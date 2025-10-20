@@ -1,13 +1,8 @@
-@ -1,11 +1,2406 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Caja Registradora - Veterinaria Santa Sofía</title>
     <meta content="width=device-width, initial-scale=1.0, shrink-to-fit=no" name="viewport" />
@@ -151,8 +146,7 @@
         }
 
         .cash-sidebar {
-            width: 18%;
-            min-width: 220px;
+            width: 20%;
             display: flex;
             flex-direction: column;
             gap: 15px;
@@ -160,63 +154,9 @@
         }
 
         .cash-main {
-            flex: 1;
+            width: 66.666%;
             display: flex;
             gap: 15px;
-        }
-
-        /* NEW: Products List (Left Side) */
-        .products-section {
-            width: 38%; /* Reducido de 45% a 38% (15% menos) */
-            min-width: 350px; /* Ajustado de 400px */
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .search-bar {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex-shrink: 0; /* No reducir altura */
-        }
-
-        .product-tabs {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            flex-shrink: 0; /* No reducir altura */
-        }
-
-        .products-list {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex: 1; /* Tomar todo el espacio restante */
-            overflow-y: auto;
-            min-height: 0; /* Permitir que el flex funcione correctamente */
-        }
-
-        /* Custom scrollbar for products list */
-        .products-list::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .products-list::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        .products-list::-webkit-scrollbar-thumb {
-            background: var(--primary-color);
-            border-radius: 10px;
-        }
-
-        .products-list::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-hover);
         }
 
         /* Compact Cash Status */
@@ -340,96 +280,23 @@
             color: #dc2626;
         }
 
-        /* Cash Status Button (Topbar) - Compact */
-        .cash-status-btn-compact {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 2px solid;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-
-        .cash-status-btn-compact.open {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
-            border-color: #43e97b;
-            color: #16a34a;
-        }
-
-        .cash-status-btn-compact.open:hover {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
-        }
-
-        .cash-status-btn-compact.closed {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
-            border-color: #fa709a;
-            color: #dc2626;
-        }
-
-        .cash-status-btn-compact.closed:hover {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
-        }
-
-        .cash-status-btn-compact .status-icon {
-            font-size: 1.2rem;
-        }
-
-        .cash-status-btn-compact .status-info h6 {
-            margin: 0;
-            font-size: 0.7rem;
-            opacity: 0.8;
-        }
-
-        .cash-status-btn-compact .status-info .amount {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
-        .cash-layout {
-            display: flex;
-            gap: 20px;
-            height: calc(100vh - 180px);
-        }
-
-        .cash-sidebar {
-            width: 18%;
-            min-width: 220px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow-y: auto;
-        }
-
-        .cash-main {
-            flex: 1;
-            display: flex;
-            gap: 15px;
-        }
-
         /* NEW: Products List (Left Side) */
         .products-section {
-            width: 38%; /* Reducido de 45% a 38% (15% menos) */
-            min-width: 350px; /* Ajustado de 400px */
+            width: 25%;
+            min-width: 350px;
             display: flex;
             flex-direction: column;
             gap: 15px;
+            height: 100%;
+            /* Usar toda la altura disponible */
         }
 
         .search-bar {
             background: white;
             border-radius: 12px;
             padding: 15px;
-            flex-shrink: 0; /* No reducir altura */
+            flex-shrink: 0;
+            /* No reducir altura */
         }
 
         .product-tabs {
@@ -439,26 +306,45 @@
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            flex-shrink: 0; /* No reducir altura */
+            flex-shrink: 0;
+            /* No reducir altura */
+        }
+
+        .product-tab {
+            padding: 8px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .product-tab:hover {
+            border-color: var(--primary-color);
+            background: #f8f9fa;
+        }
+
+        .product-tab.active {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(175, 225, 175, 0.2) 0%, rgba(137, 197, 124, 0.2) 100%);
+            color: var(--text-dark);
         }
 
         .products-list {
             background: white;
             border-radius: 12px;
             padding: 15px;
-            flex: 1; /* Tomar todo el espacio restante */
+            flex: 1;
+            /* Tomar todo el espacio restante */
             overflow-y: auto;
-            min-height: 0; /* Permitir que el flex funcione correctamente */
+            min-height: 0;
+            /* Permitir que el flex funcione correctamente */
         }
 
-        /* Custom scrollbar for products list */
         .products-list::-webkit-scrollbar {
             width: 8px;
-        }
-
-        .products-list::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
         }
 
         .products-list::-webkit-scrollbar-thumb {
@@ -470,1943 +356,1509 @@
             background: var(--primary-hover);
         }
 
-        /* Compact Cash Status */
-        .cash-status-compact {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            color: white;
-            border-radius: 12px;
-            padding: 15px;
-        }
-
-        .cash-status-compact.closed {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-
-        .cash-status-compact h5 {
-            margin: 0 0 8px 0;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .cash-status-compact .amount {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 5px 0;
-        }
-
-        .cash-status-compact .info {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
-            font-size: 0.75rem;
-        }
-
-        /* Compact Summary Cards */
-        .summary-compact {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .summary-mini {
-            background: white;
-            border-radius: 10px;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-        }
-
-        .summary-mini h6 {
-            color: #6c757d;
-            font-size: 0.7rem;
-            margin: 0 0 5px 0;
-            font-weight: 500;
-        }
-
-        .summary-mini .value {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .summary-mini.income .value {
-            color: #16a34a;
-        }
-
-        .summary-mini.expense .value {
-            color: #dc2626;
-        }
-
-        /* Compact Transactions */
-        .transaction-compact {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .transaction-compact .section-title {
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-        }
-
-        .transaction-mini {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .transaction-mini:last-child {
-            border-bottom: none;
-        }
-
-        .transaction-mini h6 {
-            margin: 0 0 3px 0;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-
-        .transaction-mini p {
-            margin: 0;
-            font-size: 0.7rem;
-            color: #6c757d;
-        }
-
-        .transaction-mini .amount {
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        .transaction-mini .amount.income {
-            color: #16a34a;
-        }
-
-        .transaction-mini .amount.expense {
-            color: #dc2626;
-        }
-
-        /* Cash Status Button (Topbar) - Compact */
-        .cash-status-btn-compact {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 2px solid;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-
-        .cash-status-btn-compact.open {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
-            border-color: #43e97b;
-            color: #16a34a;
-        }
-
-        .cash-status-btn-compact.open:hover {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
-        }
-
-        .cash-status-btn-compact.closed {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
-            border-color: #fa709a;
-            color: #dc2626;
-        }
-
-        .cash-status-btn-compact.closed:hover {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
-        }
-
-        .cash-status-btn-compact .status-icon {
-            font-size: 1.2rem;
-        }
-
-        .cash-status-btn-compact .status-info h6 {
-            margin: 0;
-            font-size: 0.7rem;
-            opacity: 0.8;
-        }
-
-        .cash-status-btn-compact .status-info .amount {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
-        .cash-layout {
-            display: flex;
-            gap: 20px;
-            height: calc(100vh - 180px);
-        }
-
-        .cash-sidebar {
-            width: 18%;
-            min-width: 220px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow-y: auto;
-        }
-
-        .cash-main {
-            flex: 1;
-            display: flex;
-            gap: 15px;
-        }
-
-        /* NEW: Products List (Left Side) */
-        .products-section {
-            width: 38%; /* Reducido de 45% a 38% (15% menos) */
-            min-width: 350px; /* Ajustado de 400px */
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .search-bar {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex-shrink: 0; /* No reducir altura */
-        }
-
-        .product-tabs {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            flex-shrink: 0; /* No reducir altura */
-        }
-
-        .products-list {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex: 1; /* Tomar todo el espacio restante */
-            overflow-y: auto;
-            min-height: 0; /* Permitir que el flex funcione correctamente */
-        }
-
-        /* Custom scrollbar for products list */
-        .products-list::-webkit-scrollbar {
-            width: 8px;
-        }
-
         .products-list::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 10px;
         }
 
-        .products-list::-webkit-scrollbar-thumb {
-            background: var(--primary-color);
-            border-radius: 10px;
-        }
-
-        .products-list::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-hover);
-        }
-
-        /* Compact Cash Status */
-        .cash-status-compact {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            color: white;
-            border-radius: 12px;
-            padding: 15px;
-        }
-
-        .cash-status-compact.closed {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-
-        .cash-status-compact h5 {
-            margin: 0 0 8px 0;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .cash-status-compact .amount {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 5px 0;
-        }
-
-        .cash-status-compact .info {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
-            font-size: 0.75rem;
-        }
-
-        /* Compact Summary Cards */
-        .summary-compact {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .summary-mini {
-            background: white;
-            border-radius: 10px;
+        .product-list-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             padding: 12px;
             border: 2px solid #e9ecef;
-        }
-
-        .summary-mini h6 {
-            color: #6c757d;
-            font-size: 0.7rem;
-            margin: 0 0 5px 0;
-            font-weight: 500;
-        }
-
-        .summary-mini .value {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .summary-mini.income .value {
-            color: #16a34a;
-        }
-
-        .summary-mini.expense .value {
-            color: #dc2626;
-        }
-
-        /* Compact Transactions */
-        .transaction-compact {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .transaction-compact .section-title {
-            font-size: 0.9rem;
+            border-radius: 10px;
             margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        .transaction-mini {
+        .product-list-item:hover {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(175, 225, 175, 0.05) 0%, rgba(137, 197, 124, 0.05) 100%);
+            transform: translateX(5px);
+        }
+
+        .product-list-item .icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+            flex-shrink: 0;
         }
 
-        .transaction-mini:last-child {
-            border-bottom: none;
+        .product-list-item .info {
+            flex: 1;
         }
 
-        .transaction-mini h6 {
+        .product-list-item .info h6 {
             margin: 0 0 3px 0;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             font-weight: 600;
             color: var(--text-dark);
         }
 
-        .transaction-mini p {
+        .product-list-item .info p {
             margin: 0;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: #6c757d;
         }
 
-        .transaction-mini .amount {
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        .transaction-mini .amount.income {
-            color: #16a34a;
-        }
-
-        .transaction-mini .amount.expense {
-            color: #dc2626;
-        }
-
-        /* Cash Status Button (Topbar) - Compact */
-        .cash-status-btn-compact {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 2px solid;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-
-        .cash-status-btn-compact.open {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
-            border-color: #43e97b;
-            color: #16a34a;
-        }
-
-        .cash-status-btn-compact.open:hover {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
-        }
-
-        .cash-status-btn-compact.closed {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
-            border-color: #fa709a;
-            color: #dc2626;
-        }
-
-        .cash-status-btn-compact.closed:hover {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
-        }
-
-        .cash-status-btn-compact .status-icon {
-            font-size: 1.2rem;
-        }
-
-        .cash-status-btn-compact .status-info h6 {
-            margin: 0;
-            font-size: 0.7rem;
-            opacity: 0.8;
-        }
-
-        .cash-status-btn-compact .status-info .amount {
-            margin: 0;
+        .product-list-item .price {
             font-size: 1rem;
             font-weight: 700;
+            color: #16a34a;
+            flex-shrink: 0;
         }
 
-        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
-        .cash-layout {
+        .product-list-item .add-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            border: none;
+            background: var(--primary-color);
+            color: var(--text-dark);
+            font-size: 1.2rem;
             display: flex;
-            gap: 20px;
-            height: calc(100vh - 180px);
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
         }
 
-        .cash-sidebar {
-            width: 18%;
-            min-width: 220px;
+        .product-list-item .add-btn:hover {
+            background: var(--primary-hover);
+            transform: scale(1.1);
+        }
+
+        /* NEW: Shopping Cart (Right Side) */
+        .cart-section {
+            width: 70%;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            overflow-y: auto;
         }
 
-        .cash-main {
+        .cart-header {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .cart-header h5 {
+            margin: 0;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+        }
+
+        .shopping-cart {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
             flex: 1;
             display: flex;
-            gap: 15px;
-        }
-
-        /* NEW: Products List (Left Side) */
-        .products-section {
-            width: 38%; /* Reducido de 45% a 38% (15% menos) */
-            min-width: 350px; /* Ajustado de 400px */
-            display: flex;
             flex-direction: column;
-            gap: 15px;
+            overflow: hidden;
+            /* Prevent cart from expanding */
         }
 
-        .search-bar {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex-shrink: 0; /* No reducir altura */
-        }
-
-        .product-tabs {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            flex-shrink: 0; /* No reducir altura */
-        }
-
-        .products-list {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex: 1; /* Tomar todo el espacio restante */
+        .cart-items {
+            flex: 0 1 auto;
+            /* Allow shrinking, don't grow */
+            max-height: 250px;
+            /* Fixed max height */
             overflow-y: auto;
-            min-height: 0; /* Permitir que el flex funcione correctamente */
+            overflow-x: hidden;
+            margin-bottom: 15px;
+            padding-right: 5px;
+            /* Space for scrollbar */
         }
 
-        /* Custom scrollbar for products list */
-        .products-list::-webkit-scrollbar {
-            width: 8px;
+        /* Custom scrollbar for cart items */
+        .cart-items::-webkit-scrollbar {
+            width: 6px;
         }
 
-        .products-list::-webkit-scrollbar-track {
+        .cart-items::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 10px;
         }
 
-        .products-list::-webkit-scrollbar-thumb {
+        .cart-items::-webkit-scrollbar-thumb {
             background: var(--primary-color);
             border-radius: 10px;
         }
 
-        .products-list::-webkit-scrollbar-thumb:hover {
+        .cart-items::-webkit-scrollbar-thumb:hover {
             background: var(--primary-hover);
         }
 
-        /* Compact Cash Status */
-        .cash-status-compact {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            color: white;
-            border-radius: 12px;
-            padding: 15px;
-        }
-
-        .cash-status-compact.closed {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-
-        .cash-status-compact h5 {
-            margin: 0 0 8px 0;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .cash-status-compact .amount {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 5px 0;
-        }
-
-        .cash-status-compact .info {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
-            font-size: 0.75rem;
-        }
-
-        /* Compact Summary Cards */
-        .summary-compact {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .summary-mini {
-            background: white;
-            border-radius: 10px;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-        }
-
-        .summary-mini h6 {
-            color: #6c757d;
-            font-size: 0.7rem;
-            margin: 0 0 5px 0;
-            font-weight: 500;
-        }
-
-        .summary-mini .value {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .summary-mini.income .value {
-            color: #16a34a;
-        }
-
-        .summary-mini.expense .value {
-            color: #dc2626;
-        }
-
-        /* Compact Transactions */
-        .transaction-compact {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .transaction-compact .section-title {
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-        }
-
-        .transaction-mini {
+        .cart-item {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            gap: 10px;
+            padding: 12px;
             border-bottom: 1px solid #f0f0f0;
         }
 
-        .transaction-mini:last-child {
+        .cart-item:last-child {
             border-bottom: none;
         }
 
-        .transaction-mini h6 {
-            margin: 0 0 3px 0;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-dark);
+        .cart-item-info {
+            flex: 1;
         }
 
-        .transaction-mini p {
+        .cart-item-info h6 {
+            margin: 0 0 3px 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .cart-item-info p {
             margin: 0;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: #6c757d;
         }
 
-        .transaction-mini .amount {
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        .transaction-mini .amount.income {
-            color: #16a34a;
-        }
-
-        .transaction-mini .amount.expense {
-            color: #dc2626;
-        }
-
-        /* Cash Status Button (Topbar) - Compact */
-        .cash-status-btn-compact {
+        .cart-item-controls {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 2px solid;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-size: 0.85rem;
         }
 
-        .cash-status-btn-compact.open {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
-            border-color: #43e97b;
-            color: #16a34a;
-        }
-
-        .cash-status-btn-compact.open:hover {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
-        }
-
-        .cash-status-btn-compact.closed {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
-            border-color: #fa709a;
-            color: #dc2626;
-        }
-
-        .cash-status-btn-compact.closed:hover {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
-        }
-
-        .cash-status-btn-compact .status-icon {
-            font-size: 1.2rem;
-        }
-
-        .cash-status-btn-compact .status-info h6 {
-            margin: 0;
-            font-size: 0.7rem;
-            opacity: 0.8;
-        }
-
-        .cash-status-btn-compact .status-info .amount {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
-        .cash-layout {
-            display: flex;
-            gap: 20px;
-            height: calc(100vh - 180px);
-        }
-
-        .cash-sidebar {
-            width: 18%;
-            min-width: 220px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow-y: auto;
-        }
-
-        .cash-main {
-            flex: 1;
-            display: flex;
-            gap: 15px;
-        }
-
-        /* NEW: Products List (Left Side) */
-        .products-section {
-            width: 38%; /* Reducido de 45% a 38% (15% menos) */
-            min-width: 350px; /* Ajustado de 400px */
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .search-bar {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex-shrink: 0; /* No reducir altura */
-        }
-
-        .product-tabs {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            flex-shrink: 0; /* No reducir altura */
-        }
-
-        .products-list {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex: 1; /* Tomar todo el espacio restante */
-            overflow-y: auto;
-            min-height: 0; /* Permitir que el flex funcione correctamente */
-        }
-
-        /* Custom scrollbar for products list */
-        .products-list::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .products-list::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        .products-list::-webkit-scrollbar-thumb {
+        .qty-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 6px;
             background: var(--primary-color);
-            border-radius: 10px;
+            color: var(--text-dark);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .products-list::-webkit-scrollbar-thumb:hover {
+        .qty-btn:hover {
             background: var(--primary-hover);
         }
 
-        /* Compact Cash Status */
-        .cash-status-compact {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            color: white;
-            border-radius: 12px;
-            padding: 15px;
-        }
-
-        .cash-status-compact.closed {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-
-        .cash-status-compact h5 {
-            margin: 0 0 8px 0;
+        .qty-display {
+            min-width: 35px;
+            text-align: center;
             font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .cart-item-price {
+            font-weight: 700;
+            color: var(--text-dark);
+            min-width: 90px;
+            text-align: right;
             font-size: 1rem;
         }
 
-        .cash-status-compact .amount {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 5px 0;
-        }
-
-        .cash-status-compact .info {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        .cart-remove {
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
             font-size: 0.75rem;
         }
 
-        /* Compact Summary Cards */
-        .summary-compact {
+        .cart-remove:hover {
+            background: #fecaca;
+        }
+
+        .cart-total {
+            border-top: 2px solid #e9ecef;
+            padding-top: 15px;
+        }
+
+        .cart-total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .cart-total-row.final {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .cart-actions {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* Empty State */
+        .empty-cart {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-cart i {
+            font-size: 4rem;
+            color: #e9ecef;
+            margin-bottom: 15px;
+        }
+
+        .empty-cart h6 {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        /* Payment Methods */
+        .payment-methods {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 10px;
         }
 
-        .summary-mini {
-            background: white;
+        .payment-method-btn {
+            padding: 15px;
+            border: 2px solid #e9ecef;
             border-radius: 10px;
-            padding: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .payment-method-btn:hover {
+            border-color: var(--primary-color);
+            background: #f8f9fa;
+        }
+
+        .payment-method-btn.active {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(175, 225, 175, 0.1) 0%, rgba(137, 197, 124, 0.1) 100%);
+        }
+
+        .payment-method-btn i {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .payment-method-btn span {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Summary Card for Modal */
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
             border: 2px solid #e9ecef;
         }
 
-        .summary-mini h6 {
+        .summary-card h6 {
             color: #6c757d;
-            font-size: 0.7rem;
-            margin: 0 0 5px 0;
-            font-weight: 500;
-        }
-
-        .summary-mini .value {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .summary-mini.income .value {
-            color: #16a34a;
-        }
-
-        .summary-mini.expense .value {
-            color: #dc2626;
-        }
-
-        /* Compact Transactions */
-        .transaction-compact {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .transaction-compact .section-title {
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-        }
-
-        .transaction-mini {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .transaction-mini:last-child {
-            border-bottom: none;
-        }
-
-        .transaction-mini h6 {
-            margin: 0 0 3px 0;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-
-        .transaction-mini p {
-            margin: 0;
-            font-size: 0.7rem;
-            color: #6c757d;
-        }
-
-        .transaction-mini .amount {
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        .transaction-mini .amount.income {
-            color: #16a34a;
-        }
-
-        .transaction-mini .amount.expense {
-            color: #dc2626;
-        }
-
-        /* Cash Status Button (Topbar) - Compact */
-        .cash-status-btn-compact {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 2px solid;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
             font-size: 0.85rem;
+            margin: 0 0 10px 0;
+            font-weight: 500;
         }
 
-        .cash-status-btn-compact.open {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
-            border-color: #43e97b;
-            color: #16a34a;
-        }
-
-        .cash-status-btn-compact.open:hover {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
-        }
-
-        .cash-status-btn-compact.closed {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
-            border-color: #fa709a;
-            color: #dc2626;
-        }
-
-        .cash-status-btn-compact.closed:hover {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
-        }
-
-        .cash-status-btn-compact .status-icon {
-            font-size: 1.2rem;
-        }
-
-        .cash-status-btn-compact .status-info h6 {
-            margin: 0;
-            font-size: 0.7rem;
-            opacity: 0.8;
-        }
-
-        .cash-status-btn-compact .status-info .amount {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
-        .cash-layout {
-            display: flex;
-            gap: 20px;
-            height: calc(100vh - 180px);
-        }
-
-        .cash-sidebar {
-            width: 18%;
-            min-width: 220px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow-y: auto;
-        }
-
-        .cash-main {
-            flex: 1;
-            display: flex;
-            gap: 15px;
-        }
-
-        /* NEW: Products List (Left Side) */
-        .products-section {
-            width: 38%; /* Reducido de 45% a 38% (15% menos) */
-            min-width: 350px; /* Ajustado de 400px */
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .search-bar {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex-shrink: 0; /* No reducir altura */
-        }
-
-        .product-tabs {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            flex-shrink: 0; /* No reducir altura */
-        }
-
-        .products-list {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex: 1; /* Tomar todo el espacio restante */
-            overflow-y: auto;
-            min-height: 0; /* Permitir que el flex funcione correctamente */
-        }
-
-        /* Custom scrollbar for products list */
-        .products-list::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .products-list::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        .products-list::-webkit-scrollbar-thumb {
-            background: var(--primary-color);
-            border-radius: 10px;
-        }
-
-        .products-list::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-hover);
-        }
-
-        /* Compact Cash Status */
-        .cash-status-compact {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            color: white;
-            border-radius: 12px;
-            padding: 15px;
-        }
-
-        .cash-status-compact.closed {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-
-        .cash-status-compact h5 {
-            margin: 0 0 8px 0;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .cash-status-compact .amount {
+        .summary-card .value {
             font-size: 1.8rem;
             font-weight: 700;
-            margin: 5px 0;
-        }
-
-        .cash-status-compact .info {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
-            font-size: 0.75rem;
-        }
-
-        /* Compact Summary Cards */
-        .summary-compact {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .summary-mini {
-            background: white;
-            border-radius: 10px;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-        }
-
-        .summary-mini h6 {
-            color: #6c757d;
-            font-size: 0.7rem;
-            margin: 0 0 5px 0;
-            font-weight: 500;
-        }
-
-        .summary-mini .value {
-            font-size: 1.2rem;
-            font-weight: 700;
             color: var(--text-dark);
         }
 
-        .summary-mini.income .value {
+        .summary-card.income .value {
             color: #16a34a;
         }
 
-        .summary-mini.expense .value {
+        .summary-card.expense .value {
             color: #dc2626;
         }
 
-        /* Compact Transactions */
-        .transaction-compact {
+        /* Disabled state for closed cash */
+        .cash-closed-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cash-closed-overlay.show {
+            display: flex;
+        }
+
+        .cash-closed-message {
             background: white;
             border-radius: 12px;
-            padding: 15px;
-            flex: 1;
-            overflow-y: auto;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
         }
 
-        .transaction-compact .section-title {
-            font-size: 0.9rem;
-            margin-bottom: 10px;
+        .cash-closed-message i {
+            font-size: 4rem;
+            color: #fa709a;
+            margin-bottom: 20px;
         }
 
-        .transaction-mini {
+        .cash-closed-message h4 {
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+        }
+
+        .cash-closed-message p {
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 991px) {
+            .main-header {
+                left: 0;
+            }
+        }
+
+        /* Compact Payment Method Buttons */
+        .payment-method-compact {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .payment-method-compact i {
+            font-size: 1rem;
+            color: #6c757d;
+        }
+
+        .payment-method-compact:hover {
+            border-color: var(--primary-color);
+            background: #f8f9fa;
+        }
+
+        .payment-method-compact.active {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(175, 225, 175, 0.2) 0%, rgba(137, 197, 124, 0.2) 100%);
+        }
+
+        .payment-method-compact.active i {
+            color: var(--primary-color);
+        }
+
+        /* Payment Amount Inputs */
+        .payment-amount-input {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .payment-amount-input:disabled {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .payment-amount-input:enabled {
+            background-color: #fff;
+        }
+
+        /* Payment Summary Box */
+        .payment-summary-box {
+            background: linear-gradient(135deg, rgba(175, 225, 175, 0.1) 0%, rgba(137, 197, 124, 0.1) 100%);
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .payment-summary-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 6px;
         }
 
-        .transaction-mini:last-child {
-            border-bottom: none;
+        .payment-summary-row:last-child {
+            margin-bottom: 0;
         }
 
-        .transaction-mini h6 {
-            margin: 0 0 3px 0;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-
-        .transaction-mini p {
-            margin: 0;
-            font-size: 0.7rem;
-            color: #6c757d;
-        }
-
-        .transaction-mini .amount {
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        .transaction-mini .amount.income {
+        #diferencia.positive {
             color: #16a34a;
         }
 
-        .transaction-mini .amount.expense {
+        #diferencia.negative {
             color: #dc2626;
         }
 
-        /* Cash Status Button (Topbar) - Compact */
-        .cash-status-btn-compact {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 2px solid;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-
-        .cash-status-btn-compact.open {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
-            border-color: #43e97b;
-            color: #16a34a;
-        }
-
-        .cash-status-btn-compact.open:hover {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
-        }
-
-        .cash-status-btn-compact.closed {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
-            border-color: #fa709a;
-            color: #dc2626;
-        }
-
-        .cash-status-btn-compact.closed:hover {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
-        }
-
-        .cash-status-btn-compact .status-icon {
-            font-size: 1.2rem;
-        }
-
-        .cash-status-btn-compact .status-info h6 {
-            margin: 0;
-            font-size: 0.7rem;
-            opacity: 0.8;
-        }
-
-        .cash-status-btn-compact .status-info .amount {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
-        .cash-layout {
-            display: flex;
-            gap: 20px;
-            height: calc(100vh - 180px);
-        }
-
-        .cash-sidebar {
-            width: 18%;
-            min-width: 220px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow-y: auto;
-        }
-
-        .cash-main {
-            flex: 1;
-            display: flex;
-            gap: 15px;
-        }
-
-        /* NEW: Products List (Left Side) */
-        .products-section {
-            width: 38%; /* Reducido de 45% a 38% (15% menos) */
-            min-width: 350px; /* Ajustado de 400px */
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .search-bar {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex-shrink: 0; /* No reducir altura */
-        }
-
-        .product-tabs {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            flex-shrink: 0; /* No reducir altura */
-        }
-
-        .products-list {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex: 1; /* Tomar todo el espacio restante */
-            overflow-y: auto;
-            min-height: 0; /* Permitir que el flex funcione correctamente */
-        }
-
-        /* Custom scrollbar for products list */
-        .products-list::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .products-list::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        .products-list::-webkit-scrollbar-thumb {
-            background: var(--primary-color);
-            border-radius: 10px;
-        }
-
-        .products-list::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-hover);
-        }
-
-        /* Compact Cash Status */
-        .cash-status-compact {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            color: white;
-            border-radius: 12px;
-            padding: 15px;
-        }
-
-        .cash-status-compact.closed {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-
-        .cash-status-compact h5 {
-            margin: 0 0 8px 0;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .cash-status-compact .amount {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 5px 0;
-        }
-
-        .cash-status-compact .info {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
-            font-size: 0.75rem;
-        }
-
-        /* Compact Summary Cards */
-        .summary-compact {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .summary-mini {
-            background: white;
-            border-radius: 10px;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-        }
-
-        .summary-mini h6 {
-            color: #6c757d;
-            font-size: 0.7rem;
-            margin: 0 0 5px 0;
-            font-weight: 500;
-        }
-
-        .summary-mini .value {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .summary-mini.income .value {
-            color: #16a34a;
-        }
-
-        .summary-mini.expense .value {
-            color: #dc2626;
-        }
-
-        /* Compact Transactions */
-        .transaction-compact {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .transaction-compact .section-title {
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-        }
-
-        .transaction-mini {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .transaction-mini:last-child {
-            border-bottom: none;
-        }
-
-        .transaction-mini h6 {
-            margin: 0 0 3px 0;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-
-        .transaction-mini p {
-            margin: 0;
-            font-size: 0.7rem;
-            color: #6c757d;
-        }
-
-        .transaction-mini .amount {
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        .transaction-mini .amount.income {
-            color: #16a34a;
-        }
-
-        .transaction-mini .amount.expense {
-            color: #dc2626;
-        }
-
-        /* Cash Status Button (Topbar) - Compact */
-        .cash-status-btn-compact {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 2px solid;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-
-        .cash-status-btn-compact.open {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
-            border-color: #43e97b;
-            color: #16a34a;
-        }
-
-        .cash-status-btn-compact.open:hover {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
-        }
-
-        .cash-status-btn-compact.closed {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
-            border-color: #fa709a;
-            color: #dc2626;
-        }
-
-        .cash-status-btn-compact.closed:hover {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
-        }
-
-        .cash-status-btn-compact .status-icon {
-            font-size: 1.2rem;
-        }
-
-        .cash-status-btn-compact .status-info h6 {
-            margin: 0;
-            font-size: 0.7rem;
-            opacity: 0.8;
-        }
-
-        .cash-status-btn-compact .status-info .amount {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
-        .cash-layout {
-            display: flex;
-            gap: 20px;
-            height: calc(100vh - 180px);
-        }
-
-        .cash-sidebar {
-            width: 18%;
-            min-width: 220px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow-y: auto;
-        }
-
-        .cash-main {
-            flex: 1;
-            display: flex;
-            gap: 15px;
-        }
-
-        /* NEW: Products List (Left Side) */
-        .products-section {
-            width: 38%; /* Reducido de 45% a 38% (15% menos) */
-            min-width: 350px; /* Ajustado de 400px */
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .search-bar {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex-shrink: 0; /* No reducir altura */
-        }
-
-        .product-tabs {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            flex-shrink: 0; /* No reducir altura */
-        }
-
-        .products-list {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex: 1; /* Tomar todo el espacio restante */
-            overflow-y: auto;
-            min-height: 0; /* Permitir que el flex funcione correctamente */
-        }
-
-        /* Custom scrollbar for products list */
-        .products-list::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .products-list::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        .products-list::-webkit-scrollbar-thumb {
-            background: var(--primary-color);
-            border-radius: 10px;
-        }
-
-        .products-list::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-hover);
-        }
-
-        /* Compact Cash Status */
-        .cash-status-compact {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            color: white;
-            border-radius: 12px;
-            padding: 15px;
-        }
-
-        .cash-status-compact.closed {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-
-        .cash-status-compact h5 {
-            margin: 0 0 8px 0;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .cash-status-compact .amount {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 5px 0;
-        }
-
-        .cash-status-compact .info {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
-            font-size: 0.75rem;
-        }
-
-        /* Compact Summary Cards */
-        .summary-compact {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .summary-mini {
-            background: white;
-            border-radius: 10px;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-        }
-
-        .summary-mini h6 {
-            color: #6c757d;
-            font-size: 0.7rem;
-            margin: 0 0 5px 0;
-            font-weight: 500;
-        }
-
-        .summary-mini .value {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .summary-mini.income .value {
-            color: #16a34a;
-        }
-
-        .summary-mini.expense .value {
-            color: #dc2626;
-        }
-
-        /* Compact Transactions */
-        .transaction-compact {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .transaction-compact .section-title {
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-        }
-
-        .transaction-mini {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .transaction-mini:last-child {
-            border-bottom: none;
-        }
-
-        .transaction-mini h6 {
-            margin: 0 0 3px 0;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-
-        .transaction-mini p {
-            margin: 0;
-            font-size: 0.7rem;
-            color: #6c757d;
-        }
-
-        .transaction-mini .amount {
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        .transaction-mini .amount.income {
-            color: #16a34a;
-        }
-
-        .transaction-mini .amount.expense {
-            color: #dc2626;
-        }
-
-        /* Cash Status Button (Topbar) - Compact */
-        .cash-status-btn-compact {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 2px solid;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-
-        .cash-status-btn-compact.open {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
-            border-color: #43e97b;
-            color: #16a34a;
-        }
-
-        .cash-status-btn-compact.open:hover {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
-        }
-
-        .cash-status-btn-compact.closed {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
-            border-color: #fa709a;
-            color: #dc2626;
-        }
-
-        .cash-status-btn-compact.closed:hover {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
-        }
-
-        .cash-status-btn-compact .status-icon {
-            font-size: 1.2rem;
-        }
-
-        .cash-status-btn-compact .status-info h6 {
-            margin: 0;
-            font-size: 0.7rem;
-            opacity: 0.8;
-        }
-
-        .cash-status-btn-compact .status-info .amount {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
-        .cash-layout {
-            display: flex;
-            gap: 20px;
-            height: calc(100vh - 180px);
-        }
-
-        .cash-sidebar {
-            width: 18%;
-            min-width: 220px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow-y: auto;
-        }
-
-        .cash-main {
-            flex: 1;
-            display: flex;
-            gap: 15px;
-        }
-
-        /* NEW: Products List (Left Side) */
-        .products-section {
-            width: 38%; /* Reducido de 45% a 38% (15% menos) */
-            min-width: 350px; /* Ajustado de 400px */
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .search-bar {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex-shrink: 0; /* No reducir altura */
-        }
-
-        .product-tabs {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            flex-shrink: 0; /* No reducir altura */
-        }
-
-        .products-list {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex: 1; /* Tomar todo el espacio restante */
-            overflow-y: auto;
-            min-height: 0; /* Permitir que el flex funcione correctamente */
-        }
-
-        /* Custom scrollbar for products list */
-        .products-list::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .products-list::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        .products-list::-webkit-scrollbar-thumb {
-            background: var(--primary-color);
-            border-radius: 10px;
-        }
-
-        .products-list::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-hover);
-        }
-
-        /* Compact Cash Status */
-        .cash-status-compact {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            color: white;
-            border-radius: 12px;
-            padding: 15px;
-        }
-
-        .cash-status-compact.closed {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-
-        .cash-status-compact h5 {
-            margin: 0 0 8px 0;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .cash-status-compact .amount {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 5px 0;
-        }
-
-        .cash-status-compact .info {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
-            font-size: 0.75rem;
-        }
-
-        /* Compact Summary Cards */
-        .summary-compact {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .summary-mini {
-            background: white;
-            border-radius: 10px;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-        }
-
-        .summary-mini h6 {
-            color: #6c757d;
-            font-size: 0.7rem;
-            margin: 0 0 5px 0;
-            font-weight: 500;
-        }
-
-        .summary-mini .value {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .summary-mini.income .value {
-            color: #16a34a;
-        }
-
-        .summary-mini.expense .value {
-            color: #dc2626;
-        }
-
-        /* Compact Transactions */
-        .transaction-compact {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .transaction-compact .section-title {
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-        }
-
-        .transaction-mini {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .transaction-mini:last-child {
-            border-bottom: none;
-        }
-
-        .transaction-mini h6 {
-            margin: 0 0 3px 0;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-
-        .transaction-mini p {
-            margin: 0;
-            font-size: 0.7rem;
-            color: #6c757d;
-        }
-
-        .transaction-mini .amount {
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        .transaction-mini .amount.income {
-            color: #16a34a;
-        }
-
-        .transaction-mini .amount.expense {
-            color: #dc2626;
-        }
-
-        /* Cash Status Button (Topbar) - Compact */
-        .cash-status-btn-compact {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 2px solid;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-
-        .cash-status-btn-compact.open {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
-            border-color: #43e97b;
-            color: #16a34a;
-        }
-
-        .cash-status-btn-compact.open:hover {
-            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
-        }
-
-        .cash-status-btn-compact.closed {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
-            border-color: #fa709a;
-            color: #dc2626;
-        }
-
-        .cash-status-btn-compact.closed:hover {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
-        }
-
-        .cash-status-btn-compact .status-icon {
-            font-size: 1.2rem;
-        }
-
-        .cash-status-btn-compact .status-info h6 {
-            margin: 0;
-            font-size: 0.7rem;
-            opacity: 0.8;
-        }
-
-        .cash-status-btn-compact .status-info .amount {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 700;
+        #diferencia.exact {
+            color: #059669;
         }
     </style>
 </head>
 
 <body>
-    <h1>cashregister</h1>
-    <!-- Your body content here -->
+    <div class="wrapper">
+        {% include 'partials/sidebar.html' %}
+        <div class="main-panel">
+            <!-- Custom Topbar for Cash Register -->
+            <div class="main-header">
+                <div class="main-header-logo">
+                    <div class="logo-header" data-background-color="dark">
+                        <a href="#" class="logo">
+                            <img src="{% static 'img/marca/logo-light.svg' %}" alt="navbar brand" class="navbar-brand"
+                                height="20" />
+                        </a>
+                        <div class="nav-toggle">
+                            <button class="btn btn-toggle toggle-sidebar">
+                                <i class="gg-menu-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="navbar navbar-header navbar-header-transparent navbar-expand-lg border-bottom">
+                    <div class="container-fluid">
+                        <div class="d-flex align-items-center w-100 justify-content-between">
+                            <!-- Left: Page Title -->
+                            <div>
+                                <h3 class="fw-bold mb-0">💰 Punto de Venta</h3>
+                            </div>
+
+                            <!-- Right: Cash Status Button & Actions -->
+                            <div class="d-flex align-items-center gap-3">
+                                <!-- Cash Status Button (replaces search) -->
+                                <div class="cash-status-btn open" id="cashStatusBtn" onclick="toggleCashRegister()">
+                                    <div class="status-icon">
+                                        <i class="fas fa-cash-register"></i>
+                                    </div>
+                                    <div class="status-info">
+                                        <h6 id="cashStatusLabel">Caja Abierta</h6>
+                                        <div class="amount" id="cashAmount">$1,245,500</div>
+                                    </div>
+                                </div>
+
+                                <!-- Print Button -->
+                                <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                                    <i class="fas fa-print"></i> Imprimir
+                                </button>
+
+                                <!-- User Dropdown -->
+                                <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
+                                    <li class="nav-item topbar-user dropdown hidden-caret">
+                                        <a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="#"
+                                            aria-expanded="false">
+                                            <div class="avatar-sm">
+                                                <img src="{% static 'img/profile.jpg' %}" alt="..."
+                                                    class="avatar-img rounded-circle" />
+                                            </div>
+                                            <span class="profile-username">
+                                                <span class="op-7">Hola,</span>
+                                                <span class="fw-bold">Andrea López</span>
+                                            </span>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-user animated fadeIn">
+                                            <div class="dropdown-user-scroll scrollbar-outer">
+                                                <li>
+                                                    <div class="user-box">
+                                                        <div class="avatar-lg">
+                                                            <img src="{% static 'img/profile.jpg' %}"
+                                                                alt="image profile" class="avatar-img rounded" />
+                                                        </div>
+                                                        <div class="u-text">
+                                                            <h4>Andrea López</h4>
+                                                            <p class="text-muted">cajera@vetsantasofia.cl</p>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a class="dropdown-item" href="#">Mi Perfil</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a class="dropdown-item" href="#">Cerrar Sesión</a>
+                                                </li>
+                                            </div>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+
+            <div class="container-fluid">
+                <div class="page-inner">
+                    <!-- Main Layout: 1/3 Dashboard + 2/3 Sales -->
+                    <div class="cash-layout">
+                        <!-- Left Sidebar (1/3) - Dashboard -->
+                        <div class="cash-sidebar">
+                            <!-- Cash Status -->
+                            <div class="cash-status-compact" id="cashStatusCard">
+                                <h5><i class="fas fa-cash-register"></i> Caja Abierta</h5>
+                                <div class="amount">$1,245,500</div>
+                                <div class="info">
+                                    <div>
+                                        <strong>Cajero:</strong><br>Andrea López
+                                    </div>
+                                    <div>
+                                        <strong>Inicio:</strong><br>09:00 AM
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Summary Stats -->
+                            <div class="summary-compact">
+                                <div class="summary-mini income">
+                                    <h6><i class="fas fa-arrow-down"></i> Ingresos</h6>
+                                    <div class="value">$1,195K</div>
+                                    <small style="color: #6c757d; font-size: 0.7rem;">18 ventas</small>
+                                </div>
+                                <div class="summary-mini expense">
+                                    <h6><i class="fas fa-arrow-up"></i> Egresos</h6>
+                                    <div class="value">$85K</div>
+                                    <small style="color: #6c757d; font-size: 0.7rem;">5 gastos</small>
+                                </div>
+                                <div class="summary-mini">
+                                    <h6><i class="fas fa-calculator"></i> Balance</h6>
+                                    <div class="value">$1,110K</div>
+                                    <small style="color: #6c757d; font-size: 0.7rem;">23 movimientos</small>
+                                </div>
+                                <div class="summary-mini">
+                                    <h6><i class="fas fa-chart-line"></i> Promedio</h6>
+                                    <div class="value">$66K</div>
+                                    <small style="color: #6c757d; font-size: 0.7rem;">por venta</small>
+                                </div>
+                            </div>
+
+                            <!-- Recent Transactions -->
+                            <div class="transaction-compact">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="section-title mb-0">📋 Últimas Ventas</span>
+                                    <button class="btn btn-sm btn-outline-secondary"
+                                        style="font-size: 0.7rem; padding: 3px 8px;">
+                                        Ver todas
+                                    </button>
+                                </div>
+
+                                <div class="transaction-mini">
+                                    <div>
+                                        <h6>Consulta + Vacuna</h6>
+                                        <p><i class="fas fa-user"></i> María González</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="amount income">+$45,000</div>
+                                        <small style="color: #6c757d; font-size: 0.7rem;">10:30 AM</small>
+                                    </div>
+                                </div>
+
+                                <div class="transaction-mini">
+                                    <div>
+                                        <h6>Revolution Plus</h6>
+                                        <p><i class="fas fa-user"></i> Carlos Pérez</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="amount income">+$32,500</div>
+                                        <small style="color: #6c757d; font-size: 0.7rem;">11:15 AM</small>
+                                    </div>
+                                </div>
+
+                                <div class="transaction-mini">
+                                    <div>
+                                        <h6>Insumos médicos</h6>
+                                        <p><i class="fas fa-building"></i> Proveedor</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="amount expense">-$85,000</div>
+                                        <small style="color: #6c757d; font-size: 0.7rem;">12:00 PM</small>
+                                    </div>
+                                </div>
+
+                                <div class="transaction-mini">
+                                    <div>
+                                        <h6>Cirugía</h6>
+                                        <p><i class="fas fa-user"></i> Sofía Ramírez</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="amount income">+$250,000</div>
+                                        <small style="color: #6c757d; font-size: 0.7rem;">02:30 PM</small>
+                                    </div>
+                                </div>
+
+                                <div class="transaction-mini">
+                                    <div>
+                                        <h6>Control + Vacuna</h6>
+                                        <p><i class="fas fa-user"></i> Ana López</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="amount income">+$28,000</div>
+                                        <small style="color: #6c757d; font-size: 0.7rem;">03:45 PM</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Main Area (2/3) - Sales -->
+                        <div class="cash-main">
+                            <!-- LEFT: Products List -->
+                            <div class="products-section">
+                                <!-- Search Bar -->
+                                <div class="search-bar">
+                                    <input type="text" class="form-control"
+                                        placeholder="🔍 Buscar producto o servicio..." id="searchInput"
+                                        oninput="filterProducts()">
+                                </div>
+
+                                <!-- Product Tabs -->
+                                <div class="product-tabs">
+                                    <button class="product-tab active" onclick="switchCategory(this, 'all')">
+                                        <i class="fas fa-th"></i> Todos
+                                    </button>
+                                    <button class="product-tab" onclick="switchCategory(this, 'servicios')">
+                                        <i class="fas fa-stethoscope"></i> Servicios
+                                    </button>
+                                    <button class="product-tab" onclick="switchCategory(this, 'productos')">
+                                        <i class="fas fa-pills"></i> Productos
+                                    </button>
+                                    <button class="product-tab" onclick="switchCategory(this, 'antiparasitarios')">
+                                        <i class="fas fa-shield-virus"></i> Antiparasitarios
+                                    </button>
+                                </div>
+
+                                <!-- Products List -->
+                                <div class="products-list" id="productsList">
+                                    <!-- Servicios -->
+                                    <div class="product-list-item" data-category="servicios"
+                                        onclick="addToCart('Consulta General', 35000)">
+                                        <div class="icon"
+                                            style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                            <i class="fas fa-stethoscope"></i>
+                                        </div>
+                                        <div class="info">
+                                            <h6>Consulta General</h6>
+                                            <p>Servicio veterinario</p>
+                                        </div>
+                                        <div class="price">$35,000</div>
+                                        <button class="add-btn">+</button>
+                                    </div>
+
+                                    <div class="product-list-item" data-category="servicios"
+                                        onclick="addToCart('Vacuna Antirrábica', 15000)">
+                                        <div class="icon"
+                                            style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                                            <i class="fas fa-syringe"></i>
+                                        </div>
+                                        <div class="info">
+                                            <h6>Vacuna Antirrábica</h6>
+                                            <p>Prevención</p>
+                                        </div>
+                                        <div class="price">$15,000</div>
+                                        <button class="add-btn">+</button>
+                                    </div>
+
+                                    <div class="product-list-item" data-category="servicios"
+                                        onclick="addToCart('Vacuna Múltiple', 25000)">
+                                        <div class="icon"
+                                            style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                                            <i class="fas fa-syringe"></i>
+                                        </div>
+                                        <div class="info">
+                                            <h6>Vacuna Múltiple</h6>
+                                            <p>Prevención</p>
+                                        </div>
+                                        <div class="price">$25,000</div>
+                                        <button class="add-btn">+</button>
+                                    </div>
+
+                                    <div class="product-list-item" data-category="servicios"
+                                        onclick="addToCart('Desparasitación', 12000)">
+                                        <div class="icon"
+                                            style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                            <i class="fas fa-pills"></i>
+                                        </div>
+                                        <div class="info">
+                                            <h6>Desparasitación</h6>
+                                            <p>Tratamiento</p>
+                                        </div>
+                                        <div class="price">$12,000</div>
+                                        <button class="add-btn">+</button>
+                                    </div>
+
+                                    <div class="product-list-item" data-category="servicios"
+                                        onclick="addToCart('Cirugía Simple', 180000)">
+                                        <div class="icon"
+                                            style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                                            <i class="fas fa-scissors"></i>
+                                        </div>
+                                        <div class="info">
+                                            <h6>Cirugía Simple</h6>
+                                            <p>Procedimiento quirúrgico</p>
+                                        </div>
+                                        <div class="price">$180,000</div>
+                                        <button class="add-btn">+</button>
+                                    </div>
+
+                                    <div class="product-list-item" data-category="servicios"
+                                        onclick="addToCart('Esterilización', 120000)">
+                                        <div class="icon"
+                                            style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                                            <i class="fas fa-cut"></i>
+                                        </div>
+                                        <div class="info">
+                                            <h6>Esterilización</h6>
+                                            <p>Cirugía</p>
+                                        </div>
+                                        <div class="price">$120,000</div>
+                                        <button class="add-btn">+</button>
+                                    </div>
+
+                                    <div class="product-list-item" data-category="servicios"
+                                        onclick="addToCart('Baño y Peluquería', 25000)">
+                                        <div class="icon"
+                                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                            <i class="fas fa-bath"></i>
+                                        </div>
+                                        <div class="info">
+                                            <h6>Baño y Peluquería</h6>
+                                            <p>Estética</p>
+                                        </div>
+                                        <div class="price">$25,000</div>
+                                        <button class="add-btn">+</button>
+                                    </div>
+
+                                    <div class="product-list-item" data-category="servicios"
+                                        onclick="addToCart('Examen de Sangre', 45000)">
+                                        <div class="icon"
+                                            style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                            <i class="fas fa-vial"></i>
+                                        </div>
+                                        <div class="info">
+                                            <h6>Examen de Sangre</h6>
+                                            <p>Diagnóstico</p>
+                                        </div>
+                                        <div class="price">$45,000</div>
+                                        <button class="add-btn">+</button>
+                                    </div>
+
+                                    <!-- Productos Antiparasitarios -->
+                                    <div class="product-list-item" data-category="antiparasitarios"
+                                        onclick="addToCart('Revolution Plus', 32500)">
+                                        <div class="icon">
+                                            <i class="fas fa-box"></i>
+                                        </div>
+                                        <div class="info">
+                                            <h6>Revolution Plus</h6>
+                                            <p>Stock: 4 unidades</p>
+                                        </div>
+                                        <div class="price">$32,500</div>
+                                        <button class="add-btn">+</button>
+                                    </div>
+
+                                    <div class="product-list-item" data-category="antiparasitarios"
+                                        onclick="addToCart('Bravecto 40-56Kg', 28000)">
+                                        <div class="icon">
+                                            <i class="fas fa-box"></i>
+                                        </div>
+                                        <div class="info">
+                                            <h6>Bravecto 40-56Kg</h6>
+                                            <p>Stock: 7 unidades</p>
+                                        </div>
+                                        <div class="price">$28,000</div>
+                                        <button class="add-btn">+</button>
+                                    </div>
+
+                                    <div class="product-list-item" data-category="antiparasitarios"
+                                        onclick="addToCart('NexGard Spectra', 26500)">
+                                        <div class="icon">
+                                            <i class="fas fa-box"></i>
+                                        </div>
+                                        <div class="info">
+                                            <h6>NexGard Spectra</h6>
+                                            <p>Stock: 6 unidades</p>
+                                        </div>
+                                        <div class="price">$26,500</div>
+                                        <button class="add-btn">+</button>
+                                    </div>
+
+                                    <div class="product-list-item" data-category="antiparasitarios"
+                                        onclick="addToCart('Simparica Trio', 24500)">
+                                        <div class="icon">
+                                            <i class="fas fa-box"></i>
+                                        </div>
+                                        <div class="info">
+                                            <h6>Simparica Trio</h6>
+                                            <p>Stock: 28 unidades</p>
+                                        </div>
+                                        <div class="price">$24,500</div>
+                                        <button class="add-btn">+</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT: Shopping Cart -->
+                            <div class="cart-section">
+                                <!-- Cart Header -->
+                                <div class="cart-header">
+                                    <h5><i class="fas fa-shopping-cart"></i> Carrito de Venta</h5>
+                                </div>
+
+                                <!-- Shopping Cart - TWO COLUMNS -->
+                                <div class="shopping-cart">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 100%;">
+                                        
+                                        <!-- LEFT COLUMN: Cart Items -->
+                                        <div style="display: flex; flex-direction: column; height: 100%;">
+                                            <h6 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 12px; color: var(--text-dark);">
+                                                <i class="fas fa-list"></i> Productos
+                                            </h6>
+                                            <div class="cart-items" id="cartItems" style="flex: 1; max-height: none; overflow-y: auto;">
+                                                <div class="empty-cart" style="padding: 40px 20px;">
+                                                    <i class="fas fa-shopping-cart"></i>
+                                                    <h6>Carrito vacío</h6>
+                                                    <p>Agrega productos desde la lista</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- RIGHT COLUMN: Totals & Payment -->
+                                        <div style="display: flex; flex-direction: column; height: 100%;">
+                                            <h6 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 12px; color: var(--text-dark);">
+                                                <i class="fas fa-calculator"></i> Resumen
+                                            </h6>
+                                            
+                                            <div id="cartTotal" style="display: none; flex: 1; display: flex; flex-direction: column; overflow-y: auto;">
+                                                <!-- Totals -->
+                                                <div class="cart-total" style="border-top: none; padding-top: 0;">
+                                                    <div class="cart-total-row">
+                                                        <span>Subtotal:</span>
+                                                        <span id="subtotal">$0</span>
+                                                    </div>
+                                                    <div class="cart-total-row">
+                                                        <span>IVA (19%):</span>
+                                                        <span id="iva">$0</span>
+                                                    </div>
+                                                    <div class="cart-total-row final">
+                                                        <span>TOTAL:</span>
+                                                        <span id="total">$0</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Payment Section -->
+                                                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e9ecef;">
+                                                    <div class="mb-3">
+                                                        <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: var(--text-dark);">Cliente</label>
+                                                        <input type="text" class="form-control form-control-sm" placeholder="Buscar o crear cliente..." id="clienteInput">
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: var(--text-dark); margin-bottom: 8px;">Métodos de Pago</label>
+                                                        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 10px; align-items: start;">
+                                                            <!-- Left: Payment Method Buttons -->
+                                                            <div style="display: flex; flex-direction: column; gap: 6px;">
+                                                                <button class="payment-method-compact" data-method="efectivo" onclick="togglePaymentMethod(this, 'efectivo')">
+                                                                    <i class="fas fa-money-bill-wave"></i>
+                                                                    <span>Efectivo</span>
+                                                                </button>
+                                                                <button class="payment-method-compact" data-method="debito" onclick="togglePaymentMethod(this, 'debito')">
+                                                                    <i class="fas fa-credit-card"></i>
+                                                                    <span>Débito</span>
+                                                                </button>
+                                                                <button class="payment-method-compact" data-method="credito" onclick="togglePaymentMethod(this, 'credito')">
+                                                                    <i class="fas fa-credit-card"></i>
+                                                                    <span>Crédito</span>
+                                                                </button>
+                                                                <button class="payment-method-compact" data-method="transferencia" onclick="togglePaymentMethod(this, 'transferencia')">
+                                                                    <i class="fas fa-university"></i>
+                                                                    <span>Transferencia</span>
+                                                                </button>
+                                                            </div>
+
+                                                            <!-- Right: Amount Inputs -->
+                                                            <div style="display: flex; flex-direction: column; gap: 6px;">
+                                                                <div class="input-group input-group-sm">
+                                                                    <span class="input-group-text" style="font-size: 0.7rem;">$</span>
+                                                                    <input type="number" class="form-control payment-amount-input" id="efectivoAmount" disabled placeholder="0" oninput="calcularPagos()">
+                                                                </div>
+                                                                <div class="input-group input-group-sm">
+                                                                    <span class="input-group-text" style="font-size: 0.7rem;">$</span>
+                                                                    <input type="number" class="form-control payment-amount-input" id="debitoAmount" disabled placeholder="0" oninput="calcularPagos()">
+                                                                </div>
+                                                                <div class="input-group input-group-sm">
+                                                                    <span class="input-group-text" style="font-size: 0.7rem;">$</span>
+                                                                    <input type="number" class="form-control payment-amount-input" id="creditoAmount" disabled placeholder="0" oninput="calcularPagos()">
+                                                                </div>
+                                                                <div class="input-group input-group-sm">
+                                                                    <span class="input-group-text" style="font-size: 0.7rem;">$</span>
+                                                                    <input type="number" class="form-control payment-amount-input" id="transferenciaAmount" disabled placeholder="0" oninput="calcularPagos()">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Payment Summary -->
+                                                    <div class="mb-3" id="paymentSummary" style="display: none;">
+                                                        <div class="payment-summary-box">
+                                                            <div class="payment-summary-row">
+                                                                <span style="font-size: 0.85rem; color: #6c757d;">Total Recibido:</span>
+                                                                <span style="font-size: 0.95rem; font-weight: 700;" id="totalRecibido">$0</span>
+                                                            </div>
+                                                            <div class="payment-summary-row">
+                                                                <span style="font-size: 0.85rem; color: #6c757d;">Total a Pagar:</span>
+                                                                <span style="font-size: 0.95rem; font-weight: 700;" id="totalAPagar">$0</span>
+                                                            </div>
+                                                            <div class="payment-summary-row" style="padding-top: 8px; border-top: 1px solid #e9ecef; margin-top: 8px;">
+                                                                <span style="font-size: 0.9rem; font-weight: 600;" id="diferenciaLabel">Diferencia:</span>
+                                                                <span style="font-size: 1.1rem; font-weight: 700;" id="diferencia">$0</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Action Buttons -->
+                                                <div class="cart-actions" style="margin-top: auto; padding-top: 15px;">
+                                                    <button class="btn btn-secondary" onclick="clearCart()">
+                                                        <i class="fas fa-trash"></i> Limpiar
+                                                    </button>
+                                                    <button class="btn btn-primary" onclick="procesarVentaDirecto()">
+                                                        <i class="fas fa-check"></i> Confirmar Venta
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer">
+                <div class="container-fluid d-flex justify-content-between">
+                    <div class="copyright">
+                        2025, Veterinaria Santa Sofía
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Modal: Abrir Caja -->
+    <div class="modal fade" id="abrirCajaModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-cash-register"></i> Abrir Caja</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">Cajero</label>
+                            <input type="text" class="form-control" value="Andrea López" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Monto Inicial</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" placeholder="50000">
+                            </div>
+                            <small class="form-text text-muted">Monto en efectivo con el que se inicia el turno</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones (Opcional)</label>
+                            <textarea class="form-control" rows="3" placeholder="Notas sobre la apertura..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="openCashRegister()">
+                        <i class="fas fa-check"></i> Abrir Caja
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Cobrar -->
+    <div class="modal fade" id="cobrarModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-cash-register"></i> Procesar Venta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Cliente</label>
+                        <input type="text" class="form-control" placeholder="Buscar o crear cliente...">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Total a Cobrar</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="text" class="form-control" id="totalVenta" readonly>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Método de Pago</label>
+                        <div class="payment-methods">
+                            <div class="payment-method-btn active" onclick="selectPayment(this, 'efectivo')">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Efectivo</span>
+                            </div>
+                            <div class="payment-method-btn" onclick="selectPayment(this, 'debito')">
+                                <i class="fas fa-credit-card"></i>
+                                <span>Débito</span>
+                            </div>
+                            <div class="payment-method-btn" onclick="selectPayment(this, 'credito')">
+                                <i class="fas fa-credit-card"></i>
+                                <span>Crédito</span>
+                            </div>
+                            <div class="payment-method-btn" onclick="selectPayment(this, 'transferencia')">
+                                <i class="fas fa-university"></i>
+                                <span>Transferencia</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="efectivoFields" style="display: none;">
+                        <label class="form-label">Monto Recibido</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="montoRecibido" oninput="calcularVuelto()">
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="vueltoField" style="display: none;">
+                        <label class="form-label">Vuelto</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="text" class="form-control" id="vuelto" readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="procesarVenta()">
+                        <i class="fas fa-check"></i> Confirmar Venta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Cerrar Caja -->
+    <div class="modal fade" id="cerrarCajaModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="modal-title"><i class="fas fa-lock"></i> Cerrar Caja</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Verifica los montos antes de cerrar la caja.
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="summary-card income">
+                                <h6>Total Ingresos</h6>
+                                <div class="value">$1,195,500</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="summary-card expense">
+                                <h6>Total Egresos</h6>
+                                <div class="value">$85,000</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">Monto en Efectivo (Contado)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" placeholder="Monto contado">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones de Cierre</label>
+                            <textarea class="form-control" rows="3" placeholder="Notas..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" onclick="closeCashRegister()">
+                        <i class="fas fa-lock"></i> Cerrar Caja
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core JS Files -->
+    <script src="{% static 'js/core/jquery-3.7.1.min.js' %}"></script>
+    <script src="{% static 'js/core/popper.min.js' %}"></script>
+    <script src="{% static 'js/core/bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/plugin/jquery-scrollbar/jquery.scrollbar.min.js' %}"></script>
+    <script src="{% static 'js/kaiadmin.min.js' %}"></script>
+
+    <script>
+        let cart = [];
+        let selectedPaymentMethods = new Set();
+        let cashOpen = true;
+        let currentCategory = 'all';
+
+        function switchCategory(element, category) {
+            document.querySelectorAll('.product-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            element.classList.add('active');
+            currentCategory = category;
+            filterProducts();
+        }
+
+        function filterProducts() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const items = document.querySelectorAll('.product-list-item');
+
+            items.forEach(item => {
+                const name = item.querySelector('.info h6').textContent.toLowerCase();
+                const category = item.getAttribute('data-category');
+                const matchesSearch = name.includes(searchTerm);
+                const matchesCategory = currentCategory === 'all' || category === currentCategory;
+
+                if (matchesSearch && matchesCategory) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function addToCart(name, price) {
+            if (!cashOpen) {
+                alert('La caja está cerrada. Por favor, abre la caja para realizar ventas.');
+                return;
+            }
+
+            const existingItem = cart.find(item => item.name === name);
+
+            if (existingItem) {
+                existingItem.quantity++;
+            } else {
+                cart.push({ name, price, quantity: 1 });
+            }
+
+            updateCart();
+        }
+
+        function updateCart() {
+            const cartItemsDiv = document.getElementById('cartItems');
+            const cartTotalDiv = document.getElementById('cartTotal');
+
+            if (cart.length === 0) {
+                cartItemsDiv.innerHTML = `
+                    <div class="empty-cart">
+                        <i class="fas fa-shopping-cart"></i>
+                        <h6>Carrito vacío</h6>
+                        <p>Agrega productos desde la lista</p>
+                    </div>
+                `;
+                cartTotalDiv.style.display = 'none';
+                return;
+            }
+
+            cartItemsDiv.innerHTML = cart.map((item, index) => `
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <h6>${item.name}</h6>
+                        <p>$${item.price.toLocaleString()} c/u</p>
+                    </div>
+                    <div class="cart-item-controls">
+                        <button class="qty-btn" onclick="decreaseQty(${index})">-</button>
+                        <span class="qty-display">${item.quantity}</span>
+                        <button class="qty-btn" onclick="increaseQty(${index})">+</button>
+                    </div>
+                    <div class="cart-item-price">$${(item.price * item.quantity).toLocaleString()}</div>
+                    <button class="cart-remove" onclick="removeFromCart(${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const iva = Math.round(subtotal * 0.19);
+            const total = subtotal + iva;
+
+            document.getElementById('subtotal').textContent = '$' + subtotal.toLocaleString();
+            document.getElementById('iva').textContent = '$' + iva.toLocaleString();
+            document.getElementById('total').textContent = '$' + total.toLocaleString();
+
+            cartTotalDiv.style.display = 'block';
+            calcularPagos();
+        }
+
+        function increaseQty(index) {
+            cart[index].quantity++;
+            updateCart();
+        }
+
+        function decreaseQty(index) {
+            if (cart[index].quantity > 1) {
+                cart[index].quantity--;
+            } else {
+                cart.splice(index, 1);
+            }
+            updateCart();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCart();
+        }
+
+        function clearCart() {
+            cart = [];
+            document.getElementById('clienteInput').value = '';
+
+            // Clear all payment methods
+            selectedPaymentMethods.clear();
+            document.querySelectorAll('.payment-method-compact').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Disable and clear all payment inputs
+            document.querySelectorAll('.payment-amount-input').forEach(input => {
+                input.disabled = true;
+                input.value = '';
+            });
+
+            document.getElementById('paymentSummary').style.display = 'none';
+            updateCart();
+        }
+
+        function togglePaymentMethod(element, method) {
+            const input = document.getElementById(method + 'Amount');
+
+            if (selectedPaymentMethods.has(method)) {
+                // Deselect
+                selectedPaymentMethods.delete(method);
+                element.classList.remove('active');
+                input.disabled = true;
+                input.value = '';
+            } else {
+                // Select
+                selectedPaymentMethods.add(method);
+                element.classList.add('active');
+                input.disabled = false;
+                input.focus();
+            }
+
+            calcularPagos();
+        }
+
+        function calcularPagos() {
+            if (cart.length === 0) return;
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const totalConIva = total + Math.round(total * 0.19);
+
+            let totalRecibido = 0;
+
+            // Sum all enabled payment inputs
+            selectedPaymentMethods.forEach(method => {
+                const input = document.getElementById(method + 'Amount');
+                const value = parseFloat(input.value) || 0;
+                totalRecibido += value;
+            });
+
+            const diferencia = totalRecibido - totalConIva;
+
+            // Show summary if any payment method is selected
+            if (selectedPaymentMethods.size > 0) {
+                document.getElementById('paymentSummary').style.display = 'block';
+                document.getElementById('totalRecibido').textContent = '$' + totalRecibido.toLocaleString();
+                document.getElementById('totalAPagar').textContent = '$' + totalConIva.toLocaleString();
+
+                const diferenciaElement = document.getElementById('diferencia');
+                const diferenciaLabel = document.getElementById('diferenciaLabel');
+
+                if (diferencia > 0) {
+                    // Hay vuelto
+                    diferenciaElement.textContent = '$' + diferencia.toLocaleString();
+                    diferenciaLabel.textContent = 'Vuelto:';
+                    diferenciaElement.classList.remove('negative', 'exact');
+                    diferenciaElement.classList.add('positive');
+                } else if (diferencia < 0) {
+                    // Falta dinero
+                    diferenciaElement.textContent = '-$' + Math.abs(diferencia).toLocaleString();
+                    diferenciaLabel.textContent = 'Falta:';
+                    diferenciaElement.classList.remove('positive', 'exact');
+                    diferenciaElement.classList.add('negative');
+                } else {
+                    // Monto exacto
+                    diferenciaElement.textContent = '$0';
+                    diferenciaLabel.textContent = 'Exacto:';
+                    diferenciaElement.classList.remove('positive', 'negative');
+                    diferenciaElement.classList.add('exact');
+                }
+            } else {
+                document.getElementById('paymentSummary').style.display = 'none';
+            }
+        }
+
+        function procesarVentaDirecto() {
+            if (cart.length === 0) {
+                alert('El carrito está vacío');
+                return;
+            }
+
+            const cliente = document.getElementById('clienteInput').value;
+            if (!cliente) {
+                alert('Por favor, ingresa un cliente');
+                return;
+            }
+
+            if (selectedPaymentMethods.size === 0) {
+                alert('Por favor, selecciona al menos un método de pago');
+                return;
+            }
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const totalConIva = total + Math.round(total * 0.19);
+
+            let totalRecibido = 0;
+            let paymentDetails = [];
+
+            selectedPaymentMethods.forEach(method => {
+                const input = document.getElementById(method + 'Amount');
+                const value = parseFloat(input.value) || 0;
+                totalRecibido += value;
+
+                if (value > 0) {
+                    paymentDetails.push(`${method.charAt(0).toUpperCase() + method.slice(1)}: $${value.toLocaleString()}`);
+                }
+            });
+
+            const diferencia = totalRecibido - totalConIva;
+
+            if (diferencia < 0) {
+                alert(`Falta dinero: $${Math.abs(diferencia).toLocaleString()}`);
+                return;
+            }
+
+            let mensaje = `¡Venta procesada exitosamente!\n\nCliente: ${cliente}\n\nMétodos de pago:\n${paymentDetails.join('\n')}\n\nTotal: $${totalConIva.toLocaleString()}\nRecibido: $${totalRecibido.toLocaleString()}`;
+
+            if (diferencia > 0) {
+                mensaje += `\nVuelto: $${diferencia.toLocaleString()}`;
+            }
+
+            alert(mensaje);
+            clearCart();
+        }
+
+        function toggleCashRegister() {
+            if (cashOpen) {
+                const cerrarModal = new bootstrap.Modal(document.getElementById('cerrarCajaModal'));
+                cerrarModal.show();
+            } else {
+                const abrirModal = new bootstrap.Modal(document.getElementById('abrirCajaModal'));
+                abrirModal.show();
+            }
+        }
+
+        function openCashRegister() {
+            cashOpen = true;
+
+            const btn = document.getElementById('cashStatusBtn');
+            btn.classList.remove('closed');
+            btn.classList.add('open');
+
+            document.getElementById('cashStatusLabel').textContent = 'Caja Abierta';
+
+            const card = document.getElementById('cashStatusCard');
+            card.classList.remove('closed');
+            card.querySelector('h5').innerHTML = '<i class="fas fa-cash-register"></i> Caja Abierta';
+
+            bootstrap.Modal.getInstance(document.getElementById('abrirCajaModal')).hide();
+
+            alert('Caja abierta exitosamente');
+        }
+
+        function closeCashRegister() {
+            cashOpen = false;
+
+            const btn = document.getElementById('cashStatusBtn');
+            btn.classList.remove('open');
+            btn.classList.add('closed');
+
+            document.getElementById('cashStatusLabel').textContent = 'Caja Cerrada';
+            document.getElementById('cashAmount').textContent = '$0';
+
+            const card = document.getElementById('cashStatusCard');
+            card.classList.add('closed');
+            card.querySelector('h5').innerHTML = '<i class="fas fa-lock"></i> Caja Cerrada';
+            card.querySelector('.amount').textContent = '$0';
+
+            bootstrap.Modal.getInstance(document.getElementById('cerrarCajaModal')).hide();
+
+            clearCart();
+
+            alert('Caja cerrada. Se ha generado el reporte de cierre.');
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!cashOpen) {
+                const btn = document.getElementById('cashStatusBtn');
+                btn.classList.remove('open');
+                btn.classList.add('closed');
+                document.getElementById('cashStatusLabel').textContent = 'Caja Cerrada';
+                document.getElementById('cashAmount').textContent = '$0';
+            }
+        });
+    </script>
 </body>
 
 </html>
