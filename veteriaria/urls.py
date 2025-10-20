@@ -16,8 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('dashboard/', include('dashboard.urls')),
-    path('', include('dashboard.urls')),  # Ruta raíz apunta a dashboard
+    path('', include('login.urls')),
+    path('dashboard', include('dashboard.urls')),
+    path('caja/', include('caja.urls')),
+
 ]

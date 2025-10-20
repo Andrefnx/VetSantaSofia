@@ -1,0 +1,137 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'login/fonts/icomoon/style.css' %}">
+    <link rel="stylesheet" href="{% static 'login/css/owl.carousel.min.css' %}">
+    <link rel="stylesheet" href="{% static 'login/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'login/css/style.css' %}">
+
+    <title>Login</title>
+
+    <!-- force primary color and hover with CSS variables -->
+    <style>
+      :root {
+        --primary-color: #76af76;
+        --primary-hover: #89C57C;
+        --primary-text: #103012;
+        --primary-focus-shadow: rgba(175, 225, 175, 0.35);
+      }
+
+      /* Primary (soft green) */
+      .btn.btn-primary,
+      input.btn.btn-primary[type="submit"] {
+        background-color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+        color: var(--primary-text) !important;
+        box-shadow: none !important;
+      }
+
+      /* Deeper green on hover */
+      .btn.btn-primary:hover,
+      input.btn.btn-primary[type="submit"]:hover {
+        background-color: var(--primary-hover) !important;
+        border-color: var(--primary-hover) !important;
+      }
+
+      /* Focus ring */
+      .btn.btn-primary:focus,
+      input.btn.btn-primary[type="submit"]:focus {
+        box-shadow: 0 0 0 0.2rem var(--primary-focus-shadow) !important;
+      }
+
+      /* Links and checkbox indicator */
+      a.forgot-pass,
+      a.forgot-pass:visited {
+        color: var(--primary-color) !important;
+      }
+      a.forgot-pass:hover {
+        color: var(--primary-hover) !important;
+      }
+
+      .control__indicator {
+        border: 2px solid var(--primary-color) !important;
+      }
+      .control input:checked ~ .control__indicator {
+        background: var(--primary-color) !important;
+      }
+
+      /* Registration button styling */
+      .btn-outline-primary {
+        color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+        background-color: transparent !important;
+      }
+
+      .btn-outline-primary:hover {
+        color: #fff !important;
+        background-color: var(--primary-hover) !important;
+        border-color: var(--primary-hover) !important;
+      }
+    </style>
+  </head>
+  <body>
+  
+
+  
+  <div class="content">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+            <img src="{% static 'login/img/vet_vector.svg' %}" alt="Veterinary clinic illustration showing a vet caring for animals in a professional medical setting" class="img-fluid">
+        </div>
+        <div class="col-md-6 contents">
+          <div class="row justify-content-center">
+            <div class="col-md-8">
+              <div class="mb-4">
+              <h3>Iniciar Sesión</h3>
+            </div>
+            <form action="#" method="post">
+              <div class="form-group first">
+                <label for="username">Usuario / Rut (12345678-9)</label>
+                <input type="text" class="form-control" id="username">
+
+              </div>
+              <div class="form-group last mb-4">
+                <label for="password">********</label>
+                <input type="password" class="form-control" id="password">
+                
+              </div>
+              
+              <div class="d-flex mb-5 align-items-center">
+                <label class="control control--checkbox mb-0"><span class="caption">Recordarme</span>
+                  <input type="checkbox" checked="checked"/>
+                  <div class="control__indicator"></div>
+                </label>
+                <span class="ml-auto"><a href="#" class="forgot-pass">¿Olvidaste tu contraseña?</a></span> 
+              </div>
+
+              <input type="submit" value="Iniciar Sesión" class="btn btn-block btn-primary">
+
+              <div class="text-center mt-3">
+                <a href="{% url 'register' %}" class="btn btn-block btn-outline-primary">Registrarse</a>
+              </div>
+              
+              </div>
+            </form>
+            </div>
+          </div>
+          
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+  
+    <script src="{% static 'login/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'login/js/popper.min.js' %}"></script>
+    <script src="{% static 'login/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'login/js/main.js' %}"></script>
+  </body>
+</html>
