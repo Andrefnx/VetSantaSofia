@@ -1,11 +1,2412 @@
+@ -1,11 +1,2406 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
+<html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Caja Registradora - Veterinaria Santa Sofía</title>
+    <meta content="width=device-width, initial-scale=1.0, shrink-to-fit=no" name="viewport" />
+    <link rel="icon" href="{% static 'img/marca/favicon.ico' %}" type="image/x-icon" />
+
+    <!-- Fonts and icons -->
+    <script src="{% static 'js/plugin/webfont/webfont.min.js' %}"></script>
+    <script>
+        WebFont.load({
+            google: { families: ["Public Sans:300,400,500,600,700"] },
+            custom: {
+                families: [
+                    "Font Awesome 5 Solid",
+                    "Font Awesome 5 Regular",
+                    "Font Awesome 5 Brands",
+                    "simple-line-icons",
+                ],
+                urls: ["{% static 'css/fonts.min.css' %}"],
+            },
+            active: function () {
+                sessionStorage.fonts = true;
+            },
+        });
+    </script>
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/plugins.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/kaiadmin.min.css' %}" />
+
+    <style>
+        :root {
+            --primary-color: #afe1af;
+            --primary-hover: #89c57c;
+            --text-dark: #103012;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+            color: var(--text-dark) !important;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover) !important;
+            border-color: var(--primary-hover) !important;
+        }
+
+        .card.card-round {
+            border-radius: 12px;
+        }
+
+        .section-title {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        /* FIX: Ensure main-header doesn't overlap content */
+        .main-header {
+            position: fixed;
+            top: 0;
+            left: 260px;
+            /* Width of sidebar */
+            right: 0;
+            z-index: 1000;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        /* FIX: Add padding to container-fluid to prevent overlap */
+        .container-fluid {
+            padding-top: 80px !important;
+            /* Height of topbar + margin */
+        }
+
+        /* Adjust when sidebar is minimized */
+        .sidebar_minimize .main-header {
+            left: 70px;
+        }
+
+        /* Cash Status Button in Topbar */
+        .cash-status-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 2px solid;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .cash-status-btn.open {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
+            border-color: #43e97b;
+            color: #16a34a;
+        }
+
+        .cash-status-btn.open:hover {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
+        }
+
+        .cash-status-btn.closed {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
+            border-color: #fa709a;
+            color: #dc2626;
+        }
+
+        .cash-status-btn.closed:hover {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
+        }
+
+        .cash-status-btn .status-icon {
+            font-size: 1.3rem;
+        }
+
+        .cash-status-btn .status-info h6 {
+            margin: 0;
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .cash-status-btn .status-info .amount {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
+        .cash-layout {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 180px);
+        }
+
+        .cash-sidebar {
+            width: 18%;
+            min-width: 220px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .cash-main {
+            flex: 1;
+            display: flex;
+            gap: 15px;
+        }
+
+        /* NEW: Products List (Left Side) */
+        .products-section {
+            width: 38%; /* Reducido de 45% a 38% (15% menos) */
+            min-width: 350px; /* Ajustado de 400px */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .search-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .product-tabs {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .products-list {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1; /* Tomar todo el espacio restante */
+            overflow-y: auto;
+            min-height: 0; /* Permitir que el flex funcione correctamente */
+        }
+
+        /* Custom scrollbar for products list */
+        .products-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .products-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Compact Cash Status */
+        .cash-status-compact {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .cash-status-compact.closed {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .cash-status-compact h5 {
+            margin: 0 0 8px 0;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .cash-status-compact .amount {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+
+        .cash-status-compact .info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.75rem;
+        }
+
+        /* Compact Summary Cards */
+        .summary-compact {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .summary-mini {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+        }
+
+        .summary-mini h6 {
+            color: #6c757d;
+            font-size: 0.7rem;
+            margin: 0 0 5px 0;
+            font-weight: 500;
+        }
+
+        .summary-mini .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .summary-mini.income .value {
+            color: #16a34a;
+        }
+
+        .summary-mini.expense .value {
+            color: #dc2626;
+        }
+
+        /* Compact Transactions */
+        .transaction-compact {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .transaction-compact .section-title {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .transaction-mini {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .transaction-mini:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-mini h6 {
+            margin: 0 0 3px 0;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .transaction-mini p {
+            margin: 0;
+            font-size: 0.7rem;
+            color: #6c757d;
+        }
+
+        .transaction-mini .amount {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .transaction-mini .amount.income {
+            color: #16a34a;
+        }
+
+        .transaction-mini .amount.expense {
+            color: #dc2626;
+        }
+
+        /* Cash Status Button (Topbar) - Compact */
+        .cash-status-btn-compact {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 2px solid;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .cash-status-btn-compact.open {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
+            border-color: #43e97b;
+            color: #16a34a;
+        }
+
+        .cash-status-btn-compact.open:hover {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
+        }
+
+        .cash-status-btn-compact.closed {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
+            border-color: #fa709a;
+            color: #dc2626;
+        }
+
+        .cash-status-btn-compact.closed:hover {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
+        }
+
+        .cash-status-btn-compact .status-icon {
+            font-size: 1.2rem;
+        }
+
+        .cash-status-btn-compact .status-info h6 {
+            margin: 0;
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .cash-status-btn-compact .status-info .amount {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
+        .cash-layout {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 180px);
+        }
+
+        .cash-sidebar {
+            width: 18%;
+            min-width: 220px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .cash-main {
+            flex: 1;
+            display: flex;
+            gap: 15px;
+        }
+
+        /* NEW: Products List (Left Side) */
+        .products-section {
+            width: 38%; /* Reducido de 45% a 38% (15% menos) */
+            min-width: 350px; /* Ajustado de 400px */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .search-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .product-tabs {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .products-list {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1; /* Tomar todo el espacio restante */
+            overflow-y: auto;
+            min-height: 0; /* Permitir que el flex funcione correctamente */
+        }
+
+        /* Custom scrollbar for products list */
+        .products-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .products-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Compact Cash Status */
+        .cash-status-compact {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .cash-status-compact.closed {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .cash-status-compact h5 {
+            margin: 0 0 8px 0;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .cash-status-compact .amount {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+
+        .cash-status-compact .info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.75rem;
+        }
+
+        /* Compact Summary Cards */
+        .summary-compact {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .summary-mini {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+        }
+
+        .summary-mini h6 {
+            color: #6c757d;
+            font-size: 0.7rem;
+            margin: 0 0 5px 0;
+            font-weight: 500;
+        }
+
+        .summary-mini .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .summary-mini.income .value {
+            color: #16a34a;
+        }
+
+        .summary-mini.expense .value {
+            color: #dc2626;
+        }
+
+        /* Compact Transactions */
+        .transaction-compact {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .transaction-compact .section-title {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .transaction-mini {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .transaction-mini:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-mini h6 {
+            margin: 0 0 3px 0;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .transaction-mini p {
+            margin: 0;
+            font-size: 0.7rem;
+            color: #6c757d;
+        }
+
+        .transaction-mini .amount {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .transaction-mini .amount.income {
+            color: #16a34a;
+        }
+
+        .transaction-mini .amount.expense {
+            color: #dc2626;
+        }
+
+        /* Cash Status Button (Topbar) - Compact */
+        .cash-status-btn-compact {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 2px solid;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .cash-status-btn-compact.open {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
+            border-color: #43e97b;
+            color: #16a34a;
+        }
+
+        .cash-status-btn-compact.open:hover {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
+        }
+
+        .cash-status-btn-compact.closed {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
+            border-color: #fa709a;
+            color: #dc2626;
+        }
+
+        .cash-status-btn-compact.closed:hover {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
+        }
+
+        .cash-status-btn-compact .status-icon {
+            font-size: 1.2rem;
+        }
+
+        .cash-status-btn-compact .status-info h6 {
+            margin: 0;
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .cash-status-btn-compact .status-info .amount {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
+        .cash-layout {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 180px);
+        }
+
+        .cash-sidebar {
+            width: 18%;
+            min-width: 220px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .cash-main {
+            flex: 1;
+            display: flex;
+            gap: 15px;
+        }
+
+        /* NEW: Products List (Left Side) */
+        .products-section {
+            width: 38%; /* Reducido de 45% a 38% (15% menos) */
+            min-width: 350px; /* Ajustado de 400px */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .search-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .product-tabs {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .products-list {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1; /* Tomar todo el espacio restante */
+            overflow-y: auto;
+            min-height: 0; /* Permitir que el flex funcione correctamente */
+        }
+
+        /* Custom scrollbar for products list */
+        .products-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .products-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Compact Cash Status */
+        .cash-status-compact {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .cash-status-compact.closed {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .cash-status-compact h5 {
+            margin: 0 0 8px 0;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .cash-status-compact .amount {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+
+        .cash-status-compact .info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.75rem;
+        }
+
+        /* Compact Summary Cards */
+        .summary-compact {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .summary-mini {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+        }
+
+        .summary-mini h6 {
+            color: #6c757d;
+            font-size: 0.7rem;
+            margin: 0 0 5px 0;
+            font-weight: 500;
+        }
+
+        .summary-mini .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .summary-mini.income .value {
+            color: #16a34a;
+        }
+
+        .summary-mini.expense .value {
+            color: #dc2626;
+        }
+
+        /* Compact Transactions */
+        .transaction-compact {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .transaction-compact .section-title {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .transaction-mini {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .transaction-mini:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-mini h6 {
+            margin: 0 0 3px 0;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .transaction-mini p {
+            margin: 0;
+            font-size: 0.7rem;
+            color: #6c757d;
+        }
+
+        .transaction-mini .amount {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .transaction-mini .amount.income {
+            color: #16a34a;
+        }
+
+        .transaction-mini .amount.expense {
+            color: #dc2626;
+        }
+
+        /* Cash Status Button (Topbar) - Compact */
+        .cash-status-btn-compact {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 2px solid;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .cash-status-btn-compact.open {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
+            border-color: #43e97b;
+            color: #16a34a;
+        }
+
+        .cash-status-btn-compact.open:hover {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
+        }
+
+        .cash-status-btn-compact.closed {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
+            border-color: #fa709a;
+            color: #dc2626;
+        }
+
+        .cash-status-btn-compact.closed:hover {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
+        }
+
+        .cash-status-btn-compact .status-icon {
+            font-size: 1.2rem;
+        }
+
+        .cash-status-btn-compact .status-info h6 {
+            margin: 0;
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .cash-status-btn-compact .status-info .amount {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
+        .cash-layout {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 180px);
+        }
+
+        .cash-sidebar {
+            width: 18%;
+            min-width: 220px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .cash-main {
+            flex: 1;
+            display: flex;
+            gap: 15px;
+        }
+
+        /* NEW: Products List (Left Side) */
+        .products-section {
+            width: 38%; /* Reducido de 45% a 38% (15% menos) */
+            min-width: 350px; /* Ajustado de 400px */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .search-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .product-tabs {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .products-list {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1; /* Tomar todo el espacio restante */
+            overflow-y: auto;
+            min-height: 0; /* Permitir que el flex funcione correctamente */
+        }
+
+        /* Custom scrollbar for products list */
+        .products-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .products-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Compact Cash Status */
+        .cash-status-compact {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .cash-status-compact.closed {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .cash-status-compact h5 {
+            margin: 0 0 8px 0;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .cash-status-compact .amount {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+
+        .cash-status-compact .info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.75rem;
+        }
+
+        /* Compact Summary Cards */
+        .summary-compact {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .summary-mini {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+        }
+
+        .summary-mini h6 {
+            color: #6c757d;
+            font-size: 0.7rem;
+            margin: 0 0 5px 0;
+            font-weight: 500;
+        }
+
+        .summary-mini .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .summary-mini.income .value {
+            color: #16a34a;
+        }
+
+        .summary-mini.expense .value {
+            color: #dc2626;
+        }
+
+        /* Compact Transactions */
+        .transaction-compact {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .transaction-compact .section-title {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .transaction-mini {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .transaction-mini:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-mini h6 {
+            margin: 0 0 3px 0;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .transaction-mini p {
+            margin: 0;
+            font-size: 0.7rem;
+            color: #6c757d;
+        }
+
+        .transaction-mini .amount {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .transaction-mini .amount.income {
+            color: #16a34a;
+        }
+
+        .transaction-mini .amount.expense {
+            color: #dc2626;
+        }
+
+        /* Cash Status Button (Topbar) - Compact */
+        .cash-status-btn-compact {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 2px solid;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .cash-status-btn-compact.open {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
+            border-color: #43e97b;
+            color: #16a34a;
+        }
+
+        .cash-status-btn-compact.open:hover {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
+        }
+
+        .cash-status-btn-compact.closed {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
+            border-color: #fa709a;
+            color: #dc2626;
+        }
+
+        .cash-status-btn-compact.closed:hover {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
+        }
+
+        .cash-status-btn-compact .status-icon {
+            font-size: 1.2rem;
+        }
+
+        .cash-status-btn-compact .status-info h6 {
+            margin: 0;
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .cash-status-btn-compact .status-info .amount {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
+        .cash-layout {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 180px);
+        }
+
+        .cash-sidebar {
+            width: 18%;
+            min-width: 220px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .cash-main {
+            flex: 1;
+            display: flex;
+            gap: 15px;
+        }
+
+        /* NEW: Products List (Left Side) */
+        .products-section {
+            width: 38%; /* Reducido de 45% a 38% (15% menos) */
+            min-width: 350px; /* Ajustado de 400px */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .search-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .product-tabs {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .products-list {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1; /* Tomar todo el espacio restante */
+            overflow-y: auto;
+            min-height: 0; /* Permitir que el flex funcione correctamente */
+        }
+
+        /* Custom scrollbar for products list */
+        .products-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .products-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Compact Cash Status */
+        .cash-status-compact {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .cash-status-compact.closed {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .cash-status-compact h5 {
+            margin: 0 0 8px 0;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .cash-status-compact .amount {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+
+        .cash-status-compact .info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.75rem;
+        }
+
+        /* Compact Summary Cards */
+        .summary-compact {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .summary-mini {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+        }
+
+        .summary-mini h6 {
+            color: #6c757d;
+            font-size: 0.7rem;
+            margin: 0 0 5px 0;
+            font-weight: 500;
+        }
+
+        .summary-mini .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .summary-mini.income .value {
+            color: #16a34a;
+        }
+
+        .summary-mini.expense .value {
+            color: #dc2626;
+        }
+
+        /* Compact Transactions */
+        .transaction-compact {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .transaction-compact .section-title {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .transaction-mini {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .transaction-mini:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-mini h6 {
+            margin: 0 0 3px 0;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .transaction-mini p {
+            margin: 0;
+            font-size: 0.7rem;
+            color: #6c757d;
+        }
+
+        .transaction-mini .amount {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .transaction-mini .amount.income {
+            color: #16a34a;
+        }
+
+        .transaction-mini .amount.expense {
+            color: #dc2626;
+        }
+
+        /* Cash Status Button (Topbar) - Compact */
+        .cash-status-btn-compact {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 2px solid;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .cash-status-btn-compact.open {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
+            border-color: #43e97b;
+            color: #16a34a;
+        }
+
+        .cash-status-btn-compact.open:hover {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
+        }
+
+        .cash-status-btn-compact.closed {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
+            border-color: #fa709a;
+            color: #dc2626;
+        }
+
+        .cash-status-btn-compact.closed:hover {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
+        }
+
+        .cash-status-btn-compact .status-icon {
+            font-size: 1.2rem;
+        }
+
+        .cash-status-btn-compact .status-info h6 {
+            margin: 0;
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .cash-status-btn-compact .status-info .amount {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
+        .cash-layout {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 180px);
+        }
+
+        .cash-sidebar {
+            width: 18%;
+            min-width: 220px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .cash-main {
+            flex: 1;
+            display: flex;
+            gap: 15px;
+        }
+
+        /* NEW: Products List (Left Side) */
+        .products-section {
+            width: 38%; /* Reducido de 45% a 38% (15% menos) */
+            min-width: 350px; /* Ajustado de 400px */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .search-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .product-tabs {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .products-list {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1; /* Tomar todo el espacio restante */
+            overflow-y: auto;
+            min-height: 0; /* Permitir que el flex funcione correctamente */
+        }
+
+        /* Custom scrollbar for products list */
+        .products-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .products-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Compact Cash Status */
+        .cash-status-compact {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .cash-status-compact.closed {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .cash-status-compact h5 {
+            margin: 0 0 8px 0;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .cash-status-compact .amount {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+
+        .cash-status-compact .info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.75rem;
+        }
+
+        /* Compact Summary Cards */
+        .summary-compact {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .summary-mini {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+        }
+
+        .summary-mini h6 {
+            color: #6c757d;
+            font-size: 0.7rem;
+            margin: 0 0 5px 0;
+            font-weight: 500;
+        }
+
+        .summary-mini .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .summary-mini.income .value {
+            color: #16a34a;
+        }
+
+        .summary-mini.expense .value {
+            color: #dc2626;
+        }
+
+        /* Compact Transactions */
+        .transaction-compact {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .transaction-compact .section-title {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .transaction-mini {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .transaction-mini:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-mini h6 {
+            margin: 0 0 3px 0;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .transaction-mini p {
+            margin: 0;
+            font-size: 0.7rem;
+            color: #6c757d;
+        }
+
+        .transaction-mini .amount {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .transaction-mini .amount.income {
+            color: #16a34a;
+        }
+
+        .transaction-mini .amount.expense {
+            color: #dc2626;
+        }
+
+        /* Cash Status Button (Topbar) - Compact */
+        .cash-status-btn-compact {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 2px solid;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .cash-status-btn-compact.open {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
+            border-color: #43e97b;
+            color: #16a34a;
+        }
+
+        .cash-status-btn-compact.open:hover {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
+        }
+
+        .cash-status-btn-compact.closed {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
+            border-color: #fa709a;
+            color: #dc2626;
+        }
+
+        .cash-status-btn-compact.closed:hover {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
+        }
+
+        .cash-status-btn-compact .status-icon {
+            font-size: 1.2rem;
+        }
+
+        .cash-status-btn-compact .status-info h6 {
+            margin: 0;
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .cash-status-btn-compact .status-info .amount {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
+        .cash-layout {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 180px);
+        }
+
+        .cash-sidebar {
+            width: 18%;
+            min-width: 220px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .cash-main {
+            flex: 1;
+            display: flex;
+            gap: 15px;
+        }
+
+        /* NEW: Products List (Left Side) */
+        .products-section {
+            width: 38%; /* Reducido de 45% a 38% (15% menos) */
+            min-width: 350px; /* Ajustado de 400px */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .search-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .product-tabs {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .products-list {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1; /* Tomar todo el espacio restante */
+            overflow-y: auto;
+            min-height: 0; /* Permitir que el flex funcione correctamente */
+        }
+
+        /* Custom scrollbar for products list */
+        .products-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .products-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Compact Cash Status */
+        .cash-status-compact {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .cash-status-compact.closed {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .cash-status-compact h5 {
+            margin: 0 0 8px 0;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .cash-status-compact .amount {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+
+        .cash-status-compact .info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.75rem;
+        }
+
+        /* Compact Summary Cards */
+        .summary-compact {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .summary-mini {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+        }
+
+        .summary-mini h6 {
+            color: #6c757d;
+            font-size: 0.7rem;
+            margin: 0 0 5px 0;
+            font-weight: 500;
+        }
+
+        .summary-mini .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .summary-mini.income .value {
+            color: #16a34a;
+        }
+
+        .summary-mini.expense .value {
+            color: #dc2626;
+        }
+
+        /* Compact Transactions */
+        .transaction-compact {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .transaction-compact .section-title {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .transaction-mini {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .transaction-mini:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-mini h6 {
+            margin: 0 0 3px 0;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .transaction-mini p {
+            margin: 0;
+            font-size: 0.7rem;
+            color: #6c757d;
+        }
+
+        .transaction-mini .amount {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .transaction-mini .amount.income {
+            color: #16a34a;
+        }
+
+        .transaction-mini .amount.expense {
+            color: #dc2626;
+        }
+
+        /* Cash Status Button (Topbar) - Compact */
+        .cash-status-btn-compact {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 2px solid;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .cash-status-btn-compact.open {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
+            border-color: #43e97b;
+            color: #16a34a;
+        }
+
+        .cash-status-btn-compact.open:hover {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
+        }
+
+        .cash-status-btn-compact.closed {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
+            border-color: #fa709a;
+            color: #dc2626;
+        }
+
+        .cash-status-btn-compact.closed:hover {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
+        }
+
+        .cash-status-btn-compact .status-icon {
+            font-size: 1.2rem;
+        }
+
+        .cash-status-btn-compact .status-info h6 {
+            margin: 0;
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .cash-status-btn-compact .status-info .amount {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
+        .cash-layout {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 180px);
+        }
+
+        .cash-sidebar {
+            width: 18%;
+            min-width: 220px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .cash-main {
+            flex: 1;
+            display: flex;
+            gap: 15px;
+        }
+
+        /* NEW: Products List (Left Side) */
+        .products-section {
+            width: 38%; /* Reducido de 45% a 38% (15% menos) */
+            min-width: 350px; /* Ajustado de 400px */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .search-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .product-tabs {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .products-list {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1; /* Tomar todo el espacio restante */
+            overflow-y: auto;
+            min-height: 0; /* Permitir que el flex funcione correctamente */
+        }
+
+        /* Custom scrollbar for products list */
+        .products-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .products-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Compact Cash Status */
+        .cash-status-compact {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .cash-status-compact.closed {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .cash-status-compact h5 {
+            margin: 0 0 8px 0;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .cash-status-compact .amount {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+
+        .cash-status-compact .info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.75rem;
+        }
+
+        /* Compact Summary Cards */
+        .summary-compact {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .summary-mini {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+        }
+
+        .summary-mini h6 {
+            color: #6c757d;
+            font-size: 0.7rem;
+            margin: 0 0 5px 0;
+            font-weight: 500;
+        }
+
+        .summary-mini .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .summary-mini.income .value {
+            color: #16a34a;
+        }
+
+        .summary-mini.expense .value {
+            color: #dc2626;
+        }
+
+        /* Compact Transactions */
+        .transaction-compact {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .transaction-compact .section-title {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .transaction-mini {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .transaction-mini:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-mini h6 {
+            margin: 0 0 3px 0;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .transaction-mini p {
+            margin: 0;
+            font-size: 0.7rem;
+            color: #6c757d;
+        }
+
+        .transaction-mini .amount {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .transaction-mini .amount.income {
+            color: #16a34a;
+        }
+
+        .transaction-mini .amount.expense {
+            color: #dc2626;
+        }
+
+        /* Cash Status Button (Topbar) - Compact */
+        .cash-status-btn-compact {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 2px solid;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .cash-status-btn-compact.open {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
+            border-color: #43e97b;
+            color: #16a34a;
+        }
+
+        .cash-status-btn-compact.open:hover {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
+        }
+
+        .cash-status-btn-compact.closed {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
+            border-color: #fa709a;
+            color: #dc2626;
+        }
+
+        .cash-status-btn-compact.closed:hover {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
+        }
+
+        .cash-status-btn-compact .status-icon {
+            font-size: 1.2rem;
+        }
+
+        .cash-status-btn-compact .status-info h6 {
+            margin: 0;
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .cash-status-btn-compact .status-info .amount {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        /* Layout: 1/3 Dashboard + 2/3 Sales Area */
+        .cash-layout {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 180px);
+        }
+
+        .cash-sidebar {
+            width: 18%;
+            min-width: 220px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .cash-main {
+            flex: 1;
+            display: flex;
+            gap: 15px;
+        }
+
+        /* NEW: Products List (Left Side) */
+        .products-section {
+            width: 38%; /* Reducido de 45% a 38% (15% menos) */
+            min-width: 350px; /* Ajustado de 400px */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .search-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .product-tabs {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex-shrink: 0; /* No reducir altura */
+        }
+
+        .products-list {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1; /* Tomar todo el espacio restante */
+            overflow-y: auto;
+            min-height: 0; /* Permitir que el flex funcione correctamente */
+        }
+
+        /* Custom scrollbar for products list */
+        .products-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .products-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        .products-list::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Compact Cash Status */
+        .cash-status-compact {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .cash-status-compact.closed {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .cash-status-compact h5 {
+            margin: 0 0 8px 0;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .cash-status-compact .amount {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+
+        .cash-status-compact .info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.75rem;
+        }
+
+        /* Compact Summary Cards */
+        .summary-compact {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .summary-mini {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+        }
+
+        .summary-mini h6 {
+            color: #6c757d;
+            font-size: 0.7rem;
+            margin: 0 0 5px 0;
+            font-weight: 500;
+        }
+
+        .summary-mini .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .summary-mini.income .value {
+            color: #16a34a;
+        }
+
+        .summary-mini.expense .value {
+            color: #dc2626;
+        }
+
+        /* Compact Transactions */
+        .transaction-compact {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .transaction-compact .section-title {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .transaction-mini {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .transaction-mini:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-mini h6 {
+            margin: 0 0 3px 0;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .transaction-mini p {
+            margin: 0;
+            font-size: 0.7rem;
+            color: #6c757d;
+        }
+
+        .transaction-mini .amount {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .transaction-mini .amount.income {
+            color: #16a34a;
+        }
+
+        .transaction-mini .amount.expense {
+            color: #dc2626;
+        }
+
+        /* Cash Status Button (Topbar) - Compact */
+        .cash-status-btn-compact {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 2px solid;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .cash-status-btn-compact.open {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
+            border-color: #43e97b;
+            color: #16a34a;
+        }
+
+        .cash-status-btn-compact.open:hover {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(67, 233, 123, 0.2);
+        }
+
+        .cash-status-btn-compact.closed {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
+            border-color: #fa709a;
+            color: #dc2626;
+        }
+
+        .cash-status-btn-compact.closed:hover {
+            background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(250, 112, 154, 0.2);
+        }
+
+        .cash-status-btn-compact .status-icon {
+            font-size: 1.2rem;
+        }
+
+        .cash-status-btn-compact .status-info h6 {
+            margin: 0;
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .cash-status-btn-compact .status-info .amount {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+    </style>
 </head>
+
 <body>
     <h1>cashregister</h1>
+    <!-- Your body content here -->
 </body>
+
 </html>

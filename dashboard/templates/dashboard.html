@@ -1,0 +1,1268 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Dashboard - Veterinaria Santa Sofía</title>
+    <meta content="width=device-width, initial-scale=1.0, shrink-to-fit=no" name="viewport" />
+    <link rel="icon" href="{% static 'img/marca/favicon.ico' %}" type="image/x-icon" />
+
+    <!-- Fonts and icons -->
+    <script src="{% static 'js/plugin/webfont/webfont.min.js' %}"></script>
+    <script>
+        WebFont.load({
+            google: { families: ["Public Sans:300,400,500,600,700"] },
+            custom: {
+                families: [
+                    "Font Awesome 5 Solid",
+                    "Font Awesome 5 Regular",
+                    "Font Awesome 5 Brands",
+                    "simple-line-icons",
+                ],
+                urls: ["{% static 'css/fonts.min.css' %}"],
+            },
+            active: function () {
+                sessionStorage.fonts = true;
+            },
+        });
+    </script>
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/plugins.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/kaiadmin.min.css' %}" />
+
+    <style>
+        :root {
+            --primary-color: #afe1af;
+            --primary-hover: #89c57c;
+            --text-dark: #103012;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+            color: var(--text-dark) !important;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover) !important;
+            border-color: var(--primary-hover) !important;
+        }
+
+        .card.card-round {
+            border-radius: 12px;
+        }
+
+        .section-title {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .stock-low {
+            color: #c0392b;
+            font-weight: 600;
+        }
+
+        .stock-medium {
+            color: #f39c12;
+            font-weight: 600;
+        }
+
+        .stock-ok {
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        /* Matching heights for cards */
+        .agenda-hospitalization-card {
+            height: 500px;
+        }
+
+        .agenda-hospitalization-card .card-body {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Stats cards inside inventory */
+        .inventory-stats {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-mini-card {
+            flex: 1;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 20px 15px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .stat-mini-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-mini-card .stat-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 10px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-mini-card.stat-low .stat-icon {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .stat-mini-card.stat-medium .stat-icon {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        }
+
+        .stat-mini-card.stat-ok .stat-icon {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .stat-mini-card h4 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .stat-mini-card p {
+            margin: 8px 0 0 0;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        /* Product list in inventory card */
+        .product-list {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-name {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .product-stock {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stock-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .stock-badge.low {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .stock-badge.medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .stock-badge.ok {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        /* Agenda Timeline Styles */
+        .agenda-timeline {
+            position: relative;
+            padding-left: 70px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .timeline-hour {
+            position: relative;
+            min-height: 80px;
+            border-left: 2px solid #e0e0e0;
+            padding-left: 15px;
+            margin-bottom: 10px;
+        }
+
+        .timeline-hour-label {
+            position: absolute;
+            left: -70px;
+            top: 0;
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+            width: 60px;
+            text-align: right;
+        }
+
+        .timeline-appointments {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .agenda-card {
+            flex: 1;
+            min-width: 150px;
+            border-left: 4px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            background: #f9faf9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .agenda-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .agenda-card.type-consulta {
+            border-left-color: #4facfe;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        }
+
+        .agenda-card.type-vacuna {
+            border-left-color: #43e97b;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .agenda-card.type-cirugia {
+            border-left-color: #fa709a;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        }
+
+        .agenda-card.type-control {
+            border-left-color: #fbbf24;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        }
+
+        .agenda-card p {
+            margin: 0;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .agenda-card h6 {
+            margin: 0 0 5px 0;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .agenda-card .badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            margin-top: 3px;
+        }
+
+        .agenda-card .owner-name {
+            font-size: 0.75rem;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        /* Quick Actions Cards */
+        .quick-action-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .quick-action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .quick-action-card .icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+        }
+
+        .quick-action-card.action-cita .icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .quick-action-card.action-mascota .icon {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .quick-action-card.action-consulta .icon {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .quick-action-card.action-venta .icon {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .quick-action-card.action-caja .icon {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .quick-action-card.action-reporte .icon {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+
+        .quick-action-card h6 {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .quick-action-card p {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin: 5px 0 0 0;
+        }
+
+        /* Hospitalization cards */
+        .hospitalization-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .hospitalization-card {
+            border-left: 4px solid var(--primary-color);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            background: #f9faf9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .hospitalization-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .hospitalization-card p {
+            margin: 0;
+            font-size: 0.85rem;
+        }
+
+        .hospitalization-card h6 {
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Chart Tabs */
+        .chart-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+        }
+
+        .chart-tab {
+            padding: 8px 15px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #6c757d;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chart-tab:hover {
+            color: var(--text-dark);
+            background: #f8f9fa;
+        }
+
+        .chart-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .chart-content {
+            display: none;
+        }
+
+        .chart-content.active {
+            display: block;
+        }
+
+        /* Pet Info Modal/Popover */
+        .pet-info-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            z-index: 9999;
+            min-width: 350px;
+            max-width: 400px;
+            display: none;
+        }
+
+        .pet-info-modal.show {
+            display: block;
+            animation: fadeInScale 0.3s ease;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .pet-info-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+            display: none;
+        }
+
+        .pet-info-overlay.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .pet-info-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .pet-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+        }
+
+        .pet-info-header h5 {
+            margin: 0;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .pet-info-header p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .pet-info-body {
+            margin-bottom: 15px;
+        }
+
+        .pet-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .pet-info-row:last-child {
+            border-bottom: none;
+        }
+
+        .pet-info-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.85rem;
+        }
+
+        .pet-info-value {
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .pet-info-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .pet-info-actions .btn {
+            flex: 1;
+            font-size: 0.85rem;
+            padding: 8px 15px;
+        }
+
+        .btn-close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 5px 10px;
+            line-height: 1;
+        }
+
+        .btn-close-modal:hover {
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        {% include 'partials/sidebar.html' %}
+        <div class="main-panel">
+            {% include 'partials/topbar.html' %}
+
+            <div class="container">
+                <div class="page-inner">
+                    <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
+                        <div>
+                            <h3 class="fw-bold mb-3">Panel General</h3>
+                            <h6 class="op-7 mb-2">Bienvenido a Veterinaria Santa Sofía</h6>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h4 class="fw-bold mb-3">⚡ Acciones Rápidas</h4>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="#" class="text-decoration-none">
+                                <div class="quick-action-card action-cita">
+                                    <div class="icon">
+                                        <i class="fas fa-calendar-plus"></i>
+                                    </div>
+                                    <h6>Nueva Cita</h6>
+                                    <p>Agendar</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="#" class="text-decoration-none">
+                                <div class="quick-action-card action-mascota">
+                                    <div class="icon">
+                                        <i class="fas fa-paw"></i>
+                                    </div>
+                                    <h6>Nueva Mascota</h6>
+                                    <p>Registrar</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="#" class="text-decoration-none">
+                                <div class="quick-action-card action-consulta">
+                                    <div class="icon">
+                                        <i class="fas fa-notes-medical"></i>
+                                    </div>
+                                    <h6>Consulta</h6>
+                                    <p>Iniciar</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="#" class="text-decoration-none">
+                                <div class="quick-action-card action-venta">
+                                    <div class="icon">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </div>
+                                    <h6>Venta Rápida</h6>
+                                    <p>Realizar</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="#" class="text-decoration-none">
+                                <div class="quick-action-card action-caja">
+                                    <div class="icon">
+                                        <i class="fas fa-receipt"></i>
+                                    </div>
+                                    <h6>Abrir Caja</h6>
+                                    <p>Iniciar turno</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="#" class="text-decoration-none">
+                                <div class="quick-action-card action-reporte">
+                                    <div class="icon">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <h6>Reportes</h6>
+                                    <p>Ver estadísticas</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Sección principal: Inventario + Agenda + Hospitalización -->
+                    <div class="row">
+                        <!-- Estado del Inventario -->
+                        <div class="col-md-4">
+                            <div class="card card-round agenda-hospitalization-card">
+                                <div class="card-body">
+                                    <div class="card-title section-title">
+                                        <i class="fas fa-boxes"></i> Estado del Inventario
+                                    </div>
+                                    
+                                    <!-- Mini Stats -->
+                                    <div class="inventory-stats">
+                                        <div class="stat-mini-card stat-low">
+                                            <div class="stat-icon">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                            </div>
+                                            <h4>8</h4>
+                                            <p>Stock Bajo</p>
+                                        </div>
+                                        <div class="stat-mini-card stat-medium">
+                                            <div class="stat-icon">
+                                                <i class="fas fa-exclamation-circle"></i>
+                                            </div>
+                                            <h4>15</h4>
+                                            <p>Stock Medio</p>
+                                        </div>
+                                        <div class="stat-mini-card stat-ok">
+                                            <div class="stat-icon">
+                                                <i class="fas fa-check-circle"></i>
+                                            </div>
+                                            <h4>142</h4>
+                                            <p>Stock OK</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Product List -->
+                                    <div class="product-list">
+                                        <div class="product-item">
+                                            <span class="product-name">Revolution Plus</span>
+                                            <div class="product-stock">
+                                                <span class="stock-badge low">4 unid.</span>
+                                            </div>
+                                        </div>
+                                        <div class="product-item">
+                                            <span class="product-name">Bravecto 40-56Kg</span>
+                                            <div class="product-stock">
+                                                <span class="stock-badge low">7 unid.</span>
+                                            </div>
+                                        </div>
+                                        <div class="product-item">
+                                            <span class="product-name">NexGard Spectra</span>
+                                            <div class="product-stock">
+                                                <span class="stock-badge low">6 unid.</span>
+                                            </div>
+                                        </div>
+                                        <div class="product-item">
+                                            <span class="product-name">Frontline Plus Perros</span>
+                                            <div class="product-stock">
+                                                <span class="stock-badge low">5 unid.</span>
+                                            </div>
+                                        </div>
+                                        <div class="product-item">
+                                            <span class="product-name">Heartgard Plus</span>
+                                            <div class="product-stock">
+                                                <span class="stock-badge low">3 unid.</span>
+                                            </div>
+                                        </div>
+                                        <div class="product-item">
+                                            <span class="product-name">Bravecto 10-20Kg</span>
+                                            <div class="product-stock">
+                                                <span class="stock-badge medium">12 unid.</span>
+                                            </div>
+                                        </div>
+                                        <div class="product-item">
+                                            <span class="product-name">Advocate Gatos</span>
+                                            <div class="product-stock">
+                                                <span class="stock-badge medium">14 unid.</span>
+                                            </div>
+                                        </div>
+                                        <div class="product-item">
+                                            <span class="product-name">Nexgard 25-50Kg</span>
+                                            <div class="product-stock">
+                                                <span class="stock-badge medium">11 unid.</span>
+                                            </div>
+                                        </div>
+                                        <div class="product-item">
+                                            <span class="product-name">Simparica Trio</span>
+                                            <div class="product-stock">
+                                                <span class="stock-badge ok">28 unid.</span>
+                                            </div>
+                                        </div>
+                                        <div class="product-item">
+                                            <span class="product-name">Bravecto Gatos</span>
+                                            <div class="product-stock">
+                                                <span class="stock-badge ok">22 unid.</span>
+                                            </div>
+                                        </div>
+                                        <div class="product-item">
+                                            <span class="product-name">Advantix Perros Grandes</span>
+                                            <div class="product-stock">
+                                                <span class="stock-badge ok">31 unid.</span>
+                                            </div>
+                                        </div>
+                                        <div class="product-item">
+                                            <span class="product-name">Seresto Collar Perros</span>
+                                            <div class="product-stock">
+                                                <span class="stock-badge ok">18 unid.</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Agenda de hoy con Timeline -->
+                        <div class="col-md-4">
+                            <div class="card card-round agenda-hospitalization-card">
+                                <div class="card-body">
+                                    <div class="card-title section-title">
+                                        <i class="fas fa-calendar-check"></i> Agenda de hoy
+                                    </div>
+                                    
+                                    <div class="agenda-timeline">
+                                        <!-- 09:00 -->
+                                        <div class="timeline-hour">
+                                            <div class="timeline-hour-label">09:00</div>
+                                            <div class="timeline-appointments">
+                                                <div class="agenda-card type-control" onclick="showPetInfo('Max', 'Golden Retriever', '5 años', 'Macho', '32 kg', 'María González', '+56 9 8765 4321', 'Control post-operatorio')">
+                                                    <h6><i class="fas fa-heartbeat"></i> Control</h6>
+                                                    <p><strong>Max</strong> · Golden Retriever</p>
+                                                    <p class="owner-name"><i class="fas fa-user"></i> María González</p>
+                                                    <p class="text-muted">Dra. Rodríguez</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 10:00 - Múltiples citas -->
+                                        <div class="timeline-hour">
+                                            <div class="timeline-hour-label">10:00</div>
+                                            <div class="timeline-appointments">
+                                                <div class="agenda-card type-consulta" onclick="showPetInfo('Firulais', 'Labrador', '3 años', 'Macho', '28 kg', 'Carlos Pérez', '+56 9 1234 5678', 'Consulta general')">
+                                                    <h6><i class="fas fa-stethoscope"></i> Consulta</h6>
+                                                    <p><strong>Firulais</strong> · Labrador</p>
+                                                    <p class="owner-name"><i class="fas fa-user"></i> Carlos Pérez</p>
+                                                    <p class="text-muted">Dr. Torres</p>
+                                                </div>
+                                                <div class="agenda-card type-vacuna" onclick="showPetInfo('Michi', 'Gato Persa', '2 años', 'Hembra', '4.5 kg', 'Ana López', '+56 9 2345 6789', 'Vacuna antirrábica')">
+                                                    <h6><i class="fas fa-syringe"></i> Vacuna</h6>
+                                                    <p><strong>Michi</strong> · Gato Persa</p>
+                                                    <p class="owner-name"><i class="fas fa-user"></i> Ana López</p>
+                                                    <p class="text-muted">Dra. Silva</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 11:00 -->
+                                        <div class="timeline-hour">
+                                            <div class="timeline-hour-label">11:00</div>
+                                            <div class="timeline-appointments">
+                                                <div class="agenda-card type-consulta" onclick="showPetInfo('Luna', 'Beagle', '4 años', 'Hembra', '12 kg', 'Pedro Sánchez', '+56 9 3456 7890', 'Revisión de rutina')">
+                                                    <h6><i class="fas fa-stethoscope"></i> Consulta</h6>
+                                                    <p><strong>Luna</strong> · Beagle</p>
+                                                    <p class="owner-name"><i class="fas fa-user"></i> Pedro Sánchez</p>
+                                                    <p class="text-muted">Dr. Torres</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 12:00 - Múltiples citas -->
+                                        <div class="timeline-hour">
+                                            <div class="timeline-hour-label">12:00</div>
+                                            <div class="timeline-appointments">
+                                                <div class="agenda-card type-vacuna" onclick="showPetInfo('Bobby', 'Bulldog', '6 años', 'Macho', '25 kg', 'Laura Martínez', '+56 9 4567 8901', 'Vacuna múltiple')">
+                                                    <h6><i class="fas fa-syringe"></i> Vacuna</h6>
+                                                    <p><strong>Bobby</strong> · Bulldog</p>
+                                                    <p class="owner-name"><i class="fas fa-user"></i> Laura Martínez</p>
+                                                    <p class="text-muted">Dra. Silva</p>
+                                                </div>
+                                                <div class="agenda-card type-control" onclick="showPetInfo('Pelusa', 'Gato Persa', '7 años', 'Hembra', '5 kg', 'Roberto Díaz', '+56 9 5678 9012', 'Control de peso')">
+                                                    <h6><i class="fas fa-heartbeat"></i> Control</h6>
+                                                    <p><strong>Pelusa</strong> · Persa</p>
+                                                    <p class="owner-name"><i class="fas fa-user"></i> Roberto Díaz</p>
+                                                    <p class="text-muted">Dra. Rodríguez</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 15:00 - Cirugía -->
+                                        <div class="timeline-hour">
+                                            <div class="timeline-hour-label">15:00</div>
+                                            <div class="timeline-appointments">
+                                                <div class="agenda-card type-cirugia" onclick="showPetInfo('Tommy', 'Schnauzer', '8 años', 'Macho', '15 kg', 'Sofía Ramírez', '+56 9 6789 0123', 'Cirugía de urgencia')">
+                                                    <h6><i class="fas fa-scissors"></i> Cirugía</h6>
+                                                    <p><strong>Tommy</strong> · Schnauzer</p>
+                                                    <p class="owner-name"><i class="fas fa-user"></i> Sofía Ramírez</p>
+                                                    <p class="text-muted">Dr. Pérez</p>
+                                                    <span class="badge bg-danger">Urgente</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 16:00 - 3 citas simultáneas -->
+                                        <div class="timeline-hour">
+                                            <div class="timeline-hour-label">16:00</div>
+                                            <div class="timeline-appointments">
+                                                <div class="agenda-card type-consulta" onclick="showPetInfo('Rex', 'Pastor Alemán', '5 años', 'Macho', '35 kg', 'Miguel Torres', '+56 9 7890 1234', 'Consulta')">
+                                                    <h6><i class="fas fa-stethoscope"></i> Consulta</h6>
+                                                    <p><strong>Rex</strong> · Pastor</p>
+                                                    <p class="owner-name"><i class="fas fa-user"></i> Miguel Torres</p>
+                                                    <p class="text-muted">Dr. Torres</p>
+                                                </div>
+                                                <div class="agenda-card type-vacuna" onclick="showPetInfo('Coco', 'Poodle', '3 años', 'Hembra', '8 kg', 'Claudia Vargas', '+56 9 8901 2345', 'Vacuna')">
+                                                    <h6><i class="fas fa-syringe"></i> Vacuna</h6>
+                                                    <p><strong>Coco</strong> · Poodle</p>
+                                                    <p class="owner-name"><i class="fas fa-user"></i> Claudia Vargas</p>
+                                                    <p class="text-muted">Dra. Silva</p>
+                                                </div>
+                                                <div class="agenda-card type-control" onclick="showPetInfo('Nina', 'Gato Siamés', '4 años', 'Hembra', '4 kg', 'José Herrera', '+56 9 9012 3456', 'Control')">
+                                                    <h6><i class="fas fa-heartbeat"></i> Control</h6>
+                                                    <p><strong>Nina</strong> · Siamés</p>
+                                                    <p class="owner-name"><i class="fas fa-user"></i> José Herrera</p>
+                                                    <p class="text-muted">Dra. Rodríguez</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hospitalización -->
+                        <div class="col-md-4">
+                            <div class="card card-round agenda-hospitalization-card">
+                                <div class="card-body">
+                                    <div class="card-title section-title">
+                                        <i class="fas fa-hospital"></i> En hospitalización
+                                    </div>
+                                    <div class="hospitalization-content">
+                                        <div class="hospitalization-card" onclick="showPetInfo('Max', 'Golden Retriever', '5 años', 'Macho', '32 kg', 'María González', '+56 9 8765 4321', 'Post-operatorio')">
+                                            <h6>Post-operatorio</h6>
+                                            <p>Mascota: <strong>Max</strong></p>
+                                            <p class="owner-name"><i class="fas fa-user"></i> María González</p>
+                                            <p>Estado: <span class="badge bg-success">De alta</span></p>
+                                        </div>
+                                        <div class="hospitalization-card" onclick="showPetInfo('Kira', 'Pastor Belga', '6 años', 'Hembra', '27 kg', 'Fernando Ruiz', '+56 9 7654 3210', 'Observación post-cirugía')">
+                                            <h6>Observación</h6>
+                                            <p>Mascota: <strong>Kira</strong></p>
+                                            <p class="owner-name"><i class="fas fa-user"></i> Fernando Ruiz</p>
+                                            <p>Estado: <span class="badge bg-warning">En observación</span></p>
+                                        </div>
+                                        <div class="hospitalization-card" onclick="showPetInfo('Rocky', 'Boxer', '4 años', 'Macho', '30 kg', 'Patricia Vega', '+56 9 6543 2109', 'Recuperación')">
+                                            <h6>Recuperación</h6>
+                                            <p>Mascota: <strong>Rocky</strong></p>
+                                            <p class="owner-name"><i class="fas fa-user"></i> Patricia Vega</p>
+                                            <p>Estado: <span class="badge bg-info">Estable</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Segunda fila: estadísticas -->
+                    <div class="row mt-4">
+                        <!-- Consumo de Insumos con Tabs -->
+                        <div class="col-md-6">
+                            <div class="card card-round">
+                                <div class="card-body">
+                                    <div class="card-title section-title">
+                                        <i class="fas fa-pills"></i> Consumo de Insumos Veterinarios
+                                    </div>
+                                    
+                                    <!-- Tabs -->
+                                    <div class="chart-tabs">
+                                        <button class="chart-tab active" onclick="switchTab('masUsados')">
+                                            <i class="fas fa-fire"></i> Más Usados
+                                        </button>
+                                        <button class="chart-tab" onclick="switchTab('rotacion')">
+                                            <i class="fas fa-sync"></i> Rotación
+                                        </button>
+                                        <button class="chart-tab" onclick="switchTab('consumo')">
+                                            <i class="fas fa-chart-line"></i> Tendencia
+                                        </button>
+                                        <button class="chart-tab" onclick="switchTab('categoria')">
+                                            <i class="fas fa-tags"></i> Por Categoría
+                                        </button>
+                                    </div>
+
+                                    <!-- Chart Content: Más Usados -->
+                                    <div id="masUsados" class="chart-content active">
+                                        <canvas id="topProductsChart" height="200"></canvas>
+                                    </div>
+
+                                    <!-- Chart Content: Rotación -->
+                                    <div id="rotacion" class="chart-content">
+                                        <canvas id="rotacionChart" height="200"></canvas>
+                                    </div>
+
+                                    <!-- Chart Content: Tendencia de Consumo -->
+                                    <div id="consumo" class="chart-content">
+                                        <canvas id="consumoChart" height="200"></canvas>
+                                    </div>
+
+                                    <!-- Chart Content: Por Categoría -->
+                                    <div id="categoria" class="chart-content">
+                                        <canvas id="categoriaChart" height="200"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tipos de Atención -->
+                        <div class="col-md-6">
+                            <div class="card card-round">
+                                <div class="card-body">
+                                    <div class="card-title section-title">Tipos de atención</div>
+                                    <canvas id="serviceChart" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <footer class="footer">
+                <div class="container-fluid d-flex justify-content-between">
+                    <div class="copyright">
+                        2025, Veterinaria Santa Sofía
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Pet Info Modal -->
+    <div class="pet-info-overlay" id="petInfoOverlay" onclick="closePetInfo()"></div>
+    <div class="pet-info-modal" id="petInfoModal">
+        <button class="btn-close-modal" onclick="closePetInfo()">&times;</button>
+        <div class="pet-info-header">
+            <div class="pet-avatar">
+                <i class="fas fa-paw"></i>
+            </div>
+            <div>
+                <h5 id="modalPetName"></h5>
+                <p id="modalPetBreed"></p>
+            </div>
+        </div>
+        <div class="pet-info-body">
+            <div class="pet-info-row">
+                <span class="pet-info-label">Edad:</span>
+                <span class="pet-info-value" id="modalPetAge"></span>
+            </div>
+            <div class="pet-info-row">
+                <span class="pet-info-label">Sexo:</span>
+                <span class="pet-info-value" id="modalPetGender"></span>
+            </div>
+            <div class="pet-info-row">
+                <span class="pet-info-label">Peso:</span>
+                <span class="pet-info-value" id="modalPetWeight"></span>
+            </div>
+            <div class="pet-info-row">
+                <span class="pet-info-label">Propietario:</span>
+                <span class="pet-info-value" id="modalPetOwner"></span>
+            </div>
+            <div class="pet-info-row">
+                <span class="pet-info-label">Teléfono:</span>
+                <span class="pet-info-value" id="modalPetPhone"></span>
+            </div>
+            <div class="pet-info-row">
+                <span class="pet-info-label">Motivo:</span>
+                <span class="pet-info-value" id="modalPetReason"></span>
+            </div>
+        </div>
+        <div class="pet-info-actions">
+            <button class="btn btn-sm btn-primary" onclick="openRecord()">
+                <i class="fas fa-folder-open"></i> Abrir Ficha
+            </button>
+            <button class="btn btn-sm btn-success" onclick="callOwner()">
+                <i class="fas fa-phone"></i> Llamar
+            </button>
+        </div>
+    </div>
+
+    <!-- Core JS Files -->
+    <script src="{% static 'js/core/jquery-3.7.1.min.js' %}"></script>
+    <script src="{% static 'js/core/popper.min.js' %}"></script>
+    <script src="{% static 'js/core/bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/plugin/jquery-scrollbar/jquery.scrollbar.min.js' %}"></script>
+    <script src="{% static 'js/plugin/chart.js/chart.min.js' %}"></script>
+    <script src="{% static 'js/kaiadmin.min.js' %}"></script>
+
+    <!-- Pet Info Modal Scripts -->
+    <script>
+        function showPetInfo(name, breed, age, gender, weight, owner, phone, reason) {
+            document.getElementById('modalPetName').textContent = name;
+            document.getElementById('modalPetBreed').textContent = breed;
+            document.getElementById('modalPetAge').textContent = age;
+            document.getElementById('modalPetGender').textContent = gender;
+            document.getElementById('modalPetWeight').textContent = weight;
+            document.getElementById('modalPetOwner').textContent = owner;
+            document.getElementById('modalPetPhone').textContent = phone;
+            document.getElementById('modalPetReason').textContent = reason;
+            
+            document.getElementById('petInfoOverlay').classList.add('show');
+            document.getElementById('petInfoModal').classList.add('show');
+        }
+
+        function closePetInfo() {
+            document.getElementById('petInfoOverlay').classList.remove('show');
+            document.getElementById('petInfoModal').classList.remove('show');
+        }
+
+        function openRecord() {
+            alert('Abriendo ficha clínica de ' + document.getElementById('modalPetName').textContent);
+            // Aquí iría la lógica para abrir la ficha
+        }
+
+        function callOwner() {
+            const phone = document.getElementById('modalPetPhone').textContent;
+            window.location.href = 'tel:' + phone;
+        }
+
+        // Close modal with ESC key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closePetInfo();
+            }
+        });
+
+        // Tab switching function
+        function switchTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('.chart-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active from all tabs
+            document.querySelectorAll('.chart-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active to clicked tab
+            event.target.closest('.chart-tab').classList.add('active');
+        }
+    </script>
+
+    <!-- Charts -->
+    <script>
+        // Top 5 Productos Más Usados (Barras Horizontales)
+        const ctx1 = document.getElementById('topProductsChart');
+        const topProductsChart = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: ['Revolution Plus', 'Bravecto 40-56Kg', 'NexGard Spectra', 'Simparica Trio', 'Advocate Gatos'],
+                datasets: [{
+                    label: 'Unidades consumidas',
+                    data: [145, 128, 98, 87, 76],
+                    backgroundColor: [
+                        '#fa709a',
+                        '#fee140',
+                        '#4facfe',
+                        '#43e97b',
+                        '#f093fb'
+                    ]
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        // Velocidad de Rotación (días para agotar stock)
+        const ctx2 = document.getElementById('rotacionChart');
+        const rotacionChart = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: ['Revolution Plus', 'Heartgard Plus', 'Frontline Plus', 'Bravecto Gatos', 'NexGard'],
+                datasets: [{
+                    label: 'Días hasta agotarse',
+                    data: [8, 12, 15, 22, 18],
+                    backgroundColor: [
+                        '#dc2626',
+                        '#f59e0b',
+                        '#fbbf24',
+                        '#43e97b',
+                        '#16a34a'
+                    ]
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Días'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Tendencia de Consumo Mensual
+        const ctx3 = document.getElementById('consumoChart');
+        const consumoChart = new Chart(ctx3, {
+            type: 'line',
+            data: {
+                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Antiparasitarios',
+                    data: [145, 152, 168, 175, 189, 198],
+                    borderColor: '#fa709a',
+                    backgroundColor: 'rgba(250, 112, 154, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Antibióticos',
+                    data: [89, 95, 88, 102, 98, 105],
+                    borderColor: '#4facfe',
+                    backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Vacunas',
+                    data: [67, 72, 78, 81, 85, 92],
+                    borderColor: '#43e97b',
+                    backgroundColor: 'rgba(67, 233, 123, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Consumo por Categoría
+        const ctx4 = document.getElementById('categoriaChart');
+        const categoriaChart = new Chart(ctx4, {
+            type: 'doughnut',
+            data: {
+                labels: ['Antiparasitarios', 'Antibióticos', 'Vacunas', 'Analgésicos', 'Suplementos'],
+                datasets: [{
+                    data: [35, 25, 18, 12, 10],
+                    backgroundColor: [
+                        '#fa709a',
+                        '#4facfe',
+                        '#43e97b',
+                        '#fbbf24',
+                        '#f093fb'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Tipos de Atención
+        const ctx5 = document.getElementById('serviceChart');
+        new Chart(ctx5, {
+            type: 'doughnut',
+            data: {
+                labels: ['Consultas', 'Vacunas', 'Cirugías'],
+                datasets: [{
+                    data: [55, 25, 20],
+                    backgroundColor: ['#AFE1AF', '#89C57C', '#6BAF6B']
+                }]
+            }
+        });
+    </script>
+</body>
+
+</html>

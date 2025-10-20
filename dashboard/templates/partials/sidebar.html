@@ -1,0 +1,681 @@
+{% load static %}
+
+<!-- Sidebar -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
+<div class="sidebar" data-background-color="dark">
+    <div class="sidebar-logo">
+        <!-- Logo Header -->
+        <div class="logo-header" data-background-color="dark">
+            <a href="{% url 'dashboard' %}" class="logo">
+                <img src="{% static 'img/logo.svg' %}" alt="navbar brand" class="navbar-brand"
+                    height="40" />
+            </a>
+            <div class="nav-toggle">
+                <button class="btn btn-toggle toggle-sidebar">
+                    <i class="gg-menu-right"></i>
+                </button>
+                <button class="btn btn-toggle sidenav-toggler">
+                    <i class="gg-menu-left"></i>
+                </button>
+            </div>
+            <button class="topbar-toggler more">
+                <i class="gg-more-vertical-alt"></i>
+            </button>
+        </div>
+        <!-- End Logo Header -->
+    </div>
+    <div class="sidebar-wrapper scrollbar scrollbar-inner">
+        <div class="sidebar-content">
+            <ul class="nav nav-secondary">
+                <li class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <a href="{% url 'dashboard' %}">
+                        <i class="fas fa-home"></i>
+                        <p>Dashboard</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#caja">
+                        <i class="bi bi-bag-check-fill"></i>
+                        <p>Caja</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="caja">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Apertura y Cierre</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Ingresos del Día</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Gastos del Día</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Arqueo de Caja</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Reporte Diario</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!--  ACCIONES RÁPIDAS -->
+                <li class="nav-section">
+                    <span class="sidebar-mini-icon">
+                        <i class="fas fa-bolt"></i>
+                    </span>
+                    <h4 class="text-section"> Acciones Rápidas</h4>
+                </li>
+
+                <li class="nav-item">
+                    <a href="#">
+                        <i class="fas fa-calendar-plus"></i>
+                        <p>Nueva Cita</p>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="#">
+                        <i class="fas fa-paw"></i>
+                        <p>Registrar Mascota</p>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="#">
+                        <i class="fas fa-notes-medical"></i>
+                        <p>Nueva Consulta</p>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="#">
+                        <i class="fas fa-shopping-cart"></i>
+                        <p>Venta Rápida</p>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="#">
+                        <i class="fas fa-receipt"></i>
+                        <p>Apertura de Caja</p>
+                    </a>
+                </li>
+
+                <!--  GESTIÓN DE PACIENTES -->
+                <li class="nav-section">
+                    <span class="sidebar-mini-icon">
+                        <i class="fas fa-stethoscope"></i>
+                    </span>
+                    <h4 class="text-section"> Gestión de Pacientes</h4>
+                </li>
+
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#pacientes">
+                        <i class="fas fa-paw"></i>
+                        <p>Pacientes</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="pacientes">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Registrar Nueva Mascota</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Lista de Pacientes</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Historial Clínico</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Vacunas Aplicadas</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Desparasitaciones</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Antecedentes Médicos</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Adjuntar Archivos</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#propietarios">
+                        <i class="fas fa-user"></i>
+                        <p>Propietarios</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="propietarios">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Registrar Propietario</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Lista de Propietarios</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Contactos y Direcciones</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Historial de Mascotas</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#consultas">
+                        <i class="fas fa-notes-medical"></i>
+                        <p>Consultas</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="consultas">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Nueva Consulta</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Consultas Programadas</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Consultas Realizadas</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Seguimiento de Tratamiento</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#hospitalizacion">
+                        <i class="fas fa-procedures"></i>
+                        <p>Hospitalización</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="hospitalizacion">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Pacientes Hospitalizados</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Estado de Camas/Jaulas</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Evolución Diaria</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Medicamentos Administrados</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Alta Médica</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#agenda">
+                        <i class="fas fa-calendar-alt"></i>
+                        <p>Agenda</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="agenda">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Citas del Día</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Programar Cita</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Calendario Mensual</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Confirmar Asistencia</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Recordatorios Automáticos</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- CAJA Y FINANZAS -->
+                <li class="nav-section">
+                    <span class="sidebar-mini-icon">
+                        <i class="bi bi-bag-check-fill"></i>
+                    </span>
+                    <h4 class="text-section"> Caja y Finanzas</h4>
+                </li>
+
+                
+
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#ventas">
+                        <i class="fas fa-shopping-cart"></i>
+                        <p>Ventas</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="ventas">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Venta de Productos</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Servicios Facturados</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Boletas y Facturas</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Devoluciones</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#inventario">
+                        <i class="fas fa-boxes"></i>
+                        <p>Inventario</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="inventario">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Productos Disponibles</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Stock Mínimo y Alertas</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Ingreso de Productos</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Proveedores</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Categorías</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Historial de Movimientos</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#reportesFinancieros">
+                        <i class="fas fa-chart-line"></i>
+                        <p>Reportes Financieros</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="reportesFinancieros">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Reporte de Ventas</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Reporte de Gastos</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Balance General</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Rentabilidad por Servicio</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Productos Más Vendidos</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!--  ADMINISTRACIÓN GENERAL -->
+                <li class="nav-section">
+                    <span class="sidebar-mini-icon">
+                        <i class="fas fa-cog"></i>
+                    </span>
+                    <h4 class="text-section"> Administración</h4>
+                </li>
+
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#usuarios">
+                        <i class="fas fa-users-cog"></i>
+                        <p>Usuarios y Roles</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="usuarios">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Registrar Usuario</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Lista de Usuarios</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Roles y Permisos</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Auditoría de Acciones</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#personalVet">
+                        <i class="fas fa-user-md"></i>
+                        <p>Personal Veterinario</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="personalVet">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Lista de Veterinarios</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Horarios de Atención</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Especialidades</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Días Disponibles</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#configuracion">
+                        <i class="fas fa-cogs"></i>
+                        <p>Configuración</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="configuracion">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Datos de la Clínica</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Logo e Identidad</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Notificaciones</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Respaldos Automáticos</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#reportesAdmin">
+                        <i class="fas fa-chart-pie"></i>
+                        <p>Reportes Administrativos</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="reportesAdmin">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Estadísticas de Pacientes</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Atención por Veterinario</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Flujo de Citas</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Productividad Mensual</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#documentos">
+                        <i class="fas fa-file-contract"></i>
+                        <p>Documentos y Formularios</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="documentos">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Contratos y Consentimientos</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Plantillas Personalizadas</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Formatos de Ingreso</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- ⚙️ EXTENSIONES -->
+                <li class="nav-section">
+                    <span class="sidebar-mini-icon">
+                        <i class="fas fa-plug"></i>
+                    </span>
+                    <h4 class="text-section">⚙️ Extensiones</h4>
+                </li>
+
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#laboratorio">
+                        <i class="fas fa-flask"></i>
+                        <p>Laboratorio</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="laboratorio">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Solicitudes de Exámenes</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Resultados e Informes</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Control de Muestras</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#farmacia">
+                        <i class="fas fa-pills"></i>
+                        <p>Farmacia</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="farmacia">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Recetas Veterinarias</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Control de Dispensación</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Vencimiento de Medicamentos</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#comunicacion">
+                        <i class="fas fa-bell"></i>
+                        <p>Comunicación</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse" id="comunicacion">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Notificaciones Automáticas</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <span class="sub-item">Correos de Control</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<!-- End Sidebar -->

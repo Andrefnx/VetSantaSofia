@@ -1,0 +1,175 @@
+{% load static %}
+<div class="main-header">
+    <div class="main-header-logo">
+        <!-- Logo Header -->
+        <div class="logo-header" data-background-color="dark">
+            <a href="{% url 'dashboard' %}" class="logo">
+                <img
+                    src="{% static 'img/logo.png' %}"
+                    alt="navbar brand"
+                    class="navbar-brand"
+                    height="40"
+                />
+            </a>
+            <div class="nav-toggle">
+                <button class="btn btn-toggle toggle-sidebar">
+                    <i class="gg-menu-right"></i>
+                </button>
+                <button class="btn btn-toggle sidenav-toggler">
+                    <i class="gg-menu-left"></i>
+                </button>
+            </div>
+            <button class="topbar-toggler more">
+                <i class="gg-more-vertical-alt"></i>
+            </button>
+        </div>
+        <!-- End Logo Header -->
+    </div>
+    <!-- Navbar Header -->
+    <nav class="navbar navbar-header navbar-header-transparent navbar-expand-lg border-bottom">
+        <div class="container-fluid">
+            <nav class="navbar navbar-header-left navbar-expand-lg navbar-form nav-search p-0 d-none d-lg-flex">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <button type="submit" class="btn btn-search pe-1">
+                            <i class="fa fa-search search-icon"></i>
+                        </button>
+                    </div>
+                    <input type="text" placeholder="Buscar..." class="form-control" />
+                </div>
+            </nav>
+
+            <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
+                <li class="nav-item topbar-icon dropdown hidden-caret d-flex d-lg-none">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false" aria-haspopup="true">
+                        <i class="fa fa-search"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-search animated fadeIn">
+                        <form class="navbar-left navbar-form nav-search">
+                            <div class="input-group">
+                                <input type="text" placeholder="Buscar..." class="form-control" />
+                            </div>
+                        </form>
+                    </ul>
+                </li>
+                
+                <li class="nav-item topbar-icon dropdown hidden-caret">
+                    <a class="nav-link dropdown-toggle" href="#" id="messageDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-envelope"></i>
+                    </a>
+                    <ul class="dropdown-menu messages-notif-box animated fadeIn" aria-labelledby="messageDropdown">
+                        <li>
+                            <div class="dropdown-title d-flex justify-content-between align-items-center">
+                                Mensajes
+                                <a href="#" class="small">Marcar todo como leído</a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="message-notif-scroll scrollbar-outer">
+                                <div class="notif-center">
+                                    <a href="#">
+                                        <div class="notif-img">
+                                            <img src="{% static 'img/kaiadmin/profile.jpg' %}" alt="Img Profile" />
+                                        </div>
+                                        <div class="notif-content">
+                                            <span class="subject">Sistema</span>
+                                            <span class="block">No hay mensajes nuevos</span>
+                                            <span class="time">Ahora</span>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <a class="see-all" href="javascript:void(0);">Ver todos los mensajes<i class="fa fa-angle-right"></i></a>
+                        </li>
+                    </ul>
+                </li>
+                
+                <li class="nav-item topbar-icon dropdown hidden-caret">
+                    <a class="nav-link dropdown-toggle" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-bell"></i>
+                        <span class="notification">0</span>
+                    </a>
+                    <ul class="dropdown-menu notif-box animated fadeIn" aria-labelledby="notifDropdown">
+                        <li>
+                            <div class="dropdown-title">No tienes notificaciones nuevas</div>
+                        </li>
+                        <li>
+                            <div class="notif-scroll scrollbar-outer">
+                                <div class="notif-center">
+                                    <a href="#">
+                                        <div class="notif-icon notif-primary">
+                                            <i class="fa fa-info"></i>
+                                        </div>
+                                        <div class="notif-content">
+                                            <span class="block">Sin notificaciones</span>
+                                            <span class="time">Ahora</span>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <a class="see-all" href="javascript:void(0);">Ver todas las notificaciones<i class="fa fa-angle-right"></i></a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item topbar-user dropdown hidden-caret">
+                    <a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="#" aria-expanded="false">
+                        <div class="avatar-sm">
+                            <img src="{% static 'img/kaiadmin/profile.jpg' %}" alt="..." class="avatar-img rounded-circle" />
+                        </div>
+                        <span class="profile-username">
+                            <span class="op-7">Hola,</span>
+                            <span class="fw-bold">{{ user.get_full_name|default:user.username }}</span>
+                        </span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-user animated fadeIn">
+                        <div class="dropdown-user-scroll scrollbar-outer">
+                            <li>
+                                <div class="user-box">
+                                    <div class="avatar-lg">
+                                        <img src="{% static 'img/kaiadmin/profile.jpg' %}" alt="image profile" class="avatar-img rounded" />
+                                    </div>
+                                    <div class="u-text">
+                                        <h4>{{ user.get_full_name|default:user.username }}</h4>
+                                        <p class="text-muted">{{ user.email }}</p>
+                                        {% if user.is_superuser %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-shield-alt"></i> Administrador
+                                            </span>
+                                        {% elif user.groups.all.0 %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-user-tag"></i> {{ user.groups.all.0.name }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-user"></i> Usuario
+                                            </span>
+                                        {% endif %}
+                                        <div class="mt-2">
+                                            <a href="#" class="btn btn-xs btn-secondary btn-sm">Ver Perfil</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#"><i class="fas fa-user"></i> Mi Perfil</a>
+                                <a class="dropdown-item" href="#"><i class="fas fa-calendar-check"></i> Mis Citas</a>
+                                <a class="dropdown-item" href="#"><i class="fas fa-paw"></i> Mis Mascotas</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#"><i class="fas fa-cog"></i> Configuración</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+                            </li>
+                        </div>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <!-- End Navbar -->
+</div>
