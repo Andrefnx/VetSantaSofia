@@ -1,0 +1,309 @@
+/* ================================
+   ESTILO GENERAL COMPARTIDO
+================================ */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f8f9fa;
+    color: #103012;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+    margin: 0;
+}
+
+a {
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+/* Colores base */
+:root {
+    --primary-color: #76af76;
+    --primary-hover: #89C57C;
+    --primary-text: #103012;
+    --focus-shadow: rgba(118, 175, 118, 0.25);
+}
+
+/* ================================
+   CONTENEDORES PRINCIPALES
+================================ */
+.auth-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    width: 100%;
+    max-width: 1400px;
+    padding: 2rem;
+}
+
+.auth-image {
+    flex: 0 0 30%;
+    text-align: center;
+}
+
+.auth-image img {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+}
+
+.auth-form {
+    flex: 0 0 65%;
+    background: #fff;
+    padding: 2.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+}
+
+.auth-form.wide {
+    max-width: 900px;
+}
+
+/* ================================
+   TÍTULOS
+================================ */
+h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--primary-text);
+    margin-bottom: 0.3rem;
+}
+
+.subtitle {
+    color: #6c757d;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+/* ================================
+   CAMPOS DE FORMULARIO
+================================ */
+form {
+    width: 100%;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.3rem;
+}
+
+input {
+    padding: 0.75rem 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    color: var(--primary-text);
+}
+
+input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.15rem var(--focus-shadow);
+    outline: none;
+}
+
+.error {
+    color: #d93025;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+.hint {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 0.2rem;
+}
+
+/* ================================
+   SECCIONES DEL FORMULARIO (REGISTRO)
+================================ */
+h3 {
+    font-size: 1.05rem;
+    color: var(--primary-text);
+    margin-top: 1.8rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.3rem;
+}
+
+/* ================================
+   TOGGLE PASSWORD
+================================ */
+.password-toggle {
+    position: relative;
+}
+
+.password-toggle input {
+    padding-right: 2.75rem;
+}
+
+.toggle-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+.toggle-icon:hover {
+    color: #495057;
+}
+
+/* ================================
+   BOTONES
+================================ */
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--primary-text);
+    padding: 0.85rem 1.6rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    width: 100%;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
+
+.alt-link {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.alt-link a {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.alt-link a:hover {
+    color: var(--primary-hover);
+}
+
+/* ================================
+   ALERTAS (MENSAJES)
+================================ */
+.alert {
+    background-color: #e9f6ea;
+    color: var(--primary-text);
+    border-left: 4px solid var(--primary-color);
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+    position: relative;
+    transition: opacity 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.close-alert {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--primary-text);
+    cursor: pointer;
+    padding: 0;
+    margin-left: 1rem;
+    line-height: 1;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.close-alert:hover {
+    opacity: 1;
+}
+
+/* ================================
+   LOGIN - FORMULARIO CENTRADO
+================================ */
+.login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 500px;
+    background: #fff;
+    padding: 2.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+    flex-direction: column;
+}
+
+.login-container h2 {
+    text-align: center;
+    margin-bottom: 1.2rem;
+}
+
+.login-container .btn-primary {
+    margin-top: 1.5rem;
+}
+
+/* ================================
+   RESPONSIVE
+================================ */
+@media (max-width: 992px) {
+    .auth-container {
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .auth-image img {
+        max-width: 320px;
+        margin-bottom: 1rem;
+    }
+
+    .auth-form {
+        width: 90%;
+        padding: 2rem;
+    }
+
+    .login-container {
+        width: 90%;
+    }
+}
+
+@media (max-width: 600px) {
+    .form-row {
+        flex-direction: column;
+    }
+
+    .auth-form {
+        padding: 1.5rem;
+    }
+
+    .btn-primary {
+        font-size: 0.95rem;
+    }
+}
