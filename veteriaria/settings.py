@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'dashboard',
     'caja',
     'login',
+    'gestion',
+    'hospital',
 ]
 
 MIDDLEWARE = [
@@ -76,10 +78,15 @@ WSGI_APPLICATION = 'veteriaria.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# OPCIÓN 1: Usando mysqlclient
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'db_santasofia',
+        'USER': 'postgres',
+        'PASSWORD': '1234',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -121,7 +128,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'  
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',  
+    BASE_DIR / "static",
 ]
 
 
@@ -129,3 +136,11 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Custom User Model
+AUTH_USER_MODEL = 'login.Usuario'
+
+# Login URLs
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'login'
