@@ -105,6 +105,7 @@ form {
     display: flex;
     flex-direction: column;
     margin-bottom: 1rem;
+    position: relative;
 }
 
 label {
@@ -113,7 +114,7 @@ label {
     margin-bottom: 0.3rem;
 }
 
-input {
+input, textarea, select {
     padding: 0.75rem 1rem;
     border: 1px solid #ced4da;
     border-radius: 6px;
@@ -122,34 +123,71 @@ input {
     color: var(--primary-text);
 }
 
-input:focus {
+input:focus, textarea:focus, select:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 0.15rem var(--focus-shadow);
     outline: none;
 }
 
-.error {
-    color: #d93025;
+/* ================================
+   TOOLTIP DE ERROR ESTILO FLOTANTE
+================================ */
+input.error, textarea.error, select.error {
+    border-color: #c1121f !important;
+    background-color: #fff5f5 !important;
+    box-shadow: 0 0 0 0.1rem rgba(193, 18, 31, 0.2);
+}
+
+/* Tooltip con flecha */
+.tooltip-error {
+    position: absolute;
+    bottom: -40px;
+    left: 0;
+    background-color: #c1121f;
+    color: #fff;
     font-size: 0.85rem;
-    margin-top: 0.25rem;
+    padding: 6px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 100;
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    animation: showTooltip 0.25s forwards ease-out;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.tooltip-error::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 15px;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid #c1121f;
+}
+
+@keyframes showTooltip {
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .hint {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: #6c757d;
-    margin-top: 0.2rem;
+    margin-top: 0.25rem;
 }
 
 /* ================================
    SECCIONES DEL FORMULARIO (REGISTRO)
 ================================ */
 h3 {
-    font-size: 1.05rem;
+    font-size: 1.2rem;
+    font-weight: 600;
     color: var(--primary-text);
-    margin-top: 1.8rem;
-    margin-bottom: 0.75rem;
-    border-bottom: 1px solid #e0e0e0;
-    padding-bottom: 0.3rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 0.5rem;
 }
 
 /* ================================
@@ -160,21 +198,21 @@ h3 {
 }
 
 .password-toggle input {
-    padding-right: 2.75rem;
+    padding-right: 2.5rem;
 }
 
 .toggle-icon {
     position: absolute;
-    right: 12px;
+    right: 1rem;
     top: 50%;
     transform: translateY(-50%);
     cursor: pointer;
     color: #6c757d;
-    font-size: 1.1rem;
+    transition: color 0.2s ease;
 }
 
 .toggle-icon:hover {
-    color: #495057;
+    color: var(--primary-color);
 }
 
 /* ================================
@@ -182,24 +220,28 @@ h3 {
 ================================ */
 .btn-primary {
     background-color: var(--primary-color);
-    color: var(--primary-text);
-    padding: 0.85rem 1.6rem;
+    color: #fff;
+    padding: 0.85rem 1.5rem;
     border: none;
     border-radius: 6px;
-    font-weight: 500;
     font-size: 1rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s ease;
     width: 100%;
+    margin-top: 1rem;
+    transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .btn-primary:hover {
     background-color: var(--primary-hover);
+    transform: translateY(-1px);
 }
 
 .alt-link {
     text-align: center;
-    margin-top: 1rem;
+    margin-top: 1.5rem;
+    color: #6c757d;
+    font-size: 0.95rem;
 }
 
 .alt-link a {
@@ -209,20 +251,16 @@ h3 {
 
 .alt-link a:hover {
     color: var(--primary-hover);
+    text-decoration: underline;
 }
 
 /* ================================
    ALERTAS (MENSAJES)
 ================================ */
 .alert {
-    background-color: #e9f6ea;
-    color: var(--primary-text);
-    border-left: 4px solid var(--primary-color);
-    padding: 0.75rem 1rem;
-    border-radius: 0.25rem;
-    margin-bottom: 1rem;
-    position: relative;
-    transition: opacity 0.3s ease;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -231,14 +269,10 @@ h3 {
 .close-alert {
     background: none;
     border: none;
-    font-size: 1.5rem;
-    color: var(--primary-text);
+    font-size: 1.2rem;
     cursor: pointer;
-    padding: 0;
-    margin-left: 1rem;
-    line-height: 1;
+    color: inherit;
     opacity: 0.7;
-    transition: opacity 0.2s ease;
 }
 
 .close-alert:hover {
@@ -249,21 +283,13 @@ h3 {
    LOGIN - FORMULARIO CENTRADO
 ================================ */
 .login-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    max-width: 500px;
-    background: #fff;
-    padding: 2.5rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
-    flex-direction: column;
+    max-width: 450px;
+    margin: 0 auto;
 }
 
 .login-container h2 {
     text-align: center;
-    margin-bottom: 1.2rem;
+    margin-bottom: 2rem;
 }
 
 .login-container .btn-primary {
@@ -279,31 +305,27 @@ h3 {
         gap: 2rem;
     }
 
-    .auth-image img {
-        max-width: 320px;
-        margin-bottom: 1rem;
+    .auth-image {
+        flex: 1;
+        max-width: 300px;
     }
 
     .auth-form {
-        width: 90%;
-        padding: 2rem;
-    }
-
-    .login-container {
-        width: 90%;
+        flex: 1;
+        width: 100%;
     }
 }
 
 @media (max-width: 600px) {
-    .form-row {
-        flex-direction: column;
-    }
-
     .auth-form {
         padding: 1.5rem;
     }
 
-    .btn-primary {
-        font-size: 0.95rem;
+    .form-row {
+        flex-direction: column;
+    }
+
+    h2 {
+        font-size: 1.4rem;
     }
 }

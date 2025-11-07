@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{% static 'login/css/style_login_register.css' %}">
-    <link rel="icon" type="image/x-icon" href="{% static 'login/img/favicon.ico' %}">
 </head>
 
 <body>
@@ -22,25 +21,18 @@
             <h2>Crear Cuenta</h2>
             <p class="subtitle">Completa los datos para registrarte</p>
 
-            <form method="post" novalidate>
+            <form method="post" id="registerForm">
                 {% csrf_token %}
 
-                <!-- DATOS PERSONALES -->
                 <h3>Datos Personales</h3>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="id_rut">RUT *</label>
                         {{ form.rut }}
-                        {% if form.rut.errors %}
-                        <div class="error">{{ form.rut.errors.0 }}</div>
-                        {% endif %}
                     </div>
                     <div class="form-group">
                         <label for="id_fecha_nacimiento">Fecha de Nacimiento</label>
                         {{ form.fecha_nacimiento }}
-                        {% if form.fecha_nacimiento.errors %}
-                        <div class="error">{{ form.fecha_nacimiento.errors.0 }}</div>
-                        {% endif %}
                     </div>
                 </div>
 
@@ -48,87 +40,66 @@
                     <div class="form-group">
                         <label for="id_first_name">Nombre *</label>
                         {{ form.first_name }}
-                        {% if form.first_name.errors %}
-                        <div class="error">{{ form.first_name.errors.0 }}</div>
-                        {% endif %}
                     </div>
                     <div class="form-group">
                         <label for="id_last_name">Apellido *</label>
                         {{ form.last_name }}
-                        {% if form.last_name.errors %}
-                        <div class="error">{{ form.last_name.errors.0 }}</div>
-                        {% endif %}
                     </div>
                 </div>
 
-                <!-- CONTACTO -->
                 <h3>Contacto</h3>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="id_email">Correo Electrónico *</label>
                         {{ form.email }}
-                        {% if form.email.errors %}
-                        <div class="error">{{ form.email.errors.0 }}</div>
-                        {% endif %}
                     </div>
                     <div class="form-group">
                         <label for="id_telefono">Teléfono</label>
                         {{ form.telefono }}
-                        {% if form.telefono.errors %}
-                        <div class="error">{{ form.telefono.errors.0 }}</div>
-                        {% endif %}
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="id_direccion">Dirección</label>
                     {{ form.direccion }}
-                    {% if form.direccion.errors %}
-                    <div class="error">{{ form.direccion.errors.0 }}</div>
-                    {% endif %}
                 </div>
 
-                <!-- CREDENCIALES -->
                 <h3>Credenciales</h3>
                 <div class="form-row">
                     <div class="form-group password-toggle">
                         <label for="id_password1">Contraseña *</label>
                         {{ form.password1 }}
                         <i class="bi bi-eye-slash toggle-icon" id="togglePassword1"></i>
-                        {% if form.password1.errors %}
-                        <div class="error">{{ form.password1.errors.0 }}</div>
-                        {% endif %}
                         <small class="hint">Mínimo 8 caracteres, incluir mayúscula, número y símbolo.</small>
                     </div>
                     <div class="form-group password-toggle">
                         <label for="id_password2">Confirmar Contraseña *</label>
                         {{ form.password2 }}
                         <i class="bi bi-eye-slash toggle-icon" id="togglePassword2"></i>
-                        {% if form.password2.errors %}
-                        <div class="error">{{ form.password2.errors.0 }}</div>
-                        {% endif %}
                     </div>
                 </div>
 
-                <div class="btn-row">
-                    <button type="submit" class="btn-primary">Registrarse</button>
-                </div>
+                <button type="submit" class="btn-primary">Registrarse</button>
                 <p class="alt-link">¿Ya tienes cuenta? <a href="{% url 'login' %}">Inicia sesión aquí</a></p>
             </form>
         </section>
     </main>
 
     <script>
-        const toggle = (id, icon) => {
-            const input = document.getElementById(id);
-            const iconEl = document.getElementById(icon);
-            const type = input.type === 'password' ? 'text' : 'password';
-            input.type = type;
-            iconEl.classList.toggle('bi-eye');
-            iconEl.classList.toggle('bi-eye-slash');
-        };
-        document.getElementById('togglePassword1').onclick = () => toggle('id_password1', 'togglePassword1');
-        document.getElementById('togglePassword2').onclick = () => toggle('id_password2', 'togglePassword2');
+        document.addEventListener('DOMContentLoaded', () => {
+            // Toggle contraseña
+            const toggle = (id, icon) => {
+                const input = document.getElementById(id);
+                const iconEl = document.getElementById(icon);
+                input.type = input.type === 'password' ? 'text' : 'password';
+                iconEl.classList.toggle('bi-eye');
+                iconEl.classList.toggle('bi-eye-slash');
+            };
+            if (document.getElementById('togglePassword1'))
+                togglePassword1.onclick = () => toggle('id_password1', 'togglePassword1');
+            if (document.getElementById('togglePassword2'))
+                togglePassword2.onclick = () => toggle('id_password2', 'togglePassword2');
+        });
     </script>
 </body>
 
