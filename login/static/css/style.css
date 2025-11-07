@@ -1,0 +1,211 @@
+/* ================================
+   COLORES GLOBALES
+================================ */
+:root {
+    --primary-color: #76af76;
+    --primary-hover: #89C57C;
+    --primary-text: #103012;
+    --background: #f8f9fa;
+    --white: #ffffff;
+    --border-color: #ced4da;
+    --input-focus: rgba(118, 175, 118, 0.25);
+    --error-color: #c1121f;
+    --text-muted: #6c757d;
+}
+
+/* ================================
+   RESET Y ESTILOS GENERALES
+================================ */
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: var(--primary-text);
+}
+
+
+
+/* ================================
+   CONTENEDOR PRINCIPAL
+================================ */
+.login-container {
+    width: 100%;
+    max-width: 420px;
+    padding: 1rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+
+.logo {
+    width: 220px;
+    max-width: 420px;
+    height: auto;
+    display: block;
+    margin: 0 auto 2rem;
+}
+
+/* ================================
+   CONTENEDOR DEL FORMULARIO
+================================ */
+form {
+    background: var(--white);
+    padding: 3rem 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    width: 100%;
+}
+
+/* ================================
+   GRUPOS DE FORMULARIO
+================================ */
+.form-group {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+/* ================================
+   INPUTS
+================================ */
+.form-control {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    color: var(--primary-text);
+    background: var(--white);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem var(--input-focus);
+}
+
+.form-control::placeholder {
+    color: #adb5bd;
+}
+
+/* ================================
+   PASSWORD TOGGLE
+================================ */
+.password-toggle {
+    position: relative;
+}
+
+.password-toggle .form-control {
+    padding-right: 3rem;
+}
+
+.toggle-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    transition: color 0.2s ease;
+    margin-top: 0.75rem;
+}
+
+.toggle-icon:hover {
+    color: var(--primary-color);
+}
+
+/* ================================
+   GRUPO DE BOTONES
+================================ */
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* ================================
+   BOTÓN
+================================ */
+.btn {
+    flex: 1;
+    padding: 0.9rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(118, 175, 118, 0.3);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* ================================
+   TEXTO
+================================ */
+.forgot-password {
+    text-align: center;
+    margin: 1.5rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.forgot-password:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+/* ================================
+   RESPONSIVE
+================================ */
+@media (max-width: 480px) {
+    .login-container {
+        max-width: 100%;
+        padding: 1rem;
+    }
+
+    .logo {
+        max-width: 300px;
+    }
+
+    form {
+        padding: 2rem 1.5rem;
+    }
+
+    .button-group {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}
