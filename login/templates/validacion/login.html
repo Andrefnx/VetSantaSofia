@@ -9,19 +9,32 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="shortcut icon" href="{% static 'img/favicon.ico' %}" type="image/x-icon">
+
+    <script src="{% static 'js/delete_alerts.js' %}"></script>
 </head>
 
 <body>
     <div class="login-container">
         <img src="{% static 'img/logo_completo.png' %}" alt="Logo" class="logo">
 
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert {{ message.tags }}">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
         <form method="post">
             {% csrf_token %}
+
             <div class="form-group">
                 <label for="rut_input">Rut:</label>
                 <input type="text" class="form-control" id="rut_input" name="rut_input" aria-describedby="emailHelp"
                     placeholder="12.345.678-9">
             </div>
+
             <div class="form-group password-toggle">
                 <label for="psw_input">Contraseña:</label>
                 <input type="password" class="form-control" id="psw_input" name="psw_input" placeholder="********">
@@ -29,14 +42,13 @@
             </div>
             <div class="button-group">
                 <button type="submit" class="btn btn-primary">Ingresar</button>
-                <button type="button" class="btn btn-primary">Registrarse</button>
+                <a href="{% url 'register_user' %}" class="btn btn-primary">Registrarse</a>
             </div>
             <p class="forgot-password">¿Olvidaste tu contraseña?</p>
         </form>
     </div>
 
     <script src="{% static 'js/psw_eye.js' %}"></script>
-
     <script src="{% static 'js/rut_validation.js' %}"></script>
 </body>
 

@@ -1,0 +1,150 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="shortcut icon" href="{% static 'img/favicon.ico' %}" type="image/x-icon">
+</head>
+
+<body>
+    <div class="login-container register">
+        
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert {{ message.tags }}">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <form method="post" id="registerForm">
+            {% csrf_token %}
+
+            <h2>Crear Cuenta</h2>
+        
+            <div class="form-group">
+                <label for="rut_input">RUT *</label>
+                <input type="text" class="form-control" id="rut_input" name="rut_input" placeholder="12.345.678-9"
+                    required>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="nombre">Nombre *</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Juan" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="apellido">Apellido *</label>
+                    <input type="text" class="form-control" id="apellido" name="apellido" placeholder="Pérez" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="correo">Correo *</label>
+                    <input type="email" class="form-control" id="correo" name="correo" placeholder="correo@ejemplo.com"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label for="telefono">Teléfono *</label>
+                    <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="+56 9 1234 5678"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label for="direccion">Dirección *</label>
+                    <input type="text" class="form-control" id="direccion" name="direccion" placeholder="Calle 123, Comuna"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label for="tipo_contrato">Tipo de Contrato *</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select" id="tipo_contrato_display">
+                            <span class="selected-value placeholder">Selecciona una opción</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </div>
+                        <ul class="custom-select-dropdown">
+                            <li data-value="veterinario"> Veterinario</li>
+                            <li data-value="recepcion"> Recepción</li>
+                        </ul>
+                        <input type="hidden" id="tipo_contrato" name="tipo_contrato" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group password-toggle">
+                    <label for="psw_input">
+                        Contraseña *
+                        <i class="bi bi-info-circle password-info-icon" id="passwordInfo"></i>
+                    </label>
+                    <input type="password" class="form-control" id="psw_input" name="psw_input" placeholder="********"
+                        required>
+                    <i class="bi bi-eye-slash toggle-icon"></i>
+                    
+                    <!-- Tooltip de requisitos -->
+                    <div class="password-tooltip" id="passwordTooltip">
+                        <h4>Requisitos de contraseña:</h4>
+                        <ul>
+                            <li id="req-length">
+                                <i class="bi bi-x-circle"></i>
+                                <span>Mínimo 8 caracteres</span>
+                            </li>
+                            <li id="req-uppercase">
+                                <i class="bi bi-x-circle"></i>
+                                <span>Una letra mayúscula</span>
+                            </li>
+                            <li id="req-lowercase">
+                                <i class="bi bi-x-circle"></i>
+                                <span>Una letra minúscula</span>
+                            </li>
+                            <li id="req-number">
+                                <i class="bi bi-x-circle"></i>
+                                <span>Un número</span>
+                            </li>
+                            <li id="req-special">
+                                <i class="bi bi-x-circle"></i>
+                                <span>Un carácter especial (@$!%*?&)</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-group password-toggle">
+                    <label for="confirm_psw">Confirmar Contraseña *</label>
+                    <input type="password" class="form-control" id="confirm_psw" name="confirm_psw"
+                        placeholder="********" required>
+                    <i class="bi bi-eye-slash toggle-icon"></i>
+                </div>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="datos_validos" required>
+                <label for="datos_validos">Confirmo que mis datos son verídicos y correspondientes.</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">Registrar</button>
+
+            <p class="forgot-password">
+                ¿Ya tienes cuenta? <a href="{% url 'login' %}">Inicia sesión</a>
+            </p>
+        </form>
+    </div>
+
+    <script src="{% static 'js/rut_validation.js' %}"></script>
+    <script src="{% static 'js/psw_eye.js' %}" defer></script>
+
+    <script src="{% static 'js/desplegable.js' %}"></script>
+
+    <script src="{% static 'js/tooltip.js' %}"></script>
+</body>
+
+</html>
