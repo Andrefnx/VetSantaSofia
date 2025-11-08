@@ -30,19 +30,19 @@
             {% csrf_token %}
 
             <div class="form-group">
-                <label for="rut_input">Rut:</label>
-                <input type="text" class="form-control" id="rut_input" name="rut_input" aria-describedby="emailHelp"
-                    placeholder="12.345.678-9">
+                <label for="rut_input">RUT:</label>
+                <input type="text" class="form-control" id="rut_input" name="rut_input" 
+                    placeholder="12.345.678-9" required>
             </div>
 
             <div class="form-group password-toggle">
                 <label for="psw_input">Contraseña:</label>
-                <input type="password" class="form-control" id="psw_input" name="psw_input" placeholder="********">
+                <input type="password" class="form-control" id="psw_input" name="password" placeholder="********" required>
                 <i class="bi bi-eye-slash toggle-icon" id="togglePassword"></i>
             </div>
             <div class="button-group">
                 <button type="submit" class="btn btn-primary">Ingresar</button>
-                <a href="{% url 'register_user' %}" class="btn btn-primary">Registrarse</a>
+                <a href="{% url 'register' %}" class="btn btn-primary">Registrarse</a>
             </div>
             <p class="forgot-password">¿Olvidaste tu contraseña?</p>
         </form>

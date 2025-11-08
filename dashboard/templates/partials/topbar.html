@@ -119,11 +119,11 @@
                 <li class="nav-item topbar-user dropdown hidden-caret">
                     <a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="#" aria-expanded="false">
                         <div class="avatar-sm">
-                            <img src="{% static 'img/kaiadmin/profile.jpg' %}" alt="..." class="avatar-img rounded-circle" />
+                            <img src="{% static 'img/profile.jpg' %}" alt="..." class="avatar-img rounded-circle" />
                         </div>
                         <span class="profile-username">
                             <span class="op-7">Hola,</span>
-                            <span class="fw-bold">{{ user.get_full_name|default:user.username }}</span>
+                            <span class="fw-bold">{{ user.nombre }} {{ user.apellido }}</span>
                         </span>
                     </a>
                     <ul class="dropdown-menu dropdown-user animated fadeIn">
@@ -131,39 +131,25 @@
                             <li>
                                 <div class="user-box">
                                     <div class="avatar-lg">
-                                        <img src="{% static 'img/kaiadmin/profile.jpg' %}" alt="image profile" class="avatar-img rounded" />
+                                        <img src="{% static 'img/profile.jpg' %}" alt="image profile" class="avatar-img rounded" />
                                     </div>
                                     <div class="u-text">
-                                        <h4>{{ user.get_full_name|default:user.username }}</h4>
-                                        <p class="text-muted">{{ user.email }}</p>
-                                        {% if user.is_superuser %}
-                                            <span class="badge bg-danger">
-                                                <i class="fas fa-shield-alt"></i> Administrador
-                                            </span>
-                                        {% elif user.groups.all.0 %}
-                                            <span class="badge bg-success">
-                                                <i class="fas fa-user-tag"></i> {{ user.groups.all.0.name }}
-                                            </span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">
-                                                <i class="fas fa-user"></i> Usuario
-                                            </span>
-                                        {% endif %}
-                                        <div class="mt-2">
-                                            <a href="#" class="btn btn-xs btn-secondary btn-sm">Ver Perfil</a>
-                                        </div>
+                                        <h4>{{ user.nombre }} {{ user.apellido }}</h4>
+                                        <p class="text-muted">{{ user.correo }}</p>
+                                        <span class="badge badge-info">{{ user.get_rol_display_custom }}</span>
                                     </div>
                                 </div>
                             </li>
                             <li>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="#"><i class="fas fa-user"></i> Mi Perfil</a>
-                                <a class="dropdown-item" href="#"><i class="fas fa-calendar-check"></i> Mis Citas</a>
-                                <a class="dropdown-item" href="#"><i class="fas fa-paw"></i> Mis Mascotas</a>
+                                <a class="dropdown-item" href="#">Mi Perfil</a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="#"><i class="fas fa-cog"></i> Configuración</a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+                                <form method="POST" action="{% url 'logout' %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item" style="border: none; background: none; cursor: pointer; width: 100%; text-align: left;">
+                                        Cerrar Sesión
+                                    </button>
+                                </form>
                             </li>
                         </div>
                     </ul>

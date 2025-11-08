@@ -1,10 +1,12 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth import get_user_model
+from .models import CustomUser
 
-User = get_user_model()
+# Primero, desregistra si ya existe
+admin.site.unregister(CustomUser)
 
-@admin.register(User)
+# Luego registra con la configuración personalizada
+@admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
     # Campos a mostrar en la lista de usuarios
     list_display = ('rut', 'nombre', 'apellido', 'correo', 'tipo_contrato', 'is_staff', 'is_active')

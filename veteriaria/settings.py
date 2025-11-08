@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'gestion',
     'hospital',
     'login',
+    'cuentas',
 ]
 
 MIDDLEWARE = [
@@ -130,3 +131,11 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+AUTH_USER_MODEL = 'cuentas.CustomUser'
+AUTHENTICATION_BACKENDS = ['cuentas.auth_backend.RUTAuthBackend']
+
+
+
+LOGOUT_REDIRECT_URL = 'login'
+LOGIN_URL = 'login'  
+LOGIN_REDIRECT_URL = 'dashboard'
