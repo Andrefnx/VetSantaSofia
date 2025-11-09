@@ -26,3 +26,8 @@ def vet_ficha_view(request):
 
 def vet_disponibilidad_view(request):
     return render(request, 'veterinarios/vet_disponibilidad.html')
+
+# --- INVENTARIO ---
+
+def inventario(request):
+    return render(request, 'inventario/inventario.html')

@@ -1,0 +1,134 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Inventario{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'hospital_css/style_inventario.css' %}">
+
+{% endblock %}
+{% block content %}
+<div class="container-fluid">
+     <h4><i class="fas fa-boxes"></i> Inventario</h4>
+    <div class="inventory-header">
+       
+
+        <div class="filter-group">
+            <div class="search-bar">
+                <i class="fas fa-search text-muted"></i>
+                <input type="text" id="searchInput" placeholder="Buscar producto...">
+            </div>
+
+            <select id="filterEspecie">
+                <option value="">Todas las especies</option>
+                <option value="canino">Canino</option>
+                <option value="felino">Felino</option>
+            </select>
+
+            <select id="filterStock">
+                <option value="">Stock</option>
+                <option value="low">Bajo</option>
+                <option value="ok">Normal</option>
+                <option value="high">Alto</option>
+            </select>
+
+            <select id="filterCaducidad">
+                <option value="">Caducidad</option>
+                <option value="vencido">Vencido</option>
+                <option value="proximo">Próximo</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-inventory">
+        <table id="inventoryTable">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Especie</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Caducidad</th>
+                    <th>Dosis</th>
+                    <th>Último Ingreso</th>
+                    <th>Proveedor</th>
+                    <th>Gestión</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Revolution Plus</td>
+                    <td>Felino</td>
+                    <td>$32.500</td>
+                    <td><span class="badge stock-ok">10</span></td>
+                    <td>15/03/2026</td>
+                    <td>1 pipeta</td>
+                    <td>03/11/2025</td>
+                    <td>Vet Pharma</td>
+                    <td>
+                        <div class="manage-wheel">
+                            <button onclick="toggleWheel(this)"><i class="fas fa-cog"></i></button>
+                            <div class="manage-options">
+                                <button><i class="fas fa-edit"></i> Editar</button>
+                                <button><i class="fas fa-plus"></i> Agregar stock</button>
+                                <button><i class="fas fa-eye"></i> Ver detalles</button>
+                                <button><i class="fas fa-trash"></i> Eliminar</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Bravecto 40-56Kg</td>
+                    <td>Canino</td>
+                    <td>$28.000</td>
+                    <td><span class="badge stock-low">3</span></td>
+                    <td>02/02/2025</td>
+                    <td>1 comprimido</td>
+                    <td>15/10/2025</td>
+                    <td>Pet Supplies</td>
+                    <td>
+                        <div class="manage-wheel">
+                            <button onclick="toggleWheel(this)"><i class="fas fa-cog"></i></button>
+                            <div class="manage-options">
+                                <button><i class="fas fa-edit"></i> Editar</button>
+                                <button><i class="fas fa-plus"></i> Agregar stock</button>
+                                <button><i class="fas fa-eye"></i> Ver detalles</button>
+                                <button><i class="fas fa-trash"></i> Eliminar</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleWheel(button) {
+        const options = button.nextElementSibling;
+        document.querySelectorAll('.manage-options').forEach(opt => {
+            if (opt !== options) opt.classList.remove('show');
+        });
+        options.classList.toggle('show');
+    }
+
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.manage-wheel')) {
+            document.querySelectorAll('.manage-options').forEach(opt => opt.classList.remove('show'));
+        }
+    });
+
+    // Buscador dinámico
+    document.getElementById('searchInput').addEventListener('input', function () {
+        const filter = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#inventoryTable tbody tr');
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(filter) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

@@ -105,6 +105,13 @@
                     </a>
                 </li>
 
+                <!-- SECCIÓN: INVENTARIO -->    
+                <li class="nav-item {% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">
+                    <a href="{% url 'inventario' %}">
+                        <i class="bi bi-box-seam"></i>
+                        <p>Inventario</p>
+                    </a>
+
                 
 
                 <!-- ACCIONES RÁPIDAS -->

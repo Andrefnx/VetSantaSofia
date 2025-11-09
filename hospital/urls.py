@@ -20,4 +20,7 @@ urlpatterns = [
     # Veterinarios
     path('veterinarios/ficha/', views.vet_ficha_view, name='vet_ficha'),
     path('veterinarios/disponibilidad/', views.vet_disponibilidad_view, name='vet_disponibilidad'),
+    
+    # Inventario
+    path('inventario/', views.inventario, name='inventario'),
 ]
