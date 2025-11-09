@@ -1,0 +1,133 @@
+{% load static %}
+
+<!-- Sidebar -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
+<div class="sidebar" data-background-color="dark">
+    <div class="sidebar-logo">
+        <!-- Logo Header -->
+        <div class="logo-header" data-background-color="dark">
+            <a href="{% url 'dashboard' %}" class="logo">
+                <img src="{% static 'img/logo.svg' %}" alt="navbar brand" class="navbar-brand" height="40" />
+            </a>
+            <div class="nav-toggle">
+                <button class="btn btn-toggle toggle-sidebar">
+                    <i class="gg-menu-right"></i>
+                </button>
+                <button class="btn btn-toggle sidenav-toggler">
+                    <i class="gg-menu-left"></i>
+                </button>
+            </div>
+            <button class="topbar-toggler more">
+                <i class="gg-more-vertical-alt"></i>
+            </button>
+        </div>
+        <!-- End Logo Header -->
+    </div>
+
+    <div class="sidebar-wrapper scrollbar scrollbar-inner">
+        <div class="sidebar-content">
+            <ul class="nav nav-secondary">
+                
+                <!-- DASHBOARD -->
+                <li class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <a href="{% url 'dashboard' %}">
+                        <i class="fas fa-home"></i>
+                        <p>Dashboard</p>
+                    </a>
+                </li>
+
+                <!-- CAJA -->
+                <li class="nav-item {% if request.resolver_match.app_name == 'caja' %}active{% endif %}">
+                    <a href="{% url 'caja:cashregister' %}">
+                        <i class="bi bi-bag-check-fill"></i>
+                        <p>Caja</p>
+                    </a>
+                </li>
+
+                <li class="nav-section">
+                    <span class="sidebar-mini-icon"><i class="fas fa-bolt"></i></span>
+                    <h4 class="text-section">CLINICA</h4>
+                </li>
+
+                <!-- SECCIÓN: AGENDA -->
+                <li class="nav-item {% if request.resolver_match.url_name == 'agenda' %}active{% endif %}">
+                    <a href="{% url 'agenda' %}">
+                        <i class="fas fa-calendar-alt"></i>
+                        <p>Agenda</p>
+                    </a>
+                </li>
+
+                <!-- SECCIÓN: CONSULTAS -->
+                <li class="nav-item {% if request.resolver_match.url_name == 'consulta' %}active{% endif %}">
+                    <a href="{% url 'consulta' %}">
+                        <i class="bi bi-clipboard2-pulse"></i>
+                        <p>Consultas</p>
+                    </a>
+                </li>
+
+                <!-- SECCIÓN: HOSPITALIZACIÓN -->
+                <li class="nav-item {% if request.resolver_match.url_name == 'hospital' %}active{% endif %}">
+                    <a href="{% url 'hospital' %}">
+                        <i class="bi bi-hospital-fill"></i>
+                        <p>Hospitalización</p>
+                    </a>
+                </li>
+
+                <!-- SECCIÓN: VETERINARIOS -->
+                <li class="nav-item {% if request.resolver_match.url_name == 'vet_ficha' or request.resolver_match.url_name == 'vet_disponibilidad' %}active submenu{% endif %}">
+                    <a data-bs-toggle="collapse" href="#veterinarios" {% if request.resolver_match.url_name in 'vet_ficha vet_disponibilidad' %}aria-expanded="true"{% endif %}>
+                        <i class="bi bi-person-vcard-fill"></i>
+                        <p>Veterinarios</p>
+                        <span class="caret"></span>
+                    </a>
+                    <div class="collapse {% if request.resolver_match.url_name in 'vet_ficha vet_disponibilidad' %}show{% endif %}" id="veterinarios">
+                        <ul class="nav nav-collapse">
+                            <li {% if request.resolver_match.url_name == 'vet_ficha' %}class="active"{% endif %}>
+                                <a href="{% url 'vet_ficha' %}">
+                                    <span class="sub-item">Ficha Veterinario</span>
+                                </a>
+                            </li>
+                            <li {% if request.resolver_match.url_name == 'vet_disponibilidad' %}class="active"{% endif %}>
+                                <a href="{% url 'vet_disponibilidad' %}">
+                                    <span class="sub-item">Disponibilidad</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- SECCIÓN: PACIENTES -->
+                <li class="nav-item {% if request.resolver_match.url_name == 'ficha_mascota' %}active{% endif %}">
+                    <a href="{% url 'ficha_mascota' %}">
+                        <i class="fas fa-paw"></i>
+                        <p>Pacientes</p>
+                    </a>
+                </li>
+
+                
+
+                <!-- ACCIONES RÁPIDAS -->
+                <li class="nav-section">
+                    <span class="sidebar-mini-icon"><i class="fas fa-bolt"></i></span>
+                    <h4 class="text-section">Acciones Rápidas</h4>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'agenda' %}">
+                        <i class="fas fa-calendar-plus"></i>
+                        <p>Nueva Cita</p>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'ficha_mascota' %}">
+                        <i class="fas fa-paw"></i>
+                        <p>Registrar Mascota</p>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<!-- End Sidebar -->

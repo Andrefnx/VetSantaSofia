@@ -2,6 +2,22 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Agrega aquí tus rutas de hospital
-    # path('', views.index, name='hospital_index'),
+    # Dashboard principal
+    path('dashboard/', views.dashboard_pacientes, name='dashboard_pacientes'),
+
+    # Agenda
+    path('agenda/', views.agenda_view, name='agenda'),
+
+    # Consultas
+    path('consultas/', views.consulta_view, name='consulta'),
+
+    # Hospitalización
+    path('hospitalizacion/', views.hospital_view, name='hospital'),
+
+    # Pacientes
+    path('pacientes/ficha/', views.ficha_mascota_view, name='ficha_mascota'),
+
+    # Veterinarios
+    path('veterinarios/ficha/', views.vet_ficha_view, name='vet_ficha'),
+    path('veterinarios/disponibilidad/', views.vet_disponibilidad_view, name='vet_disponibilidad'),
 ]

@@ -2,52 +2,36 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser
 
-# Primero, desregistra si ya existe
-admin.site.unregister(CustomUser)
-
-# Luego registra con la configuración personalizada
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
+    model = CustomUser
     # Campos a mostrar en la lista de usuarios
-    list_display = ('rut', 'nombre', 'apellido', 'correo', 'tipo_contrato', 'is_staff', 'is_active')
+    list_display = ['rut', 'nombre', 'apellido', 'correo', 'rol', 'is_staff', 'is_active']
     
     # Campos por los que se puede buscar
     search_fields = ('rut', 'nombre', 'apellido', 'correo')
     
     # Filtros en el sidebar
-    list_filter = ('tipo_contrato', 'is_staff', 'is_active', 'date_joined')
+    list_filter = ['is_staff', 'is_active', 'rol']
     
     # Ordenamiento por defecto
     ordering = ('rut',)
     
     # Campos a mostrar en el formulario de edición
     fieldsets = (
-        ('Información Personal', {
-            'fields': ('rut', 'nombre', 'apellido', 'correo', 'telefono', 'direccion')
-        }),
-        ('Información Laboral', {
-            'fields': ('tipo_contrato',)
-        }),
-        ('Permisos', {
-            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')
-        }),
-        ('Fechas Importantes', {
-            'fields': ('last_login', 'date_joined')
-        }),
+        (None, {'fields': ('rut', 'password')}),
+        ('Información Personal', {'fields': ('nombre', 'apellido', 'correo', 'telefono', 'direccion')}),
+        ('Información Laboral', {'fields': ('tipo_contrato', 'rol')}),
+        ('Permisos', {'fields': ('is_staff', 'is_active', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Fechas Importantes', {'fields': ('last_login', 'date_joined')}),
     )
     
     # Campos a mostrar al crear un nuevo usuario
     add_fieldsets = (
-        ('Información Personal', {
+        (None, {
             'classes': ('wide',),
-            'fields': ('rut', 'nombre', 'apellido', 'correo', 'telefono', 'direccion', 'password1', 'password2'),
-        }),
-        ('Información Laboral', {
-            'fields': ('tipo_contrato',)
-        }),
-        ('Permisos', {
-            'fields': ('is_staff', 'is_active')
-        }),
+            'fields': ('rut', 'nombre', 'apellido', 'correo', 'password1', 'password2', 'rol', 'is_staff', 'is_active')}
+        ),
     )
     
     # Campos de solo lectura
