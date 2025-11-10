@@ -12,7 +12,6 @@ class Insumo(models.Model):
     def __str__(self):
         return self.medicamento
 
-
 class Hospitalizacion(models.Model):
     idHospitalizacion = models.AutoField(primary_key=True)
     idMascota = models.ForeignKey(Mascota, on_delete=models.CASCADE)
