@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Inventario - Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .filter-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .custom-select-wrapper {
+            position: relative;
+            min-width: 160px;
+        }
+
+        .custom-select {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+
+
+        .selected-value {
+            font-size: 0.85rem;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        .selected-value.placeholder {
+            color: #999;
+        }
+
+        .arrow {
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 5px solid #666;
+            margin-left: 8px;
+        }
+
+        .custom-select.active .arrow {
+            transform: rotate(180deg);
+        }
+
+        .custom-select-dropdown {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            list-style: none;
+            padding: 6px 0;
+        }
+
+        .custom-select-dropdown.active {
+            display: flex;
+            animation: slideDown 0.15s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .custom-select-dropdown li {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .custom-select-dropdown li:hover {
+            background: linear-gradient(90deg, rgba(175, 225, 175, 0.15) 0%, transparent 100%);
+            padding-left: 16px;
+        }
+
+        .custom-select-dropdown li.selected {
+            background: linear-gradient(90deg, rgba(175, 225, 175, 0.25) 0%, transparent 100%);
+            font-weight: 600;
+        }
+
+        .custom-select-dropdown::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .custom-select-dropdown::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+
+        .custom-select-dropdown::-webkit-scrollbar-thumb {
+            background: #afe1af;
+            border-radius: 8px;
+        }
+
+        .custom-select-dropdown::-webkit-scrollbar-thumb:hover {
+            background: #89c57c;
+        }
+
+        input[type="hidden"] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="filter-bar">
+        <span class="filter-label">Filtros:</span>
+        
+        <div class="custom-select-wrapper">
+            <div class="custom-select">
+                <span class="selected-value placeholder">Categoría</span>
+                <div class="arrow"></div>
+            </div>
+            <ul class="custom-select-dropdown">
+                <li data-value="">Todas</li>
+                <li data-value="medicamentos">Medicamentos</li>
+                <li data-value="alimentos">Alimentos</li>
+                <li data-value="accesorios">Accesorios</li>
+            </ul>
+            <input type="hidden" name="categoria" value="">
+        </div>
+
+        <div class="custom-select-wrapper">
+            <div class="custom-select">
+                <span class="selected-value placeholder">Especie</span>
+                <div class="arrow"></div>
+            </div>
+            <ul class="custom-select-dropdown">
+                <li data-value="">Todas</li>
+                <li data-value="canino">Canino</li>
+                <li data-value="felino">Felino</li>
+            </ul>
+            <input type="hidden" name="especie" value="">
+        </div>
+
+        <div class="custom-select-wrapper">
+            <div class="custom-select">
+                <span class="selected-value placeholder">Stock</span>
+                <div class="arrow"></div>
+            </div>
+            <ul class="custom-select-dropdown">
+                <li data-value="">Todos</li>
+                <li data-value="low">Bajo</li>
+                <li data-value="ok">Normal</li>
+                <li data-value="high">Alto</li>
+            </ul>
+            <input type="hidden" name="stock" value="">
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const wrappers = document.querySelectorAll('.custom-select-wrapper');
+
+            wrappers.forEach(wrapper => {
+                const customSelect = wrapper.querySelector('.custom-select');
+                const dropdown = wrapper.querySelector('.custom-select-dropdown');
+                const hiddenInput = wrapper.querySelector('input[type="hidden"]');
+                const selectedValue = wrapper.querySelector('.selected-value');
+                const options = wrapper.querySelectorAll('.custom-select-dropdown li');
+
+                // Toggle dropdown
+                customSelect.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    
+                    // Cerrar otros dropdowns
+                    wrappers.forEach(otherWrapper => {
+                        if (otherWrapper !== wrapper) {
+                            otherWrapper.querySelector('.custom-select').classList.remove('active');
+                            otherWrapper.querySelector('.custom-select-dropdown').classList.remove('active');
+                        }
+                    });
+
+                    customSelect.classList.toggle('active');
+                    dropdown.classList.toggle('active');
+                });
+
+                // Select option
+                options.forEach(option => {
+                    option.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        
+                        // Remove selected class from all options
+                        options.forEach(opt => opt.classList.remove('selected'));
+                        
+                        // Add selected class to clicked option
+                        this.classList.add('selected');
+                        
+                        // Update display and hidden input
+                        const value = this.getAttribute('data-value');
+                        const text = this.textContent;
+                        
+                        selectedValue.textContent = text;
+                        selectedValue.classList.remove('placeholder');
+                        hiddenInput.value = value;
+                        
+                        // Close dropdown
+                        customSelect.classList.remove('active');
+                        dropdown.classList.remove('active');
+                    });
+                });
+            });
+
+            // Close all dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                wrappers.forEach(wrapper => {
+                    if (!wrapper.contains(e.target)) {
+                        wrapper.querySelector('.custom-select').classList.remove('active');
+                        wrapper.querySelector('.custom-select-dropdown').classList.remove('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -5,9 +5,7 @@ urlpatterns = [
     # Dashboard principal
     path('dashboard/', views.dashboard_pacientes, name='dashboard_pacientes'),
 
-    # Agenda
-    path('agenda/', views.agenda_view, name='agenda'),
-
+ 
     # Consultas
     path('consultas/', views.consulta_view, name='consulta'),
 
@@ -23,4 +21,6 @@ urlpatterns = [
     
     # Inventario
     path('inventario/', views.inventario, name='inventario'),
+    
+
 ]

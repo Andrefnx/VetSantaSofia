@@ -3,13 +3,21 @@
 <html lang="es">
 
 <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
-    <title>{% block title %}Dashboard{% endblock %} - Veterinaria Santa Sofía</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} - VetSantaSofia</title>
     
-    <link rel="icon" href="{% static 'img/marca/favicon.ico' %}" type="image/x-icon" />
-
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{% static 'img/favicon.ico' %}" type="image/x-icon">
+    <link rel="shortcut icon" href="{% static 'img/favicon.ico' %}" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/apple-touch-icon.png' %}">
+    
     <!-- Fonts and icons -->
     <script src="{% static 'js/plugin/webfont/webfont.min.js' %}"></script>
     <script>
@@ -31,7 +39,6 @@
     </script>
 
     <!-- CSS Files -->
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
     <link rel="stylesheet" href="{% static 'css/plugins.min.css' %}" />
     <link rel="stylesheet" href="{% static 'css/kaiadmin.min.css' %}" />
     <link rel="stylesheet" href="{% static 'css/dashboard_style.css' %}" />

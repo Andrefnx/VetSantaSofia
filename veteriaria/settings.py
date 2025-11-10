@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'hospital',
     'login',
     'cuentas',
+    'agenda',
 ]
 
 MIDDLEWARE = [
@@ -145,3 +146,9 @@ AUTHENTICATION_BACKENDS = ['cuentas.auth_backend.RUTAuthBackend']
 LOGOUT_REDIRECT_URL = 'login'
 LOGIN_URL = 'login'  
 LOGIN_REDIRECT_URL = 'dashboard'
+
+
+AUTHENTICATION_BACKENDS = [
+    'cuentas.backends.RutBackend',  # Backend personalizado para RUT
+    'django.contrib.auth.backends.ModelBackend',  # Backend por defecto
+]

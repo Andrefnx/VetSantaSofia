@@ -24,5 +24,6 @@ urlpatterns = [
     path('dashboard', include('dashboard.urls')),
     path('caja/', include('caja.urls')),
     path('hospital/', include('hospital.urls')), 
+    path('agenda/', include('agenda.urls')),
 
 ]

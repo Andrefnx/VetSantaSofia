@@ -4,10 +4,6 @@ from django.shortcuts import render
 def dashboard_pacientes(request):
     return render(request, 'dashboard_pacientes.html')
 
-# --- AGENDA ---
-def agenda_view(request):
-    return render(request, 'agenda/agenda.html')
-
 # --- CONSULTAS ---
 def consulta_view(request):
     return render(request, 'consultas/consulta.html')

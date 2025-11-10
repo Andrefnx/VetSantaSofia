@@ -49,7 +49,6 @@ def register_view(request):
         return redirect('dashboard')
     
     if request.method == 'POST':
-        # Obtener datos del formulario
         rut = request.POST.get('rut_input')
         nombre = request.POST.get('nombre')
         apellido = request.POST.get('apellido')
@@ -75,17 +74,20 @@ def register_view(request):
         
         # Crear usuario
         try:
-            user = User(
+            is_staff = True if tipo_contrato == 'administracion' else False
+
+            user = User.objects.create_user(
                 rut=rut,
+                password=password,
                 nombre=nombre,
                 apellido=apellido,
                 correo=correo,
                 telefono=telefono,
                 direccion=direccion,
-                tipo_contrato=tipo_contrato
+                tipo_contrato=tipo_contrato,
+                rol=tipo_contrato,
+                is_staff=is_staff
             )
-            user.set_password(password)  # Encripta la contraseña
-            user.save()
             messages.success(request, 'Registro exitoso. Por favor inicia sesión.')
             return redirect('login')
         except Exception as e:

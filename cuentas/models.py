@@ -3,11 +3,28 @@ from django.db import models
 from django.utils import timezone
 
 class CustomUserManager(BaseUserManager):
+    def normalize_rut(self, rut):
+        """Normaliza el formato del RUT"""
+        if not rut:
+            return rut
+        
+        # Eliminar espacios y puntos
+        rut = rut.strip().replace('.', '').replace(' ', '')
+        
+        # Convertir a mayúsculas
+        rut = rut.upper()
+        
+        # Si no tiene guión, agregarlo
+        if '-' not in rut and len(rut) >= 2:
+            rut = f"{rut[:-1]}-{rut[-1]}"
+        
+        return rut
+
     def create_user(self, rut, password=None, **extra_fields):
         if not rut:
             raise ValueError("El usuario debe tener un RUT")
 
-        rut = rut.strip().upper()
+        rut = self.normalize_rut(rut)
         user = self.model(rut=rut, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -17,7 +34,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
-        extra_fields.setdefault('rol', 'administracion')  # Rol por defecto para superusuarios
+        extra_fields.setdefault('rol', 'administracion')
 
         if extra_fields.get('is_staff') is not True:
             raise ValueError('El superusuario debe tener is_staff=True.')
@@ -51,6 +68,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'rut'
     REQUIRED_FIELDS = ['correo', 'nombre', 'apellido']
+
+    def save(self, *args, **kwargs):
+        """Normaliza el RUT antes de guardar"""
+        if self.rut:
+            self.rut = self.rut.strip().replace('.', '').replace(' ', '').upper()
+            if '-' not in self.rut and len(self.rut) >= 2:
+                self.rut = f"{self.rut[:-1]}-{self.rut[-1]}"
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.nombre} {self.apellido} ({self.rut})"

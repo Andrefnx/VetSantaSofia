@@ -1,0 +1,1141 @@
+:root {
+    --primary-color: #afe1af;
+    --primary-hover: #89c57c;
+    --text-dark: #103012;
+    --bg-light: #f8f9fa;
+    --border-color: #e0e0e0;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* ====== ESTILOS AISLADOS PARA INVENTARIO ====== */
+.vet-inventory {
+    width: 100%;
+}
+
+.tag_select{
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    color: #666 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin-bottom: 4px !important;
+    padding-left: 4px !important;
+}
+
+/* ====== FILTER ITEM CON LABEL ====== */
+.vet-inventory .filter-item {
+    all: unset;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+}
+
+.vet-inventory .filter-label {
+    all: unset;
+    display: block !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    color: #666 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin: 0 !important;
+    padding-left: 4px !important;
+}
+
+.vet-inventory .custom-select-wrapper {
+    all: unset;
+    display: inline-block !important;
+    position: relative !important;
+    min-width: 160px !important;
+}
+
+.vet-inventory .custom-select {
+    all: unset;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: white !important;
+    border: 1.5px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    user-select: none !important;
+    box-sizing: border-box !important;
+}
+
+.vet-inventory .custom-select:hover {
+    border-color: #89c57c !important;
+}
+
+.vet-inventory .custom-select.active {
+    border-color: #afe1af !important;
+    box-shadow: 0 0 0 3px rgba(175, 225, 175, 0.2) !important;
+}
+
+.vet-inventory .selected-value {
+    all: unset;
+    font-size: 0.85rem !important;
+    color: #333 !important;
+    white-space: nowrap !important;
+}
+
+.vet-inventory .selected-value.placeholder {
+    color: #999 !important;
+}
+
+.vet-inventory .arrow {
+    all: unset;
+    width: 0 !important;
+    height: 0 !important;
+    border-left: 4px solid transparent !important;
+    border-right: 4px solid transparent !important;
+    border-top: 5px solid #666 !important;
+    transition: transform 0.2s ease !important;
+    margin-left: 8px !important;
+    display: inline-block !important;
+}
+
+.vet-inventory .custom-select.active .arrow {
+    transform: rotate(180deg) !important;
+}
+
+.vet-inventory .custom-select-dropdown {
+    all: unset;
+    position: absolute !important;
+    top: calc(100% + 6px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: white !important;
+    border: 1.5px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+    display: none !important;
+    flex-direction: column !important;
+    z-index: 1000 !important;
+    max-height: 200px !important;
+    overflow-y: auto !important;
+    list-style: none !important;
+    padding: 6px 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.vet-inventory .custom-select-dropdown.active {
+    display: flex !important;
+    animation: slideDown 0.15s ease !important;
+}
+
+.vet-inventory .custom-select-dropdown li {
+    all: unset;
+    display: block !important;
+    padding: 8px 12px !important;
+    font-size: 0.85rem !important;
+    color: #333 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    box-sizing: border-box !important;
+}
+
+.vet-inventory .custom-select-dropdown li:hover {
+    background: linear-gradient(90deg, rgba(175, 225, 175, 0.15) 0%, transparent 100%) !important;
+    padding-left: 16px !important;
+}
+
+.vet-inventory .custom-select-dropdown li.selected {
+    background: linear-gradient(90deg, rgba(175, 225, 175, 0.25) 0%, transparent 100%) !important;
+    color: #89c57c !important;
+    font-weight: 600 !important;
+    border-left: 3px solid #afe1af !important;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Scrollbar personalizado para dropdown */
+.vet-inventory .custom-select-dropdown::-webkit-scrollbar {
+    width: 5px;
+}
+
+.vet-inventory .custom-select-dropdown::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 8px;
+}
+
+.vet-inventory .custom-select-dropdown::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 8px;
+}
+
+.vet-inventory .custom-select-dropdown::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-hover);
+}
+
+/* ====== CONTENEDOR PRINCIPAL ====== */
+.container-fluid {
+    padding: 2rem;
+    background: var(--bg-light);
+    min-height: 100vh;
+}
+
+/* ====== HEADER & CONTROLES ====== */
+.inventory-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 1.5rem;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+.inventory-header h4 {
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.inventory-header h4 i {
+    color: var(--primary-color);
+}
+
+.filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+/* ====== BUSCADOR ====== */
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    padding: 8px 14px;
+    transition: all 0.3s ease;
+    min-width: 250px;
+}
+
+.search-bar:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(175, 225, 175, 0.2);
+}
+
+.search-bar i {
+    color: #9ca3af;
+}
+
+.search-bar input {
+    border: none;
+    padding: 0;
+    width: 100%;
+    background: transparent;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+}
+
+.search-bar input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.search-bar input::placeholder {
+    color: #9ca3af;
+}
+
+/* ====== TABLA ====== */
+.table-inventory {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    overflow: visible !important;
+    border: 1px solid var(--border-color);
+    position: relative;
+    z-index: 1;
+}
+
+.table-inventory table {
+    width: 100%;
+    border-collapse: collapse;
+    overflow: visible !important;
+    position: relative;
+}
+
+.table-inventory thead {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    color: white;
+    position: relative;
+    z-index: 1;
+}
+
+.table-inventory th {
+    padding: 16px 20px;
+    text-align: left;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+}
+
+.table-inventory td {
+    padding: 16px 20px;
+    text-align: left;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 0.9rem;
+    color: #374151;
+    position: relative;
+    overflow: visible !important;
+}
+
+.table-inventory tbody tr {
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: visible !important;
+}
+
+.table-inventory tbody tr:hover {
+    background: linear-gradient(90deg, rgba(175, 225, 175, 0.08) 0%, transparent 100%);
+    box-shadow: inset 4px 0 0 var(--primary-color);
+    z-index: 1;
+}
+
+.table-inventory tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ====== ESTADOS DE STOCK ====== */
+.badge {
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.badge.stock-low {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #dc2626;
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+}
+
+.badge.stock-ok {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    color: #166534;
+    box-shadow: 0 2px 4px rgba(22, 101, 52, 0.2);
+}
+
+.badge.stock-high {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e3a8a;
+    box-shadow: 0 2px 4px rgba(30, 58, 138, 0.2);
+}
+
+/* ====== RUEDA DE OPCIONES ====== */
+.manage-wheel {
+    position: relative;
+    display: inline-block;
+    overflow: visible !important;
+    z-index: 5 !important;
+}
+
+
+
+.manage-wheel > button {
+    border: none;
+    background: var(--bg-light);
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: var(--text-dark);
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.manage-wheel > button:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: rotate(90deg);
+}
+
+.manage-options {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    display: none;
+    flex-direction: column;
+    z-index: 1 !important;
+    min-width: 180px;
+    overflow: visible;
+    margin-top: 8px;
+}
+
+.manage-options.show {
+    display: flex;
+    animation: slideDown 0.3s ease;
+}
+
+/* Ajuste para que se muestre hacia arriba si está muy abajo */
+.manage-wheel.flip-up .manage-options {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+.manage-options button {
+    padding: 12px 16px;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: var(--text-dark);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.manage-options button i {
+    width: 18px;
+    color: var(--primary-hover);
+}
+
+.manage-options button:hover {
+    background: linear-gradient(90deg, rgba(175, 225, 175, 0.15) 0%, transparent 100%);
+    padding-left: 20px;
+}
+
+.manage-options button:not(:last-child) {
+    border-bottom: 1px solid #f3f4f6;
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding: 1rem;
+    }
+
+    .inventory-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .vet-inventory .filter-item,
+    .vet-inventory .custom-select-wrapper,
+    .search-bar {
+        width: 100%;
+        min-width: auto;
+    }
+
+    .table-inventory {
+        overflow-x: auto;
+        overflow-y: visible !important;
+    }
+
+    .table-inventory table {
+        min-width: 800px;
+    }
+}
+
+/* Estilos para el Modal de Lotes */
+#batchesModal .modal-header {
+    background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
+    color: white;
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+}
+
+#batchesModal .modal-header .modal-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#batchesModal .modal-header .modal-title i {
+    font-size: 1.3rem;
+}
+
+#batchesModal .modal-header .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+#batchesModal .modal-header .btn-close:hover {
+    opacity: 1;
+}
+
+#batchesModal .modal-body {
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+}
+
+#batchesModal .batch-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+#batchesModal .batch-item {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #e0e0e0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+#batchesModal .batch-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+#batchesModal .batch-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+}
+
+#batchesModal .batch-value {
+    font-size: 0.95rem;
+    color: #212529;
+    font-weight: 500;
+}
+
+#batchesModal .batch-value.fw-bold {
+    color: #212529;
+    font-size: 1rem;
+}
+
+#batchesModal .batch-value.text-success {
+    color: #28a745 !important;
+    font-weight: 600;
+}
+
+#batchesModal .batch-value.text-warning {
+    color: #ffc107 !important;
+    font-weight: 600;
+}
+
+#batchesModal .batch-value.text-danger {
+    color: #dc3545 !important;
+    font-weight: 600;
+}
+
+#batchesModal .modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+}
+
+#batchesModal .modal-footer .btn {
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+#batchesModal .modal-footer .btn-secondary {
+    background-color: #6c757d;
+    border: none;
+}
+
+#batchesModal .modal-footer .btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+#batchesModal .modal-footer .btn-primary {
+    background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
+    border: none;
+}
+
+#batchesModal .modal-footer .btn-primary:hover {
+    background: linear-gradient(135deg, #9dd59d 0%, #78b56b 100%);
+}
+
+/* Mensaje cuando no hay lotes */
+#batchesModal .text-muted {
+    font-size: 1rem;
+    color: #6c757d !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #batchesModal .batch-item {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    #batchesModal .modal-header {
+        padding: 1rem;
+    }
+    
+    #batchesModal .modal-body {
+        padding: 1rem;
+    }
+    
+    #batchesModal .modal-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    #batchesModal .modal-footer .btn {
+        width: 100%;
+    }
+}
+
+/* Animación de entrada para los lotes */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#batchesModal .batch-item {
+    animation: slideInUp 0.3s ease;
+}
+
+#batchesModal .batch-item:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+#batchesModal .batch-item:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+#batchesModal .batch-item:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+#batchesModal .batch-item:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+/* ====== ESTILOS PARA MODAL DE DETALLES ====== */
+#detailsModal .modal-body {
+    background-color: #f0f2f5;
+    padding: 1.5rem;
+}
+
+#detailsModal .detail-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e0e0e0;
+    position: relative;
+    overflow: hidden;
+}
+
+#detailsModal .detail-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: #e0e0e0;
+}
+
+#detailsModal .detail-section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    padding-left: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+}
+
+#detailsModal .detail-section-title i {
+    font-size: 1.3rem;
+    color: #6c757d;
+}
+
+#detailsModal .detail-section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: #e0e0e0;
+}
+
+#detailsModal label.text-muted {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #6c757d !important;
+    margin-bottom: 0.35rem;
+    display: block;
+}
+
+#detailsModal .detail-section p {
+    font-size: 0.95rem;
+    color: #2c3e50;
+    line-height: 1.6;
+    padding: 0.5rem 0.75rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+}
+
+#detailsModal .detail-section p.fw-bold {
+    background: #f8f9fa;
+    border-left: 3px solid #e0e0e0;
+}
+
+/* Colores específicos para valores importantes */
+#detailsModal .text-primary {
+    color: #212529 !important;
+    font-size: 1.1rem;
+}
+
+#detailsModal .text-success {
+    color: #212529 !important;
+    font-size: 1.1rem;
+}
+
+#detailsModal .text-info {
+    color: #212529 !important;
+    font-size: 1.1rem;
+}
+
+/* Responsive para modal de detalles */
+@media (max-width: 768px) {
+    #detailsModal .detail-section {
+        padding: 1rem;
+    }
+    
+    #detailsModal .detail-section-title {
+        font-size: 1rem;
+    }
+    
+    #detailsModal .modal-body {
+        padding: 1rem;
+    }
+}
+
+/* Estilos para el header del modal de detalles */
+#detailsModal .modal-header {
+    background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
+    color: white;
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+}
+
+#detailsModal .modal-header .modal-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+#detailsModal .modal-header .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+#detailsModal .modal-header .btn-close:hover {
+    opacity: 1;
+}
+
+#detailsModal .modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+#detailsModal .modal-footer .btn {
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+#detailsModal .modal-footer .btn-primary {
+    background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
+    border: none;
+}
+
+#detailsModal .modal-footer .btn-primary:hover {
+    background: linear-gradient(135deg, #9dd59d 0%, #78b56b 100%);
+}
+
+/* Animación de entrada para las secciones */
+@keyframes slideInDetail {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#detailsModal .detail-section {
+    animation: slideInDetail 0.4s ease;
+}
+
+#detailsModal .detail-section:nth-child(1) { animation-delay: 0.05s; }
+#detailsModal .detail-section:nth-child(2) { animation-delay: 0.1s; }
+#detailsModal .detail-section:nth-child(3) { animation-delay: 0.15s; }
+#detailsModal .detail-section:nth-child(4) { animation-delay: 0.2s; }
+#detailsModal .detail-section:nth-child(5) { animation-delay: 0.25s; }
+#detailsModal .detail-section:nth-child(6) { animation-delay: 0.3s; }
+#detailsModal .detail-section:nth-child(7) { animation-delay: 0.35s; }
+#detailsModal .detail-section:nth-child(8) { animation-delay: 0.4s; }
+
+/* ====== ESTILOS PARA FORMULARIOS EN MODALES ====== */
+#editModal .form-control,
+#editModal .form-select,
+#addProductModal .form-control,
+#addProductModal .form-select,
+#addStockModal .form-control,
+#addStockModal .form-select {
+    font-size: 0.95rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+}
+
+#editModal .form-control:focus,
+#editModal .form-select:focus,
+#addProductModal .form-control:focus,
+#addProductModal .form-select:focus,
+#addStockModal .form-control:focus,
+#addStockModal .form-select:focus {
+    border-color: #afe1af;
+    box-shadow: 0 0 0 3px rgba(175, 225, 175, 0.15);
+}
+
+#editModal textarea.form-control,
+#addProductModal textarea.form-control,
+#addStockModal textarea.form-control {
+    resize: vertical;
+    min-height: 60px;
+}
+
+#editModal .modal-header,
+#addProductModal .modal-header,
+#addStockModal .modal-header {
+    background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
+    color: white;
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+}
+
+#editModal .modal-header .modal-title,
+#addProductModal .modal-header .modal-title,
+#addStockModal .modal-header .modal-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+#editModal .modal-header .btn-close,
+#addProductModal .modal-header .btn-close,
+#addStockModal .modal-header .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+#editModal .modal-header .btn-close:hover,
+#addProductModal .modal-header .btn-close:hover,
+#addStockModal .modal-header .btn-close:hover {
+    opacity: 1;
+}
+
+#editModal .modal-footer,
+#addProductModal .modal-footer,
+#addStockModal .modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+#editModal .modal-footer .btn,
+#addProductModal .modal-footer .btn,
+#addStockModal .modal-footer .btn {
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+#editModal .btn-primary,
+#addProductModal .btn-success,
+#addStockModal .btn-success {
+    background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
+    border: none;
+}
+
+#editModal .btn-primary:hover,
+#addProductModal .btn-success:hover,
+#addStockModal .btn-success:hover {
+    background: linear-gradient(135deg, #9dd59d 0%, #78b56b 100%);
+}
+
+/* ====== ESTILOS PARA MODAL HEADER GRADIENT ====== */
+.modal-header-gradient {
+    background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
+    color: white;
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+}
+
+.modal-header-gradient .modal-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: white;
+}
+
+.modal-header-gradient .btn-close-white {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+.modal-header-gradient .btn-close-white:hover {
+    opacity: 1;
+}
+
+/* ====== BOTONES DE ACCIÓN CON CLASE ESPECÍFICA ====== */
+div.custom_important_style.action-buttons {
+    display: flex;
+    gap: 12px;
+    padding: 15px 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+div.custom_important_style.action-buttons .btn.btn-success,
+div.custom_important_style.action-buttons .btn.btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    transition: all 0.25s ease;
+    background: white;
+    border: 1.5px solid #e0e0e0;
+    color: #374151;
+}
+
+div.custom_important_style.action-buttons .btn i {
+    font-size: 15px;
+    color: #6c757d;
+    transition: color 0.25s ease;
+}
+
+div.custom_important_style.action-buttons .btn.btn-success:hover,
+div.custom_important_style.action-buttons .btn.btn-secondary:hover {
+    background: #f8f9fa;
+    border-color: #afe1af;
+    color: #103012;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+div.custom_important_style.action-buttons .btn:hover i {
+    color: #89c57c;
+}
+
+div.custom_important_style.action-buttons .btn.btn-success:active,
+div.custom_important_style.action-buttons .btn.btn-secondary:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+div.custom_important_style.action-buttons .btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(175, 225, 175, 0.25);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    div.custom_important_style.action-buttons {
+        flex-wrap: wrap;
+    }
+    
+    div.custom_important_style.action-buttons .btn {
+        flex: 1 1 auto;
+        min-width: fit-content;
+    }
+}
+
+/* Remover estilos antiguos */
+.action-buttons {
+    display: none;
+}
+
+/* ====== ESTILOS COMPLETAMENTE AISLADOS PARA BOTONES DE INVENTARIO ====== */
+
+/* Contenedor de botones - Aislado completamente */
+.inventario-page-content .custom_important_style.action-buttons {
+    all: unset;
+    display: flex !important;
+    gap: 12px !important;
+    padding: 15px 0 !important;
+    margin-bottom: 20px !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Resetear y estilizar botones desde cero */
+.inventario-page-content .custom_important_style.action-buttons button {
+    all: unset;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 10px 18px !important;
+    font-family: inherit !important;
+    font-weight: 500 !important;
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+    border-radius: 8px !important;
+    transition: all 0.25s ease !important;
+    background: white !important;
+    border: 1.5px solid #e0e0e0 !important;
+    color: #374151 !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+}
+
+/* Iconos dentro de los botones */
+.inventario-page-content .custom_important_style.action-buttons button i {
+    all: unset;
+    display: inline-block !important;
+    font-size: 15px !important;
+    color: #6c757d !important;
+    transition: color 0.25s ease !important;
+    font-style: normal !important;
+    font-family: "Font Awesome 5 Free", "Font Awesome 5 Pro" !important;
+    font-weight: 900 !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Estado hover de los botones */
+.inventario-page-content .custom_important_style.action-buttons button:hover {
+    background: #f8f9fa !important;
+    border-color: #afe1af !important;
+    color: #103012 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Cambio de color del icono en hover */
+.inventario-page-content .custom_important_style.action-buttons button:hover i {
+    color: #89c57c !important;
+}
+
+/* Estado active (cuando se hace click) */
+.inventario-page-content .custom_important_style.action-buttons button:active {
+    transform: scale(0.98) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Estado focus (accesibilidad) */
+.inventario-page-content .custom_important_style.action-buttons button:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(175, 225, 175, 0.25) !important;
+}
+
+/* Estado disabled */
+.inventario-page-content .custom_important_style.action-buttons button:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .inventario-page-content .custom_important_style.action-buttons {
+        flex-wrap: wrap !important;
+    }
+    
+    .inventario-page-content .custom_important_style.action-buttons button {
+        flex: 1 1 auto !important;
+        min-width: fit-content !important;
+    }
+}
+
+/* Remover cualquier conflicto con clases de Bootstrap */
+.inventario-page-content .custom_important_style.action-buttons .btn,
+.inventario-page-content .custom_important_style.action-buttons .btn-success,
+.inventario-page-content .custom_important_style.action-buttons .btn-secondary {
+    all: unset !important;
+}
+
+/* Volver a aplicar los estilos base después del reset */
+.inventario-page-content .custom_important_style.action-buttons .btn,
+.inventario-page-content .custom_important_style.action-buttons .btn-success,
+.inventario-page-content .custom_important_style.action-buttons .btn-secondary {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 10px 18px !important;
+    font-family: inherit !important;
+    font-weight: 500 !important;
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+    border-radius: 8px !important;
+    transition: all 0.25s ease !important;
+    background: white !important;
+    border: 1.5px solid #e0e0e0 !important;
+    color: #374151 !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+}
