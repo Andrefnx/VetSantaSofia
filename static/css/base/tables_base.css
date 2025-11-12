@@ -56,6 +56,26 @@
     min-width: 0;
 }
 
+/* Ordena los filtros uno al lado del otro y permite wrap */
+.table-header-controls {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+    align-items: stretch !important;
+}
+
+/* Solo los filtros (no el buscador) */
+.vet-custom-select-wrapper {
+    flex: 1 1 180px !important;
+    min-width: 160px !important;
+    max-width: 300px !important;
+    margin-bottom: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
 /* Acciones a la derecha */
 .table-actions {
     grid-column: 2 / 3;
@@ -163,11 +183,11 @@
     color: #9ca3af;
 }
 .filter-group {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 1rem !important;
     width: 100%;
-    display: flex;
-    flex-direction: row;
-    gap: 1rem;
-    margin-top: 0.5rem;
 }
 
 /* ====== SELECT PERSONALIZADO ====== */

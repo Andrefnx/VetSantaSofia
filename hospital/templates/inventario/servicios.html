@@ -12,24 +12,64 @@
 {% endblock %}
 
 {% block table_filters %}
-<div class="search-bar">
-    <i class="fas fa-search text-muted"></i>
-    <input type="text" id="searchInput" placeholder="Buscar servicio...">
-</div>
-<div class="vet-custom-select-wrapper">
-    <span class="tag_select">Tipo</span>
-    <div class="vet-custom-select">
-        <span class="vet-selected-value placeholder">Todos</span>
-        <div class="vet-arrow"></div>
+<div class="filter-group">
+    <div class="vet-custom-select-wrapper">
+        <span class="tag_select">Tipo</span>
+        <div class="vet-custom-select">
+            <span class="vet-selected-value placeholder">Todos</span>
+            <div class="vet-arrow"></div>
+        </div>
+        <ul class="vet-custom-select-dropdown">
+            <li data-value="">Todos</li>
+            <li data-value="consulta">Consulta</li>
+            <li data-value="vacunación">Vacunación</li>
+            <li data-value="cirugía">Cirugía</li>
+        </ul>
+        <input type="hidden" id="filterTipo" value="">
     </div>
-    <ul class="vet-custom-select-dropdown">
-        <li data-value="">Todos</li>
-        <li data-value="consulta">Consulta</li>
-        <li data-value="vacunación">Vacunación</li>
-        <li data-value="cirugía">Cirugía</li>
-        <!-- Agrega más tipos si es necesario -->
-    </ul>
-    <input type="hidden" id="filterTipo" value="">
+    <div class="vet-custom-select-wrapper">
+        <span class="tag_select">Tipo</span>
+        <div class="vet-custom-select">
+            <span class="vet-selected-value placeholder">Todos</span>
+            <div class="vet-arrow"></div>
+        </div>
+        <ul class="vet-custom-select-dropdown">
+            <li data-value="">Todos</li>
+            <li data-value="consulta">Consulta</li>
+            <li data-value="vacunación">Vacunación</li>
+            <li data-value="cirugía">Cirugía</li>
+        </ul>
+        <input type="hidden" id="filterTipo" value="">
+    </div>
+    <div class="vet-custom-select-wrapper">
+        <span class="tag_select">Tipo</span>
+        <div class="vet-custom-select">
+            <span class="vet-selected-value placeholder">Todos</span>
+            <div class="vet-arrow"></div>
+        </div>
+        <ul class="vet-custom-select-dropdown">
+            <li data-value="">Todos</li>
+            <li data-value="consulta">Consulta</li>
+            <li data-value="vacunación">Vacunación</li>
+            <li data-value="cirugía">Cirugía</li>
+        </ul>
+        <input type="hidden" id="filterTipo" value="">
+    </div>
+    <div class="vet-custom-select-wrapper">
+        <span class="tag_select">Tipo</span>
+        <div class="vet-custom-select">
+            <span class="vet-selected-value placeholder">Todos</span>
+            <div class="vet-arrow"></div>
+        </div>
+        <ul class="vet-custom-select-dropdown">
+            <li data-value="">Todos</li>
+            <li data-value="consulta">Consulta</li>
+            <li data-value="vacunación">Vacunación</li>
+            <li data-value="cirugía">Cirugía</li>
+        </ul>
+        <input type="hidden" id="filterTipo" value="">
+    </div>
+    <!-- Más filtros aquí si quieres -->
 </div>
 {% endblock %}
 
@@ -59,7 +99,9 @@
     <td>Evaluación médica general de la mascota.</td>
     <td>N/A</td>
     <td>
-        {% include "partials/utilities/manage_wheel.html" %}
+        {% with custom_options=None %}
+            {% include "partials/utilities/manage_wheel.html" %}
+        {% endwith %}
     </td>
 </tr>
 <tr>
@@ -69,7 +111,9 @@
     <td>Aplicación de vacuna antirrábica.</td>
     <td>Vacuna Rabia</td>
     <td>
-        {% include "partials/utilities/manage_wheel.html" %}
+        {% with custom_options=None %}
+            {% include "partials/utilities/manage_wheel.html" %}
+        {% endwith %}
     </td>
 </tr>
 <tr>
@@ -79,7 +123,9 @@
     <td>Esterilización de mascota (canino/felino).</td>
     <td>Anestesia, Suturas</td>
     <td>
-        {% include "partials/utilities/manage_wheel.html" %}
+        {% with custom_options=None %}
+            {% include "partials/utilities/manage_wheel.html" %}
+        {% endwith %}
     </td>
 </tr>
 {% endblock %}

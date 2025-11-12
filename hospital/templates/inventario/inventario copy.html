@@ -1,169 +1,153 @@
-{% extends "partials/base_table.html" %}
+{% extends 'partials/base.html' %}
 {% load static %}
 
 {% block title %}Inventario{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/style_inventario.css' %}?v=4" type="text/css" media="all">
 <link rel="stylesheet" href="{% static 'css/lotes.css' %}" type="text/css" media="all">
-<link rel="stylesheet" href="{% static 'css/style_inventario.css' %}" type="text/css" media="all">
 {% endblock %}
 
-{% block table_title %}
-<i class="fas fa-boxes"></i> Inventario
-{% endblock %}
+{% block content %}
+<!-- Contenedor específico para aislar estilos de inventario -->
+<div class="inventario-page-content">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="inventory-header">
+            <h4><i class="fas fa-boxes"></i> Inventario</h4>
 
-{% block table_filters %}
-<div class="filter-group vet-inventory">
-    <!-- Filtro Especie -->
-    <div class="vet-custom-select-wrapper">
-        <span class="tag_select">Especie</span>
-        <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todas</span>
-            <div class="vet-arrow"></div>
-        </div>
-        <ul class="vet-custom-select-dropdown">
-            <li data-value="">Todas</li>
-            <li data-value="canino">Canino</li>
-            <li data-value="felino">Felino</li>
-        </ul>
-        <input type="hidden" id="filterEspecie" value="">
-    </div>
+            <div class="filter-group vet-inventory">
+                <!-- Buscador -->
+                <div class="search-bar">
+                    <i class="fas fa-search text-muted"></i>
+                    <input type="text" id="searchInput" placeholder="Buscar producto...">
+                </div>
 
-    <!-- Filtro Stock -->
-    <div class="vet-custom-select-wrapper">
-        <span class="tag_select">Stock</span>
-        <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todos</span>
-            <div class="vet-arrow"></div>
-        </div>
-        <ul class="vet-custom-select-dropdown">
-            <li data-value="">Todos</li>
-            <li data-value="low">Bajo</li>
-            <li data-value="ok">Normal</li>
-            <li data-value="high">Alto</li>
-        </ul>
-        <input type="hidden" id="filterStock" value="">
-    </div>
+                <!-- Filtros -->
+                <div class="filters vet-inventory">
+                    <!-- Filtro Especie -->
+                    <div class="custom-select-wrapper">
+                        <p class="tag_select">Especie</p>
+                        <div class="custom-select">
+                            <span class="selected-value placeholder">Especie</span>
+                            <div class="arrow"></div>
+                        </div>
+                        <ul class="custom-select-dropdown">
+                            <li data-value="">Todas</li>
+                            <li data-value="canino">Canino</li>
+                            <li data-value="felino">Felino</li>
+                        </ul>
+                        <input type="hidden" id="filterEspecie" value="">
+                    </div>
 
-    <!-- Filtro Proveedor -->
-    <div class="vet-custom-select-wrapper">
-        <span class="tag_select">Proveedor</span>
-        <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todos</span>
-            <div class="vet-arrow"></div>
-        </div>
-        <ul class="vet-custom-select-dropdown">
-            <li data-value="">Todos</li>
-            <li data-value="vet pharma">Vet Pharma</li>
-            <li data-value="pet supplies">Pet Supplies</li>
-        </ul>
-        <input type="hidden" id="filterProveedor" value="">
-    </div>
-</div>
-{% endblock %}
+                    <!-- Filtro Stock -->
+                    <div class="custom-select-wrapper">
+                        <p class="tag_select">Stock</p>
+                        <div class="custom-select">
+                            <span class="selected-value placeholder">Stock</span>
+                            <div class="arrow"></div>
+                        </div>
+                        <ul class="custom-select-dropdown">
+                            <li data-value="">Todos</li>
+                            <li data-value="low">Bajo</li>
+                            <li data-value="ok">Normal</li>
+                            <li data-value="high">Alto</li>
+                        </ul>
+                        <input type="hidden" id="filterStock" value="">
+                    </div>
 
-{% block table_buttons %}
-<button type="button" onclick="openAddProductModal()">
-    <i class="fas fa-plus-circle"></i> Nuevo Producto
-</button>
-<button type="button" onclick="exportInventory()">
-    <i class="fas fa-file-export"></i> Exportar
-</button>
-{% endblock %}
-
-{% block table_columns %}
-<th>Producto</th>
-<th>Especie</th>
-<th>Precio</th>
-<th>Stock</th>
-<th>Último Ingreso</th>
-<th>Último Salida</th>
-<th>Proveedor</th>
-<th>Gestión</th>
-{% endblock %}
-
-{% block table_rows %}
-<tr data-especie="felino" data-stock="ok" data-proveedor="vet pharma">
-    <td>Revolution Plus</td>
-    <td>Felino</td>
-    <td>$32.500</td>
-    <td><span class="badge stock-ok">10</span></td>
-    <td>15/03/2026</td>
-    <td>03/11/2025</td>
-    <td>Vet Pharma</td>
-    <td>
-        <!-- Aquí va el manage wheel -->
-        <div class="manage-wheel">
-    <button type="button" onclick="toggleWheel(this)">
-        <i class="fas fa-cog"></i>
-    </button>
-    <div class="manage-options" style="display: none;">
-        <button type="button" onclick="openBatchesModal()">
-            <i class="fas fa-layer-group"></i> Ver lotes
-        </button>
-        <button type="button" onclick="openDetailsModal()">
-            <i class="fas fa-eye"></i> Ver detalles
-        </button>
-        <button type="button" onclick="openAddStockModal()">
-            <i class="fas fa-plus"></i> Agregar stock
-        </button>
-        <button type="button" onclick="openEditModal()">
-            <i class="fas fa-edit"></i> Editar
-        </button>
-        <button type="button" onclick="openDeleteModal()">
-            <i class="fas fa-trash"></i> Eliminar
-        </button>
-    </div>
-</div>
-
-    </td>
-</tr>
-<tr data-especie="canino" data-stock="low" data-proveedor="pet supplies">
-    <td>Bravecto 40-56Kg</td>
-    <td>Canino</td>
-    <td>$28.000</td>
-    <td><span class="badge stock-low">3</span></td>
-    <td>02/02/2025</td>
-    <td>15/10/2025</td>
-    <td>Pet Supplies</td>
-    <td>
-        <div class="manage-wheel">
-            <button onclick="toggleWheel(this)">
-                <i class="fas fa-cog"></i>
-            </button>
-            <div class="manage-options" style="display: none;">
-                <button type='button' class='btn-ver-lotes'
-                    onclick="openBatchesModal(this.closest('tr').cells[0].textContent.trim())">
-                    <i class='fas fa-layer-group'></i> Ver lotes
-                </button>
-                <button onclick="openDetailsModal()"><i class="fas fa-eye"></i> Ver detalles</button>
-                <button onclick="openAddStockModal()"><i class="fas fa-plus"></i> Agregar stock</button>
-                <button onclick="openEditModal()"><i class="fas fa-edit"></i> Editar</button>
-                <button onclick="openDeleteModal()"><i class="fas fa-trash"></i> Eliminar</button>
+                    <!-- Filtro Proveedor -->
+                    <div class="custom-select-wrapper">
+                        <p class="tag_select">Proveedor</p>
+                        <div class="custom-select">
+                            <span class="selected-value placeholder">Proveedor</span>
+                            <div class="arrow"></div>
+                        </div>
+                        <ul class="custom-select-dropdown">
+                            <li data-value="">Todos</li>
+                            <li data-value="vet pharma">Vet Pharma</li>
+                            <li data-value="pet supplies">Pet Supplies</li>
+                        </ul>
+                        <input type="hidden" id="filterProveedor" value="">
+                    </div>
+                </div>
             </div>
         </div>
-    </td>
-</tr>
-{% endblock %}
 
-{% block extra_js %}
-<script src="{% static 'js/inventario/lotes.js' %}"></script>
-<script src="{% static 'js/inventario/modal_inventario.js' %}"></script>
+        <!-- Botones de Acción - Completamente Aislados -->
+        <div class="custom_important_style action-buttons">
+            <button type="button" onclick="openAddProductModal()">
+                <i class="fas fa-plus-circle"></i> Nuevo Producto
+            </button>
+      
+            <button type="button" onclick="exportInventory()">
+                <i class="fas fa-file-export"></i> Exportar
+            </button>
+        </div>
 
-<script>
-    // Para Bootstrap 5+
-    function openBatchesModal(productName) {
-        const batches = productBatches[productName] || [];
-        document.getElementById('batchProductName').textContent = productName;
-        // ...cargar los lotes en #batchList...
+        <!-- Tabla -->
+        <div class="table-inventory">
+            <table id="inventoryTable">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Especie</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Último Ingreso</th>
+                        <th>Último Salida</th>
+                        <th>Proveedor</th>
+                        <th>Gestión</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-especie="felino" data-stock="ok" data-proveedor="vet pharma">
+                        <td>Revolution Plus</td>
+                        <td>Felino</td>
+                        <td>$32.500</td>
+                        <td><span class="badge stock-ok">10</span></td>
+                        <td>15/03/2026</td>
+                        <td>03/11/2025 </td>
+                        <td>Vet Pharma</td>
+                        <td>
+                            <div class="manage-wheel">
+                                <button onclick="toggleWheel(this)"><i class="fas fa-cog"></i></button>
+                                <div class="manage-options">
+                                    <button onclick="openDetailsModal()"><i class="fas fa-eye"></i> Ver detalles</button>
+                                    <button onclick="openEditModal()"><i class="fas fa-edit"></i> Editar</button>
+                                    <button onclick="openAddStockModal()"><i class="fas fa-plus"></i> Agregar stock</button>
+                                    <button onclick="openDeleteModal()"><i class="fas fa-trash"></i> Eliminar</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
 
-        // Mostrar el modal usando Bootstrap
-        const modal = new bootstrap.Modal(document.getElementById('batchesModal'));
-        modal.show();
-    }
-</script>
-{% endblock %}
-
+                    <tr data-especie="canino" data-stock="low" data-proveedor="pet supplies">
+                        <td>Bravecto 40-56Kg</td>
+                        <td>Canino</td>
+                        <td>$28.000</td>
+                        <td><span class="badge stock-low">3</span></td>
+                        <td>02/02/2025</td>
+                        <td>15/10/2025</td>
+                        <td>Pet Supplies</td>
+                        <td>
+                            <div class="manage-wheel">
+                                <button onclick="toggleWheel(this)"><i class="fas fa-cog"></i></button>
+                                <div class="manage-options">
+                                    <button onclick="openDetailsModal()"><i class="fas fa-eye"></i> Ver detalles</button>
+                                    <button onclick="openEditModal()"><i class="fas fa-edit"></i> Editar</button>
+                                    <button onclick="openAddStockModal()"><i class="fas fa-plus"></i> Agregar stock</button>
+                                    
+                                    <button onclick="openDeleteModal()"><i class="fas fa-trash"></i> Eliminar</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 <!-- Modal Editar Producto -->
 <div class="modal fade" id="editModal" tabindex="-1">
@@ -1122,3 +1106,14 @@
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Scripts de inventario -->
+<script src="{% static 'js/inventario/gestion_wheel.js' %}"></script>
+<script src="{% static 'js/inventario/lotes.js' %}"></script>
+<script src="{% static 'js/inventario/modal_inventario.js' %}"></script>
+<script src="{% static 'js/inventario/filters.js' %}"></script>
+<script src="{% static 'js/inventario/init.js' %}"></script>
+{% endblock %}

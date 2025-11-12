@@ -20,3 +20,13 @@ export function setupModalGuard(modalId, state) {
         state.allowClose = false;
     });
 }
+
+function openBatchesModal(productName) {
+    const batches = productBatches[productName] || [];
+    document.getElementById('batchProductName').textContent = productName;
+    // ...cargar los lotes en #batchList...
+
+    // Mostrar el modal usando Bootstrap
+    const modal = new bootstrap.Modal(document.getElementById('batchesModal'));
+    modal.show();
+}

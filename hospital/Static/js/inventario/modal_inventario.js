@@ -488,4 +488,35 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteConfirmed = false;
         });
     }
+    
+    // Tabla de productos - Modal de lotes
+    const table = document.getElementById('vet-table');
+    if (table) {
+        table.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('click', function(e) {
+                // Si el click fue en un botón dentro de la fila, no abrir modal
+                if (e.target.closest('.manage-wheel, .manage-options, button')) return;
+                // Abre el modal de lotes
+                const batchesModal = document.getElementById('batchesModal');
+                if (batchesModal) {
+                    new bootstrap.Modal(batchesModal).show();
+                }
+            });
+        });
+    }
 });
+
+function openBatchesModal(productName) {
+    // Si no se pasó el nombre, intenta obtenerlo desde la fila activa
+    if (!productName) {
+        const row = getCurrentRow?.();
+        productName = row ? row.cells[0].textContent.trim() : "(Desconocido)";
+    }
+
+    const batchNameElem = document.getElementById("batchProductName");
+    if (batchNameElem) batchNameElem.textContent = productName;
+
+    const modalElem = document.getElementById("batchesModal");
+    if (modalElem) new bootstrap.Modal(modalElem).show();
+    else console.error("❌ No se encontró el modal #batchesModal en el DOM");
+}

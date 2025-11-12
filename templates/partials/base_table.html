@@ -1,6 +1,8 @@
 {% extends "partials/base.html" %}
 {% load static %}
-
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/base/tables_base.css' %}?v=4" type="text/css" media="all">
+{% endblock %}
 {% block content %}
 <div class="table-page-content">
     <div class="container-fluid">
@@ -12,11 +14,11 @@
                 {% endblock %}
             </h4>
             <div class="table-header-controls">
+                <div class="search-bar">
+                    <i class="fas fa-search text-muted"></i>
+                    <input type="text" id="searchInput" placeholder="Buscar ...">
+                </div>
                 {% block table_filters %}
-                    <div class="search-bar">
-                        <i class="fas fa-search text-muted"></i>
-                        <input type="text" id="searchInput" placeholder="Buscar ...">
-                    </div>
                 {% endblock %}
             </div>
             <div class="table-actions">
@@ -55,13 +57,21 @@
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('vet-table');
+    if (!searchInput || !table) return;
 
-<script type="module">
-    import { initManageWheel } from "{% static 'js/base/wheel_base.js' %}";
-    import { initFiltersBase } from "{% static 'js/base/filters_base.js' %}";
-    document.addEventListener('DOMContentLoaded', function() {
-        initManageWheel();
-        initFiltersBase();
+    searchInput.addEventListener('input', function() {
+        const filter = searchInput.value.toLowerCase();
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(filter) ? '' : 'none';
+        });
     });
+});
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}
