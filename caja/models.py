@@ -7,7 +7,7 @@ class Caja(models.Model):
     descripcion = models.CharField(max_length=200, null=True, blank=True)
     valor_total = models.DecimalField(max_digits=10, decimal_places=2)
     veterinario = models.CharField(max_length=100)
-    num_operacion = models.IntegerField(max_length=100, null=True, blank=True)
+    num_operacion = models.IntegerField(null=True, blank=True)
     metodo_pago = models.CharField(max_length=50, choices=[
         ('efectivo', 'Efectivo'),
         ('tarjetadeb', 'Debito'),
@@ -30,7 +30,7 @@ class Caja(models.Model):
 class DetalleCaja(models.Model):
     Caja = models.ForeignKey(Caja, on_delete=models.CASCADE, related_name='detalles')
     Insumo = models.ForeignKey(Insumo, on_delete=models.CASCADE)
-    cantidad = models.IntergerField(default=1)
+    cantidad = models.IntegerField(default=1)
 
     @property
     def subtotal(self):

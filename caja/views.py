@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 import openpyxl
 from caja.forms import CajaForm, DetalleCajaFormSet
-from caja.models import caja
+from caja.models import Caja
 import xlsxwriter
 from io import BytesIO
 from datetime import date, datetime
@@ -17,7 +17,7 @@ from datetime import date, datetime
 @login_required
 def caja(request):
     hoy = date.today()
-    registros = caja.objects.filter(fecha_caja=hoy)
+    registros = Caja.objects.filter(fecha_caja=hoy)
     return render(request, 'cash_register.html', {
         'registros': registros,
         'fecha': hoy
@@ -39,7 +39,7 @@ def anadir_cobro(request):
 
 
 def editar_cobro(request, caja_id):
-    cobro = get_object_or_404(caja, id=caja_id)
+    cobro = get_object_or_404(Caja, idCaja=caja_id)
     if request.method == 'POST':
         form = CajaForm(request.POST, instance=cobro)
         if form.is_valid():
@@ -59,8 +59,8 @@ def crear_caja(request):
         form = CajaForm()
     return render(request, 'caja_diaria', {'form': form})
 
-def editar_caja(request, pk):
-    registro = get_object_or_404(caja, pk=pk)
+def editar_caja(request, caja_id):
+    registro = get_object_or_404(Caja, idCaja=caja_id)
     if request.method == 'POST':
         form = CajaForm(request.POST, instance=registro)
         if form.is_valid():
@@ -70,8 +70,8 @@ def editar_caja(request, pk):
         form = CajaForm(instance=registro)
     return render(request, 'caja_diaria.html', {'form': form})
 
-def eliminar_caja(request, pk):
-    registro = get_object_or_404(caja, pk=pk)
+def eliminar_caja(request, caja_id):
+    registro = get_object_or_404(Caja, idCaja=caja_id)
     if request.method == 'POST':
         registro.delete()
         return redirect('caja_diaria')
@@ -137,7 +137,7 @@ def export_caja_diaria(request):
     for col, header in enumerate(headers):
         worksheet.write(0, col, header, header_format)
     fecha = date.today()
-    registros = caja.objects.filter(fecha_caja=fecha)
+    registros = Caja.objects.filter(fecha_caja=fecha)
 
     for row, registro in enumerate(registros, start=1):
         worksheet.write(row, 0, registro.fecha_caja, date_format)

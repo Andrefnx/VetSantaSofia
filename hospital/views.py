@@ -31,7 +31,7 @@ def vet_disponibilidad_view(request):
     return render(request, 'veterinarios/vet_disponibilidad.html')
 
 def ver_insumos(request):
-    insumos = insumo.objects.all()
+    insumos = Insumo.objects.all()
     return render(request, 'ver_insumos.html', {'insumos': insumos}
 )
 
@@ -85,8 +85,8 @@ def crear_hospitalizacion(request):
         form = HospitalizacionForm()
     return render(request, 'hospitalizacion_form.html', {'form': form})
 
-def editar_hospitalizacion(request, pk):
-    registro = get_object_or_404(Hospitalizacion, pk=pk)
+def editar_hospitalizacion(request, hospid):
+    registro = get_object_or_404(Hospitalizacion, idHospitalizacion=hospid)
     if request.method == 'POST':
         form = HospitalizacionForm(request.POST, instance=registro)
         if form.is_valid():
@@ -96,8 +96,8 @@ def editar_hospitalizacion(request, pk):
         form = HospitalizacionForm(instance=registro)
     return render(request, 'hospitalizacion_form.html', {'form': form})
 
-def eliminar_hospitalizacion(request, pk):
-    registro = get_object_or_404(Hospitalizacion, pk=pk)
+def eliminar_hospitalizacion(request, hospid):
+    registro = get_object_or_404(Hospitalizacion, idHospitalizacion=hospid)
     if request.method == 'POST':
         registro.delete()
         return redirect('lista_hospitalizaciones')
