@@ -21,6 +21,9 @@ urlpatterns = [
     
     # Inventario
     path('inventario/', views.inventario, name='inventario'),
+
+    path('servicios/', views.servicios, name='servicios'),
     
+    path('test/', views.test_view, name='test'),
 
 ]

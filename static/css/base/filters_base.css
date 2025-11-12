@@ -1,0 +1,105 @@
+.filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    border: 1.5px solid rgb(138, 138, 138);
+    border-radius: 10px;
+    padding: 8px 14px;
+    transition: all 0.3s ease;
+    width:420px;
+}
+
+.search-bar input {
+    border: none;
+    outline: none;
+    width: 100%;
+    background: transparent;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+}
+
+.search-bar:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(175, 225, 175, 0.2);
+}
+
+.vet-custom-select-wrapper {
+    position: relative;
+    min-width: 160px;
+    display: inline-block;
+}
+
+.vet-custom-select {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.vet-custom-select:hover,
+.vet-custom-select.active {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(175, 225, 175, 0.15);
+}
+
+.vet-custom-select .selected-value {
+    font-size: 0.85rem;
+    color: #333;
+}
+
+.vet-custom-select-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    display: none;
+    flex-direction: column;
+    list-style: none;
+    z-index: 1000;
+}
+
+.vet-custom-select-dropdown.active {
+    display: flex;
+    animation: fadeIn 0.2s ease;
+}
+
+.vet-custom-select-dropdown li {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.vet-custom-select-dropdown li:hover {
+    background: rgba(175, 225, 175, 0.15);
+    padding-left: 16px;
+}
+
+.vet-custom-select-dropdown li.selected {
+    background: rgba(175, 225, 175, 0.25);
+    color: var(--primary-hover);
+    font-weight: 600;
+    border-left: 3px solid var(--primary-color);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}

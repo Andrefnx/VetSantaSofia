@@ -27,3 +27,11 @@ def vet_disponibilidad_view(request):
 
 def inventario(request):
     return render(request, 'inventario/inventario.html')
+
+# --- SERVICIOS ---
+
+def servicios(request):
+    return render(request, 'inventario/servicios.html')
+
+def test_view(request):
+    return render(request, 'inventario/test.html')

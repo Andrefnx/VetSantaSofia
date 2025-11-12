@@ -28,7 +28,7 @@
     <div class="sidebar-wrapper scrollbar scrollbar-inner">
         <div class="sidebar-content">
             <ul class="nav nav-secondary">
-                
+
                 <!-- DASHBOARD -->
                 <li class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <a href="{% url 'dashboard' %}">
@@ -75,21 +75,21 @@
                 </li>
 
                 <!-- SECCIÓN: VETERINARIOS -->
-                <li class="nav-item {% if request.resolver_match.url_name == 'vet_ficha' or request.resolver_match.url_name == 'vet_disponibilidad' %}active submenu{% endif %}">
-                    <a data-bs-toggle="collapse" href="#veterinarios" {% if request.resolver_match.url_name in 'vet_ficha vet_disponibilidad' %}aria-expanded="true"{% endif %}>
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#veterinarios">
                         <i class="bi bi-person-vcard-fill"></i>
                         <p>Veterinarios</p>
                         <span class="caret"></span>
                     </a>
-                    <div class="collapse {% if request.resolver_match.url_name in 'vet_ficha vet_disponibilidad' %}show{% endif %}" id="veterinarios">
+                    <div class="collapse" id="veterinarios">
                         <ul class="nav nav-collapse">
-                            <li {% if request.resolver_match.url_name == 'vet_ficha' %}class="active"{% endif %}>
-                                <a href="{% url 'vet_ficha' %}">
+                            <li>
+                                <a href="#">
                                     <span class="sub-item">Ficha Veterinario</span>
                                 </a>
                             </li>
-                            <li {% if request.resolver_match.url_name == 'vet_disponibilidad' %}class="active"{% endif %}>
-                                <a href="{% url 'vet_disponibilidad' %}">
+                            <li>
+                                <a href="#">
                                     <span class="sub-item">Disponibilidad</span>
                                 </a>
                             </li>
@@ -105,14 +105,22 @@
                     </a>
                 </li>
 
-                <!-- SECCIÓN: INVENTARIO -->    
+                <!-- SECCIÓN: INVENTARIO -->
                 <li class="nav-item {% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">
                     <a href="{% url 'inventario' %}">
                         <i class="bi bi-box-seam"></i>
                         <p>Inventario</p>
                     </a>
+                </li>
+                <!-- SECCIÓN: SERVICIOS -->
+                <li class="nav-item {% if request.resolver_match.url_name == 'servicios' %}active{% endif %}">
+                    <a href="{% url 'servicios' %}">
+                        <i class="bi bi-gear"></i>
+                        <p>Servicios</p>
+                    </a>
+                </li>
 
-                
+
 
                 <!-- ACCIONES RÁPIDAS -->
                 <li class="nav-section">

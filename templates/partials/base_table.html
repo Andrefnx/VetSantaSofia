@@ -1,0 +1,67 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="table-page-content">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="table-header">
+            <h4>
+                {% block table_title %}
+                    <i class="fas fa-boxes"></i> Tabla
+                {% endblock %}
+            </h4>
+            <div class="table-header-controls">
+                {% block table_filters %}
+                    <div class="search-bar">
+                        <i class="fas fa-search text-muted"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar ...">
+                    </div>
+                {% endblock %}
+            </div>
+            <div class="table-actions">
+                <div class="table-action-buttons">
+                    {% block table_buttons %}
+                        <!-- Botones por defecto o vacíos -->
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Datos -->
+        <div class="vet-table">
+            <table id="vet-table" class="vet-table">
+                <thead>
+                    <tr>
+                        {% block table_columns %}
+                            <th>Producto</th>
+                            <th>Especie</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Último Ingreso</th>
+                            <th>Último Salida</th>
+                            <th>Proveedor</th>
+                            <th>Gestión</th>
+                        {% endblock %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% block table_rows %}
+                        <!-- Filas por defecto o vacías -->
+                    {% endblock %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<script type="module">
+    import { initManageWheel } from "{% static 'js/base/wheel_base.js' %}";
+    import { initFiltersBase } from "{% static 'js/base/filters_base.js' %}";
+    document.addEventListener('DOMContentLoaded', function() {
+        initManageWheel();
+        initFiltersBase();
+    });
+</script>
+{% endblock %}

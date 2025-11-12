@@ -1,0 +1,15 @@
+<div class="manage-wheel">
+    <button onclick="toggleWheel(this)">
+        <i class="fas fa-cog"></i>
+    </button>
+    <div class="manage-options" style="display: none;">
+        {% if custom_options %}
+            {{ custom_options|safe }}
+        {% else %}
+            <button onclick="openDetailsModal()"><i class="fas fa-eye"></i> Ver detalles</button>
+            <button onclick="openEditModal()"><i class="fas fa-edit"></i> Editar</button>
+            <button onclick="openAddStockModal()"><i class="fas fa-plus"></i> Agregar stock</button>
+            <button onclick="openDeleteModal()"><i class="fas fa-trash"></i> Eliminar</button>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,442 @@
+:root {
+    --primary-color: #afe1af;
+    --primary-hover: #89c57c;
+    --text-dark: #103012;
+    --bg-light: #f8f9fa;
+    --border-color: #e0e0e0;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* ====== CONTENEDOR PRINCIPAL ====== */
+.container-fluid {
+    padding: 2rem;
+    background: var(--bg-light);
+    min-height: 100vh;
+}
+
+/* ====== HEADER EN GRID ====== */
+.table-header,
+.table-header-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 250px;
+    grid-template-rows: auto 1fr;
+    gap: 1.5rem 2rem;
+    background: white !important;
+    padding: 1.5rem !important;
+    border-radius: 16px !important;
+    box-shadow: var(--shadow-sm) !important;
+    margin-bottom: 2rem !important;
+    align-items: start;
+}
+
+/* Título ocupa ambas columnas */
+.table-header h4,
+.table-header-grid h4 {
+    grid-column: 1 ;
+    margin: 0 0 0.5rem 0 !important;
+    font-weight: 700;
+    color: var(--text-dark);
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.table-header h4 i,
+.table-header-grid h4 i {
+    color: var(--primary-color);
+}
+
+/* Controles a la izquierda */
+.table-header-controls {
+    grid-column: 1 / 2;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+}
+
+/* Acciones a la derecha */
+.table-actions {
+    grid-column: 2 / 3;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    min-width: 0;
+}
+
+/* Botones en columna alineados a la derecha */
+.table-action-buttons {
+    width: 100%;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    gap: 12px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-sizing: border-box !important;
+}
+.table-action-buttons button {
+    width: 100% !important;
+    justify-content: flex-end !important;
+    all: unset !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 10px 18px !important;
+    font-weight: 500 !important;
+    font-size: 0.9rem !important;
+    border-radius: 8px !important;
+    transition: all 0.25s ease !important;
+    background: white !important;
+    border: 1.5px solid #e0e0e0 !important;
+    color: #374151 !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+}
+.table-action-buttons button i {
+    font-size: 15px !important;
+    color: #6c757d !important;
+    transition: color 0.25s ease !important;
+}
+.table-action-buttons button:hover {
+    background: #f8f9fa !important;
+    border-color: #afe1af !important;
+    color: #103012 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+.table-action-buttons button:hover i {
+    color: #89c57c !important;
+}
+.table-action-buttons button:active {
+    transform: scale(0.98) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important;
+}
+.table-action-buttons button:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(175, 225, 175, 0.25) !important;
+}
+.table-action-buttons button:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+/* ====== BUSCADOR Y FILTROS ====== */
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    padding: 8px 14px;
+    transition: all 0.3s ease;
+    min-width: 200px;
+    max-width: 300px;
+    width: 100%;
+    flex: none;
+}
+.search-bar:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(175, 225, 175, 0.2);
+}
+.search-bar i {
+    color: #9ca3af;
+}
+.search-bar input {
+    border: none;
+    padding: 0;
+    width: 100%;
+    background: transparent;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+}
+.search-bar input:focus {
+    outline: none;
+    box-shadow: none;
+}
+.search-bar input::placeholder {
+    color: #9ca3af;
+}
+.filter-group {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+/* ====== SELECT PERSONALIZADO ====== */
+.vet-custom-select-wrapper {
+    position: relative;
+    min-width: 160px;
+    max-width: 250px;
+    margin-bottom: 0;
+}
+.vet-custom-select {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    min-width: 120px;
+    min-height: 38px;
+    font-size: 0.95rem;
+}
+.vet-custom-select:hover,
+.vet-custom-select.active {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(175, 225, 175, 0.15);
+    background: #fff;
+}
+.vet-selected-value {
+    color: #333;
+    font-size: 0.95rem;
+    font-weight: 500;
+    user-select: none;
+}
+.vet-selected-value.placeholder {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #999 !important;
+    opacity: 1 !important;
+    min-height: unset !important;
+    display: inline !important;
+    vertical-align: baseline !important;
+    cursor: pointer !important;
+    font-weight: 400 !important;
+}
+.vet-custom-select .placeholder {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+.vet-arrow {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #666;
+    margin-left: 8px;
+    transition: transform 0.25s;
+}
+.vet-custom-select.active .vet-arrow {
+    transform: rotate(180deg);
+}
+.vet-custom-select-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    display: none;
+    flex-direction: column;
+    list-style: none;
+    z-index: 1000;
+    padding: 0;
+    margin: 0;
+}
+.vet-custom-select-dropdown.active {
+    display: flex;
+    animation: fadeIn 0.2s ease;
+}
+.vet-custom-select-dropdown li {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #333;
+    transition: background 0.15s;
+    border-radius: 6px;
+}
+.vet-custom-select-dropdown li:hover {
+    background: #f4f9f4;
+}
+.vet-custom-select-dropdown li.selected {
+    background: var(--primary-color);
+    color: white;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-8px);}
+    to { opacity: 1; transform: none;}
+}
+
+/* Etiqueta de filtro */
+.tag_select{
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    color: #666 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin-bottom: 4px !important;
+    padding-left: 4px !important;
+}
+.vet-selected-value.placeholder,
+.vet-custom-select,
+.vet-custom-select .placeholder {
+    cursor: pointer !important;
+}
+
+/* ====== ESTILO DE TABLA COMPATIBLE CON .vet-table ====== */
+.vet-table {
+    background: white !important;
+    border-radius: 16px !important;
+    box-shadow: var(--shadow-md) !important;
+    overflow: visible !important;
+    border: 1px solid var(--border-color) !important;
+    position: relative !important;
+    z-index: 1 !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+
+.vet-table thead {
+    background: var(--primary-color) !important;
+    color: #fff !important;
+}
+
+.vet-table th {
+    padding: 16px 20px !important;
+    text-align: left !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    border: none !important;
+}
+
+.vet-table td {
+    padding: 16px 20px !important;
+    text-align: left !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+    font-size: 0.9rem !important;
+    color: #374151 !important;
+    position: relative !important;
+    overflow: visible !important;
+}
+
+.vet-table tbody tr {
+    transition: all 0.2s ease !important;
+    position: relative !important;
+    overflow: visible !important;
+}
+
+
+.vet-table tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
+/* Responsive: apila todo en columna en pantallas pequeñas */
+@media (max-width: 900px) {
+    .table-header,
+    .table-header-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        gap: 1rem;
+    }
+    .table-header h4,
+    .table-header-grid h4,
+    .table-header-controls,
+    .table-header-grid .table-header-controls,
+    .table-actions,
+    .table-header-grid .table-actions {
+        grid-column: 1 / 2 !important;
+    }
+    .table-actions,
+    .table-header-grid .table-actions,
+    .table-action-buttons,
+    .table-header-grid .table-action-buttons {
+        align-items: stretch !important;
+    }
+    .table-action-buttons button,
+    .table-header-grid .table-action-buttons button {
+        justify-content: center !important;
+    }
+}
+
+/* Wheel de gestión */
+.manage-wheel {
+    position: relative;
+    display: inline-block;
+}
+.manage-wheel > button {
+    background: none !important;   /* gris claro */
+    border: none !important;
+    border-radius: 0 !important;              /* sin círculo */
+    width: 36px !important;
+    height: 36px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #6c757d !important;                /* icono gris */
+    font-size: 1.2rem !important;
+    cursor: pointer !important;
+    transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.3s;
+    box-shadow: none !important;
+    transform: rotate(0deg);
+}
+.manage-wheel > button:hover,
+.manage-wheel > button:active,
+.manage-wheel.active > button {
+    color: var(--primary-color) !important;
+    transform: rotate(90deg);
+}
+.manage-options,
+.manage-options.show {
+    min-width: 180px;
+    background: #fff;
+    border: 1.5px solid var(--primary-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(175, 225, 175, 0.18);
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+    z-index: 9999;
+    animation: fadeInWheel 0.18s;
+}
+.manage-options button {
+    all: unset;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    color: #374151;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    border-radius: 8px;
+}
+.manage-options button i {
+    font-size: 1rem;
+    color: var(--primary-color);
+    transition: color 0.15s;
+}
+.manage-options button:hover {
+    background: var(--primary-color);
+    color: #fff;
+}
+.manage-options button:hover i {
+    color: #fff;
+}
+@keyframes fadeInWheel {
+    from { opacity: 0; transform: translateY(-8px);}
+    to { opacity: 1; transform: none;}
+}
+@keyframes fadeOutWheel {
+    from { opacity: 1; transform: none; }
+    to { opacity: 0; transform: translateY(-8px);}
+}
+
+.manage-options.fade-out {
+    animation: fadeOutWheel 0.18s forwards !important;
+}
+

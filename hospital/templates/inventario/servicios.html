@@ -1,0 +1,85 @@
+{% extends "partials/base_table.html" %}
+{% load static %}
+
+{% block title %}Servicios{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/base/tables_base.css' %}?v=4" type="text/css" media="all">
+{% endblock %}
+
+{% block table_title %}
+<i class="fas fa-boxes"></i> Servicios
+{% endblock %}
+
+{% block table_filters %}
+<div class="search-bar">
+    <i class="fas fa-search text-muted"></i>
+    <input type="text" id="searchInput" placeholder="Buscar servicio...">
+</div>
+<div class="vet-custom-select-wrapper">
+    <span class="tag_select">Tipo</span>
+    <div class="vet-custom-select">
+        <span class="vet-selected-value placeholder">Todos</span>
+        <div class="vet-arrow"></div>
+    </div>
+    <ul class="vet-custom-select-dropdown">
+        <li data-value="">Todos</li>
+        <li data-value="consulta">Consulta</li>
+        <li data-value="vacunación">Vacunación</li>
+        <li data-value="cirugía">Cirugía</li>
+        <!-- Agrega más tipos si es necesario -->
+    </ul>
+    <input type="hidden" id="filterTipo" value="">
+</div>
+{% endblock %}
+
+{% block table_buttons %}
+<button type="button" onclick="openAddServiceModal()">
+    <i class="fas fa-plus-circle"></i> Nuevo Servicio
+</button>
+<button type="button" onclick="exportServices()">
+    <i class="fas fa-file-export"></i> Exportar
+</button>
+{% endblock %}
+
+{% block table_columns %}
+<th>Servicio</th>
+<th>Tipo</th>
+<th>Precio</th>
+<th>Descripción</th>
+<th>Productos</th>
+<th>Gestión</th>
+{% endblock %}
+
+{% block table_rows %}
+<tr>
+    <td>Consulta General</td>
+    <td>Consulta</td>
+    <td>$15.000</td>
+    <td>Evaluación médica general de la mascota.</td>
+    <td>N/A</td>
+    <td>
+        {% include "partials/utilities/manage_wheel.html" %}
+    </td>
+</tr>
+<tr>
+    <td>Vacunación Antirrábica</td>
+    <td>Vacunación</td>
+    <td>$10.000</td>
+    <td>Aplicación de vacuna antirrábica.</td>
+    <td>Vacuna Rabia</td>
+    <td>
+        {% include "partials/utilities/manage_wheel.html" %}
+    </td>
+</tr>
+<tr>
+    <td>Cirugía Esterilización</td>
+    <td>Cirugía</td>
+    <td>$80.000</td>
+    <td>Esterilización de mascota (canino/felino).</td>
+    <td>Anestesia, Suturas</td>
+    <td>
+        {% include "partials/utilities/manage_wheel.html" %}
+    </td>
+</tr>
+{% endblock %}
