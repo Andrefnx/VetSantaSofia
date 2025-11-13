@@ -151,7 +151,8 @@ function openEditModal() {
     // Activar detección de cambios
     trackFormChanges('editForm');
     
-    new bootstrap.Modal(document.getElementById('editModal')).show();
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('editModal'));
+    modal.hide();
 }
 
 function saveEdit() {

@@ -123,7 +123,8 @@ function openBatchesModal(productName) {
     document.getElementById('batchList').innerHTML = batchListHTML || 
         '<p class="text-muted text-center py-4">No hay lotes disponibles</p>';
     
-    new bootstrap.Modal(document.getElementById('batchesModal')).show();
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('batchesModal'));
+    modal.show();
 }
 
 function convertToDateInput(dateStr) {

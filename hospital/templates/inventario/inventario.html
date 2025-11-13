@@ -4,8 +4,8 @@
 {% block title %}Inventario{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/lotes.css' %}" type="text/css" media="all">
 <link rel="stylesheet" href="{% static 'css/style_inventario.css' %}" type="text/css" media="all">
+
 {% endblock %}
 
 {% block table_title %}
@@ -63,11 +63,8 @@
 {% endblock %}
 
 {% block table_buttons %}
-<button type="button" onclick="openAddProductModal()">
+<button type="button" onclick="abrirModalNuevoProducto()">
     <i class="fas fa-plus-circle"></i> Nuevo Producto
-</button>
-<button type="button" onclick="exportInventory()">
-    <i class="fas fa-file-export"></i> Exportar
 </button>
 {% endblock %}
 
@@ -92,29 +89,27 @@
     <td>03/11/2025</td>
     <td>Vet Pharma</td>
     <td>
-        <!-- Aquí va el manage wheel -->
         <div class="manage-wheel">
-    <button type="button" onclick="toggleWheel(this)">
-        <i class="fas fa-cog"></i>
-    </button>
-    <div class="manage-options" style="display: none;">
-        <button type="button" onclick="openBatchesModal()">
-            <i class="fas fa-layer-group"></i> Ver lotes
-        </button>
-        <button type="button" onclick="openDetailsModal()">
-            <i class="fas fa-eye"></i> Ver detalles
-        </button>
-        <button type="button" onclick="openAddStockModal()">
-            <i class="fas fa-plus"></i> Agregar stock
-        </button>
-        <button type="button" onclick="openEditModal()">
-            <i class="fas fa-edit"></i> Editar
-        </button>
-        <button type="button" onclick="openDeleteModal()">
-            <i class="fas fa-trash"></i> Eliminar
-        </button>
-    </div>
-</div>
+            <button type="button" onclick="toggleWheel(this)">
+                <i class="fas fa-cog"></i>
+            </button>
+            <div class="manage-options" style="display: none;">
+                <button type="button" onclick="abrirModalProducto(this, 'view')">
+                    <i class="fas fa-eye"></i> Ver detalles
+                </button>
+                <button type="button" onclick="openModificarStockModal(this.closest('tr').querySelector('[data-field=stock_actual]') 
+    ? parseInt(this.closest('tr').querySelector('[data-field=stock_actual]').textContent.replace(/\D/g, '')) 
+    : parseInt(this.closest('tr').cells[3].textContent.replace(/\D/g, '')) )">
+                    <i class="bi bi-plus-slash-minus"></i>Modificar stock
+                </button>
+                <button type="button" onclick="abrirModalProducto(this, 'edit')">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+                <button type="button" onclick="abrirModalEliminarProducto(this)">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
 
     </td>
 </tr>
@@ -132,993 +127,309 @@
                 <i class="fas fa-cog"></i>
             </button>
             <div class="manage-options" style="display: none;">
-                <button type='button' class='btn-ver-lotes'
-                    onclick="openBatchesModal(this.closest('tr').cells[0].textContent.trim())">
-                    <i class='fas fa-layer-group'></i> Ver lotes
+
+                <button type="button" onclick="abrirModalProducto(this, 'view')">
+                    <i class="fas fa-eye"></i> Ver detalles
                 </button>
-                <button onclick="openDetailsModal()"><i class="fas fa-eye"></i> Ver detalles</button>
-                <button onclick="openAddStockModal()"><i class="fas fa-plus"></i> Agregar stock</button>
-                <button onclick="openEditModal()"><i class="fas fa-edit"></i> Editar</button>
-                <button onclick="openDeleteModal()"><i class="fas fa-trash"></i> Eliminar</button>
+                <button type="button" onclick="openModificarStockModal(this.closest('tr').querySelector('[data-field=stock_actual]') 
+    ? parseInt(this.closest('tr').querySelector('[data-field=stock_actual]').textContent.replace(/\D/g, '')) 
+    : parseInt(this.closest('tr').cells[3].textContent.replace(/\D/g, '')) )">
+                    <i class="bi bi-plus-slash-minus"></i>Modificar stock
+                </button>
+                <button type="button" onclick="abrirModalProducto(this, 'edit')">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+                <button type="button" onclick="abrirModalEliminarProducto(this)">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
             </div>
         </div>
     </td>
 </tr>
 {% endblock %}
 
-{% block extra_js %}
-<script src="{% static 'js/inventario/lotes.js' %}"></script>
-<script src="{% static 'js/inventario/modal_inventario.js' %}"></script>
 
-<script>
-    // Para Bootstrap 5+
-    function openBatchesModal(productName) {
-        const batches = productBatches[productName] || [];
-        document.getElementById('batchProductName').textContent = productName;
-        // ...cargar los lotes en #batchList...
+{% block modals %}
 
-        // Mostrar el modal usando Bootstrap
-        const modal = new bootstrap.Modal(document.getElementById('batchesModal'));
-        modal.show();
-    }
-</script>
-{% endblock %}
-
-
-<!-- Modal Editar Producto -->
-<div class="modal fade" id="editModal" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-edit"></i> Editar Producto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<!-- Modal: Nuevo Producto -->
+<div class="vet-modal-overlay hide" id="modalNuevoProducto">
+    <div class="vet-custom-modal">
+        <div class="vet-modal-content">
+            <div class="vet-custom-modal-title">
+                <h3>Nuevo Producto</h3>
+                <i class="bi bi-x" style="margin-left:auto;cursor:pointer;"
+                    onclick="closeVetModal('modalNuevoProducto')"></i>
             </div>
-            <div class="modal-body">
-                <form id="editForm">
-                    <!-- 1. Identificación General -->
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-tag"></i> Identificación General
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="text-muted small">Nombre Comercial *</label>
-                                <input type="text" class="form-control" name="nombre_comercial" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Nombre Genérico</label>
-                                <input type="text" class="form-control" name="nombre_generico">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">SKU / Código</label>
-                                <input type="text" class="form-control" name="sku">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Código de Barra</label>
-                                <input type="text" class="form-control" name="codigo_barra">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Categoría *</label>
-                                <select class="form-select" name="categoria" required>
-                                    <option value="">Seleccionar</option>
-                                    <option value="antiparasitario">Antiparasitario Externo</option>
-                                    <option value="antiparasitario_interno">Antiparasitario Interno</option>
-                                    <option value="antibiotico">Antibiótico</option>
-                                    <option value="analgesico">Analgésico</option>
-                                    <option value="antipiretico">Antipirético</option>
-                                    <option value="suplemento">Suplemento</option>
-                                    <option value="vacuna">Vacuna</option>
-                                    <option value="otro">Otro</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Presentación *</label>
-                                <select class="form-select" name="presentacion" required>
-                                    <option value="">Seleccionar</option>
-                                    <option value="pipeta">Pipeta</option>
-                                    <option value="comprimido">Comprimido</option>
-                                    <option value="jarabe">Jarabe</option>
-                                    <option value="inyectable">Inyectable</option>
-                                    <option value="polvo">Polvo</option>
-                                    <option value="pomada">Pomada</option>
-                                    <option value="colirio">Colirio</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Especie *</label>
-                                <select class="form-select" name="especie" required>
-                                    <option value="">Seleccionar</option>
-                                    <option value="canino">Canino</option>
-                                    <option value="felino">Felino</option>
-                                    <option value="equino">Equino</option>
-                                    <option value="bovino">Bovino</option>
-                                    <option value="aviar">Aviar</option>
-                                    <option value="multiespecie">Multiespecie</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Peso Animal</label>
-                                <input type="text" class="form-control" name="peso_animal" placeholder="Ej: 2.5 - 7.5 kg">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 2. Composición y Farmacología -->
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-flask"></i> Composición y Farmacología
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="text-muted small">Principio Activo</label>
-                                <input type="text" class="form-control" name="principio_activo">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Concentración</label>
-                                <input type="text" class="form-control" name="concentracion" placeholder="Ej: 30mg/ml">
-                            </div>
-                            <div class="col-md-12">
-                                <label class="text-muted small">Indicaciones</label>
-                                <textarea class="form-control" name="indicaciones" rows="2"></textarea>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Dosis</label>
-                                <input type="text" class="form-control" name="dosis" placeholder="Ej: 1 pipeta por mes">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Vía de Administración</label>
-                                <select class="form-select" name="via_administracion">
-                                    <option value="">Seleccionar</option>
-                                    <option value="topica">Tópica (spot-on)</option>
-                                    <option value="oral">Oral</option>
-                                    <option value="subcutanea">Subcutánea</option>
-                                    <option value="intramuscular">Intramuscular</option>
-                                    <option value="ocular">Ocular</option>
-                                    <option value="auricular">Auricular</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 3. Control Sanitario -->
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-certificate"></i> Control Sanitario
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="text-muted small">Registro Sanitario</label>
-                                <input type="text" class="form-control" name="registro_sanitario">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Lote *</label>
-                                <input type="text" class="form-control" name="lote" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Fecha Fabricación</label>
-                                <input type="date" class="form-control" name="fecha_fabricacion">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Caducidad *</label>
-                                <input type="date" class="form-control" name="caducidad" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Laboratorio</label>
-                                <input type="text" class="form-control" name="laboratorio">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">País de Origen</label>
-                                <input type="text" class="form-control" name="pais_origen">
-                            </div>
-                            <div class="col-md-12">
-                                <label class="text-muted small">Condiciones de Almacenamiento</label>
-                                <textarea class="form-control" name="almacenamiento" rows="2"></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 4. Información Comercial -->
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-dollar-sign"></i> Información Comercial
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="text-muted small">Precio Compra *</label>
-                                <input type="number" class="form-control" name="precio_compra" step="0.01" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Precio Venta *</label>
-                                <input type="number" class="form-control" name="precio_venta" step="0.01" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Estado Producto</label>
-                                <select class="form-select" name="estado_producto">
-                                    <option value="disponible">Disponible</option>
-                                    <option value="agotado">Agotado</option>
-                                    <option value="proximo_vencer">Próximo a Vencer</option>
-                                    <option value="revision">En Revisión</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 5. Inventario -->
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-boxes"></i> Inventario
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <label class="text-muted small">Stock Actual *</label>
-                                <input type="number" class="form-control" name="stock_actual" min="0" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="text-muted small">Stock Mínimo *</label>
-                                <input type="number" class="form-control" name="stock_minimo" min="0" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="text-muted small">Stock Máximo</label>
-                                <input type="number" class="form-control" name="stock_maximo" min="0">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="text-muted small">Unidad de Medida *</label>
-                                <select class="form-select" name="unidad_medida" required>
-                                    <option value="unidades">Unidades</option>
-                                    <option value="ml">Mililitros (ml)</option>
-                                    <option value="gr">Gramos (gr)</option>
-                                    <option value="kg">Kilogramos (kg)</option>
-                                    <option value="dosis">Dosis</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 6. Presentación -->
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-box"></i> Presentación y Envase
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="text-muted small">Contenido Neto</label>
-                                <input type="text" class="form-control" name="contenido_neto" placeholder="Ej: 0.75 ml">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Empaque</label>
-                                <input type="text" class="form-control" name="empaque" placeholder="Ej: Blíster individual">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 7. Advertencias -->
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-exclamation-triangle"></i> Advertencias y Precauciones
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-12">
-                                <label class="text-muted small">Efectos Adversos</label>
-                                <textarea class="form-control" name="efectos_adversos" rows="2"></textarea>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="text-muted small">Contraindicaciones</label>
-                                <textarea class="form-control" name="contraindicaciones" rows="2"></textarea>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="text-muted small">Precauciones</label>
-                                <textarea class="form-control" name="precauciones" rows="2"></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 8. Logística -->
-                    <div class="detail-section mb-0">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-warehouse"></i> Logística y Trazabilidad
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="text-muted small">Fecha Ingreso *</label>
-                                <input type="date" class="form-control" name="ultimo_ingreso" id="fechaIngreso" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Proveedor *</label>
-                                <select class="form-select" name="proveedor" required>
-                                    <option value="">Seleccionar</option>
-                                    <option value="vet_pharma">Vet Pharma S.A.</option>
-                                    <option value="pet_supplies">Pet Supplies</option>
-                                    <option value="zoetis">Zoetis Chile</option>
-                                    <option value="bayer">Bayer Animal Health</option>
-                                    <option value="merial">Merial</option>
-                                    <option value="otro">Otro</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Ubicación</label>
-                                <input type="text" class="form-control" name="ubicacion" placeholder="Ej: Estante A-3">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Responsable</label>
-                                <input type="text" class="form-control" name="responsable">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Factura</label>
-                                <input type="text" class="form-control" name="factura">
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-        
-                <button type="button" class="btn btn-primary" onclick="saveEdit()">
-                    <i class="fas fa-save"></i> Guardar Cambios
-                </button>
+            <div class="vet-modal-body">
+                <p>Formulario para agregar un nuevo producto.</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Agregar Producto (copia del modal de edición con título diferente) -->
-<div class="modal fade" id="addProductModal" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-plus-circle"></i> Agregar Nuevo Producto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+<!-- Modal: Ver/Editar Detalles Producto -->
+<div class="vet-modal-overlay hide" id="modalProducto">
+    <div class="vet-custom-modal" style="max-width: 900px; width: 100%;">
+        <div class="vet-modal-content">
+            <div class="vet-custom-modal-title">
+                <h3>
+                    <i class="fas fa-box"></i>
+                    <span id="modalProductoTitulo">Detalles del Producto</span>
+                </h3>
+                <i class="bi bi-x" style="margin-left:auto;cursor:pointer;"
+                    onclick="closeVetModal('modalProducto')"></i>
             </div>
-            <div class="modal-body">
-                <form id="addProductForm">
-                    <!-- Mismo contenido que editModal -->
-                    <!-- 1. Identificación General -->
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-tag"></i> Identificación General
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="text-muted small">Nombre Comercial *</label>
-                                <input type="text" class="form-control" name="nombre_comercial" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Nombre Genérico</label>
-                                <input type="text" class="form-control" name="nombre_generico">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">SKU / Código</label>
-                                <input type="text" class="form-control" name="sku">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Código de Barra</label>
-                                <input type="text" class="form-control" name="codigo_barra">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Categoría *</label>
-                                <select class="form-select" name="categoria" required>
-                                    <option value="">Seleccionar</option>
-                                    <option value="antiparasitario">Antiparasitario Externo</option>
-                                    <option value="antiparasitario_interno">Antiparasitario Interno</option>
-                                    <option value="antibiotico">Antibiótico</option>
-                                    <option value="analgesico">Analgésico</option>
-                                    <option value="antipiretico">Antipirético</option>
-                                    <option value="suplemento">Suplemento</option>
-                                    <option value="vacuna">Vacuna</option>
-                                    <option value="otro">Otro</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Presentación *</label>
-                                <select class="form-select" name="presentacion" required>
-                                    <option value="">Seleccionar</option>
-                                    <option value="pipeta">Pipeta</option>
-                                    <option value="comprimido">Comprimido</option>
-                                    <option value="jarabe">Jarabe</option>
-                                    <option value="inyectable">Inyectable</option>
-                                    <option value="polvo">Polvo</option>
-                                    <option value="pomada">Pomada</option>
-                                    <option value="colirio">Colirio</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Especie *</label>
-                                <select class="form-select" name="especie" required>
-                                    <option value="">Seleccionar</option>
-                                    <option value="canino">Canino</option>
-                                    <option value="felino">Felino</option>
-                                    <option value="equino">Equino</option>
-                                    <option value="bovino">Bovino</option>
-                                    <option value="aviar">Aviar</option>
-                                    <option value="multiespecie">Multiespecie</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Peso Animal</label>
-                                <input type="text" class="form-control" name="peso_animal" placeholder="Ej: 2.5 - 7.5 kg">
-                            </div>
-                        </div>
-                    </div>
+            <div class="vet-modal-body" style="max-height: 70vh; overflow-y: auto;">
 
-                    <!-- 2. Composición y Farmacología -->
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-flask"></i> Composición y Farmacología
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="text-muted small">Principio Activo</label>
-                                <input type="text" class="form-control" name="principio_activo">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Concentración</label>
-                                <input type="text" class="form-control" name="concentracion" placeholder="Ej: 30mg/ml">
-                            </div>
-                            <div class="col-md-12">
-                                <label class="text-muted small">Indicaciones</label>
-                                <textarea class="form-control" name="indicaciones" rows="2"></textarea>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Dosis</label>
-                                <input type="text" class="form-control" name="dosis" placeholder="Ej: 1 pipeta por mes">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Vía de Administración</label>
-                                <select class="form-select" name="via_administracion">
-                                    <option value="">Seleccionar</option>
-                                    <option value="topica">Tópica (spot-on)</option>
-                                    <option value="oral">Oral</option>
-                                    <option value="subcutanea">Subcutánea</option>
-                                    <option value="intramuscular">Intramuscular</option>
-                                    <option value="ocular">Ocular</option>
-                                    <option value="auricular">Auricular</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 3. Control Sanitario -->
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-certificate"></i> Control Sanitario
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="text-muted small">Registro Sanitario</label>
-                                <input type="text" class="form-control" name="registro_sanitario">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Lote *</label>
-                                <input type="text" class="form-control" name="lote" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Fecha Fabricación</label>
-                                <input type="date" class="form-control" name="fecha_fabricacion">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Caducidad *</label>
-                                <input type="date" class="form-control" name="caducidad" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Laboratorio</label>
-                                <input type="text" class="form-control" name="laboratorio">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">País de Origen</label>
-                                <input type="text" class="form-control" name="pais_origen">
-                            </div>
-                            <div class="col-md-12">
-                                <label class="text-muted small">Condiciones de Almacenamiento</label>
-                                <textarea class="form-control" name="almacenamiento" rows="2"></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 4. Información Comercial -->
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-dollar-sign"></i> Información Comercial
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="text-muted small">Precio Compra *</label>
-                                <input type="number" class="form-control" name="precio_compra" step="0.01" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Precio Venta *</label>
-                                <input type="number" class="form-control" name="precio_venta" step="0.01" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Estado Producto</label>
-                                <select class="form-select" name="estado_producto">
-                                    <option value="disponible">Disponible</option>
-                                    <option value="agotado">Agotado</option>
-                                    <option value="proximo_vencer">Próximo a Vencer</option>
-                                    <option value="revision">En Revisión</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 5. Inventario -->
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-boxes"></i> Inventario
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <label class="text-muted small">Stock Actual *</label>
-                                <input type="number" class="form-control" name="stock_actual" min="0" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="text-muted small">Stock Mínimo *</label>
-                                <input type="number" class="form-control" name="stock_minimo" min="0" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="text-muted small">Stock Máximo</label>
-                                <input type="number" class="form-control" name="stock_maximo" min="0">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="text-muted small">Unidad de Medida *</label>
-                                <select class="form-select" name="unidad_medida" required>
-                                    <option value="unidades">Unidades</option>
-                                    <option value="ml">Mililitros (ml)</option>
-                                    <option value="gr">Gramos (gr)</option>
-                                    <option value="kg">Kilogramos (kg)</option>
-                                    <option value="dosis">Dosis</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 6. Presentación -->
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-box"></i> Presentación y Envase
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="text-muted small">Contenido Neto</label>
-                                <input type="text" class="form-control" name="contenido_neto" placeholder="Ej: 0.75 ml">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Empaque</label>
-                                <input type="text" class="form-control" name="empaque" placeholder="Ej: Blíster individual">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 7. Advertencias -->
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-exclamation-triangle"></i> Advertencias y Precauciones
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-12">
-                                <label class="text-muted small">Efectos Adversos</label>
-                                <textarea class="form-control" name="efectos_adversos" rows="2"></textarea>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="text-muted small">Contraindicaciones</label>
-                                <textarea class="form-control" name="contraindicaciones" rows="2"></textarea>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="text-muted small">Precauciones</label>
-                                <textarea class="form-control" name="precauciones" rows="2"></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 8. Logística -->
-                    <div class="detail-section mb-0">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-warehouse"></i> Logística y Trazabilidad
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="text-muted small">Fecha Ingreso *</label>
-                                <input type="date" class="form-control" name="ultimo_ingreso" id="fechaIngreso" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Proveedor *</label>
-                                <select class="form-select" name="proveedor" required>
-                                    <option value="">Seleccionar</option>
-                                    <option value="vet_pharma">Vet Pharma S.A.</option>
-                                    <option value="pet_supplies">Pet Supplies</option>
-                                    <option value="zoetis">Zoetis Chile</option>
-                                    <option value="bayer">Bayer Animal Health</option>
-                                    <option value="merial">Merial</option>
-                                    <option value="otro">Otro</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="text-muted small">Ubicación</label>
-                                <input type="text" class="form-control" name="ubicacion" placeholder="Ej: Estante A-3">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Responsable</label>
-                                <input type="text" class="form-control" name="responsable">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Factura</label>
-                                <input type="text" class="form-control" name="factura">
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                
-                <button type="button" class="btn btn-success" onclick="saveNewProduct()">
-                    <i class="fas fa-check"></i> Agregar Producto
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Agregar Stock (simplificado) -->
-<div class="modal fade" id="addStockModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-plus"></i> Agregar Stock</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addStockForm">
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-box"></i> Información del Producto
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-12">
-                                <label class="text-muted small">Producto</label>
-                                <p class="form-control-plaintext fw-bold" id="addStockProductName">-</p>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Stock Actual</label>
-                                <input type="number" class="form-control" id="currentStock" readonly>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Cantidad a Agregar *</label>
-                                <input type="number" class="form-control" name="cantidad" min="1" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="detail-section mb-0">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-certificate"></i> Información del Lote
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="text-muted small">Número de Lote *</label>
-                                <input type="text" class="form-control" name="lote" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Fecha de Caducidad *</label>
-                                <input type="date" class="form-control" name="caducidad" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Fecha de Ingreso *</label>
-                                <input type="date" class="form-control" name="fecha_ingreso" id="fechaIngresoStock" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="text-muted small">Proveedor *</label>
-                                <select class="form-select" name="proveedor" required>
-                                    <option value="">Seleccionar</option>
-                                    <option value="vet_pharma">Vet Pharma S.A.</option>
-                                    <option value="pet_supplies">Pet Supplies</option>
-                                    <option value="zoetis">Zoetis Chile</option>
-                                    <option value="bayer">Bayer Animal Health</option>
-                                    <option value="merial">Merial</option>
-                                    <option value="otro">Otro</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-              
-                <button type="button" class="btn btn-success" onclick="saveAddStock()">
-                    <i class="fas fa-check"></i> Agregar Stock
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Eliminar -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>¿Está seguro que desea eliminar este producto?</p>
-                <div class="alert alert-warning">
-                    <strong id="deleteProductName">-</strong>
-                </div>
-                <p class="text-muted small">Esta acción no se puede deshacer.</p>
-            </div>
-            <div class="modal-footer">
-            
-                <button type="button" class="btn btn-danger" onclick="confirmDelete()">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Detalles -->
-<div class="modal fade" id="detailsModal" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-info-circle"></i> Detalles del Producto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <!-- 1. Identificación General -->
+                <!-- IDENTIFICACIÓN GENERAL -->
                 <div class="detail-section mb-4">
-                    <h6 class="detail-section-title">
-                        <i class="fas fa-tag"></i> Identificación General
-                    </h6>
+                    <h6 class="detail-section-title"><i class="fas fa-tag"></i> Identificación General</h6>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="text-muted small">Nombre Comercial</label>
-                            <p class="fw-bold mb-0" id="detail_nombre_comercial">-</p>
+                            <p class="field-view fw-bold mb-0" data-field="nombre_comercial">-</p>
+                            <input class="field-edit form-control d-none" data-field="nombre_comercial">
                         </div>
                         <div class="col-md-6">
-                            <label class="text-muted small">Nombre Genérico</label>
-                            <p class="mb-0" id="detail_nombre_generico">-</p>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">SKU / Código</label>
-                            <p class="mb-0" id="detail_sku">-</p>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Código de Barra</label>
-                            <p class="mb-0" id="detail_codigo_barra">-</p>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Categoría</label>
-                            <p class="mb-0" id="detail_categoria">-</p>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Presentación</label>
-                            <p class="mb-0" id="detail_presentacion">-</p>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Especie</label>
-                            <p class="mb-0" id="detail_especie">-</p>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Peso Animal</label>
-                            <p class="mb-0" id="detail_peso_animal">-</p>
+                            <label class="text-muted small">Descripción</label>
+                            <p class="field-view mb-0" data-field="descripcion">-</p>
+                            <textarea class="field-edit form-control d-none" data-field="descripcion"></textarea>
                         </div>
                     </div>
                 </div>
-
-                <!-- 2. Composición y Farmacología -->
+                <!-- PESO ANIMAL Y DOSIS -->
                 <div class="detail-section mb-4">
-                    <h6 class="detail-section-title">
-                        <i class="fas fa-flask"></i> Composición y Farmacología
-                    </h6>
+                    <h6 class="detail-section-title"><i class="fas fa-weight"></i> Peso Animal y Dosis</h6>
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="text-muted small">Principio Activo</label>
-                            <p class="mb-0" id="detail_principio_activo">-</p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small">Concentración</label>
-                            <p class="mb-0" id="detail_concentracion">-</p>
-                        </div>
+
+                        <!-- Vista -->
                         <div class="col-md-12">
-                            <label class="text-muted small">Indicaciones</label>
-                            <p class="mb-0" id="detail_indicaciones">-</p>
+
+                            <div id="pesoDosisList" class="field-view">-</div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small">Dosis</label>
-                            <p class="mb-0" id="detail_dosis">-</p>
+
+                        <!-- Edición -->
+                        <div class="col-md-12 field-edit d-none" id="pesoDosisEdit">
+
+                            <!-- Campos para agregar un rango -->
+                            <div class="row g-2 align-items-end mb-2">
+                                <div class="col-md-3">
+                                    <label>Peso Mínimo (kg)</label>
+                                    <input type="number" step="0.1" class="form-control" id="pesoMinTemp">
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Peso Máximo (kg)</label>
+                                    <input type="number" step="0.1" class="form-control" id="pesoMaxTemp">
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Dosis (ml)</label>
+                                    <input type="number" step="0.1" class="form-control" id="dosisTemp">
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="button" class="btn btn-success w-100" onclick="agregarRangoDosis()">
+                                        <i class="bi bi-plus-lg"></i> Agregar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Lista editable -->
+                            <ul id="pesoDosisEditList" class="list-group"></ul>
+
                         </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small">Vía de Administración</label>
-                            <p class="mb-0" id="detail_via_administracion">-</p>
-                        </div>
+
                     </div>
                 </div>
 
-                <!-- 3. Control Sanitario -->
+                <!-- INFORMACIÓN COMERCIAL -->
                 <div class="detail-section mb-4">
-                    <h6 class="detail-section-title">
-                        <i class="fas fa-certificate"></i> Control Sanitario
-                    </h6>
+                    <h6 class="detail-section-title"><i class="fas fa-dollar-sign"></i> Información Comercial</h6>
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="text-muted small">Registro Sanitario</label>
-                            <p class="mb-0" id="detail_registro_sanitario">-</p>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Lote</label>
-                            <p class="mb-0" id="detail_lote">-</p>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Fecha Fabricación</label>
-                            <p class="mb-0" id="detail_fecha_fabricacion">-</p>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Caducidad</label>
-                            <p class="mb-0" id="detail_caducidad">-</p>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Estado</label>
-                            <p class="mb-0" id="detail_estado">-</p>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Laboratorio</label>
-                            <p class="mb-0" id="detail_laboratorio">-</p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small">País de Origen</label>
-                            <p class="mb-0" id="detail_pais_origen">-</p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small">Condiciones de Almacenamiento</label>
-                            <p class="mb-0" id="detail_almacenamiento">-</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 4. Información Comercial -->
-                <div class="detail-section mb-4">
-                    <h6 class="detail-section-title">
-                        <i class="fas fa-dollar-sign"></i> Información Comercial
-                    </h6>
-                    <div class="row g-3">
-                        <div class="col-md-3">
                             <label class="text-muted small">Precio Compra</label>
-                            <p class="mb-0 fw-bold text-primary" id="detail_precio_compra">-</p>
+                            <p class="field-view fw-bold mb-0" data-field="precio_compra">-</p>
+                            <input type="number" min="0" class="field-edit form-control d-none"
+                                data-field="precio_compra">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="text-muted small">Precio Venta</label>
-                            <p class="mb-0 fw-bold text-success" id="detail_precio_venta">-</p>
+                            <p class="field-view fw-bold mb-0" data-field="precio_venta">-</p>
+                            <input type="number" min="0" class="field-edit form-control d-none"
+                                data-field="precio_venta">
                         </div>
-                        <div class="col-md-3">
-                            <label class="text-muted small">Margen</label>
-                            <p class="mb-0 fw-bold text-info" id="detail_margen">-</p>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="text-muted small">Estado Producto</label>
-                            <p class="mb-0" id="detail_estado_producto">-</p>
-                        </div>
+
                     </div>
                 </div>
-
-                <!-- 5. Inventario -->
+                <!-- INVENTARIO -->
                 <div class="detail-section mb-4">
-                    <h6 class="detail-section-title">
-                        <i class="fas fa-boxes"></i> Inventario
-                    </h6>
+                    <h6 class="detail-section-title"><i class="fas fa-boxes"></i> Inventario</h6>
                     <div class="row g-3">
                         <div class="col-md-3">
                             <label class="text-muted small">Stock Actual</label>
-                            <p class="mb-0 fw-bold" id="detail_stock_actual">-</p>
+                            <p class="field-view fw-bold mb-0" data-field="stock_actual">-</p>
+                            <input type="number" min="0" class="field-edit form-control d-none"
+                                data-field="stock_actual">
                         </div>
                         <div class="col-md-3">
                             <label class="text-muted small">Stock Mínimo</label>
-                            <p class="mb-0" id="detail_stock_minimo">-</p>
+                            <p class="field-view mb-0" data-field="stock_minimo">-</p>
+                            <input type="number" min="0" class="field-edit form-control d-none"
+                                data-field="stock_minimo">
                         </div>
                         <div class="col-md-3">
                             <label class="text-muted small">Stock Máximo</label>
-                            <p class="mb-0" id="detail_stock_maximo">-</p>
+                            <p class="field-view mb-0" data-field="stock_maximo">-</p>
+                            <input type="number" min="0" class="field-edit form-control d-none"
+                                data-field="stock_maximo">
                         </div>
                         <div class="col-md-3">
-                            <label class="text-muted small">Unidad de Medida</label>
-                            <p class="mb-0" id="detail_unidad_medida">-</p>
+                            <label class="text-muted small">Estado Producto</label>
+                            <p class="field-view mb-0" id="estado_producto_auto">-</p>
+                            <!-- No input aquí, es automático -->
                         </div>
                     </div>
                 </div>
-
-                <!-- 6. Presentación -->
+                <!-- PROVEEDOR -->
                 <div class="detail-section mb-4">
-                    <h6 class="detail-section-title">
-                        <i class="fas fa-box"></i> Presentación y Envase
-                    </h6>
+                    <h6 class="detail-section-title"><i class="fas fa-truck"></i> Proveedor</h6>
+
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="text-muted small">Contenido Neto</label>
-                            <p class="mb-0" id="detail_contenido_neto">-</p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small">Empaque</label>
-                            <p class="mb-0" id="detail_empaque">-</p>
+                        <div class="col-md-6 position-relative">
+                            <label class="text-muted small">Proveedor</label>
+                            <p class="field-view mb-0" data-field="proveedor">-</p>
+                            <select class="field-edit form-control d-none" data-field="proveedor" id="selectProveedorIntegrado"
+                                onchange="onProveedorIntegradoChange()">
+                                
+                                <option value="">Selecciona...</option>
+                                <!-- Opciones de proveedores se llenan por JS -->
+                                <option value="__nuevo__">+ Agregar nuevo proveedor...</option>
+                            </select>
+                            <div id="nuevoProveedorWrapper" class="mt-2 d-none">
+                                <input type="text" class="form-control mb-1" id="inputNuevoProveedor" placeholder="Nuevo proveedor" onkeydown="if(event.key==='Enter'){agregarNuevoProveedorIntegrado();}">
+                                <button type="button" class="vet-btn-grey btn btn-sm w-100" id="btnAgregarProveedor" onclick="agregarNuevoProveedorIntegrado()">Agregar</button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 7. Advertencias -->
+                <!-- PRECAUCIONES Y OTROS -->
                 <div class="detail-section mb-4">
-                    <h6 class="detail-section-title">
-                        <i class="fas fa-exclamation-triangle"></i> Advertencias y Precauciones
+                    <h6 class="detail-section-title"><i class="fas fa-exclamation-triangle"></i> Precauciones y Otros
                     </h6>
                     <div class="row g-3">
                         <div class="col-md-12">
-                            <label class="text-muted small">Efectos Adversos</label>
-                            <p class="mb-0" id="detail_efectos_adversos">-</p>
+                            <label class="text-muted small">Precauciones</label>
+                            <p class="field-view mb-0" data-field="precauciones">-</p>
+                            <textarea class="field-edit form-control d-none" data-field="precauciones"></textarea>
                         </div>
                         <div class="col-md-12">
                             <label class="text-muted small">Contraindicaciones</label>
-                            <p class="mb-0" id="detail_contraindicaciones">-</p>
+                            <p class="field-view mb-0" data-field="contraindicaciones">-</p>
+                            <textarea class="field-edit form-control d-none" data-field="contraindicaciones"></textarea>
                         </div>
                         <div class="col-md-12">
-                            <label class="text-muted small">Precauciones</label>
-                            <p class="mb-0" id="detail_precauciones">-</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 8. Logística -->
-                <div class="detail-section mb-0">
-                    <h6 class="detail-section-title">
-                        <i class="fas fa-warehouse"></i> Logística y Trazabilidad
-                    </h6>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="text-muted small">Último Ingreso</label>
-                            <p class="mb-0" id="detail_ultimo_ingreso">-</p>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Proveedor</label>
-                            <p class="mb-0" id="detail_proveedor">-</p>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Ubicación</label>
-                            <p class="mb-0" id="detail_ubicacion">-</p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small">Responsable</label>
-                            <p class="mb-0" id="detail_responsable">-</p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small">Factura</label>
-                            <p class="mb-0" id="detail_factura">-</p>
+                            <label class="text-muted small">Efectos Adversos</label>
+                            <p class="field-view mb-0" data-field="efectos_adversos">-</p>
+                            <textarea class="field-edit form-control d-none" data-field="efectos_adversos"></textarea>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="window.print()">
-                    <i class="fas fa-print"></i> Imprimir
+            <div class="vet-modal-body" style="border-top:1px solid #eee; text-align:right;">
+                <button type="button" class="vet-btn-grey" id="btnEditarProducto" onclick="switchToEditModeProducto()">
+                    <i class="bi bi-pencil-fill"></i> Editar
+                </button>
+                <button type="button" class="vet-btn-grey d-none" id="btnGuardarProducto"
+                    onclick="guardarProductoEditado()">
+                    <i class="bi bi-floppy-fill"></i> Guardar
+                </button>
+                <button type="button" class="vet-btn-grey error" id="btnEliminarProducto"
+                    onclick="abrirModalEliminarProducto(this)">
+                    <i class="bi bi-trash3-fill"></i> Eliminar
+                </button>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Modificar Stock -->
+<div class="vet-modal-overlay hide" id="modalModificarStock">
+    <div class="vet-custom-modal" style="max-width: 400px;">
+        <div class="vet-modal-content">
+            <div class="vet-custom-modal-title">
+                <h3><i class="fas fa-boxes"></i> Modificar Stock</h3>
+                <i class="bi bi-x" style="margin-left:auto;cursor:pointer;"
+                    onclick="closeVetModal('modalModificarStock')"></i>
+            </div>
+            <div class="vet-modal-body" style="text-align:center;">
+                <div style="margin-bottom: 18px;">
+                    <span style="font-size: 1.1rem; color: #333;">
+                        Stock actual: <span id="stockActualValor" style="font-weight: 600;">0</span>
+                    </span>
+                </div>
+                <p>Ingresa la cantidad de producto a modificar:</p>
+                <div style="display: flex; justify-content: center; margin-bottom: 10px;">
+                    <input type="number" id="inputStockOperacion" class="form-control" style="width:150px;"
+                        placeholder="Cantidad">
+                </div>
+                <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom: 10px;">
+                    <button type="button" class="vet-btn-grey" onclick="sumarStockInput()">
+                        <i class="bi bi-plus-circle"></i> Ingresar
+                    </button>
+                    <button type="button" class="vet-btn-grey" onclick="restarStockInput()">
+                        <i class="bi bi-dash-circle"></i> Restar
+                    </button>
+                </div>
+            </div>
+            <div class="vet-modal-body" style="text-align:right;">
+                <button type="button" class="vet-btn-grey success" id="btnGuardarProducto" onclick="guardarStock()">
+                    <i class="bi bi-floppy-fill"></i> Guardar
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Lotes -->
-<div class="modal fade" id="batchesModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-boxes"></i> Lotes Disponibles - <span id="batchProductName"></span>
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<!-- Modal: Editar Producto -->
+<div class="vet-modal-overlay hide" id="modalEditarProducto">
+    <div class="vet-custom-modal">
+        <div class="vet-modal-content">
+            <div class="vet-custom-modal-title">
+                <h3>Editar Producto</h3>
+                <i class="bi bi-x" style="margin-left:auto;cursor:pointer;"
+                    onclick="closeVetModal('modalEditarProducto')"></i>
             </div>
-            <div class="modal-body">
-                <div class="batch-list" id="batchList"></div>
+            <div class="vet-modal-body">
+                <p>Formulario para editar el producto.</p>
             </div>
-            <div class="modal-footer">
-               
-                <button type="button" class="btn btn-primary" onclick="exportBatches()">
-                    <i class="fas fa-file-export"></i> Exportar
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Eliminar Producto -->
+<div class="vet-modal-overlay hide" id="modalEliminarProducto">
+    <div class="vet-custom-modal">
+        <div class="vet-modal-content">
+            <div class="vet-custom-modal-title" style="background: #b71c1c;">
+                <h3><i class="bi bi-trash3-fill"></i> Eliminar Producto</h3>
+                <i class="bi bi-x" style="margin-left:auto;cursor:pointer;" onclick="closeEliminarProductoModal()"></i>
+
+            </div>
+            <div class="vet-modal-body">
+                <p id="eliminarProductoMensaje">¿Estás seguro que deseas eliminar este producto?</p>
+            </div>
+            <div class="vet-modal-body" style="text-align:right;">
+                <button type="button" class="vet-btn-grey error" id="btnConfirmarEliminarProducto">
+                    <i class="bi bi-trash3-fill"></i> Eliminar
                 </button>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/inventario/crud_inventario.js' %}"></script>
+{% endblock %}

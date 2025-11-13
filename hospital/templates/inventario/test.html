@@ -1,155 +1,39 @@
 {% extends 'partials/base.html' %}
 {% load static %}
 
-{% block title %}Nombre de tu página{% endblock %}
-
-
-{% block styles %}
-<link rel="stylesheet" href="{% static 'css/base/test.css' %}?v=4" type="text/css" media="all">
-{% endblock %}
-
+{% block title %}Test Modal{% endblock %}
 
 {% block content %}
-<div class="table-page-content">
-    <div class="container-fluid">
-        <!-- Header -->
-        <div class="table-header">
-            <h4><i class="fas fa-boxes"></i> Tabla</h4>
-            <div class="table-header-controls">
+<div class="vet-modal-overlay hide" id="modalEditarProducto">
+    <div class="vet-custom-modal">
+        <div class="vet-modal-content">
 
-                <div class="search-bar">
-                    <i class="fas fa-search text-muted"></i>
-                    <input type="text" id="searchInput" placeholder="Buscar ...">
-                </div>
-                <div class="filter-group">
-                    <!-- Filtro 1 -->
-                    <div class="vet-custom-select-wrapper">
-                        <p class="tag_select">Filtro</p>
-                        <div class="vet-custom-select">
-                            <span class="vet-selected-value placeholder">Filtro</span>
-                            <div class="vet-arrow"></div>
-                        </div>
-                        <ul class="vet-custom-select-dropdown">
-                            <li data-value="">Todo</li>
-                            <li data-value="canino">Opción 1</li>
-                            <li data-value="felino">Opción 2</li>
-                            <li data-value="ovino">Opción 3</li>
-                        </ul>
-                        <input type="hidden" id="filter1" value="">
-                    </div>
-                    <!-- Filtro 2 -->
-                    <div class="vet-custom-select-wrapper">
-                        <p class="tag_select">Filtro</p>
-                        <div class="vet-custom-select">
-                            <span class="vet-selected-value placeholder">Filtro</span>
-                            <div class="vet-arrow"></div>
-                        </div>
-                        <ul class="vet-custom-select-dropdown">
-                            <li data-value="">Todo</li>
-                            <li data-value="canino">opcion 1</li>
-                            <li data-value="felino">opcion 2</li>
-                        </ul>
-                        <input type="hidden" id="filter2" value="">
-                    </div>
-                    <!-- Filtro 3 -->
-                    <div class="vet-custom-select-wrapper">
-                        <p class="tag_select">Filtro</p>
-                        <div class="vet-custom-select">
-                            <span class="vet-selected-value placeholder">Filtro</span>
-                            <div class="vet-arrow"></div>
-                        </div>
-                        <ul class="vet-custom-select-dropdown">
-                            <li data-value="">Todo</li>
-                            <li data-value="canino">opcion 1</li>
-                            <li data-value="felino">opcion 2</li>
-                        </ul>
-                        <input type="hidden" id="filter3" value="">
-                    </div>
-                    <!-- Puedes repetir para más filtros, solo cambia el id del input -->
-                </div>
+            <div class="vet-custom-modal-title">
+                
+                <h3>TITULO</h3>
 
+                <i class="bi bi-x" style="margin-left:auto;cursor:pointer;"
+                    onclick="closeVetModal('modalEditarProducto')"></i>
             </div>
-            <div class="table-actions">
-                <!-- Botones de Acción - Completamente Aislados -->
-                <div class="table-action-buttons">
-                    <button type="button" onclick="openAddProductModal()">
-                        <i class="fas fa-plus-circle"></i> Nuevo Servicio
-                    </button>
 
-                    <button type="button" onclick="exportInventory()">
-                        <i class="fas fa-file-export"></i> Exportar
-                    </button>
+            <div class="vet-modal-body">
+                <div>
+                    <p>Contenido del modal para editar el producto.</p>
                 </div>
-
             </div>
 
         </div>
+    </div>
+</div>
+<!-- Botón -->
+<button onclick="openVetModal('modalEditarProducto')" class="btn btn-primary">
+    Editar Producto
+</button>
 
-        <!-- Tabla de Datos -->
-        <div class="vet-table">
-            <table id="vet-table" class="vet-table">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Especie</th>
-                        <th>Precio</th>
-                        <th>Stock</th>
-                        <th>Último Ingreso</th>
-                        <th>Último Salida</th>
-                        <th>Proveedor</th>
-                        <th>Gestión</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr data-especie="felino" data-stock="ok" data-proveedor="vet pharma">
-                        <td>Revolution Plus</td>
-                        <td>Felino</td>
-                        <td>$32.500</td>
-                        <td><span class="badge stock-ok">10</span></td>
-                        <td>15/03/2026</td>
-                        <td>03/11/2025 </td>
-                        <td>Vet Pharma</td>
-                        <td>
-                            {% include "partials/utilities/manage_wheel.html" with custom_options="<button onclick='openCustomModal()'><i class='fas fa-star'></i> Opción especial</button><button onclick='openEditModal()'><i class='fas fa-edit'></i> Editar</button>" %}
-                        </td>
-                    </tr>
+{% endblock %}
 
-                    <tr data-especie="canino" data-stock="low" data-proveedor="pet supplies">
-                        <td>Bravecto 40-56Kg</td>
-                        <td>Canino</td>
-                        <td>$28.000</td>
-                        <td><span class="badge stock-low">3</span></td>
-                        <td>02/02/2025</td>
-                        <td>15/10/2025</td>
-                        <td>Pet Supplies</td>
-                        <td>
-                            <div class="manage-wheel">
-                                <button onclick="toggleWheel(this)">
-                                    <i class="fas fa-cog"></i>
-                                </button>
-                                <div class="manage-options" style="display: none;">
-                                    <button onclick="openDetailsModal()"><i class="fas fa-eye"></i> Ver
-                                        detalles</button>
-                                    <button onclick="openEditModal()"><i class="fas fa-edit"></i> Editar</button>
-                                    <button onclick="openAddStockModal()"><i class="fas fa-plus"></i> Agregar
-                                        stock</button>
-                                    <button onclick="openDeleteModal()"><i class="fas fa-trash"></i> Eliminar</button>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        {% endblock %}
-        {% block extra_js %}
-        <script type="module" src="{% static 'js/base/filters_base.js' %}">
-
-        </script>
-        <script type="module">
-            import { initManageWheel } from "{% static 'js/base/wheel_base.js' %}";
-            document.addEventListener('DOMContentLoaded', function () {
-                initManageWheel();
-            });
-        </script>
-        {% endblock %}
+{% block extra_js %}
+<script>
+    // Puedes agregar scripts adicionales aquí si es necesario
+</script>
+{% endblock %}

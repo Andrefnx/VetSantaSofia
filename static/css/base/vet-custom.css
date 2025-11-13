@@ -132,3 +132,30 @@
     background: linear-gradient(135deg, #fee2e2, #fecaca);
     color: #b91c1c;
 }
+
+/* =============================
+MODALES PERSONALIZADOS
+============================= */
+.custom-modal-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 1rem 1.5rem;
+}
+
+.custom-modal-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.custom-modal-footer {
+    background: #f8f9fa;
+    border-top: 1px solid #e0e0e0;
+    padding: 1rem 1.5rem;
+}
+
+.custom-modal .btn {
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+}

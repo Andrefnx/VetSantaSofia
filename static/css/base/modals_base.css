@@ -1,24 +1,166 @@
-/* Estilos base para modales */
-.modal-header {
-    background: #f8f9fa;
-    border-bottom: 1px solid #e0e0e0;
-    padding: 1rem 1.5rem;
+:root {
+    --primary-color: #afe1af;
+    --primary-hover: #89c57c;
+    --text-dark: #103012;
+    --bg-light: #f8f9fa;
+    --border-color: #e0e0e0;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+    --grey: #afafaf;
+    --grey-hover: #a8a8a8;
 }
-
-.modal-title {
+.vet-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    transition: opacity 0.35s cubic-bezier(0.4,0,0.2,1);
+    opacity: 1;
+    pointer-events: auto;
+}
+.vet-modal-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+    display: flex;
+}
+.vet-modal-overlay.hide {
+    opacity: 0;
+    pointer-events: none;
+    /* Quita display: none; para permitir la transición */
+}
+.vet-custom-modal {
+    width: 100%;
+    max-width: 1100px;
+    max-height: 90vh;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 24px 0 rgba(0,0,0,0.18), 0 6px 20px 0 rgba(0,0,0,0.19);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform:  scale(0.98);
+    opacity: 0;
+    transition:
+        opacity 0.35s cubic-bezier(0.4,0,0.2,1),
+        transform 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+.vet-modal-overlay.show .vet-custom-modal {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+.vet-modal-overlay.hide .vet-custom-modal {
+    opacity: 0;
+    transform: scale(0.98);
+}
+.vet-modal-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.vet-custom-modal-title {
+    display: flex;
+    align-items: center;
+    background-color: rgb(132, 190, 132);
+    padding: 18px 28px 18px 24px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    color: white;
+    font-size: 1.4rem;
     font-weight: 600;
+}
+.vet-custom-modal-title h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.vet-custom-modal-title i {
+    font-size: 1.4rem;
+    margin-right: 10px;
+}
+.bi.bi-x {
+    margin-left: auto;
+    cursor: pointer;
+    font-size: 1.6rem;
+}
+.vet-modal-body {
+    padding: 24px 28px;
+    background: #fff;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    max-height: 70vh;
+}
+
+.vet-custom-modal button {
+    cursor: pointer;
+    border: none;
+    background: var(--grey)!important;
+    color: white!important;
+    padding: 10px 16px!important; 
+    border-radius: 6px!important;
+    font-size: 0.9rem!important;
+    
+    transition: 0.3s all ease;
+}
+
+.vet-custom-modal button:hover {
+    background: var(--grey-hover)!important;
+    
+    transition: 0.3s all ease;
+}
+.vet-btn-grey.error:hover {
+    background: rgb(192, 19, 19) !important;
+    color: #fff;
+    transition: 0.3s all ease;
+}
+
+.vet-btn-grey.success:hover {
+    background: rgb(93, 201, 116) !important;
+    color: #fff;
+    transition: 0.3s all ease;
+}
+.vet-custom-modal button i {
+    margin-right: 6px;
+    font-size: 1rem;
+}
+
+@media (max-width: 900px) {
+    .vet-custom-modal {
+        max-width: 98vw;
+        min-width: 0;
+    }
+    .vet-modal-body {
+        padding: 16px 8px;
+    }
+    .vet-custom-modal-title {
+        padding: 12px 12px 12px 10px;
+    }
+}
+.detail-section-title {
+    font-weight: 600;
+    color: #2d3e50;
+    margin-bottom: 10px;
     font-size: 1.1rem;
-    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
-
-.modal-footer {
+.detail-section {
+    margin-bottom: 1.5rem;
+}
+.detail-section:last-child {
+    margin-bottom: 0;
+}
+.modal-footer, .vet-modal-footer {
+    padding: 16px 28px;
     background: #f8f9fa;
-    border-top: 1px solid #e0e0e0;
-    padding: 1rem 1.5rem;
-}
-
-.modal .btn {
-    border-radius: 8px;
-    font-weight: 500;
-    padding: 0.5rem 1.25rem;
+    border-top: 1px solid #eee;
+    text-align: right;
 }
