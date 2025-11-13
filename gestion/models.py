@@ -48,26 +48,3 @@ class Consulta(models.Model):
         return f"Consulta {self.idConsulta} - {self.idMascota.nombreMascota}"
 
 
-class Agenda(models.Model):
-    idMascota = models.ForeignKey(Mascota, on_delete=models.CASCADE)
-    fecha_agenda = models.DateField()
-    hora_agenda = models.TimeField()
-    nombreMascota = models.CharField(max_length=100)
-    nombre_apellido = models.CharField(max_length=100)
-    telefono = models.CharField(max_length=15)
-    razon = models.CharField(max_length=100)
-    estado = models.CharField(
-        max_length=20,
-        choices=[
-            ('pendiente', 'Pendiente'),
-            ('confirmada', 'Confirmada'),
-            ('cancelada', 'Cancelada'),
-        ],
-        default='pendiente'
-    )
-
-    class Meta:
-        unique_together = ('nombreMascota', 'fecha_agenda', 'hora_agenda')
-
-    def __str__(self):
-        return f"{self.nombreMascota} - {self.fecha_agenda}"

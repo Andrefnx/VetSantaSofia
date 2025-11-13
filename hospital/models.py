@@ -2,6 +2,9 @@
 from django.db import models
 from gestion.models import Mascota
 
+from django.db import models
+from gestion.models import Mascota
+
 class Insumo(models.Model):
     idIns = models.AutoField(primary_key=True)
     medicamento = models.CharField(max_length=100)
@@ -11,7 +14,6 @@ class Insumo(models.Model):
 
     def __str__(self):
         return self.medicamento
-
 
 class Hospitalizacion(models.Model):
     idHospitalizacion = models.AutoField(primary_key=True)
