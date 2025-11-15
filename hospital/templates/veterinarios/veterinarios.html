@@ -1,0 +1,244 @@
+{% extends "partials/base_table.html" %}
+{% load static %}
+
+{% block title %}Veterinarios{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/base/tables_base.css' %}?v=4" type="text/css" media="all">
+{% endblock %}
+
+{% block table_title %}
+<i class="fas fa-user-md"></i> Veterinarios
+{% endblock %}
+
+{% block table_filters %}
+<div class="filter-group">
+    <div class="vet-custom-select-wrapper">
+        <span class="tag_select">Rol</span>
+        <div class="vet-custom-select">
+            <span class="vet-selected-value placeholder">Todos</span>
+            <div class="vet-arrow"></div>
+        </div>
+        <ul class="vet-custom-select-dropdown">
+            <li data-value="">Todos</li>
+            <li data-value="veterinario">Veterinario</li>
+            <li data-value="administracion">Administración</li>
+            <li data-value="recepcion">Recepción</li>
+        </ul>
+        <input type="hidden" id="filterRol" value="">
+    </div>
+    <!-- Puedes agregar más filtros aquí -->
+</div>
+{% endblock %}
+
+{% block table_buttons %}
+<button type="button" onclick="abrirModalNuevoVeterinario()">
+    <i class="fas fa-plus-circle"></i> Nuevo Veterinario
+</button>
+{% endblock %}
+
+{% block table_columns %}
+<th>Nombre</th>
+<th>RUT</th>
+<th>Correo</th>
+<th>Teléfono</th>
+<th>Rol</th>
+<th>Gestión</th>
+{% endblock %}
+
+{% block table_rows %}
+<tr>
+    <td>Kathleen Curie-Galen</td>
+    <td>20776187-7</td>
+    <td>kathleen@vet.cl</td>
+    <td>+56 9 1234 5678</td>
+    <td>Veterinario</td>
+    <td>
+        <div class="manage-wheel">
+            <button type="button" onclick="toggleWheel(this)">
+                <i class="fas fa-cog"></i>
+            </button>
+            <div class="manage-options" style="display: none;">
+                <button type="button" onclick="window.location.href='{% url 'vet_ficha' %}'">
+                    <i class="bi bi-eye"></i> Ver
+                </button>
+                <button type="button" onclick="abrirModalVeterinario(this, 'edit')">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+                <button type="button" onclick="abrirModalEliminarVeterinario(this)">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </td>
+</tr>
+<tr>
+    <td>Martín González</td>
+    <td>18543210-5</td>
+    <td>martin@vet.cl</td>
+    <td>+56 9 8765 4321</td>
+    <td>Administración</td>
+    <td>
+        <div class="manage-wheel">
+            <button type="button" onclick="toggleWheel(this)">
+                <i class="fas fa-cog"></i>
+            </button>
+            <div class="manage-options" style="display: none;">
+                <button type="button" onclick="window.location.href='{% url 'vet_ficha' %}'">
+                    <i class="bi bi-eye"></i> Ver
+                </button>
+                <button type="button" onclick="abrirModalVeterinario(this, 'edit')">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+                <button type="button" onclick="abrirModalEliminarVeterinario(this)">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </td>
+</tr>
+{% endblock %}
+
+{% block modals %}
+
+<!-- Modal: Nuevo Veterinario -->
+<div class="vet-modal-overlay hide" id="modalNuevoVeterinario">
+    <div class="vet-custom-modal">
+        <div class="vet-modal-content">
+            <div class="vet-custom-modal-title">
+                <h3>Nuevo Veterinario</h3>
+                <i class="bi bi-x" style="margin-left:auto;cursor:pointer;"
+                    onclick="closeVetModal('modalNuevoVeterinario')"></i>
+            </div>
+            <div class="vet-modal-body">
+                <form id="addVeterinarioForm">
+                    <div class="mb-3">
+                        <label>Nombre</label>
+                        <input type="text" class="form-control" name="nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>RUT</label>
+                        <input type="text" class="form-control" name="rut" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Correo</label>
+                        <input type="email" class="form-control" name="correo" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Teléfono</label>
+                        <input type="text" class="form-control" name="telefono">
+                    </div>
+                    <div class="mb-3">
+                        <label>Rol</label>
+                        <select class="form-control" name="rol" required>
+                            <option value="">Selecciona...</option>
+                            <option value="veterinario">Veterinario</option>
+                            <option value="administracion">Administración</option>
+                            <option value="recepcion">Recepción</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="vet-modal-body" style="text-align:right;">
+                <button type="button" class="vet-btn-grey success" onclick="saveNewVeterinario()">
+                    <i class="bi bi-floppy-fill"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Ver/Editar Veterinario -->
+<div class="vet-modal-overlay hide" id="modalVeterinario">
+    <div class="vet-custom-modal" style="max-width: 900px; width: 100%;">
+        <div class="vet-modal-content">
+            <div class="vet-custom-modal-title">
+                <h3>
+                    <i class="fas fa-user-md"></i>
+                    <span id="modalVeterinarioTitulo">Detalles del Veterinario</span>
+                </h3>
+                <i class="bi bi-x" style="margin-left:auto;cursor:pointer;" onclick="closeVeterinarioModal()"></i>
+            </div>
+            <div class="vet-modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <div class="detail-section mb-4">
+                    <h6 class="detail-section-title"><i class="fas fa-id-card"></i> Identificación</h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="text-muted small">Nombre</label>
+                            <p class="field-view fw-bold mb-0" data-field="nombre">-</p>
+                            <input class="field-edit form-control d-none" data-field="nombre">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted small">RUT</label>
+                            <p class="field-view mb-0" data-field="rut">-</p>
+                            <input class="field-edit form-control d-none" data-field="rut">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Correo</label>
+                            <p class="field-view mb-0" data-field="correo">-</p>
+                            <input class="field-edit form-control d-none" data-field="correo">
+                        </div>
+                    </div>
+                </div>
+                <div class="detail-section mb-4">
+                    <h6 class="detail-section-title"><i class="fas fa-phone"></i> Contacto</h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="text-muted small">Teléfono</label>
+                            <p class="field-view fw-bold mb-0" data-field="telefono">-</p>
+                            <input class="field-edit form-control d-none" data-field="telefono">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Rol</label>
+                            <p class="field-view mb-0" data-field="rol">-</p>
+                            <select class="field-edit form-control d-none" data-field="rol">
+                                <option value="">Selecciona...</option>
+                                <option value="veterinario">Veterinario</option>
+                                <option value="administracion">Administración</option>
+                                <option value="recepcion">Recepción</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="vet-modal-body" style="border-top:1px solid #eee; text-align:right;">
+                <button type="button" class="vet-btn-grey" id="btnEditarVeterinario" onclick="switchToEditModeVeterinario()">
+                    <i class="bi bi-pencil-fill"></i> Editar
+                </button>
+                <button type="button" class="vet-btn-grey d-none" id="btnGuardarVeterinario"
+                    onclick="guardarVeterinarioEditado()">
+                    <i class="bi bi-floppy-fill"></i> Guardar
+                </button>
+                <button type="button" class="vet-btn-grey error" id="btnEliminarVeterinario"
+                    onclick="abrirModalEliminarVeterinario(this)">
+                    <i class="bi bi-trash3-fill"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Eliminar Veterinario -->
+<div class="vet-modal-overlay hide" id="modalEliminarVeterinario">
+    <div class="vet-custom-modal">
+        <div class="vet-modal-content">
+            <div class="vet-custom-modal-title" style="background: #b71c1c;">
+                <h3><i class="bi bi-trash3-fill"></i> Eliminar Veterinario</h3>
+                <i class="bi bi-x" style="margin-left:auto;cursor:pointer;" onclick="closeEliminarVeterinarioModal()"></i>
+            </div>
+            <div class="vet-modal-body">
+                <p id="eliminarVeterinarioMensaje">¿Estás seguro que deseas eliminar este veterinario?</p>
+            </div>
+            <div class="vet-modal-body" style="text-align:right;">
+                <button type="button" class="vet-btn-grey error" id="btnConfirmarEliminarVeterinario">
+                    <i class="bi bi-trash3-fill"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Aquí puedes agregar JS específico para veterinarios si lo necesitas -->
+{% endblock %}

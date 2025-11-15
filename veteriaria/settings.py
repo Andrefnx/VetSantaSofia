@@ -130,6 +130,7 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',  # Carpeta static global
     BASE_DIR / 'hospital/Static',
+      BASE_DIR / 'agenda/Static',
 ]
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'

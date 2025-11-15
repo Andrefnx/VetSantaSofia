@@ -13,15 +13,20 @@ def hospital_view(request):
     return render(request, 'hospitalizacion/hospital.html')
 
 # --- PACIENTES ---
-def ficha_mascota_view(request):
+def pacientes_view(request):
+    return render(request, 'pacientes/pacientes.html')
+
+
+def ficha_mascota(request):
     return render(request, 'pacientes/ficha_mascota.html')
 
 # --- VETERINARIOS ---
-def vet_ficha_view(request):
-    return render(request, 'veterinarios/vet_ficha.html')
 
-def vet_disponibilidad_view(request):
-    return render(request, 'veterinarios/vet_disponibilidad.html')
+def vet_view(request):
+    return render(request, 'veterinarios/veterinarios.html')
+def vet_ficha_view(request):
+    dias = range(1, 32)  # Días del 1 al 31
+    return render(request, 'veterinarios/vet_ficha.html', {'dias': dias})
 
 # --- INVENTARIO ---
 

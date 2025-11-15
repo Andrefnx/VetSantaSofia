@@ -3,6 +3,135 @@
 
 {% block title %}Agenda{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{% static 'agenda/css/agenda.css' %}">
+{% endblock %}
+
 {% block content %}
-    <!-- Tu contenido aquí -->
+<div class="agenda-container">
+    <h1><i class="fas fa-calendar-alt"></i> Agenda</h1>
+    <div class="agenda-tabs">
+        <button class="agenda-tab-btn active" data-tab="mensual">Mensual</button>
+        <button class="agenda-tab-btn" data-tab="semanal">Semanal</button>
+        <button class="agenda-tab-btn" data-tab="agendar">Agendar Cita</button>
+    </div>
+    <div class="agenda-tabs-content">
+        <!-- Vista Mensual -->
+        <div class="agenda-tab active" id="mensual">
+            <div class="calendar-month">
+                <div class="calendar-header">
+                    <button class="month-prev">&lt;</button>
+                    <h3 id="monthDisplay">Noviembre 2025</h3>
+                    <button class="month-next">&gt;</button>
+                </div>
+                <div class="calendar-grid">
+                    <!-- Ejemplo de días con citas -->
+                    <div class="calendar-day">
+                        <span>15</span>
+                        <div class="event">
+                            <b>10:00</b> - Max (Dra. Andrea)
+                        </div>
+                        <div class="event">
+                            <b>12:00</b> - Luna (Dr. Carlos)
+                        </div>
+                    </div>
+                    <div class="calendar-day">
+                        <span>16</span>
+                        <div class="event">
+                            <b>09:00</b> - Rocky (Dra. Andrea)
+                        </div>
+                    </div>
+                    <!-- ...más días de ejemplo... -->
+                </div>
+            </div>
+        </div>
+        <!-- Vista Semanal -->
+        <div class="agenda-tab" id="semanal">
+            <div class="calendar-month">
+                <div class="calendar-header">
+                    <button class="week-prev">&lt;</button>
+                    <h3 id="weekRange">15 - 21 Noviembre 2025</h3>
+                    <button class="week-next">&gt;</button>
+                </div>
+                <div class="week-grid">
+                    <div class="week-day">
+                        <span>Lun 17</span>
+                        <div class="event">
+                            <b>09:00</b> - Max (Dra. Andrea)
+                        </div>
+                    </div>
+                    <div class="week-day">
+                        <span>Mar 18</span>
+                        <div class="event">
+                            <b>11:00</b> - Luna (Dr. Carlos)
+                        </div>
+                    </div>
+                    <!-- ...más días de ejemplo... -->
+                </div>
+            </div>
+        </div>
+        <!-- Agendar Cita -->
+        <div class="agenda-tab" id="agendar">
+            <div class="calendar-month">
+                <h3>Agendar Nueva Cita</h3>
+                <form id="formAgendarCita">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="detail-section">
+                                <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
+                                <input type="date" class="form-control" name="fecha" required>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-section-title"><i class="bi bi-clock"></i> Hora</div>
+                                <input type="time" class="form-control" name="hora" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-section">
+                                <div class="detail-section-title"><i class="bi bi-person-badge"></i> Veterinario</div>
+                                <select class="form-control" name="veterinario" required>
+                                    <option value="">Seleccione</option>
+                                    <option value="1">Dra. Andrea Guerra</option>
+                                    <option value="2">Dr. Carlos Martínez</option>
+                                </select>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-section-title"><i class="bi bi-list-task"></i> Tipo de Cita</div>
+                                <select class="form-control" name="tipo" required>
+                                    <option value="">Seleccione tipo</option>
+                                    <option value="consulta">Consulta general</option>
+                                    <option value="control">Control</option>
+                                    <option value="vacunacion">Vacunación</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="detail-section" style="margin-top:15px;">
+                        <div class="detail-section-title"><i class="bi bi-journal-text"></i> Notas</div>
+                        <textarea class="form-control" name="notas"></textarea>
+                    </div>
+                    <div class="vet-modal-footer d-flex justify-content-end align-items-center" style="margin-top:15px;">
+                        <button type="submit" class="vet-btn vet-btn-primary">
+                            <i class="bi bi-calendar-plus"></i> Agendar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Tabs
+document.querySelectorAll('.agenda-tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.agenda-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.agenda-tab').forEach(tab => tab.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+});
+</script>
 {% endblock %}

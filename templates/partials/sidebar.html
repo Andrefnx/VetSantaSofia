@@ -63,48 +63,18 @@
                     </a>
                 </li>
 
-                <!-- SECCIÓN: CONSULTAS -->
-                <li class="nav-item {% if request.resolver_match.url_name == 'consulta' %}active{% endif %}">
-                    <a href="{% url 'consulta' %}">
-                        <i class="bi bi-clipboard2-pulse"></i>
-                        <p>Consultas</p>
-                    </a>
-                </li>
-
-                <!-- SECCIÓN: HOSPITALIZACIÓN -->
-                <li class="nav-item {% if request.resolver_match.url_name == 'hospital' %}active{% endif %}">
-                    <a href="{% url 'hospital' %}">
-                        <i class="bi bi-hospital-fill"></i>
-                        <p>Hospitalización</p>
-                    </a>
-                </li>
 
                 <!-- SECCIÓN: VETERINARIOS -->
-                <li class="nav-item">
-                    <a data-bs-toggle="collapse" href="#veterinarios">
-                        <i class="bi bi-person-vcard-fill"></i>
-                        <p>Veterinarios</p>
-                        <span class="caret"></span>
-                    </a>
-                    <div class="collapse" id="veterinarios">
-                        <ul class="nav nav-collapse">
-                            <li>
-                                <a href="#">
-                                    <span class="sub-item">Ficha Veterinario</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#">
-                                    <span class="sub-item">Disponibilidad</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+            <li class="nav-item {% if request.resolver_match.url_name == 'vet_view' %}active{% endif %}">
+                <a href="{% url 'vet_view' %}">
+                    <i class="bi-file-medical"></i>
+                    <p>Veterinarios</p>
+                </a>
+            </li>
 
                 <!-- SECCIÓN: PACIENTES -->
-                <li class="nav-item {% if request.resolver_match.url_name == 'ficha_mascota' %}active{% endif %}">
-                    <a href="{% url 'ficha_mascota' %}">
+                <li class="nav-item {% if request.resolver_match.url_name == 'pacientes_view' %}active{% endif %}">
+                    <a href="{% url 'pacientes_view' %}">
                         <i class="fas fa-paw"></i>
                         <p>Pacientes</p>
                     </a>

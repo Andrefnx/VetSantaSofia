@@ -3,6 +3,421 @@
 
 {% block title %}Ficha de Mascota{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/base/vet-custom.css' %}">
+<link rel="stylesheet" href="{% static 'css/pacientes.css' %}">
+{% endblock %}
+
 {% block content %}
-    <!-- Tu contenido aquí -->
+<div class="header">
+    <h1>
+        <i class="fas fa-paw"></i> Nombre de la Mascota
+    </h1>
+    <div class="edit-mode">
+        <button class="vet-btn vet-btn-primary">
+            <i class="bi bi-pencil-square"></i> Editar Ficha
+        </button>
+    </div>
+</div>
+
+<div class="general-container">
+
+    <div class="general-information">
+        <!-- ...existing info blocks... -->
+        <div class="section personal-info">
+            <h2>
+                Información General
+            </h2>
+            <div class="info">
+                <div class="info-row">
+                    <p><strong>Especie:</strong> Especie de la Mascota</p>
+                    <p><strong>Raza:</strong> Raza de la Mascota</p>
+                    <p><strong>Edad:</strong> Edad de la Mascota</p>
+                    <p><strong>Sexo:</strong> Sexo de la Mascota</p>
+                    <p><strong>Color:</strong> Color de la Mascota</p>
+                </div>
+                <p><strong>Microchip:</strong> Número de Microchip</p>
+            </div>
+        </div>
+        <div class="section resumen-clinico">
+            <h2>
+                Resumen
+            </h2>
+            <div class="info">
+                <div class="info-row">
+                    <p><strong>Último peso registrado:</strong> Peso de la Mascota</p>
+                    <p><strong>Último control:</strong> Último control</p>
+                </div>
+            </div>
+        </div>
+        <div class="section responsable">
+            <h2>
+                Responsable
+            </h2>
+            <div class="info">
+                <div class="info-row">
+                    <p><strong>Dueño:</strong> Nombre del Dueño</p>
+                    <p><strong>Teléfono:</strong> Teléfono del Dueño</p>
+                    <p><strong>Correo Electrónico:</strong> Correo del Dueño</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="section tabs-section">
+        <div class="tabs-nav">
+            <button class="tab-btn active" data-tab="historial">Historial Clínico</button>
+            <button class="tab-btn" data-tab="hosp">Hospitalizaciones</button>
+            <button class="tab-btn" data-tab="examenes">Exámenes</button>
+            <button class="tab-btn" data-tab="docs">Documentos</button>
+        </div>
+        <div class="tabs-content">
+
+            <div class="tab-content active" id="historial">
+                <div class="historial-clinico">
+                    <h3>Historial Clínico</h3>
+                </div>
+
+                <div class="timeline" id="timeline">
+                    <div class="timeline-item new-event">
+                        <button class="vet-btn vet-btn-primary" id="btnNuevaConsulta">
+                            <i class="bi bi-plus-lg"></i> Nueva Consulta
+                        </button>
+                        <button class="vet-btn vet-btn-grey" id="btnAgendarCitaModal" style="margin-left:10px;">
+                            <i class="bi bi-calendar-plus"></i> Agendar Cita
+                        </button>
+                    </div>
+                    <!-- Instancias de nuevas consultas agendadas (gris) -->
+                    <div id="nuevasConsultas"></div>
+                    <!-- ITEM -->
+                    <div class="timeline-item">
+                        <div class="timeline-date">
+                            <span class="month">Jun</span>
+                            <span class="year">2010</span>
+                        </div>
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h3 class="event-title">Depresión</h3>
+                            <p class="event-subtitle">
+                                Médico Tratante: Kathleen Curie-Galen, MD <br>
+                                05/26/2012 – Presente
+                            </p>
+                            <p class="event-notes">
+                                Notes 06/12: Duis sed odio sit amet nibh vulputate cursus a sit amet mauris. Nam nec
+                                tellus a odio tincidunt auctor a ornare odio.
+                            </p>
+                            <button class="timeline-btn">Ver detalle</button>
+                        </div>
+                    </div>
+                    <!-- ITEM -->
+                    <div class="timeline-item">
+                        <div class="timeline-date">
+                            <span class="month">Jul</span>
+                            <span class="year">2011</span>
+                        </div>
+                        <div class="timeline-content">
+                            <h3 class="event-title">Fractura de pata</h3>
+                            <p class="event-subtitle">
+                                Veterinario Tratante: Dr. Martínez <br>
+                                07/08/2011 – 08/30/2011
+                            </p>
+                            <p class="event-notes">
+                                Notes 10/11: Proin gravida nibh vel velit auctor aliquet. Aenean sollicitudin lorem quis
+                                bibendum auctor nisi elit consequat.
+                            </p>
+                            <button class="timeline-btn">Ver detalle</button>
+                        </div>
+                    </div>
+                    <!-- ...otros items... -->
+                </div>
+            </div>
+
+            <div class="tab-content" id="hosp">
+                <div class="hospitalizaciones">
+                    <h3>Hospitalizaciones</h3>
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Fecha ingreso</th>
+                                <th>Fecha alta</th>
+                                <th>Motivo</th>
+                                <th>Veterinario</th>
+                                <th>Notas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>12/03/2023</td>
+                                <td>15/03/2023</td>
+                                <td>Cirugía ortopédica</td>
+                                <td>Dr. González</td>
+                                <td>Recuperación sin complicaciones.</td>
+                            </tr>
+                            <tr>
+                                <td>20/07/2022</td>
+                                <td>22/07/2022</td>
+                                <td>Observación gastroenteritis</td>
+                                <td>Dra. Pérez</td>
+                                <td>Alta con dieta especial.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content" id="examenes">
+                <div class="examenes">
+                    <h3>Exámenes</h3>
+                    <div style="margin-bottom: 1rem;">
+                        <label class="vet-btn vet-btn-primary" style="cursor:pointer;">
+                            <i class="bi bi-paperclip"></i> Adjuntar Examen
+                            <input type="file" name="adjuntar_examen" style="display:none;">
+                        </label>
+                    </div>
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Veterinario</th>
+                                <th>Resultado</th>
+                                <th>Documento</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>10/02/2024</td>
+                                <td>Hemograma</td>
+                                <td>Dra. López</td>
+                                <td>Normal</td>
+                                <td>
+                                    <a href="#" target="_blank" class="vet-link-exam">
+                                        <i class="bi bi-file-earmark-text"></i> Ver PDF
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>05/11/2023</td>
+                                <td>Radiografía</td>
+                                <td>Dr. Martínez</td>
+                                <td>Fractura detectada</td>
+                                <td>
+                                    <a href="#" target="_blank" class="vet-link-exam">
+                                        <i class="bi bi-file-earmark-text"></i> Ver imagen
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content" id="docs">
+                <div class="documentos">
+                    <h3>Documentos</h3>
+                    <div style="margin-bottom: 1rem;">
+                        <label class="vet-btn vet-btn-primary" style="cursor:pointer;">
+                            <i class="bi bi-paperclip"></i> Adjuntar Documento
+                            <input type="file" name="adjuntar_documento" style="display:none;">
+                        </label>
+                    </div>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Carnet de Vacunación
+                            <a href="#" target="_blank" class="vet-link-exam">
+                                <i class="bi bi-file-earmark-text"></i> Descargar
+                            </a>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Certificado de Salud
+                            <a href="#" target="_blank" class="vet-link-exam">
+                                <i class="bi bi-file-earmark-text"></i> Descargar
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Modal Detalle Consulta -->
+<div id="detalleConsultaModal" class="vet-modal-overlay hide">
+    <div class="vet-custom-modal">
+        <div class="vet-custom-modal-title">
+            <h3 id="detalleTitulo" style="margin:0;"><i class="bi bi-clipboard2-pulse"></i> Detalle de Consulta</h3>
+            <i class="bi bi-x" id="closeDetalleModal" tabindex="0" role="button" aria-label="Cerrar"></i>
+        </div>
+        <div class="vet-modal-body">
+            <div class="row g-3">
+                <!-- Columna izquierda: Datos fisiológicos -->
+                <div class="col-md-4" id="detalleDatosMascota">
+                    <div class="detail-section">
+                        <div class="detail-section-title"><i class="bi bi-thermometer-half"></i> Temperatura</div>
+                        <p id="detalleTemp">-</p>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title"><i class="bi bi-speedometer2"></i> Peso</div>
+                        <p id="detallePeso">-</p>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title"><i class="bi bi-heart-pulse"></i> Frec. Cardíaca</div>
+                        <p id="detalleFC">-</p>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title"><i class="bi bi-wind"></i> Frec. Respiratoria</div>
+                        <p id="detalleFR">-</p>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title"><i class="bi bi-droplet-half"></i> Otros</div>
+                        <p id="detalleOtros">-</p>
+                    </div>
+                </div>
+                <!-- Columna derecha: Detalles de consulta -->
+                <div class="col-md-8" id="detalleContenido">
+                    <!-- Aquí se llenarán los detalles dinámicamente -->
+                </div>
+            </div>
+        </div>
+        <div class="vet-modal-footer d-flex justify-content-between align-items-center">
+            <button id="editarConsultaBtn" class="vet-btn vet-btn-grey" title="Editar consulta">
+                <i class="bi bi-pencil-square"></i> Editar consulta
+            </button>
+            <button class="vet-btn vet-btn-primary" id="btnAgendarCita">
+                <i class="bi bi-calendar-plus"></i> Agendar próxima cita
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nueva Consulta -->
+<div id="nuevaConsultaModal" class="vet-modal-overlay hide">
+    <div class="vet-custom-modal">
+        <div class="vet-custom-modal-title">
+            <h3 style="margin:0;"><i class="bi bi-clipboard2-plus"></i> Nueva Consulta</h3>
+            <i class="bi bi-x" id="closeNuevaConsultaModal" tabindex="0" role="button" aria-label="Cerrar"></i>
+        </div>
+        <form id="formNuevaConsulta">
+            <div class="vet-modal-body">
+                <div class="row g-3">
+                    <!-- Columna izquierda: Datos fisiológicos -->
+                    <div class="col-md-4">
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-thermometer-half"></i> Temperatura</div>
+                            <input type="text" class="form-control" name="temp" required>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-speedometer2"></i> Peso</div>
+                            <input type="text" class="form-control" name="peso" required>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-heart-pulse"></i> Frec. Cardíaca</div>
+                            <input type="text" class="form-control" name="fc">
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-wind"></i> Frec. Respiratoria</div>
+                            <input type="text" class="form-control" name="fr">
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-droplet-half"></i> Otros</div>
+                            <input type="text" class="form-control" name="otros">
+                        </div>
+                    </div>
+                    <!-- Columna derecha: Detalles de consulta -->
+                    <div class="col-md-8">
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-person-badge"></i> Médico Tratante</div>
+                            <input type="text" class="form-control" name="medico" value="{{ user.nombre }} {{ user.apellido }}" readonly style="background:#f3f3f3;">
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
+                            <input type="text" class="form-control" name="fecha" value="{% now 'd/m/Y' %}" readonly style="background:#f3f3f3;">
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-clipboard2-check"></i> Diagnóstico</div>
+                            <input type="text" class="form-control" name="diagnostico">
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-capsule"></i> Tratamiento</div>
+                            <input type="text" class="form-control" name="tratamiento">
+                        </div>
+                        <!-- Exámenes oculto -->
+                        <div class="detail-section" style="display:none;">
+                            <div class="detail-section-title"><i class="bi bi-file-earmark-medical"></i> Exámenes</div>
+                            <input type="text" class="form-control" name="examenes" placeholder="Separar por coma">
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-journal-text"></i> Notas</div>
+                            <textarea class="form-control" name="notas"></textarea>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-lightbulb"></i> Recomendaciones</div>
+                            <input type="text" class="form-control" name="recomendaciones">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="vet-modal-footer d-flex justify-content-between align-items-center">
+                <span></span>
+                <button type="submit" class="vet-btn vet-btn-primary" id="btnAgendarNuevaCita">
+                    <i class="bi bi-calendar-plus"></i> Agendar y guardar en historial
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Agendar Cita -->
+<div id="agendarCitaModal" class="vet-modal-overlay hide">
+    <div class="vet-custom-modal">
+        <div class="vet-custom-modal-title">
+            <h3 style="margin:0;"><i class="bi bi-calendar-plus"></i> Agendar Cita</h3>
+            <i class="bi bi-x" id="closeAgendarCitaModal" tabindex="0" role="button" aria-label="Cerrar"></i>
+        </div>
+        <form id="formAgendarCita">
+            <div class="vet-modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
+                            <input type="date" class="form-control" name="fecha" required>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-clock"></i> Hora</div>
+                            <input type="time" class="form-control" name="hora" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-list-task"></i> Tipo de Cita</div>
+                            <select class="form-control" name="tipo" required>
+                                <option value="">Seleccione tipo</option>
+                                <option value="hospitalizacion">Hospitalización</option>
+                                <option value="consulta">Consulta general</option>
+                                <option value="control">Control</option>
+                                <option value="vacunacion">Vacunación</option>
+                            </select>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-journal-text"></i> Notas</div>
+                            <textarea class="form-control" name="notas"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="vet-modal-footer d-flex justify-content-between align-items-center">
+                <span></span>
+                <button type="submit" class="vet-btn vet-btn-primary">
+                    <i class="bi bi-calendar-plus"></i> Agendar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/base/tabs.js' %}"></script>
+<script src="{% static 'js/pacientes/historial_medico.js' %}"></script>
 {% endblock %}

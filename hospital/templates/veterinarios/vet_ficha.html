@@ -3,6 +3,317 @@
 
 {% block title %}Ficha Veterinario{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/base/vet-custom.css' %}">
+<link rel="stylesheet" href="{% static 'css/pacientes.css' %}">
+<style>
+    .agenda-modern-container {
+        display: flex;
+        gap: 2.5rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+    .agenda-calendar-box {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        padding: 1.5rem 1.5rem 1.2rem 1.5rem;
+        min-width: 260px;
+        max-width: 320px;
+        flex: 1 1 260px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .agenda-slots-box {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        padding: 1.5rem 1.5rem 1.2rem 1.5rem;
+        flex: 2 1 400px;
+        min-width: 320px;
+        max-width: 700px;
+    }
+    .agenda-section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1.2rem;
+        color: #2d5c2d;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .agenda-slots-group {
+        margin-bottom: 1.5rem;
+    }
+    .agenda-slots-label {
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 0.7rem;
+        color: #555;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .agenda-slots-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.7rem;
+    }
+    .agenda-slot {
+        background: #f5f8fa;
+        border: 1.5px solid #e0e6ed;
+        border-radius: 8px;
+        padding: 0.7rem 1.1rem;
+        font-size: 1rem;
+        color: #2d5c2d;
+        cursor: pointer;
+        transition: background 0.15s, border 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .agenda-slot.selected, .agenda-slot:active {
+        background: #e3f2e8;
+        border: 2px solid #75b167;
+        color: #103012;
+        font-weight: 600;
+    }
+    .agenda-add-slot, .agenda-add-wait {
+        color: #4a90e2;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.98rem;
+        margin-left: 0.5rem;
+        padding: 0;
+        transition: color 0.15s;
+    }
+    .agenda-add-slot:hover, .agenda-add-wait:hover {
+        color: #2366b1;
+        text-decoration: underline;
+    }
+    .agenda-waiting-list {
+        margin-top: 1.5rem;
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 1rem 1.2rem;
+        font-size: 0.98rem;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+    }
+    .agenda-calendar-box .calendar {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+    /* Simple calendar style for demo */
+    .calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 2.1em);
+        gap: 0.3em;
+        justify-content: center;
+        font-size: 0.98em;
+    }
+    .calendar-day, .calendar-date {
+        text-align: center;
+        padding: 0.3em 0;
+        border-radius: 6px;
+    }
+    .calendar-day {
+        font-weight: bold;
+        color: #4a90e2;
+        background: #f3f7fa;
+    }
+    .calendar-date {
+        cursor: pointer;
+        background: #f5f8fa;
+        color: #333;
+        transition: background 0.13s;
+    }
+    .calendar-date.selected, .calendar-date:active {
+        background: #9fcf9f;
+        color: #fff;
+        font-weight: 600;
+    }
+    @media (max-width: 900px) {
+        .agenda-modern-container {
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+        .agenda-calendar-box, .agenda-slots-box {
+            max-width: 100%;
+            min-width: 0;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-    <!-- Tu contenido aquí -->
+<div class="header">
+    <h1>
+        <i class="fas fa-user-md"></i> Nombre del Veterinario
+    </h1>
+    <div class="edit-mode">
+        <button class="vet-btn vet-btn-primary">
+            <i class="bi bi-pencil-square"></i> Editar Ficha
+        </button>
+    </div>
+</div>
+
+<div class="general-container">
+
+    <div class="general-information">
+        <div class="section personal-info">
+            <h2>Información General</h2>
+            <div class="info">
+                <div class="info-row">
+                    <p><strong>RUT:</strong> 20776187-7</p>
+                    <p><strong>Correo:</strong> veterinario@vet.cl</p>
+                    <p><strong>Teléfono:</strong> +56 9 1234 5678</p>
+                    <p><strong>Rol:</strong> Veterinario</p>
+                </div>
+                <p><strong>Especialidad:</strong> Medicina interna</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section tabs-section">
+        <div class="tabs-nav">
+            <button class="tab-btn active" data-tab="pacientes">Pacientes Atendidos</button>
+            <button class="tab-btn" data-tab="agenda">Agenda</button>
+        </div>
+        <div class="tabs-content">
+
+            <div class="tab-content active" id="pacientes">
+                <div class="pacientes-atendidos">
+                    <h3>Pacientes Atendidos</h3>
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Especie</th>
+                                <th>Raza</th>
+                                <th>Edad</th>
+                                <th>Última Consulta</th>
+                                <th>Gestión</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Max</td>
+                                <td>Canino</td>
+                                <td>Labrador</td>
+                                <td>5 años</td>
+                                <td>12/10/2024</td>
+                                <td>
+                                    <a href="{% url 'ficha_mascota' %}" class="vet-btn vet-btn-primary btn-sm">
+                                        <i class="bi bi-eye"></i> Ver ficha
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Luna</td>
+                                <td>Felino</td>
+                                <td>Siames</td>
+                                <td>3 años</td>
+                                <td>05/09/2024</td>
+                                <td>
+                                    <a href="{% url 'ficha_mascota' %}" class="vet-btn vet-btn-primary btn-sm">
+                                        <i class="bi bi-eye"></i> Ver ficha
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content" id="agenda">
+                <div class="agenda-modern-container">
+                    <!-- Calendario -->
+                    <div class="agenda-calendar-box">
+                        <div class="agenda-section-title">
+                            <i class="bi bi-calendar-event"></i> Selecciona una fecha
+                        </div>
+                        <div class="calendar">
+                            <div class="calendar-day">D</div>
+                            <div class="calendar-day">L</div>
+                            <div class="calendar-day">M</div>
+                            <div class="calendar-day">M</div>
+                            <div class="calendar-day">J</div>
+                            <div class="calendar-day">V</div>
+                            <div class="calendar-day">S</div>
+                            <!-- Ejemplo de días del mes (1-31) -->
+                            {% for i in dias %}
+    <div class="calendar-date{% if i == 2 %} selected{% endif %}">{{ i }}</div>
+{% endfor %}
+                        </div>
+                    </div>
+                    <!-- Slots de agenda -->
+                    <div class="agenda-slots-box">
+                        <div class="agenda-slots-group">
+                            <div class="agenda-slots-label">
+                                <i class="bi bi-brightness-high"></i> Mañana <span style="font-weight:400;">(09:00 a 12:00 PM)</span>
+                                <button class="agenda-add-slot" type="button">+ Add Slots</button>
+                            </div>
+                            <div class="agenda-slots-list">
+                                <div class="agenda-slot">9:00 AM</div>
+                                <div class="agenda-slot">9:10 AM</div>
+                                <div class="agenda-slot">9:20 AM</div>
+                                <div class="agenda-slot selected">10:10 AM</div>
+                                <div class="agenda-slot">10:20 AM</div>
+                                <div class="agenda-slot">10:30 AM</div>
+                                <div class="agenda-slot">10:40 AM</div>
+                                <div class="agenda-slot">10:50 AM</div>
+                            </div>
+                        </div>
+                        <div class="agenda-slots-group">
+                            <div class="agenda-slots-label">
+                                <i class="bi bi-moon"></i> Tarde <span style="font-weight:400;">(17:00 a 21:00 PM)</span>
+                                <button class="agenda-add-slot" type="button">+ Add Slots</button>
+                            </div>
+                            <div class="agenda-slots-list">
+                                <div class="agenda-slot">5:00 PM</div>
+                                <div class="agenda-slot">5:10 PM</div>
+                                <div class="agenda-slot">5:20 PM</div>
+                                <div class="agenda-slot">5:30 PM</div>
+                                <div class="agenda-slot">5:40 PM</div>
+                                <div class="agenda-slot">5:50 PM</div>
+                                <div class="agenda-slot">6:00 PM</div>
+                                <div class="agenda-slot">6:10 PM</div>
+                            </div>
+                        </div>
+                        <div class="agenda-waiting-list">
+                            <i class="bi bi-clock-history"></i>
+                            Waiting list
+                            <button class="agenda-add-wait" type="button">+ Add to Wait List</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/base/tabs.js' %}"></script>
+<script>
+    // Demo: seleccionar slot y fecha (solo frontend)
+    document.querySelectorAll('.agenda-slot').forEach(slot => {
+        slot.onclick = function() {
+            document.querySelectorAll('.agenda-slot').forEach(s => s.classList.remove('selected'));
+            slot.classList.add('selected');
+        }
+    });
+    document.querySelectorAll('.calendar-date').forEach(date => {
+        date.onclick = function() {
+            document.querySelectorAll('.calendar-date').forEach(d => d.classList.remove('selected'));
+            date.classList.add('selected');
+        }
+    });
+</script>
 {% endblock %}
