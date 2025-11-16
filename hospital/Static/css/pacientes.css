@@ -251,6 +251,46 @@
     color: #222;
 }
 
+ .vet-link-exam {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--primary-color, #89c57c);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+    .vet-link-exam:hover {
+        color: var(--primary-hover, #103012);
+        text-decoration: underline;
+    }
+    .vet-custom-modal-title {
+        position: relative;
+    }
+    #editarConsultaBtn {
+        position: relative;
+        top: 0;
+        left: 0;
+        padding: 6px 10px !important;
+        font-size: 1.1rem !important;
+        display: inline-flex;
+        align-items: center;
+        margin-right: 12px;
+    }
+    /* Nueva consulta agendada en gris */
+    .timeline-item.nueva-consulta-agendada {
+        background: #f3f3f3;
+        border: 1.5px dashed #bbb;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        margin-top: 10px;
+        box-shadow: none;
+    }
+    .timeline-item.nueva-consulta-agendada .timeline-content {
+        background: transparent;
+        box-shadow: none;
+        padding: 18px 22px;
+    }
 /* Responsive: apilar en móviles */
 @media screen and (max-width: 600px) {
     .timeline-item.new-event {
