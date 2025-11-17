@@ -4,396 +4,280 @@
 {% block title %}Agenda{% endblock %}
 
 {% block styles %}
-<link rel="stylesheet" href="{% static 'css/base/vet-custom.css' %}">
 <link rel="stylesheet" href="{% static 'agenda/css/agenda.css' %}">
+
+<style>
+.agenda-container {
+    padding: 32px 24px;
+    background: #f7fafc;
+    min-height: 90vh;
+    border-radius: 18px;
+    box-shadow: 0 2px 16px #0001;
+    max-width: 900px;
+    margin: 30px auto;
+}
+
+.agenda-header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 32px;
+    justify-content: center;
+}
+
+.agenda-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0096d6;
+    letter-spacing: 1px;
+}
+
+.day-nav {
+    padding: 8px 18px;
+    font-size: 22px;
+    background: #e3f2fd;
+    border-radius: 8px;
+    border: none;
+    color: #0096d6;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.day-nav:hover {
+    background: #b7e5ff;
+}
+
+.daily-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.hour-block {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+}
+
+.hour-label {
+    width: 90px;
+    font-weight: bold;
+    color: #444;
+    font-size: 1.1rem;
+    text-align: right;
+}
+
+.hour-slots {
+    display: flex;
+    gap: 10px;
+}
+
+.slot {
+    width: 100px;
+    height: 54px;
+    border-radius: 8px;
+    border: 1.5px solid #d0e3f1;
+    background: #fff;
+    position: relative;
+    cursor: pointer;
+    padding: 6px;
+    box-shadow: 0 1px 4px #0001;
+    transition: border 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.slot:hover {
+    border: 1.5px solid #0096d6;
+    box-shadow: 0 2px 8px #0096d622;
+}
+.slot.has-cita {
+    background: linear-gradient(135deg, #b7e5ff 60%, #e3f2fd 100%);
+    border-color: #0096d6;
+    color: #0a3a5a;
+    font-weight: 600;
+}
+
+.slot-time {
+    font-size: 1.1rem;
+    color: #0096d6;
+    font-weight: 500;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: #00000055;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.hide {
+    display: none !important;
+}
+
+.modal-card {
+    background: white;
+    padding: 32px 28px;
+    border-radius: 14px;
+    width: 400px;
+    box-shadow: 0 4px 24px #0002;
+}
+
+.modal-card h3 {
+    margin-bottom: 18px;
+    color: #0096d6;
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.modal-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.modal-card label {
+    font-weight: 500;
+    color: #444;
+}
+
+.modal-card input,
+.modal-card select,
+.modal-card textarea {
+    border: 1.2px solid #d0e3f1;
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 1rem;
+    background: #f7fafc;
+    transition: border 0.2s;
+}
+.modal-card input:focus,
+.modal-card select:focus,
+.modal-card textarea:focus {
+    border-color: #0096d6;
+    outline: none;
+}
+
+.btn-primary {
+    background: #0096d6;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 9px 0;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-primary:hover {
+    background: #007bb3;
+}
+
+.btn-secondary {
+    background: #e3f2fd;
+    color: #0096d6;
+    border: none;
+    border-radius: 6px;
+    padding: 9px 0;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background 0.2s;
+}
+.btn-secondary:hover {
+    background: #b7e5ff;
+}
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="header">
-    <h1>
-        <i class="bi bi-calendar3"></i> Agenda
-    </h1>
-    <div class="edit-mode">
-        <button class="vet-btn vet-btn-primary">
-            <i class="bi bi-pencil-square"></i> Editar Ficha
-        </button>
+
+<div class="agenda-container">
+
+    <div class="agenda-header">
+        <button id="dayPrev" class="day-nav"><</button>
+        <h2 id="currentDay">Cargando...</h2>
+        <button id="dayNext" class="day-nav">></button>
     </div>
+
+    <div class="daily-grid">
+        {% for h in horas %}
+
+        <div class="hour-block">
+            <div class="hour-label">{{ h }}:00</div>
+            <div class="hour-slots">
+
+                {% for m in minutos %}
+
+                <div class="slot"
+                     data-hour="{{ h }}"
+                     data-minute="{{ m }}">
+                    <span class="slot-time">{{ h }}:{{ m }}</span>
+                </div>
+                {% endfor %}
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
 </div>
 
-<div class="general-container">
-
-    <div class="general-information">
-        <!-- ...existing info blocks... -->
-        <div class="section calendar-section">
-            <div class="calendar-display">
-                <div class="calendar-widget">
-                    <div class="calendar-header">
-                        <button id="prevMonthBtn" class="calendar-nav-btn">&lt;</button>
-                        <span id="calendarMonthYear" class="calendar-month-label"></span>
-                        <button id="nextMonthBtn" class="calendar-nav-btn">&gt;</button>
-                    </div>
-                    <div class="calendar-body">
-                        <div class="calendar-days-row">
-                            <span>Lu</span><span>Ma</span><span>Mi</span><span>Ju</span><span>Vi</span><span>Sa</span><span>Do</span>
-                        </div>
-                        <div id="calendarDaysGrid" class="calendar-days-grid"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
-    <div class="section tabs-section">
-        <div class="tabs-nav">
-
-            <button class="tab-btn active" data-tab="diario">Diario</button>
-            <button class="tab-btn" data-tab="mensual">Mensual</button>
-            <button class="tab-btn" data-tab="semanal">Semanal</button>
-            <button class="tab-btn" data-tab="disponibilidad">Disponibilidad</button>
-
-        </div>
-        <div class="tabs-content">
-
-            <div class="tab-content" id="diario">
-                <div class="agenda-daily active">
-
-                    <!-- PANEL LATERAL -->
-                    <aside class="agenda-sidebar">
-              
-                        <!-- Calendario pequeño -->
-                        
-                        <!-- Categorías -->
-                        <div class="agenda-categories">
-                            <h4>Categorías</h4>
-                            <label><input type="checkbox" checked> Consultas</label>
-                            <label><input type="checkbox" checked> Vacunas</label>
-                            <label><input type="checkbox" checked> Controles</label>
-                            <label><input type="checkbox" checked> Procedimientos</label>
-                        </div>
-                    </aside>
-
-                    <!-- PANEL PRINCIPAL -->
-                    <main class="agenda-main">
-
-                        <!-- Encabezado del día -->
-                        <div class="agenda-main-header">
-                            <button class="day-nav" id="dayPrev"><i class="bi bi-chevron-left"></i></button>
-                            <h2 id="currentDay">15 de Marzo 2025</h2>
-                            <button class="day-nav" id="dayNext"><i class="bi bi-chevron-right"></i></button>
-                        </div>
-
-                        <!-- GRID DE HORAS DEL DÍA -->
-                        <div class="daily-grid scrollable-daily-grid">
-                            {% for hour in horas %}
-                            <div class="hour-block">
-                                <div class="hour-label">{{ hour }}:00</div>
-                                <div class="hour-slot">
-                                    {% for q in minutos %}
-                                        {% if hour == "09" and q == "00" %}
-                                            <div class="quarter-block has-appointment cita-consulta" style="height:66px;" title="Consulta general">
-                                                <div class="cita-info">
-                                                    <span class="cita-tipo">Consulta</span>
-                                                    <span class="cita-mascota">Rocky</span>
-                                                    <span class="cita-especie">Canino</span>
-                                                    <span class="cita-vet">Dra. Andrea</span>
-                                                </div>
-                                            </div>
-                                        {% elif hour == "09" and q == "15" %}
-                                            {# Bloque ocupado por la cita anterior (Consulta 30min) #}
-                                        {% elif hour == "10" and q == "00" %}
-                                            <div class="quarter-block has-appointment cita-vacunacion" style="width:50%;" title="Vacunación">
-                                                <div class="cita-info">
-                                                    <span class="cita-tipo">Vacunación</span>
-                                                    <span class="cita-mascota">Luna</span>
-                                                    <span class="cita-especie">Felino</span>
-                                                    <span class="cita-vet">Dr. Carlos</span>
-                                                </div>
-                                            </div>
-                                            
-                                        {% elif hour == "10" and q == "15" %}
-                                            <div class="quarter-block-group">
-                                                <div class="quarter-block has-appointment cita-vacunacion" title="Vacunación">
-                                                    <div class="cita-info">
-                                                        <span class="cita-tipo">Vacunación</span>
-                                                        <span class="cita-mascota">Luna</span>
-                                                        <span class="cita-especie">Felino</span>
-                                                        <span class="cita-vet">Dr. Carlos</span>
-                                                    </div>
-                                                </div>
-                                                <div class="quarter-block has-appointment cita-control" title="Control">
-                                                    <div class="cita-info">
-                                                        <span class="cita-tipo">Control</span>
-                                                        <span class="cita-mascota">Toby</span>
-                                                        <span class="cita-especie">Canino</span>
-                                                        <span class="cita-vet">Dra. Andrea</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        {% elif hour == "10" and q == "30" %}
-                                            {# Bloque ocupado por la cita anterior (Control 30min) #}
-                                        {% elif hour == "10" and q == "45" %}
-                                            {# Vacío #}
-                                            <div class="quarter-block" data-hour="{{ hour }}" data-minute="{{ q }}">
-                                                <span class="quarter-label">{{ hour }}:{{ q }}</span>
-                                                <span class="add-icon"><i class="bi bi-plus-circle"></i></span>
-                                            </div>
-                                        {% else %}
-                                            <div class="quarter-block" data-hour="{{ hour }}" data-minute="{{ q }}">
-                                                <span class="quarter-label">{{ hour }}:{{ q }}</span>
-                                                <span class="add-icon"><i class="bi bi-plus-circle"></i></span>
-                                            </div>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </main>
-
-                    <!-- PANEL DE INFORMACIÓN (DETALLE DE CITA) -->
-                    <aside class="agenda-sidebar-right">
-                        <h3>Detalle de Cita</h3>
-
-                        <div id="appointmentDetail" class="appt-detail-empty">
-                            Seleccione una cita para ver detalle
-                        </div>     
-                        <div id="appointmentDetail" class="appt-detail">
-                        
-                            <div class="appt-section appt-pet-info">
-                                <strong>Mascota:</strong> Rocky<br>
-                                <strong>Especie:</strong> Canino<br>
-                                <strong>Raza:</strong> Labrador Retriever<br>
-                                <strong>Edad:</strong> 3 años<br>
-                                <strong>Sexo:</strong> Macho<br>
-                                <a href="/ficha/mascota/123" class="vet-link" target="_blank">
-                                    <i class="bi bi-card-list"></i> Ver ficha de mascota
-                                </a>
-                            </div>
-                             <div class="appt-section appt-owner-info">
-                                <strong>Dueño:</strong> Juan Pérez<br>
-                                <strong>Teléfono:</strong> <a href="tel:+56912345678">+56 9 1234 5678</a><br>
-                                <strong>Correo:</strong> <a href="mailto:juan.perez@email.com">juan.perez@email.com</a>
-                            </div>
-                            <div class="appt-section appt-vet-info">
-                                <strong>Veterinario:</strong> Dra. Andrea Soto<br>
-                                <a href="/veterinarios/45" class="vet-link" target="_blank">
-                                    <i class="bi bi-person-badge"></i> Ver perfil veterinario
-                                </a>
-                            </div>
-                        </div>
-                        
-                    </aside>
-
-                </div>
-
-            </div>
-            <div class="tab-content " id="mensual">
-                <div class="monthly-calendar-view">
-                    <div class="monthly-calendar-table">
-                        <div class="monthly-calendar-days-row">
-                            <span>Lunes</span><span>Martes</span><span>Miércoles</span><span>Jueves</span><span>Viernes</span><span>Sábado</span><span>Domingo</span>
-                        </div>
-                        <div id="monthlyCalendarGrid" class="monthly-calendar-grid"></div>
-                    </div>
-                    <div class="monthly-calendar-legend">
-                        <span class="legend-item legend-workorder">Consulta</span>
-                        <span class="legend-item legend-movein">Vacunación</span>
-                        <span class="legend-item legend-moveout">Control</span>
-                        <span class="legend-item legend-note">Nota</span>
-                    </div>
-                </div>
-            </div>
-
-
-
-            <div class="tab-content" id="semanal"></div>
-
-            <div class="tab-content" id="disponibilidad"></div>
-        </div>
-    </div>
-</div>
 {% endblock %}
+
 
 {% block modals %}
-<!-- Modal Detalle Consulta -->
-<div id="detalleConsultaModal" class="vet-modal-overlay hide">
-    <div class="vet-custom-modal">
-        <div class="vet-custom-modal-title">
-            <h3 id="detalleTitulo" style="margin:0;"><i class="bi bi-clipboard2-pulse"></i> Detalle de Consulta</h3>
-            <i class="bi bi-x" id="closeDetalleModal" tabindex="0" role="button" aria-label="Cerrar"></i>
-        </div>
-        <div class="vet-modal-body">
-            <div class="row g-3">
-                <!-- Columna izquierda: Datos fisiológicos -->
-                <div class="col-md-4" id="detalleDatosMascota">
-                    <div class="detail-section">
-                        <div class="detail-section-title"><i class="bi bi-thermometer-half"></i> Temperatura</div>
-                        <p id="detalleTemp">-</p>
-                    </div>
-                    <div class="detail-section">
-                        <div class="detail-section-title"><i class="bi bi-speedometer2"></i> Peso</div>
-                        <p id="detallePeso">-</p>
-                    </div>
-                    <div class="detail-section">
-                        <div class="detail-section-title"><i class="bi bi-heart-pulse"></i> Frec. Cardíaca</div>
-                        <p id="detalleFC">-</p>
-                    </div>
-                    <div class="detail-section">
-                        <div class="detail-section-title"><i class="bi bi-wind"></i> Frec. Respiratoria</div>
-                        <p id="detalleFR">-</p>
-                    </div>
-                    <div class="detail-section">
-                        <div class="detail-section-title"><i class="bi bi-droplet-half"></i> Otros</div>
-                        <p id="detalleOtros">-</p>
-                    </div>
-                </div>
-                <!-- Columna derecha: Detalles de consulta -->
-                <div class="col-md-8" id="detalleContenido">
-                    <!-- Aquí se llenarán los detalles dinámicamente -->
-                </div>
-            </div>
-        </div>
-        <div class="vet-modal-footer d-flex justify-content-between align-items-center">
-            <button id="editarConsultaBtn" class="vet-btn vet-btn-grey" title="Editar consulta">
-                <i class="bi bi-pencil-square"></i> Editar consulta
-            </button>
-            <button class="vet-btn vet-btn-primary" id="btnAgendarCita">
-                <i class="bi bi-calendar-plus"></i> Agendar próxima cita
-            </button>
-        </div>
-    </div>
-</div>
 
-<!-- Modal Nueva Consulta -->
-<div id="nuevaConsultaModal" class="vet-modal-overlay hide">
-    <div class="vet-custom-modal">
-        <div class="vet-custom-modal-title">
-            <h3 style="margin:0;"><i class="bi bi-clipboard2-plus"></i> Nueva Consulta</h3>
-            <i class="bi bi-x" id="closeNuevaConsultaModal" tabindex="0" role="button" aria-label="Cerrar"></i>
-        </div>
-        <form id="formNuevaConsulta">
-            <div class="vet-modal-body">
-                <div class="row g-3">
-                    <!-- Columna izquierda: Datos fisiológicos -->
-                    <div class="col-md-4">
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-thermometer-half"></i> Temperatura</div>
-                            <input type="text" class="form-control" name="temp" required>
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-speedometer2"></i> Peso</div>
-                            <input type="text" class="form-control" name="peso" required>
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-heart-pulse"></i> Frec. Cardíaca</div>
-                            <input type="text" class="form-control" name="fc">
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-wind"></i> Frec. Respiratoria</div>
-                            <input type="text" class="form-control" name="fr">
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-droplet-half"></i> Otros</div>
-                            <input type="text" class="form-control" name="otros">
-                        </div>
-                    </div>
-                    <!-- Columna derecha: Detalles de consulta -->
-                    <div class="col-md-8">
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-person-badge"></i> Médico Tratante</div>
-                            <input type="text" class="form-control" name="medico"
-                                value="{{ user.nombre }} {{ user.apellido }}" readonly style="background:#f3f3f3;">
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
-                            <input type="text" class="form-control" name="fecha" value="{% now 'd/m/Y' %}" readonly
-                                style="background:#f3f3f3;">
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-clipboard2-check"></i> Diagnóstico</div>
-                            <input type="text" class="form-control" name="diagnostico">
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-capsule"></i> Tratamiento</div>
-                            <input type="text" class="form-control" name="tratamiento">
-                        </div>
-                        <!-- Exámenes oculto -->
-                        <div class="detail-section" style="display:none;">
-                            <div class="detail-section-title"><i class="bi bi-file-earmark-medical"></i> Exámenes</div>
-                            <input type="text" class="form-control" name="examenes" placeholder="Separar por coma">
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-journal-text"></i> Notas</div>
-                            <textarea class="form-control" name="notas"></textarea>
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-lightbulb"></i> Recomendaciones</div>
-                            <input type="text" class="form-control" name="recomendaciones">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="vet-modal-footer d-flex justify-content-between align-items-center">
-                <span></span>
-                <button type="submit" class="vet-btn vet-btn-primary" id="btnAgendarNuevaCita">
-                    <i class="bi bi-calendar-plus"></i> Agendar y guardar en historial
-                </button>
-            </div>
+<!-- Modal Nueva Cita -->
+<div class="modal-overlay hide" id="modalNuevaCita">
+    <div class="modal-card">
+        <h3>Nueva Cita</h3>
+
+        <form id="formNuevaCita">
+            <input type="hidden" name="hora">
+
+            <label>Mascota</label>
+            <select name="mascota" required>
+                <option value="">Seleccione</option>
+                {% for m in mascotas %}
+                <option value="{{ m.id }}">{{ m.nombre }} ({{ m.especie }})</option>
+                {% endfor %}
+            </select>
+<label>Veterinario</label>
+<select name="veterinario" required>
+    <option value="">Seleccione</option>
+    {% for v in veterinarios %}
+        <option value="{{ v.id }}">{{ v.nombre }} {{ v.apellido }}</option>
+    {% endfor %}
+</select>
+            <label>Tipo</label>
+            <select name="tipo" required>
+                <option value="">Seleccione</option>
+                <option value="consulta">Consulta</option>
+                <option value="vacunacion">Vacunación</option>
+                <option value="control">Control</option>
+                <option value="procedimiento">Procedimiento</option>
+            </select>
+
+            <label>Duración (min)</label>
+            <input type="number" name="duracion" value="30">
+
+            <label>Notas</label>
+            <textarea name="notas"></textarea>
+
+            <button type="submit" class="btn-primary">Guardar</button>
+            <button type="button" class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
         </form>
     </div>
 </div>
 
-<!-- Modal Agendar Cita -->
-<div id="agendarCitaModal" class="vet-modal-overlay hide">
-    <div class="vet-custom-modal">
-        <div class="vet-custom-modal-title">
-            <h3 style="margin:0;"><i class="bi bi-calendar-plus"></i> Agendar Cita</h3>
-            <i class="bi bi-x" id="closeAgendarCitaModal" tabindex="0" role="button" aria-label="Cerrar"></i>
-        </div>
-        <form id="formAgendarCita">
-            <div class="vet-modal-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
-                            <input type="date" class="form-control" name="fecha" required>
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-clock"></i> Hora</div>
-                            <input type="time" class="form-control" name="hora" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-list-task"></i> Tipo de Cita</div>
-                            <select class="form-control" name="tipo" required>
-                                <option value="">Seleccione tipo</option>
-                                <option value="hospitalizacion">Hospitalización</option>
-                                <option value="consulta">Consulta general</option>
-                                <option value="control">Control</option>
-                                <option value="vacunacion">Vacunación</option>
-                            </select>
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-journal-text"></i> Notas</div>
-                            <textarea class="form-control" name="notas"></textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="vet-modal-footer d-flex justify-content-between align-items-center">
-                <span></span>
-                <button type="submit" class="vet-btn vet-btn-primary">
-                    <i class="bi bi-calendar-plus"></i> Agendar
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
 {% endblock %}
 
+
 {% block extra_js %}
-<script src="{% static 'js/base/tabs.js' %}"></script>
-<script src="{% static 'js/base/calendar.js' %}"></script>
 <script src="{% static 'agenda/js/agenda.js' %}"></script>
 {% endblock %}
