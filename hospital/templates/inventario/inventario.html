@@ -13,53 +13,7 @@
 {% endblock %}
 
 {% block table_filters %}
-<div class="filter-group vet-inventory">
-    <!-- Filtro Especie -->
-    <div class="vet-custom-select-wrapper">
-        <span class="tag_select">Especie</span>
-        <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todas</span>
-            <div class="vet-arrow"></div>
-        </div>
-        <ul class="vet-custom-select-dropdown">
-            <li data-value="">Todas</li>
-            <li data-value="canino">Canino</li>
-            <li data-value="felino">Felino</li>
-        </ul>
-        <input type="hidden" id="filterEspecie" value="">
-    </div>
 
-    <!-- Filtro Stock -->
-    <div class="vet-custom-select-wrapper">
-        <span class="tag_select">Stock</span>
-        <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todos</span>
-            <div class="vet-arrow"></div>
-        </div>
-        <ul class="vet-custom-select-dropdown">
-            <li data-value="">Todos</li>
-            <li data-value="low">Bajo</li>
-            <li data-value="ok">Normal</li>
-            <li data-value="high">Alto</li>
-        </ul>
-        <input type="hidden" id="filterStock" value="">
-    </div>
-
-    <!-- Filtro Proveedor -->
-    <div class="vet-custom-select-wrapper">
-        <span class="tag_select">Proveedor</span>
-        <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todos</span>
-            <div class="vet-arrow"></div>
-        </div>
-        <ul class="vet-custom-select-dropdown">
-            <li data-value="">Todos</li>
-            <li data-value="vet pharma">Vet Pharma</li>
-            <li data-value="pet supplies">Pet Supplies</li>
-        </ul>
-        <input type="hidden" id="filterProveedor" value="">
-    </div>
-</div>
 {% endblock %}
 
 {% block table_buttons %}
@@ -75,19 +29,19 @@
 <th>Stock</th>
 <th>Último Ingreso</th>
 <th>Último Salida</th>
-<th>Proveedor</th>
 <th>Gestión</th>
 {% endblock %}
 
 {% block table_rows %}
-<tr data-especie="felino" data-stock="ok" data-proveedor="vet pharma">
-    <td>Revolution Plus</td>
-    <td>Felino</td>
-    <td>$32.500</td>
-    <td><span class="badge stock-ok">10</span></td>
-    <td>15/03/2026</td>
-    <td>03/11/2025</td>
-    <td>Vet Pharma</td>
+{% for insumo in insumos %}
+<tr data-id="{{ insumo.idInventario }}" data-especie="{{ insumo.especie|default_if_none:'' }}" data-stock="ok"
+    data-dosis-ml="{{ insumo.dosis_ml }}" data-peso-kg="{{ insumo.peso_kg }}">
+    <td>{{ insumo.medicamento }}</td>
+    <td>{{ insumo.especie }}</td>
+    <td>${{ insumo.precio_venta|floatformat:0 }}</td>
+    <td><span class="badge stock-ok">{{ insumo.stock_actual }}</span></td>
+    <td>-</td>
+    <td>-</td>
     <td>
         <div class="manage-wheel">
             <button type="button" onclick="toggleWheel(this)">
@@ -97,43 +51,7 @@
                 <button type="button" onclick="abrirModalProducto(this, 'view')">
                     <i class="fas fa-eye"></i> Ver detalles
                 </button>
-                <button type="button" onclick="openModificarStockModal(this.closest('tr').querySelector('[data-field=stock_actual]') 
-    ? parseInt(this.closest('tr').querySelector('[data-field=stock_actual]').textContent.replace(/\D/g, '')) 
-    : parseInt(this.closest('tr').cells[3].textContent.replace(/\D/g, '')) )">
-                    <i class="bi bi-plus-slash-minus"></i>Modificar stock
-                </button>
-                <button type="button" onclick="abrirModalProducto(this, 'edit')">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                <button type="button" onclick="abrirModalEliminarProducto(this)">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>
-            </div>
-        </div>
-
-    </td>
-</tr>
-<tr data-especie="canino" data-stock="low" data-proveedor="pet supplies">
-    <td>Bravecto 40-56Kg</td>
-    <td>Canino</td>
-    <td>$28.000</td>
-    <td><span class="badge stock-low">3</span></td>
-    <td>02/02/2025</td>
-    <td>15/10/2025</td>
-    <td>Pet Supplies</td>
-    <td>
-        <div class="manage-wheel">
-            <button onclick="toggleWheel(this)">
-                <i class="fas fa-cog"></i>
-            </button>
-            <div class="manage-options" style="display: none;">
-
-                <button type="button" onclick="abrirModalProducto(this, 'view')">
-                    <i class="fas fa-eye"></i> Ver detalles
-                </button>
-                <button type="button" onclick="openModificarStockModal(this.closest('tr').querySelector('[data-field=stock_actual]') 
-    ? parseInt(this.closest('tr').querySelector('[data-field=stock_actual]').textContent.replace(/\D/g, '')) 
-    : parseInt(this.closest('tr').cells[3].textContent.replace(/\D/g, '')) )">
+                <button type="button" onclick="openModificarStockModal(this)">
                     <i class="bi bi-plus-slash-minus"></i>Modificar stock
                 </button>
                 <button type="button" onclick="abrirModalProducto(this, 'edit')">
@@ -146,27 +64,15 @@
         </div>
     </td>
 </tr>
+{% empty %}
+<tr>
+    <td colspan="7">No hay productos en inventario.</td>
+</tr>
+{% endfor %}
 {% endblock %}
 
 
 {% block modals %}
-
-<!-- Modal: Nuevo Producto -->
-<div class="vet-modal-overlay hide" id="modalNuevoProducto">
-    <div class="vet-custom-modal">
-        <div class="vet-modal-content">
-            <div class="vet-custom-modal-title">
-                <h3>Nuevo Producto</h3>
-                <i class="bi bi-x" style="margin-left:auto;cursor:pointer;"
-                    onclick="closeVetModal('modalNuevoProducto')"></i>
-            </div>
-            <div class="vet-modal-body">
-                <p>Formulario para agregar un nuevo producto.</p>
-            </div>
-        </div>
-    </div>
-</div>
-
 
 <!-- Modal: Ver/Editar Detalles Producto -->
 <div class="vet-modal-overlay hide" id="modalProducto">
@@ -196,48 +102,16 @@
                             <p class="field-view mb-0" data-field="descripcion">-</p>
                             <textarea class="field-edit form-control d-none" data-field="descripcion"></textarea>
                         </div>
-                    </div>
-                </div>
-                <!-- PESO ANIMAL Y DOSIS -->
-                <div class="detail-section mb-4">
-                    <h6 class="detail-section-title"><i class="fas fa-weight"></i> Peso Animal y Dosis</h6>
-                    <div class="row g-3">
-
-                        <!-- Vista -->
-                        <div class="col-md-12">
-
-                            <div id="pesoDosisList" class="field-view">-</div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Especie</label>
+                            <p class="field-view mb-0" data-field="especie">-</p>
+                            <select class="field-edit form-control d-none" data-field="especie">
+                                <option value="">Selecciona...</option>
+                                <option value="Canino">Canino</option>
+                                <option value="Felino">Felino</option>
+                                <option value="Todos">Todos</option>
+                            </select>
                         </div>
-
-                        <!-- Edición -->
-                        <div class="col-md-12 field-edit d-none" id="pesoDosisEdit">
-
-                            <!-- Campos para agregar un rango -->
-                            <div class="row g-2 align-items-end mb-2">
-                                <div class="col-md-3">
-                                    <label>Peso Mínimo (kg)</label>
-                                    <input type="number" step="0.1" class="form-control" id="pesoMinTemp">
-                                </div>
-                                <div class="col-md-3">
-                                    <label>Peso Máximo (kg)</label>
-                                    <input type="number" step="0.1" class="form-control" id="pesoMaxTemp">
-                                </div>
-                                <div class="col-md-3">
-                                    <label>Dosis (ml)</label>
-                                    <input type="number" step="0.1" class="form-control" id="dosisTemp">
-                                </div>
-                                <div class="col-md-3">
-                                    <button type="button" class="btn btn-success w-100" onclick="agregarRangoDosis()">
-                                        <i class="bi bi-plus-lg"></i> Agregar
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Lista editable -->
-                            <ul id="pesoDosisEditList" class="list-group"></ul>
-
-                        </div>
-
                     </div>
                 </div>
 
@@ -246,18 +120,11 @@
                     <h6 class="detail-section-title"><i class="fas fa-dollar-sign"></i> Información Comercial</h6>
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="text-muted small">Precio Compra</label>
-                            <p class="field-view fw-bold mb-0" data-field="precio_compra">-</p>
-                            <input type="number" min="0" class="field-edit form-control d-none"
-                                data-field="precio_compra">
-                        </div>
-                        <div class="col-md-4">
                             <label class="text-muted small">Precio Venta</label>
                             <p class="field-view fw-bold mb-0" data-field="precio_venta">-</p>
                             <input type="number" min="0" class="field-edit form-control d-none"
                                 data-field="precio_venta">
                         </div>
-
                     </div>
                 </div>
                 <!-- INVENTARIO -->
@@ -282,33 +149,37 @@
                             <input type="number" min="0" class="field-edit form-control d-none"
                                 data-field="stock_maximo">
                         </div>
-                        <div class="col-md-3">
-                            <label class="text-muted small">Estado Producto</label>
-                            <p class="field-view mb-0" id="estado_producto_auto">-</p>
-                            <!-- No input aquí, es automático -->
-                        </div>
                     </div>
                 </div>
-                <!-- PROVEEDOR -->
                 <div class="detail-section mb-4">
-                    <h6 class="detail-section-title"><i class="fas fa-truck"></i> Proveedor</h6>
+                    <h6 class="detail-section-title">
+                        <i class="fas fa-syringe"></i> Dosis
+                    </h6>
 
                     <div class="row g-3">
-                        <div class="col-md-6 position-relative">
-                            <label class="text-muted small">Proveedor</label>
-                            <p class="field-view mb-0" data-field="proveedor">-</p>
-                            <select class="field-edit form-control d-none" data-field="proveedor" id="selectProveedorIntegrado"
-                                onchange="onProveedorIntegradoChange()">
-                                
-                                <option value="">Selecciona...</option>
-                                <!-- Opciones de proveedores se llenan por JS -->
-                                <option value="__nuevo__">+ Agregar nuevo proveedor...</option>
-                            </select>
-                            <div id="nuevoProveedorWrapper" class="mt-2 d-none">
-                                <input type="text" class="form-control mb-1" id="inputNuevoProveedor" placeholder="Nuevo proveedor" onkeydown="if(event.key==='Enter'){agregarNuevoProveedorIntegrado();}">
-                                <button type="button" class="vet-btn-grey btn btn-sm w-100" id="btnAgregarProveedor" onclick="agregarNuevoProveedorIntegrado()">Agregar</button>
+
+                        <!-- VISTA -->
+                        <div class="col-md-12">
+                            <label class="text-muted small">Dosis Recomendada</label>
+                            <p class="field-view mb-0" data-field="dosis_formula_view">-</p>
+                        </div>
+
+                        <!-- EDICIÓN -->
+                        <div class="col-md-12 field-edit d-none">
+                            <div class="input-group">
+                                <span class="input-group-text">Dosis</span>
+                                <input type="number" step="any" class="form-control field-edit" data-field="dosis_ml"
+                                    placeholder="Ej: 0.3">
+
+                                <span class="input-group-text">ml cada</span>
+
+                                <input type="number" step="any" class="form-control field-edit" data-field="peso_kg"
+                                    placeholder="Ej: 5">
+
+                                <span class="input-group-text">kg</span>
                             </div>
                         </div>
+
                     </div>
                 </div>
 
@@ -347,8 +218,6 @@
                     onclick="abrirModalEliminarProducto(this)">
                     <i class="bi bi-trash3-fill"></i> Eliminar
                 </button>
-
-
             </div>
         </div>
     </div>
@@ -432,4 +301,5 @@
 
 {% block extra_js %}
 <script src="{% static 'js/inventario/crud_inventario.js' %}"></script>
+
 {% endblock %}

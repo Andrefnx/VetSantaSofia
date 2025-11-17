@@ -1,76 +1,19 @@
 {% extends "partials/base_table.html" %}
 {% load static %}
+{% load duracion_filters %}
 
-{% block title %}Servicios{% endblock %}
+{% block title %}Servicios Veterinarios{% endblock %}
 
-{% block styles %}
-<link rel="stylesheet" href="{% static 'css/base/tables_base.css' %}?v=4" type="text/css" media="all">
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/style_servicios.css' %}" type="text/css" media="all">
 {% endblock %}
 
 {% block table_title %}
-<i class="fas fa-boxes"></i> Servicios
+<i class="fas fa-stethoscope"></i> Servicios Veterinarios
 {% endblock %}
 
 {% block table_filters %}
-<div class="filter-group">
-    <div class="vet-custom-select-wrapper">
-        <span class="tag_select">Tipo</span>
-        <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todos</span>
-            <div class="vet-arrow"></div>
-        </div>
-        <ul class="vet-custom-select-dropdown">
-            <li data-value="">Todos</li>
-            <li data-value="consulta">Consulta</li>
-            <li data-value="vacunación">Vacunación</li>
-            <li data-value="cirugía">Cirugía</li>
-        </ul>
-        <input type="hidden" id="filterTipo" value="">
-    </div>
-    <div class="vet-custom-select-wrapper">
-        <span class="tag_select">Tipo</span>
-        <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todos</span>
-            <div class="vet-arrow"></div>
-        </div>
-        <ul class="vet-custom-select-dropdown">
-            <li data-value="">Todos</li>
-            <li data-value="consulta">Consulta</li>
-            <li data-value="vacunación">Vacunación</li>
-            <li data-value="cirugía">Cirugía</li>
-        </ul>
-        <input type="hidden" id="filterTipo" value="">
-    </div>
-    <div class="vet-custom-select-wrapper">
-        <span class="tag_select">Tipo</span>
-        <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todos</span>
-            <div class="vet-arrow"></div>
-        </div>
-        <ul class="vet-custom-select-dropdown">
-            <li data-value="">Todos</li>
-            <li data-value="consulta">Consulta</li>
-            <li data-value="vacunación">Vacunación</li>
-            <li data-value="cirugía">Cirugía</li>
-        </ul>
-        <input type="hidden" id="filterTipo" value="">
-    </div>
-    <div class="vet-custom-select-wrapper">
-        <span class="tag_select">Tipo</span>
-        <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todos</span>
-            <div class="vet-arrow"></div>
-        </div>
-        <ul class="vet-custom-select-dropdown">
-            <li data-value="">Todos</li>
-            <li data-value="consulta">Consulta</li>
-            <li data-value="vacunación">Vacunación</li>
-            <li data-value="cirugía">Cirugía</li>
-        </ul>
-        <input type="hidden" id="filterTipo" value="">
-    </div>
-    <!-- Más filtros aquí si quieres -->
-</div>
+
 {% endblock %}
 
 {% block table_buttons %}
@@ -81,20 +24,20 @@
 
 {% block table_columns %}
 <th>Servicio</th>
-<th>Tipo</th>
+<th>Categoría</th>
 <th>Precio</th>
-<th>Descripción</th>
-<th>Productos</th>
+<th>Duración</th>
 <th>Gestión</th>
 {% endblock %}
 
 {% block table_rows %}
-<tr>
-    <td>Consulta General</td>
-    <td>Consulta</td>
-    <td>$15.000</td>
-    <td>Evaluación médica general de la mascota.</td>
-    <td>N/A</td>
+{% for servicio in servicios %}
+<tr data-id="{{ servicio.idServicio }}" data-categoria="{{ servicio.categoria|default_if_none:'' }}">
+    <td>{{ servicio.nombre }}</td>
+    <td>{{ servicio.categoria }}</td>
+    <td>${{ servicio.precio|floatformat:0 }}</td>
+    <td>{{ servicio.duracion|formato_duracion }}</td>
+
     <td>
         <div class="manage-wheel">
             <button type="button" onclick="toggleWheel(this)">
@@ -102,7 +45,7 @@
             </button>
             <div class="manage-options" style="display: none;">
                 <button type="button" onclick="abrirModalServicio(this, 'view')">
-                    <i class="bi bi-eye"></i> Ver
+                    <i class="fas fa-eye"></i> Ver detalles
                 </button>
                 <button type="button" onclick="abrirModalServicio(this, 'edit')">
                     <i class="fas fa-edit"></i> Editar
@@ -114,108 +57,16 @@
         </div>
     </td>
 </tr>
+{% empty %}
 <tr>
-    <td>Vacunación Antirrábica</td>
-    <td>Vacunación</td>
-    <td>$10.000</td>
-    <td>Aplicación de vacuna antirrábica.</td>
-    <td>Vacuna Rabia</td>
-    <td>
-        <div class="manage-wheel">
-            <button type="button" onclick="toggleWheel(this)">
-                <i class="fas fa-cog"></i>
-            </button>
-            <div class="manage-options" style="display: none;">
-                <button type="button" onclick="abrirModalServicio(this, 'view')">
-                    <i class="bi bi-eye"></i> Ver
-                </button>
-                <button type="button" onclick="abrirModalServicio(this, 'edit')">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                <button type="button" onclick="abrirModalEliminarServicio(this)">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>
-            </div>
-        </div>
-    </td>
+    <td colspan="5">No hay servicios registrados.</td>
 </tr>
-<tr>
-    <td>Cirugía Esterilización</td>
-    <td>Cirugía</td>
-    <td>$80.000</td>
-    <td>Esterilización de mascota (canino/felino).</td>
-    <td>Anestesia, Suturas</td>
-    <td>
-        <div class="manage-wheel">
-            <button type="button" onclick="toggleWheel(this)">
-                <i class="fas fa-cog"></i>
-            </button>
-            <div class="manage-options" style="display: none;">
-                <button type="button" onclick="abrirModalServicio(this, 'view')">
-                    <i class="bi bi-eye"></i> Ver
-                </button>
-                <button type="button" onclick="abrirModalServicio(this, 'edit')">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                <button type="button" onclick="abrirModalEliminarServicio(this)">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>
-            </div>
-        </div>
-    </td>
-</tr>
+{% endfor %}
 {% endblock %}
 
 {% block modals %}
 
-<!-- Modal: Nuevo Servicio -->
-<div class="vet-modal-overlay hide" id="modalNuevoServicio">
-    <div class="vet-custom-modal">
-        <div class="vet-modal-content">
-            <div class="vet-custom-modal-title">
-                <h3>Nuevo Servicio</h3>
-                <i class="bi bi-x" style="margin-left:auto;cursor:pointer;"
-                    onclick="closeVetModal('modalNuevoServicio')"></i>
-            </div>
-            <div class="vet-modal-body">
-                <form id="addServiceForm">
-                    <div class="mb-3">
-                        <label>Nombre del Servicio</label>
-                        <input type="text" class="form-control" name="nombre_servicio" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Tipo</label>
-                        <select class="form-control" name="tipo_servicio" required>
-                            <option value="">Selecciona...</option>
-                            <option value="consulta">Consulta</option>
-                            <option value="vacunación">Vacunación</option>
-                            <option value="cirugía">Cirugía</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label>Precio</label>
-                        <input type="number" class="form-control" name="precio" min="0" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Descripción</label>
-                        <textarea class="form-control" name="descripcion"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label>Productos/Insumos</label>
-                        <select class="form-control" name="insumos" id="insumosAdd" multiple></select>
-                    </div>
-                </form>
-            </div>
-            <div class="vet-modal-body" style="text-align:right;">
-                <button type="button" class="vet-btn-grey success" onclick="saveNewService()">
-                    <i class="bi bi-floppy-fill"></i> Guardar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal: Ver/Editar Servicio -->
+<!-- Modal: Ver/Editar Detalles Servicio -->
 <div class="vet-modal-overlay hide" id="modalServicio">
     <div class="vet-custom-modal" style="max-width: 900px; width: 100%;">
         <div class="vet-modal-content">
@@ -225,42 +76,35 @@
                     <span id="modalServicioTitulo">Detalles del Servicio</span>
                 </h3>
                 <i class="bi bi-x" style="margin-left:auto;cursor:pointer;"
-                    onclick="closeServicioModal()"></i>
+                   onclick="closeVetModal('modalServicio')"></i>
             </div>
             <div class="vet-modal-body" style="max-height: 70vh; overflow-y: auto;">
+
+                <!-- IDENTIFICACIÓN GENERAL -->
                 <div class="detail-section mb-4">
-                    <h6 class="detail-section-title"><i class="fas fa-tag"></i> Identificación</h6>
+                    <h6 class="detail-section-title">
+                        <i class="fas fa-tag"></i> Identificación General
+                    </h6>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="text-muted small">Nombre Servicio</label>
-                            <p class="field-view fw-bold mb-0" data-field="nombre_servicio">-</p>
-                            <input class="field-edit form-control d-none" data-field="nombre_servicio">
+                            <label class="text-muted small">Nombre del Servicio</label>
+                            <p class="field-view fw-bold mb-0" data-field="nombre">-</p>
+                            <input class="field-edit form-control d-none" data-field="nombre">
                         </div>
                         <div class="col-md-6">
-                            <label class="text-muted small">Tipo</label>
-                            <p class="field-view mb-0" data-field="tipo_servicio">-</p>
-                            <select class="field-edit form-control d-none" data-field="tipo_servicio">
+                            <label class="text-muted small">Categoría</label>
+                            <p class="field-view mb-0" data-field="categoria">-</p>
+                            <select class="field-edit form-control d-none" data-field="categoria">
                                 <option value="">Selecciona...</option>
-                                <option value="consulta">Consulta</option>
-                                <option value="vacunación">Vacunación</option>
-                                <option value="cirugía">Cirugía</option>
+                                <option value="Consulta general">Consulta general</option>
+                                <option value="Vacunación">Vacunación</option>
+                                <option value="Cirugía">Cirugía</option>
+                                <option value="Control">Control</option>
+                                <option value="Urgencia">Urgencia</option>
+                                <option value="Procedimiento diagnóstico">Procedimiento diagnóstico</option>
+                                <option value="Otro">Otro</option>
                             </select>
                         </div>
-                    </div>
-                </div>
-                <div class="detail-section mb-4">
-                    <h6 class="detail-section-title"><i class="fas fa-dollar-sign"></i> Información Comercial</h6>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="text-muted small">Precio</label>
-                            <p class="field-view fw-bold mb-0" data-field="precio">-</p>
-                            <input type="number" min="0" class="field-edit form-control d-none" data-field="precio">
-                        </div>
-                    </div>
-                </div>
-                <div class="detail-section mb-4">
-                    <h6 class="detail-section-title"><i class="fas fa-info-circle"></i> Descripción</h6>
-                    <div class="row g-3">
                         <div class="col-md-12">
                             <label class="text-muted small">Descripción</label>
                             <p class="field-view mb-0" data-field="descripcion">-</p>
@@ -268,62 +112,46 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- INFORMACIÓN COMERCIAL -->
                 <div class="detail-section mb-4">
-                    <h6 class="detail-section-title"><i class="fas fa-boxes"></i> Productos e Insumos</h6>
+                    <h6 class="detail-section-title">
+                        <i class="fas fa-dollar-sign"></i> Información Comercial
+                    </h6>
                     <div class="row g-3">
-                        <div class="col-md-5">
-                            <label class="text-muted small">Productos Disponibles</label>
-                            <select multiple class="form-control field-edit" id="productosDisponibles" size="7"></select>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Precio</label>
+                            <p class="field-view fw-bold mb-0" data-field="precio">-</p>
+                            <input type="number" min="0" class="field-edit form-control d-none"
+                                   data-field="precio">
                         </div>
-                        <div class="col-md-2 d-flex flex-column justify-content-center align-items-center"
-                            style="gap:10px;">
-                            <button type="button" class="btn btn-outline-primary"
-                                onclick="moverSeleccionados('productosDisponibles','productosSeleccionados')">&gt;&gt;</button>
-                            <button type="button" class="btn btn-outline-secondary"
-                                onclick="moverSeleccionados('productosSeleccionados','productosDisponibles')">&lt;&lt;</button>
-                        </div>
-                        <div class="col-md-5">
-                            <label class="text-muted small">Productos Seleccionados</label>
-                            <select multiple class="form-control field-edit" id="productosSeleccionados" size="7"
-                                data-field="productos"></select>
-                        </div>
-                    </div>
-                    <div class="row g-3 mt-3">
-                        <div class="col-md-5">
-                            <label class="text-muted small">Insumos Disponibles</label>
-                            <select multiple class="form-control field-edit" id="insumosDisponibles" size="7"></select>
-                        </div>
-                        <div class="col-md-2 d-flex flex-column justify-content-center align-items-center"
-                            style="gap:10px;">
-                            <button type="button" class="btn btn-outline-primary"
-                                onclick="moverSeleccionados('insumosDisponibles','insumosSeleccionados')">&gt;&gt;</button>
-                            <button type="button" class="btn btn-outline-secondary"
-                                onclick="moverSeleccionados('insumosSeleccionados','insumosDisponibles')">&lt;&lt;</button>
-                        </div>
-                        <div class="col-md-5">
-                            <label class="text-muted small">Insumos Seleccionados</label>
-                            <select multiple class="form-control field-edit" id="insumosSeleccionados" size="7"
-                                data-field="insumos"></select>
-                        </div>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-12">
-                            <p class="field-view mb-0" data-field="productos">-</p>
-                            <p class="field-view mb-0" data-field="insumos">-</p>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Duración</label>
+                            <div class="field-view mb-0" data-field="duracion">-</div>
+                            <div class="input-group field-edit d-none">
+                               <input type="number" min="0" 
+       class="form-control field-edit" 
+       data-field="duracion"
+       placeholder="Ej: 30">
+
+                                <span class="input-group-text">min</span>
+                            </div>
                         </div>
                     </div>
                 </div>
+
             </div>
             <div class="vet-modal-body" style="border-top:1px solid #eee; text-align:right;">
-                <button type="button" class="vet-btn-grey" id="btnEditarServicio" onclick="switchToEditModeServicio()">
+                <button type="button" class="vet-btn-grey" id="btnEditarServicio"
+                        onclick="switchToEditModeServicio()">
                     <i class="bi bi-pencil-fill"></i> Editar
                 </button>
                 <button type="button" class="vet-btn-grey d-none" id="btnGuardarServicio"
-                    onclick="guardarServicioEditado()">
+                        onclick="guardarServicioEditado()">
                     <i class="bi bi-floppy-fill"></i> Guardar
                 </button>
                 <button type="button" class="vet-btn-grey error" id="btnEliminarServicio"
-                    onclick="abrirModalEliminarServicio(this)">
+                        onclick="abrirModalEliminarServicio(this)">
                     <i class="bi bi-trash3-fill"></i> Eliminar
                 </button>
             </div>
@@ -337,7 +165,8 @@
         <div class="vet-modal-content">
             <div class="vet-custom-modal-title" style="background: #b71c1c;">
                 <h3><i class="bi bi-trash3-fill"></i> Eliminar Servicio</h3>
-                <i class="bi bi-x" style="margin-left:auto;cursor:pointer;" onclick="closeEliminarServicioModal()"></i>
+                <i class="bi bi-x" style="margin-left:auto;cursor:pointer;"
+                   onclick="closeEliminarServicioModal()"></i>
             </div>
             <div class="vet-modal-body">
                 <p id="eliminarServicioMensaje">¿Estás seguro que deseas eliminar este servicio?</p>
@@ -350,8 +179,8 @@
         </div>
     </div>
 </div>
-{% endblock %}
 
+{% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/servicios/crud_servicios.js' %}"></script>

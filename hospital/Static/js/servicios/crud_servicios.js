@@ -1,250 +1,322 @@
-// -------- NUEVO SERVICIO --------
+/************************************
+ *  NUEVO SERVICIO
+ ************************************/
 function abrirModalNuevoServicio() {
-    const form = document.getElementById('addServiceForm');
-    if (form) form.reset();
-    // Limpiar selección de insumos
-    const insumosSelect = form.insumos;
-    if (insumosSelect) {
-        Array.from(insumosSelect.options).forEach(option => option.selected = false);
-    }
-    openVetModal('modalNuevoServicio');
+
+    const data = {
+        nombre: "",
+        descripcion: "",
+        categoria: "",
+        precio: "",
+        duracion: ""
+    };
+
+    openServicioModal("nuevo", data);
 }
 
-// -------- VER/EDITAR SERVICIO --------
+/************************************
+ *  VER / EDITAR SERVICIO
+ ************************************/
 function abrirModalServicio(btn, mode) {
     const tr = btn.closest('tr');
     if (!tr) return;
+
     const data = {
-        nombre_servicio: tr.cells[0].textContent.trim(),
-        tipo_servicio: tr.cells[1].textContent.trim(),
-        precio: tr.cells[2].textContent.replace(/\D/g, '').trim(),
-        descripcion: tr.cells[3].textContent.trim(),
-        insumos: tr.cells[4].textContent.trim().split(',').map(i => i.trim())
+        nombre: tr.cells[0].textContent.trim(),
+        categoria: tr.cells[1].textContent.trim(),
+        precio: tr.cells[2].textContent.replace(/[^0-9.,]/g, '').trim(),
+        duracion: tr.cells[3].textContent.trim()
     };
+
+    if (tr.hasAttribute('data-id')) {
+        data.idServicio = tr.getAttribute('data-id');
+    }
+
     openServicioModal(mode, data);
 }
 
+/************************************
+ *  ABRE EL MODAL
+ ************************************/
+let servicioDatosOriginales = null;
+
 function openServicioModal(mode, data = {}) {
+
     const modal = document.getElementById("modalServicio");
     if (!modal) return;
 
-    // Cargar insumos en el select
-    renderInsumosOptions('insumosEdit');
-    // Seleccionar insumos si hay
-    if (data.insumos && Array.isArray(data.insumos)) {
-        const select = document.getElementById('insumosEdit');
-        Array.from(select.options).forEach(option => {
-            option.selected = data.insumos.includes(option.value);
-        });
+    // Guardar datos originales para detectar cambios
+    if (mode === "edit") {
+        servicioDatosOriginales = { ...data };
     }
 
-    // Cambiar título según acción
+    // Título
     let titulo = "Detalles del Servicio";
     if (mode === "edit") titulo = "Editar Servicio";
     if (mode === "nuevo") titulo = "Nuevo Servicio";
+
     document.getElementById("modalServicioTitulo").textContent = titulo;
 
-    // Mostrar/ocultar botones
+    // Mostrar / Ocultar botones
     document.getElementById("btnGuardarServicio").classList.toggle("d-none", mode === "view");
     document.getElementById("btnEditarServicio").classList.toggle("d-none", mode !== "view");
     document.getElementById("btnEliminarServicio").classList.toggle("d-none", mode === "nuevo");
 
-    // Mostrar modo ver / editar
+    // Campos
     const viewFields = modal.querySelectorAll(".field-view");
     const editFields = modal.querySelectorAll(".field-edit");
+
     viewFields.forEach(f => f.classList.toggle("d-none", mode !== "view"));
     editFields.forEach(f => f.classList.toggle("d-none", mode === "view"));
 
-    // Rellenar datos
+    // Rellenar campos
     Object.keys(data).forEach(key => {
         modal.querySelectorAll(`.field-view[data-field="${key}"]`)
             .forEach(el => el.textContent = data[key] ?? "-");
+
         modal.querySelectorAll(`.field-edit[data-field="${key}"]`)
             .forEach(el => el.value = data[key] ?? "");
     });
 
-    renderDualListbox();
-    // Si hay productos/insumos seleccionados en data, muévelos a la lista derecha
-    if (data.productos && Array.isArray(data.productos)) {
-        const prodSel = document.getElementById('productosSeleccionados');
-        data.productos.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p;
-            opt.textContent = p;
-            prodSel.appendChild(opt);
-        });
-    }
-    if (data.insumos && Array.isArray(data.insumos)) {
-        const insSel = document.getElementById('insumosSeleccionados');
-        data.insumos.forEach(i => {
-            const opt = document.createElement('option');
-            opt.value = i;
-            opt.textContent = i;
-            insSel.appendChild(opt);
-        });
-    }
+    // Guardar ID
+    if (data.idServicio) modal.dataset.idservicio = data.idServicio;
+    else delete modal.dataset.idservicio;
 
     modal.classList.remove("hide");
     modal.classList.add("show");
 }
 
+/************************************
+ * MODO EDITAR
+ ************************************/
 function switchToEditModeServicio() {
     openServicioModal("edit", getServicioModalData());
 }
 
+/************************************
+ * GUARDAR EDICIÓN
+ ************************************/
 function guardarServicioEditado() {
+
     const modal = document.getElementById("modalServicio");
-    const productos = Array.from(document.getElementById('productosSeleccionados').options).map(opt => opt.value);
-    const insumos = Array.from(document.getElementById('insumosSeleccionados').options).map(opt => opt.value);
     const inputs = modal.querySelectorAll(".field-edit");
+
     let updated = {};
+
     inputs.forEach(input => {
         updated[input.dataset.field] = input.value;
     });
-    // Actualiza los campos de vista
-    modal.querySelector('[data-field="productos"]').textContent = productos.join(', ') || '-';
-    modal.querySelector('[data-field="insumos"]').textContent = insumos.join(', ') || '-';
-    openServicioModal("view", {...getServicioModalData(), productos, insumos});
+
+    if (modal.dataset.idservicio) {
+        updated.idServicio = modal.dataset.idservicio;
+    }
+
+    // VALIDACIÓN
+    if (!updated.nombre || !updated.categoria || !updated.precio) {
+        alert("Debes completar Nombre, Categoría y Precio antes de guardar.");
+        return;
+    }
+
+    // Mostrar resumen
+    const resumen = construirResumenCambiosServicio(updated);
+    //alert(resumen);
+
+    // URL
+    const url = updated.idServicio
+        ? `/hospital/servicios/editar/${updated.idServicio}/`
+        : `/hospital/servicios/crear/`;
+
+    fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated)
+    })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) {
+                closeVetModal("modalServicio");
+                location.reload();
+            }
+        });
 }
 
+/************************************
+ * LEER CAMPOS DEL MODAL
+ ************************************/
 function getServicioModalData() {
     const modal = document.getElementById("modalServicio");
     let data = {};
+
     modal.querySelectorAll(".field-edit").forEach(input => {
         data[input.dataset.field] = input.value;
     });
+
     modal.querySelectorAll(".field-view").forEach(p => {
         if (!data[p.dataset.field]) data[p.dataset.field] = p.textContent;
     });
+
     return data;
 }
 
-// -------- ELIMINAR SERVICIO --------
-let servicioAEliminar = null;
+/************************************
+ * DETECTAR CAMBIOS
+ ************************************/
+function hayCambiosServicio() {
+    if (!servicioDatosOriginales) return false;
+
+    const modal = document.getElementById("modalServicio");
+
+    let actual = {};
+
+    modal.querySelectorAll(".field-edit").forEach(input => {
+        actual[input.dataset.field] = input.value;
+    });
+
+    return Object.keys(servicioDatosOriginales).some(
+        key => (servicioDatosOriginales[key] ?? "") !== (actual[key] ?? "")
+    );
+}
+
+/************************************
+ * CERRAR MODAL CON WARNING
+ ************************************/
+function closeServicioModal() {
+    if (hayCambiosServicio()) {
+        if (window.Swal) {
+            Swal.fire({
+                title: "¿Cerrar sin guardar?",
+                text: "Si cierras, los cambios no se guardarán.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Entendido",
+                cancelButtonText: "Cancelar",
+            }).then(result => {
+                if (result.isConfirmed) closeVetModal("modalServicio");
+            });
+        } else {
+            if (confirm("Si cierras, no se guardarán los cambios. ¿Continuar?")) {
+                closeVetModal("modalServicio");
+            }
+        }
+    } else closeVetModal("modalServicio");
+}
+
+/************************************
+ * ELIMINAR SERVICIO
+ ************************************/
+let servicioAEliminarId = null;
+
 function abrirModalEliminarServicio(btn) {
-    let tr = btn.closest('tr');
-    let nombre = '';
+
+    let tr = btn.closest("tr");
+    let nombre = "";
+
     if (tr) {
         nombre = tr.cells[0].textContent.trim();
-        servicioAEliminar = tr;
+        servicioAEliminarId = tr.getAttribute("data-id");
     } else {
-        const nombreField = document.querySelector('#modalServicio [data-field="nombre_servicio"]');
-        nombre = nombreField ? nombreField.textContent.trim() : '';
-        servicioAEliminar = null;
+        const modal = document.getElementById("modalServicio");
+        servicioAEliminarId = modal.dataset.idservicio || null;
+
+        const nombreField = modal.querySelector('[data-field="nombre"]');
+        nombre = nombreField ? nombreField.textContent.trim() : "";
     }
-    document.getElementById('eliminarServicioMensaje').textContent =
+
+    document.getElementById("eliminarServicioMensaje").textContent =
         `¿Estás seguro que deseas eliminar el servicio "${nombre}"?`;
+
     openVetModal('modalEliminarServicio');
 }
 
 function closeEliminarServicioModal() {
-    if (confirm("Si cierras, el servicio no se eliminará. ¿Deseas continuar?")) {
-        closeVetModal('modalEliminarServicio');
+    if (window.Swal) {
+        Swal.fire({
+            title: "¿Cerrar sin eliminar?",
+            text: "Si cierras, no se eliminará.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Entendido",
+            cancelButtonText: "Cancelar",
+        }).then(result => {
+            if (result.isConfirmed) closeVetModal("modalEliminarServicio");
+        });
+    } else {
+        if (confirm("¿Cerrar sin eliminar?")) closeVetModal("modalEliminarServicio");
     }
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('btnConfirmarEliminarServicio').onclick = function () {
-        if (confirm("¿Estás segura/o de eliminar este servicio?")) {
-            eliminarServicioConfirmado();
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("btnConfirmarEliminarServicio").onclick = function () {
+
+        if (window.Swal) {
+            Swal.fire({
+                title: "¿Eliminar servicio?",
+                text: "Esta acción no se puede deshacer.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Sí, eliminar",
+                cancelButtonText: "Cancelar",
+            }).then(result => {
+                if (result.isConfirmed) eliminarServicioConfirmado();
+            });
+        } else {
+            if (confirm("¿Eliminar servicio?")) eliminarServicioConfirmado();
         }
     };
 });
 
 function eliminarServicioConfirmado() {
-    if (servicioAEliminar) {
-        servicioAEliminar.remove();
-    }
-    closeVetModal('modalEliminarServicio');
-    closeVetModal('modalServicio');
-    alert("El servicio ha sido eliminado.");
+    if (!servicioAEliminarId) return;
+
+    fetch(`/hospital/servicios/eliminar/${servicioAEliminarId}/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+    })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) location.reload();
+        });
 }
 
-// --------- INSUMOS MULTISELECT ---------
-const insumosDisponibles = [
-    'Vacuna antirrábica',
-    'Jeringa 3ml',
-    'Desparasitante oral',
-    'Guantes',
-    'Gasas estériles',
-    'Aguja 21G',
-    'Alcohol',
-    'Sutura',
-    'Anestesia'
-];
+/************************************
+ * RESUMEN DE CAMBIOS
+ ************************************/
+function construirResumenCambiosServicio(updated) {
 
-// Productos e insumos de ejemplo
-const productosDisponiblesList = [
-    'Vacuna Rabia',
-    'Antiparasitario',
-    'Anestesia',
-    'Sutura',
-    'Antibiótico'
-];
-const insumosDisponiblesList = [
-    'Jeringa 3ml',
-    'Guantes',
-    'Gasas estériles',
-    'Aguja 21G',
-    'Alcohol'
-];
+    const labels = {
+        nombre: "Nombre",
+        descripcion: "Descripción",
+        categoria: "Categoría",
+        precio: "Precio",
+        duracion: "Duración"
+    };
 
-function renderInsumosOptions(selectId) {
-    const select = document.getElementById(selectId);
-    if (!select) return;
-    select.innerHTML = '';
-    insumosDisponibles.forEach(insumo => {
-        const option = document.createElement('option');
-        option.value = insumo;
-        option.textContent = insumo;
-        select.appendChild(option);
-    });
-}
+    const lineas = [];
 
-// Render dual listbox
-function renderDualListbox() {
-    const prodDisp = document.getElementById('productosDisponibles');
-    const prodSel = document.getElementById('productosSeleccionados');
-    const insDisp = document.getElementById('insumosDisponibles');
-    const insSel = document.getElementById('insumosSeleccionados');
-    if (prodDisp && prodSel) {
-        prodDisp.innerHTML = '';
-        productosDisponiblesList.forEach(p => {
-            if (![...prodSel.options].some(opt => opt.value === p)) {
-                const opt = document.createElement('option');
-                opt.value = p;
-                opt.textContent = p;
-                prodDisp.appendChild(opt);
+    if (servicioDatosOriginales) {
+        // EDICIÓN
+        Object.keys(labels).forEach(key => {
+            const antes = servicioDatosOriginales[key] ?? "";
+            const ahora = updated[key] ?? "";
+
+            if ((antes + "").trim() !== (ahora + "").trim()) {
+                lineas.push(`${labels[key]}: "${antes || "-"}" → "${ahora || "-"}"`);
             }
         });
-    }
-    if (insDisp && insSel) {
-        insDisp.innerHTML = '';
-        insumosDisponiblesList.forEach(i => {
-            if (![...insSel.options].some(opt => opt.value === i)) {
-                const opt = document.createElement('option');
-                opt.value = i;
-                opt.textContent = i;
-                insDisp.appendChild(opt);
-            }
+
+        if (!lineas.length) lineas.push("No se detectaron cambios.");
+
+        return "Cambios realizados:\n\n" + lineas.join("\n");
+
+    } else {
+        // NUEVO
+        Object.keys(labels).forEach(key => {
+            const v = (updated[key] ?? "").trim();
+            if (v) lineas.push(`${labels[key]}: "${v}"`);
         });
+
+        if (!lineas.length) lineas.push("No se ingresaron datos.");
+
+        return "Datos del nuevo servicio:\n\n" + lineas.join("\n");
     }
 }
-
-// Mover seleccionados entre listas
-function moverSeleccionados(origenId, destinoId) {
-    const origen = document.getElementById(origenId);
-    const destino = document.getElementById(destinoId);
-    if (!origen || !destino) return;
-    Array.from(origen.selectedOptions).forEach(opt => {
-        origen.removeChild(opt);
-        destino.appendChild(opt);
-    });
-}
-
-// Llama esto al cargar el DOM para ambos formularios
-document.addEventListener('DOMContentLoaded', () => {
-    renderInsumosOptions('insumosAdd');
-    renderInsumosOptions('insumosEdit');
-    renderDualListbox();
-});
