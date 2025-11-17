@@ -1,76 +1,8 @@
 //---------NUEVO PRODUCTO---------
-// Lista que guarda los rangos
-let rangosDosis = [];
-
-// Mostrar rangos tanto en vista como en edición
-function renderRangosDosis() {
-    const viewContainer = document.getElementById("pesoDosisList");
-    const editContainer = document.getElementById("pesoDosisEditList");
-
-    // Ordenar de menor a mayor por min
-    rangosDosis.sort((a, b) => a.min - b.min);
-
-    // Vista
-    if (viewContainer) {
-        if (rangosDosis.length === 0) {
-            viewContainer.innerHTML = "-";
-        } else {
-            viewContainer.innerHTML = rangosDosis
-                .map(r => `${r.min} – ${r.max} kg → ${r.dosis} ml`)
-                .join("<br>");
-        }
-    }
-
-    // Edición
-    if (editContainer) {
-        editContainer.innerHTML = "";
-        rangosDosis.forEach((rango, index) => {
-            const li = document.createElement("li");
-            li.className = "list-group-item d-flex justify-content-between align-items-center";
-            li.innerHTML = `
-                <span>${rango.min}–${rango.max} kg → ${rango.dosis} ml</span>
-                <button class="btn btn-danger btn-sm" onclick="eliminarRangoDosis(${index})">
-                    <i class="bi bi-trash"></i>
-                </button>
-            `;
-            editContainer.appendChild(li);
-        });
-    }
-}
-
-// Agregar rango
-function agregarRangoDosis() {
-    let min = parseFloat(document.getElementById("pesoMinTemp").value);
-    let max = parseFloat(document.getElementById("pesoMaxTemp").value);
-    let dosis = parseFloat(document.getElementById("dosisTemp").value);
-
-    if (isNaN(min) || isNaN(max) || isNaN(dosis)) {
-        alert("Completa todos los campos.");
-        return;
-    }
-    if (min >= max) {
-        alert("El peso mínimo debe ser menor que el máximo.");
-        return;
-    }
-
-    rangosDosis.push({ min, max, dosis });
-    renderRangosDosis();
-
-    // limpiar inputs
-    document.getElementById("pesoMinTemp").value = "";
-    document.getElementById("pesoMaxTemp").value = "";
-    document.getElementById("dosisTemp").value = "";
-}
-
-// Eliminar un rango
-function eliminarRangoDosis(index) {
-    rangosDosis.splice(index, 1);
-    renderRangosDosis();
-}
 
 // Abre el modal de producto en modo "nuevo"
 function abrirModalNuevoProducto() {
-    // Limpia todos los campos
+    // NO uses tr aquí, porque no hay fila seleccionada
     const data = {
         nombre_comercial: "",
         categoria: "",
@@ -86,12 +18,11 @@ function abrirModalNuevoProducto() {
         stock_actual: "",
         stock_minimo: "",
         stock_maximo: "",
-        proveedor: "",
         almacenamiento: "",
         precauciones: "",
         contraindicaciones: "",
-        efectos_adversos: "",
-        rangos_dosis: []
+        efectos_adversos: ""
+        // dosis_ml, peso_kg, ml, rangos_dosis eliminados
     };
     openProductoModal("nuevo", data);
 }
@@ -105,30 +36,19 @@ function abrirModalProducto(btn, mode) {
     const data = {
         nombre_comercial: tr.cells[0].textContent.trim(),
         especie: tr.cells[1].textContent.trim(),
-        precio_venta: tr.cells[2].textContent.trim(),
-        stock_actual: tr.cells[3].textContent.replace(/\D/g, '').trim(),
-        // Puedes mapear más campos según tus necesidades y el orden de las columnas
-        rangos_dosis: [] // Aquí deberías mapear los rangos si los tienes en la tabla
+        precio_venta: tr.cells[2].textContent.replace(/[^0-9.,]/g, '').trim(),
+        stock_actual: tr.cells[3].textContent.replace(/\D/g, '').trim()
+        // dosis_ml, peso_kg, ml, rangos_dosis eliminados
     };
+    if (tr.hasAttribute('data-id')) {
+        data.idInventario = tr.getAttribute('data-id');
+    }
     openProductoModal(mode, data);
 }
 
 function openProductoModal(mode, data = {}) {
     const modal = document.getElementById("modalProducto");
     if (!modal) return;
-
-    // cargar los rangos si vienen desde Django o JS
-    rangosDosis = data.rangos_dosis ? [...data.rangos_dosis] : [];
-    renderRangosDosis();
-
-    // Cargar proveedores en el select integrado
-    cargarProveedoresEnSelect();
-
-    // Si hay proveedor en los datos, seleccionarlo
-    if (data.proveedor) {
-        const select = document.getElementById("selectProveedorIntegrado");
-        if (select) select.value = data.proveedor;
-    }
 
     // Guardar datos originales solo en modo edit
     if (mode === "edit") {
@@ -163,6 +83,13 @@ function openProductoModal(mode, data = {}) {
             .forEach(el => el.value = data[key] ?? "");
     });
 
+    // Guarda el idInventario como atributo en el modal para referencia
+    if (data.idInventario) {
+        modal.dataset.idinventario = data.idInventario;
+    } else {
+        delete modal.dataset.idinventario;
+    }
+
     modal.classList.remove("hide");
     modal.classList.add("show");
 }
@@ -180,17 +107,48 @@ function guardarProductoEditado() {
         updated[input.dataset.field] = input.value;
     });
 
-    // Guardar los rangos de dosis ordenados
-    updated.rangos_dosis = [...rangosDosis].sort((a, b) => a.min - b.min);
+    // Elimina dosis_ml y peso_kg
+    delete updated.dosis_ml;
+    delete updated.peso_kg;
 
-    // ACTUALIZA LOS CAMPOS DE VISTA
-    Object.keys(updated).forEach(key => {
-        modal.querySelectorAll(`.field-view[data-field="${key}"]`)
-            .forEach(el => el.textContent = updated[key] ?? "-");
-    });
+    // Mapeo para compatibilidad backend
+    if (updated.nombre_comercial && !updated.medicamento) {
+        updated.medicamento = updated.nombre_comercial;
+    }
 
-    // Cambia a modo vista con los datos actualizados
-    openProductoModal("view", updated);
+    // Asegúrate de incluir el idInventario si está en el modal (por ejemplo, como atributo en el modal)
+    if (!updated.idInventario && modal.dataset.idinventario) {
+        updated.idInventario = modal.dataset.idinventario;
+    }
+
+    // VALIDACIÓN: nombre y especie obligatorios
+    if (
+        !updated.nombre_comercial ||
+        !updated.especie
+    ) {
+        alert("Debes completar Nombre Comercial y Especie antes de guardar.");
+        return;
+    }
+
+    // Si es edición, enviar AJAX a editar
+    if (updated.idInventario) {
+        fetch(`/hospital/inventario/editar/${updated.idInventario}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updated)
+        }).then(r => r.json()).then(resp => {
+            if (resp.success) location.reload();
+        });
+    } else {
+        // Si es nuevo, enviar AJAX a crear
+        fetch('/hospital/inventario/crear/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updated)
+        }).then(r => r.json()).then(resp => {
+            if (resp.success) location.reload();
+        });
+    }
 }
 
 function getProductoModalData() {
@@ -202,23 +160,26 @@ function getProductoModalData() {
     modal.querySelectorAll(".field-view").forEach(p => {
         if (!data[p.dataset.field]) data[p.dataset.field] = p.textContent;
     });
+    // Elimina dosis_ml y peso_kg si existen
+    delete data.dosis_ml;
+    delete data.peso_kg;
     return data;
 }
 //----------ELIMINAR---------
-let productoAEliminar = null;
+let productoAEliminarId = null;
 
 function abrirModalEliminarProducto(btn) {
-    // Si viene de la tabla, busca el <tr>
     let tr = btn.closest('tr');
     let nombre = '';
     if (tr) {
         nombre = tr.cells[0].textContent.trim();
-        productoAEliminar = tr;
+        productoAEliminarId = tr.getAttribute('data-id');
     } else {
-        // Si viene del modal de producto, busca el nombre en el modal
-        const nombreField = document.querySelector('#modalProducto [data-field="nombre_comercial"]');
+        // Si viene del modal, busca el id en el modal
+        const modal = document.getElementById('modalProducto');
+        productoAEliminarId = modal.dataset.idinventario || null;
+        const nombreField = modal.querySelector('[data-field="nombre_comercial"]');
         nombre = nombreField ? nombreField.textContent.trim() : '';
-        productoAEliminar = null; // O puedes guardar un id si tienes
     }
     document.getElementById('eliminarProductoMensaje').textContent =
         `¿Estás seguro que deseas eliminar el producto "${nombre}"?`;
@@ -284,35 +245,27 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function eliminarProductoConfirmado() {
-    // Si hay un <tr> directo (desde la tabla), elimínalo
-    if (productoAEliminar) {
-        productoAEliminar.remove();
-    } else if (window.nombreProductoActual) {
-        // Si viene desde el modal, busca la fila por el nombre comercial
-        const filas = document.querySelectorAll('table tbody tr');
-        for (let tr of filas) {
-            if (tr.cells[0] && tr.cells[0].textContent.trim() === window.nombreProductoActual) {
-                tr.remove();
-                break;
-            }
-        }
-    }
-    closeVetModal('modalEliminarProducto');
-    closeVetModal('modalProducto');
-    if (window.Swal && Swal.fire) {
-        Swal.fire("Eliminado", "El producto ha sido eliminado.", "success");
-    } else {
-        alert("El producto ha sido eliminado.");
-    }
+    if (!productoAEliminarId) return;
+    fetch(`/hospital/inventario/eliminar/${productoAEliminarId}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    }).then(r => r.json()).then(resp => {
+        if (resp.success) location.reload();
+    });
 }
 
 //--------MODIFICAR STOCK--------
 let stockActualTemp = 0;
 let stockOriginal = 0;
+let productoIdStock = null; // NUEVO: para guardar el id del producto a modificar stock
 
-// Modifica openModificarStockModal para guardar stock original
-function openModificarStockModal(stockInicial = 0) {
-    stockActualTemp = parseInt(stockInicial) || 0;
+// Modifica openModificarStockModal para guardar stock original y el id del producto
+function openModificarStockModal(btn) {
+    // btn: botón dentro de la fila de la tabla
+    let tr = btn.closest('tr');
+    if (!tr) return;
+    productoIdStock = tr.getAttribute('data-id');
+    stockActualTemp = parseInt(tr.cells[3].textContent.replace(/\D/g, '')) || 0;
     stockOriginal = stockActualTemp; // Guardar stock original
     document.getElementById('stockActualValor').textContent = stockActualTemp;
     document.getElementById('inputStockOperacion').value = '';
@@ -377,9 +330,14 @@ function restarStockInput() {
 }
 
 function guardarStock() {
-    // Aquí puedes actualizar el stock en la tabla o enviar al backend
-    closeVetModal('modalModificarStock');
-    // Ejemplo: alert("Nuevo stock: " + stockActualTemp);
+    if (!productoIdStock) return;
+    fetch(`/hospital/inventario/modificar_stock/${productoIdStock}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stock_actual: stockActualTemp })
+    }).then(r => r.json()).then(resp => {
+        if (resp.success) location.reload();
+    });
 }
 
 // Variables para detectar cambios
@@ -393,6 +351,9 @@ function hayCambiosProducto() {
     modal.querySelectorAll(".field-edit").forEach(input => {
         actual[input.dataset.field] = input.value;
     });
+    // Elimina dosis_ml y peso_kg si existen
+    delete actual.dosis_ml;
+    delete actual.peso_kg;
     return Object.keys(productoDatosOriginales).some(
         key => (productoDatosOriginales[key] ?? "") !== (actual[key] ?? "")
     );
@@ -423,116 +384,4 @@ function closeProductoModal() {
     } else {
         closeVetModal('modalProducto');
     }
-}
-let proveedoresBase = [
-    "Vet Pharma",
-    "Pet Supplies"
-];
-// ===============================
-// Cargar proveedores en la lista
-// ===============================
-function cargarProveedoresEnSelect() {
-    const select = document.getElementById("selectProveedorIntegrado");
-    // Guarda la selección actual
-    const selected = select.value;
-    // Limpia y agrega las opciones especiales
-    select.innerHTML = `
-     
-        <option value="">Selecciona...</option>
-    `;
-    proveedoresBase.forEach(p => {
-        const opt = document.createElement("option");
-        opt.value = p;
-        opt.textContent = p;
-        select.appendChild(opt);
-    });
-    // Opción para agregar nuevo proveedor
-    const optNuevo = document.createElement("option");
-    optNuevo.value = "__nuevo__";
-    optNuevo.textContent = "+ Agregar nuevo proveedor...";
-    select.appendChild(optNuevo);
-
-    // Restaura la selección si aplica
-    if (selected) select.value = selected;
-}
-
-function onProveedorIntegradoChange() {
-    const select = document.getElementById("selectProveedorIntegrado");
-    const value = select.value;
-    const nuevoWrapper = document.getElementById("nuevoProveedorWrapper");
-
-    if (value === "__buscar__") {
-        mostrarInputBusquedaProveedor();
-        // Vuelve a "Selecciona..." para evitar quedarse en la opción de búsqueda
-        setTimeout(() => { select.value = ""; }, 100);
-        nuevoWrapper.classList.add("d-none");
-    } else if (value === "__nuevo__") {
-        nuevoWrapper.classList.remove("d-none");
-        document.getElementById("inputNuevoProveedor").focus();
-    } else {
-        nuevoWrapper.classList.add("d-none");
-    }
-}
-
-function mostrarInputBusquedaProveedor() {
-    // Evita duplicados
-    if (document.getElementById('inputBuscarProveedorFlotante')) return;
-    const select = document.getElementById('selectProveedorIntegrado');
-    const rect = select.getBoundingClientRect();
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.id = 'inputBuscarProveedorFlotante';
-    input.className = 'form-control mb-1';
-    input.placeholder = 'Buscar proveedor...';
-    input.style.position = 'absolute';
-    input.style.left = 0;
-    input.style.top = 0;
-    input.style.width = '100%';
-    input.style.zIndex = 2000;
-
-    // Filtrar mientras escribe
-    input.oninput = function() {
-        filtrarOpcionesProveedor(input.value);
-    };
-    // Al salir, eliminar input y restaurar opciones
-    input.onblur = function() {
-        setTimeout(() => {
-            input.remove();
-            filtrarOpcionesProveedor(""); // Restablece todas las opciones
-        }, 200);
-    };
-
-    select.parentNode.appendChild(input);
-    input.focus();
-}
-
-function filtrarOpcionesProveedor(filtro) {
-    const select = document.getElementById("selectProveedorIntegrado");
-    filtro = (filtro || "").toLowerCase();
-    for (let opt of select.options) {
-        // No filtrar las opciones especiales
-        if (opt.value === "__buscar__" || opt.value === "" || opt.value === "__nuevo__") {
-            opt.hidden = false;
-            continue;
-        }
-        opt.hidden = !opt.textContent.toLowerCase().includes(filtro);
-    }
-}
-
-// ===============================
-// Agregar nuevo proveedor
-// ===============================
-function agregarNuevoProveedorIntegrado() {
-    const input = document.getElementById("inputNuevoProveedor");
-    const nombre = input.value.trim();
-    if (!nombre) return;
-    if (!proveedoresBase.includes(nombre)) {
-        proveedoresBase.push(nombre);
-    }
-    cargarProveedoresEnSelect();
-    // Selecciona automáticamente el nuevo proveedor
-    const select = document.getElementById("selectProveedorIntegrado");
-    select.value = nombre;
-    input.value = "";
-    document.getElementById("nuevoProveedorWrapper").classList.add("d-none");
 }

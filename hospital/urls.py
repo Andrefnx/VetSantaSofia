@@ -14,9 +14,9 @@ urlpatterns = [
 
     # Pacientes
     
-    path('pacientes/', views.pacientes_view, name='pacientes_view'),
+    path('pacientes/', views.pacientes, name='pacientes_view'),
     
-    path('pacientes/ficha/', views.ficha_mascota, name='ficha_mascota'),
+    path('pacientes/ficha/', views.ficha_mascota_view, name='ficha_mascota'),
 
     # Veterinarios
     path('veterinarios/ficha/', views.vet_ficha_view, name='vet_ficha'),
@@ -24,6 +24,10 @@ urlpatterns = [
     
     # Inventario
     path('inventario/', views.inventario, name='inventario'),
+    path('inventario/crear/', views.crear_insumo, name='crear_insumo'),
+    path('inventario/editar/<int:insumo_id>/', views.editar_insumo, name='editar_insumo'),
+    path('inventario/eliminar/<int:insumo_id>/', views.eliminar_insumo, name='eliminar_insumo'),
+    path('inventario/modificar_stock/<int:insumo_id>/', views.modificar_stock, name='modificar_stock'),
 
     path('servicios/', views.servicios, name='servicios'),
     

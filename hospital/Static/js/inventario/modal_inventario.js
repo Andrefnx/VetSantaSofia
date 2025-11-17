@@ -521,3 +521,26 @@ function openBatchesModal(productName) {
     if (modalElem) new bootstrap.Modal(modalElem).show();
     else console.error("❌ No se encontró el modal #batchesModal en el DOM");
 }
+
+function guardarProductoEditado() {
+    const data = getProductoModalData(); // debe incluir dosis_ml y peso_kg
+    let url = '/hospital/inventario/crear/';
+    let method = 'POST';
+
+    if (data.idInventario) {
+        url = `/hospital/inventario/editar/${data.idInventario}/`;
+        method = 'POST';
+    }
+
+    fetch(url, {
+        method: method,
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(resp => resp.json())
+    .then(resp => {
+        if (resp.success) {
+            // Actualiza la tabla, cierra modal, etc.
+        }
+    });
+}

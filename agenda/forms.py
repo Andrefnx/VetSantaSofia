@@ -1,13 +1,7 @@
 from django import forms
-from .models import DocumentoMascota, Agenda
-
-class DocumentoMascotaForm(forms.ModelForm):
-    class Meta:
-        model = DocumentoMascota
-        fields = ['archivo']
-
-
+from .models import Agenda
 class AgendaForm(forms.ModelForm):
+
     class Meta:
         model = Agenda
         fields = [
@@ -15,16 +9,10 @@ class AgendaForm(forms.ModelForm):
             'nombreMascota', 'nombre_apellido', 'telefono',
             'razon', 'estado'
         ]
+        labels = {
+            'nombreMascota': 'Nombre Mascota',
+        }
         widgets = {
             'fecha_agenda': forms.DateInput(attrs={'type': 'date'}),
             'hora_agenda': forms.TimeInput(attrs={'type': 'time'}),
         }
-
-from django import forms
-from .models import DocumentoMascota
-
-class DocumentoMascotaForm(forms.ModelForm):
-    class Meta:
-        model = DocumentoMascota
-        fields = ['archivo']
-
