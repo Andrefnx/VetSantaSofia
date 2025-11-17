@@ -54,36 +54,34 @@ class Hospitalizacion(models.Model):
     def __str__(self):
         return f"Hospitalización {self.idHospitalizacion} - {self.idMascota.nombreMascota}"
 
-
 class Servicio(models.Model):
     idServicio = models.AutoField(primary_key=True)
-
-    nombre = models.CharField(
-        max_length=150,
-        verbose_name="Nombre del Servicio"
-    )
-
-    descripcion = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name="Descripción"
-    )
-
-    categoria = models.CharField(max_length=100, verbose_name="Categoría", default="")
-
+    nombre = models.CharField(max_length=150)
+    descripcion = models.TextField(blank=True, null=True)
+    categoria = models.CharField(max_length=100)
     precio = models.PositiveIntegerField(default=0)
-
     duracion = models.PositiveIntegerField(default=0)
-
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        db_table = "Servicio"
-        verbose_name = "Servicio Veterinario"
-        verbose_name_plural = "Servicios Veterinarios"
-        ordering = ["nombre"]
+    insumos = models.ManyToManyField(
+        'Insumo',
+        through='ServicioInsumo',
+        related_name='servicios'
+    )
 
     def __str__(self):
         return self.nombre
+
+
+class ServicioInsumo(models.Model):
+    servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE)
+    insumo = models.ForeignKey(Insumo, on_delete=models.CASCADE)
+
+    cantidad = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        unique_together = ('servicio', 'insumo')
+
+    def __str__(self):
+        return f"{self.servicio.nombre} → {self.cantidad} x {self.insumo.medicamento}"
