@@ -11,10 +11,10 @@
 {% block content %}
 <div class="header">
     <h1>
-        <i class="fas fa-paw"></i> Nombre de la Mascota
+        <i class="fas fa-paw"></i> {{ mascota.nombreMascota }}
     </h1>
     <div class="edit-mode">
-        <button class="vet-btn vet-btn-primary">
+        <button class="vet-btn vet-btn-primary" id="btnEditarFicha">
             <i class="bi bi-pencil-square"></i> Editar Ficha
         </button>
     </div>
@@ -30,13 +30,13 @@
             </h2>
             <div class="info">
                 <div class="info-row">
-                    <p><strong>Especie:</strong> Especie de la Mascota</p>
-                    <p><strong>Raza:</strong> Raza de la Mascota</p>
-                    <p><strong>Edad:</strong> Edad de la Mascota</p>
-                    <p><strong>Sexo:</strong> Sexo de la Mascota</p>
-                    <p><strong>Color:</strong> Color de la Mascota</p>
+                    <p><strong>Especie:</strong> {{ mascota.animal_mascota }}</p>
+                    <p><strong>Raza:</strong> {{ mascota.raza_mascota }}</p>
+                    <p><strong>Edad:</strong> {{ mascota.edad }} años</p>
+                    <p><strong>Sexo:</strong> {{ mascota.sexo }}</p>
+                    <p><strong>Color:</strong> -</p>
                 </div>
-                <p><strong>Microchip:</strong> Número de Microchip</p>
+                <p><strong>Microchip:</strong> -</p>
             </div>
         </div>
         <div class="section resumen-clinico">
@@ -45,8 +45,8 @@
             </h2>
             <div class="info">
                 <div class="info-row">
-                    <p><strong>Último peso registrado:</strong> Peso de la Mascota</p>
-                    <p><strong>Último control:</strong> Último control</p>
+                    <p><strong>Último peso registrado:</strong> {{ mascota.peso }} kg</p>
+                    <p><strong>Último control:</strong> -</p>
                 </div>
             </div>
         </div>
@@ -56,9 +56,9 @@
             </h2>
             <div class="info">
                 <div class="info-row">
-                    <p><strong>Dueño:</strong> Nombre del Dueño</p>
-                    <p><strong>Teléfono:</strong> Teléfono del Dueño</p>
-                    <p><strong>Correo Electrónico:</strong> Correo del Dueño</p>
+                    <p><strong>Dueño:</strong> {{ mascota.idCliente.nombreCliente }}</p>
+                    <p><strong>Teléfono:</strong> {{ mascota.idCliente.telCliente }}</p>
+                    <p><strong>Correo Electrónico:</strong> {{ mascota.idCliente.emailCliente }}</p>
                 </div>
             </div>
         </div>
@@ -242,6 +242,95 @@
 {% endblock %}
 
 {% block modals %}
+<!-- Modal Editar Mascota -->
+<div id="modalEditarMascota" class="vet-modal-overlay hide">
+    <div class="vet-custom-modal">
+        <div class="vet-custom-modal-title">
+            <h3 style="margin:0;"><i class="bi bi-pencil-square"></i> Editar Ficha de Mascota</h3>
+            <i class="bi bi-x" id="closeEditarMascotaModal" tabindex="0" role="button" aria-label="Cerrar"></i>
+        </div>
+        <div class="vet-modal-body">
+            <form id="formEditarMascota">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h4>Datos de la Mascota</h4>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-tag"></i> Nombre</div>
+                            <input type="text" class="form-control" id="edit-nombre" name="nombre" required>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-tree"></i> Especie</div>
+                            <input type="text" class="form-control" id="edit-especie" name="especie" required>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-star"></i> Raza</div>
+                            <input type="text" class="form-control" id="edit-raza" name="raza" required>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-calendar"></i> Edad</div>
+                            <input type="number" class="form-control" id="edit-edad" name="edad" required>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-gender-ambiguous"></i> Sexo</div>
+                            <select class="form-control" id="edit-sexo" name="sexo" required>
+                                <option value="">Seleccione</option>
+                                <option value="Macho">Macho</option>
+                                <option value="Hembra">Hembra</option>
+                            </select>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-speedometer2"></i> Peso (kg)</div>
+                            <input type="number" step="0.01" class="form-control" id="edit-peso" name="peso" required>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-upc"></i> Microchip</div>
+                            <input type="text" class="form-control" id="edit-chip" name="chip">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Datos del Cliente</h4>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-person"></i> RUT</div>
+                            <div class="row">
+                                <div class="col-8">
+                                    <input type="text" class="form-control" id="edit-rutCliente" name="rutCliente" required>
+                                </div>
+                                <div class="col-4">
+                                    <input type="text" class="form-control" id="edit-dvCliente" name="dvCliente" maxlength="1" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-person-fill"></i> Nombre</div>
+                            <input type="text" class="form-control" id="edit-nombreCliente" name="nombreCliente" required>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-telephone"></i> Teléfono</div>
+                            <input type="text" class="form-control" id="edit-telCliente" name="telCliente" required>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-envelope"></i> Correo Electrónico</div>
+                            <input type="email" class="form-control" id="edit-emailCliente" name="emailCliente" required>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-geo-alt"></i> Dirección</div>
+                            <input type="text" class="form-control" id="edit-direccion" name="direccion" required>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="vet-modal-footer d-flex justify-content-between align-items-center">
+            <button class="vet-btn vet-btn-grey" onclick="closeEditarMascotaModal()">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </button>
+            <button class="vet-btn vet-btn-primary" onclick="guardarEditarMascota()">
+                <i class="bi bi-check-circle"></i> Guardar Cambios
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Detalle Consulta -->
 <div id="detalleConsultaModal" class="vet-modal-overlay hide">
     <div class="vet-custom-modal">
@@ -420,4 +509,5 @@
 {% block extra_js %}
 <script src="{% static 'js/base/tabs.js' %}"></script>
 <script src="{% static 'js/pacientes/historial_medico.js' %}"></script>
+<script src="{% static 'js/pacientes/ficha_mascota.js' %}"></script>
 {% endblock %}

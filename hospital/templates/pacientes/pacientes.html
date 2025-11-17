@@ -5,6 +5,7 @@
 
 {% block styles %}
 <link rel="stylesheet" href="{% static 'css/base/tables_base.css' %}?v=4" type="text/css" media="all">
+<link rel="stylesheet" href="{% static 'css/base/modals_base.css' %}?v=4" type="text/css" media="all">
 {% endblock %}
 
 {% block table_title %}
@@ -16,7 +17,7 @@
     <div class="vet-custom-select-wrapper">
         <span class="tag_select">Especie</span>
         <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todas</span>
+            <span class="vet-selected-value placeholder">{% if especie_filter == 'canino' %}Canino{% elif especie_filter == 'felino' %}Felino{% else %}Todas{% endif %}</span>
             <div class="vet-arrow"></div>
         </div>
         <ul class="vet-custom-select-dropdown">
@@ -24,12 +25,12 @@
             <li data-value="canino">Canino</li>
             <li data-value="felino">Felino</li>
         </ul>
-        <input type="hidden" id="filterEspecie" value="">
+        <input type="hidden" id="filterEspecie" value="{{ especie_filter }}">
     </div>
     <div class="vet-custom-select-wrapper">
         <span class="tag_select">Sexo</span>
         <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todos</span>
+            <span class="vet-selected-value placeholder">{% if sexo_filter == 'macho' %}Macho{% elif sexo_filter == 'hembra' %}Hembra{% else %}Todos{% endif %}</span>
             <div class="vet-arrow"></div>
         </div>
         <ul class="vet-custom-select-dropdown">
@@ -37,7 +38,7 @@
             <li data-value="macho">Macho</li>
             <li data-value="hembra">Hembra</li>
         </ul>
-        <input type="hidden" id="filterSexo" value="">
+        <input type="hidden" id="filterSexo" value="{{ sexo_filter }}">
     </div>
     <!-- Puedes agregar más filtros aquí -->
 </div>
@@ -60,22 +61,23 @@
 {% endblock %}
 
 {% block table_rows %}
-<tr>
-    <td>Max</td>
-    <td>Canino</td>
-    <td>Labrador</td>
-    <td>5 años</td>
-    <td>Macho</td>
-    <td>Juan Pérez</td>
+{% for mascota in mascotas %}
+<tr data-mascota-id="{{ mascota.idMascota }}">
+    <td>{{ mascota.nombreMascota }}</td>
+    <td>{{ mascota.animal_mascota }}</td>
+    <td>{{ mascota.raza_mascota }}</td>
+    <td>{{ mascota.edad }} años</td>
+    <td>{{ mascota.sexo }}</td>
+    <td>{{ mascota.idCliente.nombreCliente }}</td>
     <td>
         <div class="manage-wheel">
             <button type="button" onclick="toggleWheel(this)">
                 <i class="fas fa-cog"></i>
             </button>
             <div class="manage-options" style="display: none;">
-                <button type="button" onclick="window.location.href='{% url 'ficha_mascota' %}'">
-                    <i class="bi bi-eye"></i> Ver
-                </button>
+                <a href="{% url 'ficha_mascota' mascota.idMascota %}">
+                    <i class="bi bi-eye"></i> Ver Ficha
+                </a>
                 <button type="button" onclick="abrirModalPaciente(this, 'edit')">
                     <i class="fas fa-edit"></i> Editar
                 </button>
@@ -86,58 +88,11 @@
         </div>
     </td>
 </tr>
+{% empty %}
 <tr>
-    <td>Luna</td>
-    <td>Felino</td>
-    <td>Siames</td>
-    <td>2 años</td>
-    <td>Hembra</td>
-    <td>María Gómez</td>
-    <td>
-        <div class="manage-wheel">
-            <button type="button" onclick="toggleWheel(this)">
-                <i class="fas fa-cog"></i>
-            </button>
-            <div class="manage-options" style="display: none;">
-                <button type="button" onclick="abrirModalPaciente(this, 'view')">
-                    <i class="bi bi-eye"></i> Ver
-                </button>
-                <button type="button" onclick="abrirModalPaciente(this, 'edit')">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                <button type="button" onclick="abrirModalEliminarPaciente(this)">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>
-            </div>
-        </div>
-    </td>
+    <td colspan="7">No hay pacientes registrados.</td>
 </tr>
-<tr>
-    <td>Rocky</td>
-    <td>Canino</td>
-    <td>Bulldog</td>
-    <td>3 años</td>
-    <td>Macho</td>
-    <td>Carlos Ruiz</td>
-    <td>
-        <div class="manage-wheel">
-            <button type="button" onclick="toggleWheel(this)">
-                <i class="fas fa-cog"></i>
-            </button>
-            <div class="manage-options" style="display: none;">
-                <button type="button" onclick="abrirModalPaciente(this, 'view')">
-                    <i class="bi bi-eye"></i> Ver
-                </button>
-                <button type="button" onclick="abrirModalPaciente(this, 'edit')">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                <button type="button" onclick="abrirModalEliminarPaciente(this)">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>
-            </div>
-        </div>
-    </td>
-</tr>
+{% endfor %}
 {% endblock %}
 
 {% block modals %}
@@ -153,38 +108,73 @@
             </div>
             <div class="vet-modal-body">
                 <form id="addPacienteForm">
-                    <div class="mb-3">
-                        <label>Nombre</label>
-                        <input type="text" class="form-control" name="nombre" required>
+                    {% csrf_token %}
+                    <div class="detail-section mb-4">
+                        <h6 class="detail-section-title"><i class="fas fa-paw"></i> Información de la Mascota</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label>Nombre</label>
+                                <input type="text" class="form-control" name="nombre" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label>Especie</label>
+                                <select class="form-control" name="especie" required>
+                                    <option value="">Selecciona...</option>
+                                    <option value="canino">Canino</option>
+                                    <option value="felino">Felino</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label>Raza</label>
+                                <input type="text" class="form-control" name="raza">
+                            </div>
+                            <div class="col-md-6">
+                                <label>Edad</label>
+                                <input type="number" class="form-control" name="edad">
+                            </div>
+                            <div class="col-md-6">
+                                <label>Sexo</label>
+                                <select class="form-control" name="sexo" required>
+                                    <option value="">Selecciona...</option>
+                                    <option value="macho">Macho</option>
+                                    <option value="hembra">Hembra</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label>Peso (kg)</label>
+                                <input type="number" step="0.01" class="form-control" name="peso">
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label>Especie</label>
-                        <select class="form-control" name="especie" required>
-                            <option value="">Selecciona...</option>
-                            <option value="canino">Canino</option>
-                            <option value="felino">Felino</option>
-                            <option value="otro">Otro</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label>Raza</label>
-                        <input type="text" class="form-control" name="raza">
-                    </div>
-                    <div class="mb-3">
-                        <label>Edad</label>
-                        <input type="text" class="form-control" name="edad">
-                    </div>
-                    <div class="mb-3">
-                        <label>Sexo</label>
-                        <select class="form-control" name="sexo" required>
-                            <option value="">Selecciona...</option>
-                            <option value="macho">Macho</option>
-                            <option value="hembra">Hembra</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label>Propietario</label>
-                        <input type="text" class="form-control" name="propietario" required>
+                    <div class="detail-section mb-4">
+                        <h6 class="detail-section-title"><i class="fas fa-user"></i> Información del Propietario</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label>RUT</label>
+                                <input type="number" class="form-control" name="rutCliente" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label>DV</label>
+                                <input type="number" min="0" max="9" class="form-control" name="dvCliente" required>
+                            </div>
+                            <div class="col-md-12">
+                                <label>Nombre Completo</label>
+                                <input type="text" class="form-control" name="nombreCliente" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label>Teléfono</label>
+                                <input type="tel" class="form-control" name="telCliente">
+                            </div>
+                            <div class="col-md-6">
+                                <label>Email</label>
+                                <input type="email" class="form-control" name="emailCliente">
+                            </div>
+                            <div class="col-md-12">
+                                <label>Dirección</label>
+                                <input type="text" class="form-control" name="direccion">
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -210,7 +200,7 @@
             </div>
             <div class="vet-modal-body" style="max-height: 70vh; overflow-y: auto;">
                 <div class="detail-section mb-4">
-                    <h6 class="detail-section-title"><i class="fas fa-tag"></i> Identificación</h6>
+                    <h6 class="detail-section-title"><i class="fas fa-paw"></i> Información de la Mascota</h6>
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="text-muted small">Nombre</label>
@@ -232,15 +222,10 @@
                             <p class="field-view mb-0" data-field="raza">-</p>
                             <input class="field-edit form-control d-none" data-field="raza">
                         </div>
-                    </div>
-                </div>
-                <div class="detail-section mb-4">
-                    <h6 class="detail-section-title"><i class="fas fa-birthday-cake"></i> Información General</h6>
-                    <div class="row g-3">
                         <div class="col-md-4">
                             <label class="text-muted small">Edad</label>
                             <p class="field-view fw-bold mb-0" data-field="edad">-</p>
-                            <input class="field-edit form-control d-none" data-field="edad">
+                            <input class="field-edit form-control d-none" data-field="edad" type="number">
                         </div>
                         <div class="col-md-4">
                             <label class="text-muted small">Sexo</label>
@@ -252,9 +237,44 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="text-muted small">Propietario</label>
-                            <p class="field-view mb-0" data-field="propietario">-</p>
-                            <input class="field-edit form-control d-none" data-field="propietario">
+                            <label class="text-muted small">Peso (kg)</label>
+                            <p class="field-view mb-0" data-field="peso">-</p>
+                            <input class="field-edit form-control d-none" data-field="peso" type="number" step="0.01">
+                        </div>
+                    </div>
+                </div>
+                <div class="detail-section mb-4">
+                    <h6 class="detail-section-title"><i class="fas fa-user"></i> Información del Propietario</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="text-muted small">RUT</label>
+                            <p class="field-view fw-bold mb-0" data-field="rutCliente">-</p>
+                            <input class="field-edit form-control d-none" data-field="rutCliente" type="number">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">DV</label>
+                            <p class="field-view mb-0" data-field="dvCliente">-</p>
+                            <input class="field-edit form-control d-none" data-field="dvCliente" type="number" min="0" max="9">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="text-muted small">Nombre Completo</label>
+                            <p class="field-view mb-0" data-field="nombreCliente">-</p>
+                            <input class="field-edit form-control d-none" data-field="nombreCliente">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Teléfono</label>
+                            <p class="field-view mb-0" data-field="telCliente">-</p>
+                            <input class="field-edit form-control d-none" data-field="telCliente" type="tel">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Email</label>
+                            <p class="field-view mb-0" data-field="emailCliente">-</p>
+                            <input class="field-edit form-control d-none" data-field="emailCliente" type="email">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="text-muted small">Dirección</label>
+                            <p class="field-view mb-0" data-field="direccion">-</p>
+                            <input class="field-edit form-control d-none" data-field="direccion">
                         </div>
                     </div>
                 </div>
@@ -298,5 +318,6 @@
 {% endblock %}
 
 {% block extra_js %}
-
+<script src="{% static 'js/base/modals_base.js' %}"></script>
+<script src="{% static 'js/pacientes/pacientes.js' %}"></script>
 {% endblock %}

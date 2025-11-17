@@ -20,6 +20,8 @@ class Mascota(models.Model):
     raza_mascota = models.CharField(max_length=50)
     edad = models.IntegerField()
     peso = models.FloatField()
+    sexo = models.CharField(max_length=10, default='desconocido')
+    chip = models.CharField(max_length=50, blank=True, null=True)
     idCliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
 
     def __str__(self):

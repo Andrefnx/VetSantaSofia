@@ -17,3 +17,7 @@ function closeVetModal(id) {
     overlay.classList.remove("show");
     overlay.classList.add("hide");
 }
+
+function abrirModalNuevoPaciente() {
+    openVetModal('modalNuevoPaciente');
+}
