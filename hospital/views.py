@@ -148,44 +148,27 @@ def agregar_insumo(request):
         return redirect('ver_insumos')
     return render(request, 'agregar_insumo.html')
 
-def eliminar_insumo(request, insumo_id):
-    if request.method == 'POST':
-        Insumo.objects.filter(idIns=insumo_id).delete()
-    return redirect('ver_insumos')
-
-def editar_insumo(request, insumo_id):
-    insumo_obj = get_object_or_404(Insumo, idIns=insumo_id)
-    if request.method == 'POST':
-        insumo_obj.medicamento = request.POST.get('medicamento')
-        insumo_obj.dosis = request.POST.get('dosis')
-        insumo_obj.valor_unitario = request.POST.get('valor_unitario')
-        insumo_obj.cantidad = request.POST.get('cantidad')
-        insumo_obj.save()
-        return redirect('ver_insumos')
-    return render(request, 'editar_insumo.html', {'insumo': insumo_obj})
-
 def inventario(request):
     insumos = Insumo.objects.all()
-    return render(request, 'inventario/inventario.html', {
-        'insumos': insumos,
-    })
+    return render(request, 'inventario/inventario.html', {'insumos': insumos})
+
 @csrf_exempt
 def crear_insumo(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-
+        # Mapeo para que medicamento = nombre_comercial
+        data['medicamento'] = data.get('nombre_comercial', '')
         numeric_fields = [
             'precio_venta', 'margen', 'stock_actual',
-            'stock_minimo', 'stock_maximo'
+            'stock_minimo', 'stock_maximo', 'dosis_ml', 'peso_kg'
         ]
-
         insumo_kwargs = {}
         for field in [
             'medicamento', 'categoria', 'sku', 'codigo_barra', 'presentacion',
             'especie', 'descripcion', 'unidad_medida', 'precio_venta',
             'margen', 'stock_actual', 'stock_minimo', 'stock_maximo',
             'almacenamiento', 'precauciones', 'contraindicaciones',
-            'efectos_adversos'
+            'efectos_adversos', 'dosis_ml', 'peso_kg'
         ]:
             value = data.get(field)
             if field in numeric_fields:
@@ -199,44 +182,38 @@ def crear_insumo(request):
                     except Exception:
                         value = 0
             insumo_kwargs[field] = value
-
         insumo = Insumo.objects.create(**insumo_kwargs)
         return JsonResponse({'success': True, 'id': insumo.idInventario})
+
 @csrf_exempt
 def editar_insumo(request, insumo_id):
-    insumo = get_object_or_404(Insumo, idInventario=insumo_id)
-    if request.method == 'POST':
+    if request.method == "POST":
+        insumo = get_object_or_404(Insumo, idInventario=insumo_id)
         data = json.loads(request.body)
+        # Mapeo para que medicamento = nombre_comercial
+        if 'nombre_comercial' in data:
+            data['medicamento'] = data['nombre_comercial']
 
         numeric_fields = [
             'precio_venta', 'margen', 'stock_actual',
             'stock_minimo', 'stock_maximo', 'dosis_ml', 'peso_kg'
         ]
 
-        for field in [
-            'medicamento', 'categoria', 'sku', 'codigo_barra', 'presentacion',
-            'especie', 'descripcion', 'unidad_medida', 'precio_venta',
-            'margen', 'stock_actual', 'stock_minimo', 'stock_maximo',
-            'almacenamiento', 'precauciones', 'contraindicaciones',
-            'efectos_adversos', 'dosis_ml', 'peso_kg'
-        ]:
-            value = data.get(field)
-            if field in numeric_fields:
-                try:
+        for field, value in data.items():
+            if hasattr(insumo, field):
+                if field in numeric_fields:
                     if value in ("", None):
                         value = 0
                     else:
-                        value = float(value)
-                        if field.startswith('stock'):
-                            value = int(value)
-                except:
-                    value = 0
-
-            if value is not None:
+                        try:
+                            value = float(value)
+                            if field.startswith('stock'):
+                                value = int(value)
+                        except Exception:
+                            value = 0
                 setattr(insumo, field, value)
-
         insumo.save()
-        return JsonResponse({'success': True})
+        return JsonResponse({"success": True})
 
 @csrf_exempt
 def eliminar_insumo(request, insumo_id):
@@ -244,15 +221,20 @@ def eliminar_insumo(request, insumo_id):
     if request.method == 'POST':
         insumo.delete()
         return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 @csrf_exempt
 def modificar_stock(request, insumo_id):
-    insumo = get_object_or_404(Insumo, idInventario=insumo_id)
-    if request.method == 'POST':
+    if request.method == "POST":
+        insumo = get_object_or_404(Insumo, idInventario=insumo_id)
         data = json.loads(request.body)
-        insumo.stock_actual = data.get('stock_actual', insumo.stock_actual)
-        insumo.save()
-        return JsonResponse({'success': True})
+        nuevo_stock = data.get("stock_actual")
+        if nuevo_stock is not None:
+            insumo.stock_actual = int(nuevo_stock)
+            insumo.save()
+            return JsonResponse({"success": True})
+        return JsonResponse({"success": False, "error": "No se envió stock_actual"}, status=400)
+    return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)
 
 
 

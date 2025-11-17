@@ -210,8 +210,8 @@
                 <button type="button" class="vet-btn-grey" id="btnEditarProducto" onclick="switchToEditModeProducto()">
                     <i class="bi bi-pencil-fill"></i> Editar
                 </button>
-                <button type="button" class="vet-btn-grey d-none" id="btnGuardarProducto"
-                    onclick="guardarProductoEditado()">
+                <button type="button" class="vet-btn-grey d-none" id="btnGuardarProductoModal"
+    onclick="guardarProductoEditado()">
                     <i class="bi bi-floppy-fill"></i> Guardar
                 </button>
                 <button type="button" class="vet-btn-grey error" id="btnEliminarProducto"
@@ -253,7 +253,7 @@
                 </div>
             </div>
             <div class="vet-modal-body" style="text-align:right;">
-                <button type="button" class="vet-btn-grey success" id="btnGuardarProducto" onclick="guardarStock()">
+                <button type="button" class="vet-btn-grey success" id="btnGuardarStockModal" onclick="guardarStock()">
                     <i class="bi bi-floppy-fill"></i> Guardar
                 </button>
             </div>
@@ -290,7 +290,7 @@
                 <p id="eliminarProductoMensaje">¿Estás seguro que deseas eliminar este producto?</p>
             </div>
             <div class="vet-modal-body" style="text-align:right;">
-                <button type="button" class="vet-btn-grey error" id="btnConfirmarEliminarProducto">
+                <button type="button" class="vet-btn-grey error" id="btnConfirmarEliminarProducto" onclick="eliminarProductoConfirmado()">
                     <i class="bi bi-trash3-fill"></i> Eliminar
                 </button>
             </div>
