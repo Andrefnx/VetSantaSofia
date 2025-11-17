@@ -65,12 +65,14 @@
 
 
                 <!-- SECCIÓN: VETERINARIOS -->
+            <!--
             <li class="nav-item {% if request.resolver_match.url_name == 'vet_view' %}active{% endif %}">
                 <a href="{% url 'vet_view' %}">
                     <i class="bi-file-medical"></i>
                     <p>Veterinarios</p>
                 </a>
             </li>
+            -->
 
                 <!-- SECCIÓN: PACIENTES -->
                 <li class="nav-item {% if request.resolver_match.url_name == 'pacientes_view' %}active{% endif %}">
@@ -97,26 +99,29 @@
 
 
 
-                <!-- ACCIONES RÁPIDAS -->
-                <li class="nav-section">
-                    <span class="sidebar-mini-icon"><i class="fas fa-bolt"></i></span>
-                    <h4 class="text-section">Acciones Rápidas</h4>
-                </li>
+<!--  ACCIONES RÁPIDAS --> 
+<!-- <li class="nav-section"> -->
+<!--     <span class="sidebar-mini-icon"><i class="fas fa-bolt"></i></span> -->
+<!--     <h4 class="text-section">Acciones Rápidas</h4> -->
+<!-- </li> -->
 
-                <li class="nav-item">
-                    <a href="{% url 'agenda:agenda' %}">
-                        <i class="fas fa-calendar-plus"></i>
-                        <p>Nueva Cita</p>
-                    </a>
-                </li>
+<!--  Opción: Nueva Cita --> 
+<!-- <li class="nav-item"> -->
+<!--     <a href="{% url 'agenda:agenda' %}"> -->
+<!--         <i class="fas fa-calendar-plus"></i> -->
+<!--         <p>Nueva Cita</p> -->
+<!--     </a> -->
+<!-- </li> -->
 
-                <li class="nav-item">
-                    <a href="{% url 'ficha_mascota' %}">
-                        <i class="fas fa-paw"></i>
-                        <p>Registrar Mascota</p>
-                    </a>
-                </li>
-            </ul>
+<!--  Opción: Registrar Mascota --> 
+<!-- <li class="nav-item"> -->
+<!--     <a href="{% url 'ficha_mascota' %}"> -->
+<!--         <i class="fas fa-paw"></i> -->
+<!--         <p>Registrar Mascota</p> -->
+<!--     </a> -->
+<!-- </li> -->
+<!--  End ACCIONES RÁPIDAS -->
+
         </div>
     </div>
 </div>
