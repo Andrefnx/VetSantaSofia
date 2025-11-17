@@ -30,6 +30,10 @@ urlpatterns = [
     path('inventario/modificar_stock/<int:insumo_id>/', views.modificar_stock, name='modificar_stock'),
 
     path('servicios/', views.servicios, name='servicios'),
+path('servicios/crear/', views.crear_servicio, name='crear_servicio'),
+path('servicios/editar/<int:servicio_id>/', views.editar_servicio, name='editar_servicio'),
+path('servicios/eliminar/<int:servicio_id>/', views.eliminar_servicio, name='eliminar_servicio'),
+
     
     path('test/', views.test_view, name='test'),
 

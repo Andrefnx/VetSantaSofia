@@ -55,3 +55,35 @@ class Hospitalizacion(models.Model):
         return f"Hospitalización {self.idHospitalizacion} - {self.idMascota.nombreMascota}"
 
 
+class Servicio(models.Model):
+    idServicio = models.AutoField(primary_key=True)
+
+    nombre = models.CharField(
+        max_length=150,
+        verbose_name="Nombre del Servicio"
+    )
+
+    descripcion = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Descripción"
+    )
+
+    categoria = models.CharField(max_length=100, verbose_name="Categoría", default="")
+
+    precio = models.PositiveIntegerField(default=0)
+
+    duracion = models.PositiveIntegerField(default=0)
+
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "Servicio"
+        verbose_name = "Servicio Veterinario"
+        verbose_name_plural = "Servicios Veterinarios"
+        ordering = ["nombre"]
+
+    def __str__(self):
+        return self.nombre

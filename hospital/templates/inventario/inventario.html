@@ -13,40 +13,7 @@
 {% endblock %}
 
 {% block table_filters %}
-<div class="filter-group vet-inventory">
-    <!-- Filtro Especie -->
-    <div class="vet-custom-select-wrapper">
-        <span class="tag_select">Especie</span>
-        <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todas</span>
-            <div class="vet-arrow"></div>
-        </div>
-        <ul class="vet-custom-select-dropdown">
-            <li data-value="">Todas</li>
-            <li data-value="canino">Canino</li>
-            <li data-value="felino">Felino</li>
-        </ul>
-        <input type="hidden" id="filterEspecie" value="">
-    </div>
 
-    <!-- Filtro Stock -->
-    <div class="vet-custom-select-wrapper">
-        <span class="tag_select">Stock</span>
-        <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todos</span>
-            <div class="vet-arrow"></div>
-        </div>
-        <ul class="vet-custom-select-dropdown">
-            <li data-value="">Todos</li>
-            <li data-value="low">Bajo</li>
-            <li data-value="ok">Normal</li>
-            <li data-value="high">Alto</li>
-        </ul>
-        <input type="hidden" id="filterStock" value="">
-    </div>
-
-
-</div>
 {% endblock %}
 
 {% block table_buttons %}
@@ -140,8 +107,8 @@
                             <p class="field-view mb-0" data-field="especie">-</p>
                             <select class="field-edit form-control d-none" data-field="especie">
                                 <option value="">Selecciona...</option>
-                                <option value="canino">Canino</option>
-                                <option value="felino">Felino</option>
+                                <option value="Canino">Canino</option>
+                                <option value="Felino">Felino</option>
                                 <option value="Todos">Todos</option>
                             </select>
                         </div>
@@ -334,4 +301,5 @@
 
 {% block extra_js %}
 <script src="{% static 'js/inventario/crud_inventario.js' %}"></script>
+
 {% endblock %}

@@ -157,7 +157,8 @@ function guardarProductoEditado() {
 
     // 6) Construir resumen de cambios y mostrarlo ANTES de enviar
     const resumen = construirResumenCambios(updated);
-    alert(resumen); // el usuario debe dar OK para continuar
+    // alert(resumen); // el usuario debe dar OK para continuar
+
     // 7) Preparar URL según si es edición o creación
     const url = updated.idInventario
         ? `/hospital/inventario/editar/${updated.idInventario}/`
@@ -173,7 +174,7 @@ function guardarProductoEditado() {
         .then(resp => {
             if (resp.success) {
                 // Opcional: alert final de confirmación
-                alert("Datos actualizados correctamente.");
+                // alert("Datos actualizados correctamente.");
                 closeVetModal("modalProducto");
                 location.reload();
             }

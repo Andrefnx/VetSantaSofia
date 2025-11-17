@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
-from .models import Insumo
+from .models import Insumo, Servicio
 from django.views.decorators.csrf import csrf_exempt
 import json
 
@@ -156,8 +156,6 @@ def modificar_stock(request, insumo_id):
         insumo.save()
         return JsonResponse({'success': True})
 
-def servicios(request):
-    return render(request, 'inventario/servicios.html')
 
 def test_view(request):
     return render(request, 'test.html')
@@ -165,3 +163,75 @@ def test_view(request):
 def dashboard_pacientes(request):
     return render(request, 'dashboard_pacientes.html')
 
+# ---------------------------
+#   SERVICIOS VETERINARIOS
+# ---------------------------
+
+def servicios(request):
+    servicios = Servicio.objects.all()
+    return render(request, 'inventario/servicios.html', {
+        'servicios': servicios,
+    })
+
+
+# ---------------------------
+#   CREAR SERVICIO
+# ---------------------------
+@csrf_exempt
+def crear_servicio(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+
+        servicio = Servicio.objects.create(
+            nombre=data.get("nombre", ""),
+            descripcion=data.get("descripcion", ""),
+            categoria=data.get("categoria", ""),
+            precio=int(float(data.get("precio", 0) or 0)),
+            duracion=int(float(data.get("duracion", 0) or 0)),
+        )
+
+        return JsonResponse({"success": True, "id": servicio.idServicio})
+
+
+# ---------------------------
+#   EDITAR SERVICIO
+# ---------------------------
+@csrf_exempt
+def editar_servicio(request, servicio_id):
+    servicio = get_object_or_404(Servicio, idServicio=servicio_id)
+
+    if request.method == "POST":
+        data = json.loads(request.body)
+
+        servicio.nombre = data.get("nombre", servicio.nombre)
+        servicio.descripcion = data.get("descripcion", servicio.descripcion)
+        servicio.categoria = data.get("categoria", servicio.categoria)
+
+        precio = data.get("precio")
+        duracion = data.get("duracion")
+
+        try:
+            servicio.precio = int(float(precio)) if precio not in ["", None] else 0
+        except:
+            servicio.precio = 0
+
+        try:
+            servicio.duracion = int(float(duracion)) if duracion not in ["", None] else 0
+        except:
+            servicio.duracion = 0
+
+        servicio.save()
+
+        return JsonResponse({"success": True})
+
+
+# ---------------------------
+#   ELIMINAR SERVICIO
+# ---------------------------
+@csrf_exempt
+def eliminar_servicio(request, servicio_id):
+    servicio = get_object_or_404(Servicio, idServicio=servicio_id)
+
+    if request.method == "POST":
+        servicio.delete()
+        return JsonResponse({"success": True})
