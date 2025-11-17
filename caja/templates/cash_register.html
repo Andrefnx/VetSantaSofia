@@ -1,6 +1,6 @@
 {% extends 'partials/base.html' %}
 {% load static %}
-
+{% load humanize %}
 {% block title %}Caja Registradora{% endblock %}
 
 {% block extra_css %}
@@ -17,13 +17,14 @@
     <div class="cash-main">
         <!-- LEFT: Products List -->
         <div class="products-section">
-            <!-- Search Bar -->
+
+            <!-- SEARCH -->
             <div class="search-bar">
                 <input type="text" class="form-control" placeholder="🔍 Buscar producto o servicio..." id="searchInput"
                     oninput="filterProducts()">
             </div>
 
-            <!-- Product Tabs -->
+            <!-- FILTER TABS -->
             <div class="product-tabs">
                 <button class="product-tab active" onclick="switchCategory(this, 'all')">
                     <i class="fas fa-th"></i> Todos
@@ -32,166 +33,60 @@
                     <i class="fas fa-stethoscope"></i> Servicios
                 </button>
                 <button class="product-tab" onclick="switchCategory(this, 'productos')">
-                    <i class="fas fa-pills"></i> Productos
+                    <i class="fas fa-box"></i> Productos
                 </button>
-                <button class="product-tab" onclick="switchCategory(this, 'antiparasitarios')">
-                    <i class="fas fa-shield-virus"></i> Antiparasitarios
-                </button>
+               
             </div>
 
-            <!-- Products List -->
+            <!-- LISTA -->
             <div class="products-list" id="productsList">
-                <!-- Servicios -->
-                <div class="product-list-item" data-category="servicios" onclick="addToCart('Consulta General', 35000)">
+
+                <!-- ============================ -->
+                <!--          SERVICIOS           -->
+                <!-- ============================ -->
+                {% for servicio in servicios %}
+                <div class="product-list-item" data-category="servicios"
+                    onclick="addToCart('{{ servicio.nombre|escapejs }}', {{ servicio.precio }})">
+
                     <div class="icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                         <i class="fas fa-stethoscope"></i>
                     </div>
-                    <div class="info">
-                        <h6>Consulta General</h6>
-                        <p>Servicio veterinario</p>
-                    </div>
-                    <div class="price">$35,000</div>
-                    <button class="add-btn">+</button>
-                </div>
 
-                <div class="product-list-item" data-category="servicios"
-                    onclick="addToCart('Vacuna Antirrábica', 15000)">
-                    <div class="icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                        <i class="fas fa-syringe"></i>
-                    </div>
                     <div class="info">
-                        <h6>Vacuna Antirrábica</h6>
-                        <p>Prevención</p>
+                        <h6>{{ servicio.nombre }}</h6>
+                        <p>{{ servicio.categoria }}</p>
                     </div>
-                    <div class="price">$15,000</div>
-                    <button class="add-btn">+</button>
-                </div>
 
-                <div class="product-list-item" data-category="servicios" onclick="addToCart('Vacuna Múltiple', 25000)">
-                    <div class="icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                        <i class="fas fa-syringe"></i>
-                    </div>
-                    <div class="info">
-                        <h6>Vacuna Múltiple</h6>
-                        <p>Prevención</p>
-                    </div>
-                    <div class="price">$25,000</div>
+                    <div class="price">${{ servicio.precio|intcomma }}</div>
                     <button class="add-btn">+</button>
                 </div>
+                {% empty %}
+                <p class="empty-section">No hay servicios registrados.</p>
+                {% endfor %}
 
-                <div class="product-list-item" data-category="servicios" onclick="addToCart('Desparasitación', 12000)">
-                    <div class="icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <i class="fas fa-pills"></i>
-                    </div>
-                    <div class="info">
-                        <h6>Desparasitación</h6>
-                        <p>Tratamiento</p>
-                    </div>
-                    <div class="price">$12,000</div>
-                    <button class="add-btn">+</button>
-                </div>
+           <!-- ============================ -->
+<!--          PRODUCTOS           -->
+<!-- ============================ -->
+{% for producto in productos %}
+<div class="product-list-item" data-category="productos"
+    onclick="addToCart('{{ producto.medicamento|escapejs }}', {{ producto.precio_venta }})">
 
-                <div class="product-list-item" data-category="servicios" onclick="addToCart('Cirugía Simple', 180000)">
-                    <div class="icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                        <i class="fas fa-scissors"></i>
-                    </div>
-                    <div class="info">
-                        <h6>Cirugía Simple</h6>
-                        <p>Procedimiento quirúrgico</p>
-                    </div>
-                    <div class="price">$180,000</div>
-                    <button class="add-btn">+</button>
-                </div>
+    <div class="icon">
+        <i class="fas fa-box"></i>
+    </div>
 
-                <div class="product-list-item" data-category="servicios" onclick="addToCart('Esterilización', 120000)">
-                    <div class="icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                        <i class="fas fa-cut"></i>
-                    </div>
-                    <div class="info">
-                        <h6>Esterilización</h6>
-                        <p>Cirugía</p>
-                    </div>
-                    <div class="price">$120,000</div>
-                    <button class="add-btn">+</button>
-                </div>
+    <div class="info">
+        <h6>{{ producto.medicamento }}</h6>
+        <p>Stock: {{ producto.stock_actual }} {{ producto.unidad_medida }}</p>
+    </div>
 
-                <div class="product-list-item" data-category="servicios"
-                    onclick="addToCart('Baño y Peluquería', 25000)">
-                    <div class="icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                        <i class="fas fa-bath"></i>
-                    </div>
-                    <div class="info">
-                        <h6>Baño y Peluquería</h6>
-                        <p>Estética</p>
-                    </div>
-                    <div class="price">$25,000</div>
-                    <button class="add-btn">+</button>
-                </div>
+    <div class="price">${{ producto.precio_venta|intcomma }}</div>
+    <button class="add-btn">+</button>
+</div>
+{% empty %}
+<p class="empty-section">No hay productos en inventario.</p>
+{% endfor %}
 
-                <div class="product-list-item" data-category="servicios" onclick="addToCart('Examen de Sangre', 45000)">
-                    <div class="icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                        <i class="fas fa-vial"></i>
-                    </div>
-                    <div class="info">
-                        <h6>Examen de Sangre</h6>
-                        <p>Diagnóstico</p>
-                    </div>
-                    <div class="price">$45,000</div>
-                    <button class="add-btn">+</button>
-                </div>
-
-                <!-- Productos Antiparasitarios -->
-                <div class="product-list-item" data-category="antiparasitarios"
-                    onclick="addToCart('Revolution Plus', 32500)">
-                    <div class="icon">
-                        <i class="fas fa-box"></i>
-                    </div>
-                    <div class="info">
-                        <h6>Revolution Plus</h6>
-                        <p>Stock: 4 unidades</p>
-                    </div>
-                    <div class="price">$32,500</div>
-                    <button class="add-btn">+</button>
-                </div>
-
-                <div class="product-list-item" data-category="antiparasitarios"
-                    onclick="addToCart('Bravecto 40-56Kg', 28000)">
-                    <div class="icon">
-                        <i class="fas fa-box"></i>
-                    </div>
-                    <div class="info">
-                        <h6>Bravecto 40-56Kg</h6>
-                        <p>Stock: 7 unidades</p>
-                    </div>
-                    <div class="price">$28,000</div>
-                    <button class="add-btn">+</button>
-                </div>
-
-                <div class="product-list-item" data-category="antiparasitarios"
-                    onclick="addToCart('NexGard Spectra', 26500)">
-                    <div class="icon">
-                        <i class="fas fa-box"></i>
-                    </div>
-                    <div class="info">
-                        <h6>NexGard Spectra</h6>
-                        <p>Stock: 6 unidades</p>
-                    </div>
-                    <div class="price">$26,500</div>
-                    <button class="add-btn">+</button>
-                </div>
-
-                <div class="product-list-item" data-category="antiparasitarios"
-                    onclick="addToCart('Simparica Trio', 24500)">
-                    <div class="icon">
-                        <i class="fas fa-box"></i>
-                    </div>
-                    <div class="info">
-                        <h6>Simparica Trio</h6>
-                        <p>Stock: 28 unidades</p>
-                    </div>
-                    <div class="price">$24,500</div>
-                    <button class="add-btn">+</button>
-                </div>
             </div>
         </div>
 
