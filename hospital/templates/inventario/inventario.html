@@ -45,20 +45,7 @@
         <input type="hidden" id="filterStock" value="">
     </div>
 
-    <!-- Filtro Proveedor -->
-    <div class="vet-custom-select-wrapper">
-        <span class="tag_select">Proveedor</span>
-        <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todos</span>
-            <div class="vet-arrow"></div>
-        </div>
-        <ul class="vet-custom-select-dropdown">
-            <li data-value="">Todos</li>
-            <li data-value="vet pharma">Vet Pharma</li>
-            <li data-value="pet supplies">Pet Supplies</li>
-        </ul>
-        <input type="hidden" id="filterProveedor" value="">
-    </div>
+
 </div>
 {% endblock %}
 
@@ -80,11 +67,8 @@
 
 {% block table_rows %}
 {% for insumo in insumos %}
-<tr data-id="{{ insumo.idInventario }}"
-    data-especie="{{ insumo.especie|default_if_none:'' }}"
-    data-stock="ok"
-    data-dosis-ml="{{ insumo.dosis_ml }}"
-    data-peso-kg="{{ insumo.peso_kg }}">
+<tr data-id="{{ insumo.idInventario }}" data-especie="{{ insumo.especie|default_if_none:'' }}" data-stock="ok"
+    data-dosis-ml="{{ insumo.dosis_ml }}" data-peso-kg="{{ insumo.peso_kg }}">
     <td>{{ insumo.medicamento }}</td>
     <td>{{ insumo.especie }}</td>
     <td>${{ insumo.precio_venta|floatformat:0 }}</td>
@@ -202,20 +186,15 @@
                 </div>
                 <div class="detail-section mb-4">
                     <h6 class="detail-section-title">
-                        <i class="fas fa-balance-scale"></i> Dosis Recomendada
+                        <i class="fas fa-syringe"></i> Dosis
                     </h6>
 
                     <div class="row g-3">
 
                         <!-- VISTA -->
-                        <div class="col-md-12 field-view" data-field="dosis_formula">
-                            <p id="dosisFormulaView" class="mb-0">
-                                {% if insumo.dosis_ml and insumo.peso_kg %}
-                                    {{ insumo.dosis_ml }} ml cada {{ insumo.peso_kg }} kg
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </p>
+                        <div class="col-md-12">
+                            <label class="text-muted small">Dosis Recomendada</label>
+                            <p class="field-view mb-0" data-field="dosis_formula_view">-</p>
                         </div>
 
                         <!-- EDICIÓN -->

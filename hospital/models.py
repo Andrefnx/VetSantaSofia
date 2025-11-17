@@ -23,7 +23,7 @@ class Insumo(models.Model):
     contraindicaciones = models.TextField(blank=True, null=True)
     efectos_adversos = models.TextField(blank=True, null=True)
     dosis_ml = models.FloatField(default=0)
-    peso_kg = models.FloatField(default=1)  # evitar división por 0
+    peso_kg = models.FloatField(default=1) 
 
 
     def __str__(self):

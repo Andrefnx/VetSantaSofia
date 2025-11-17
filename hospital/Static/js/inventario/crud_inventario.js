@@ -37,8 +37,10 @@ function abrirModalProducto(btn, mode) {
         nombre_comercial: tr.cells[0].textContent.trim(),
         especie: tr.cells[1].textContent.trim(),
         precio_venta: tr.cells[2].textContent.replace(/[^0-9.,]/g, '').trim(),
-        stock_actual: tr.cells[3].textContent.replace(/\D/g, '').trim()
-        // dosis_ml, peso_kg, ml, rangos_dosis eliminados
+        stock_actual: tr.cells[3].textContent.replace(/\D/g, '').trim(),
+        // NUEVO: extrae dosis_ml y peso_kg de los atributos del tr
+        dosis_ml: tr.getAttribute('data-dosis-ml') || "",
+        peso_kg: tr.getAttribute('data-peso-kg') || ""
     };
     if (tr.hasAttribute('data-id')) {
         data.idInventario = tr.getAttribute('data-id');
@@ -49,6 +51,16 @@ function abrirModalProducto(btn, mode) {
 function openProductoModal(mode, data = {}) {
     const modal = document.getElementById("modalProducto");
     if (!modal) return;
+
+    // Generar texto de dosis para la vista
+    const dosisView = modal.querySelector('[data-field="dosis_formula_view"]');
+    if (dosisView) {
+        let texto = "-";
+        if (data.dosis_ml && data.peso_kg) {
+            texto = `${data.dosis_ml} cada ${data.peso_kg} kg`;
+        }
+        dosisView.textContent = texto;
+    }
 
     // Guardar datos originales solo en modo edit
     if (mode === "edit") {
@@ -75,13 +87,21 @@ function openProductoModal(mode, data = {}) {
     viewFields.forEach(f => f.classList.toggle("d-none", mode !== "view"));
     editFields.forEach(f => f.classList.toggle("d-none", mode === "view"));
 
-    // Rellenar datos
+    // Rellenar datos en campos de vista y edición
     Object.keys(data).forEach(key => {
         modal.querySelectorAll(`.field-view[data-field="${key}"]`)
             .forEach(el => el.textContent = data[key] ?? "-");
         modal.querySelectorAll(`.field-edit[data-field="${key}"]`)
             .forEach(el => el.value = data[key] ?? "");
     });
+
+    // Asegura que los campos dosis_ml y peso_kg se rellenen en modo edición
+    if (mode !== "view") {
+        const dosisInput = modal.querySelector('.field-edit[data-field="dosis_ml"]');
+        const pesoInput = modal.querySelector('.field-edit[data-field="peso_kg"]');
+        if (dosisInput) dosisInput.value = data.dosis_ml ?? "";
+        if (pesoInput) pesoInput.value = data.peso_kg ?? "";
+    }
 
     // Guarda el idInventario como atributo en el modal para referencia
     if (data.idInventario) {
@@ -99,6 +119,7 @@ function switchToEditModeProducto() {
 }
 
 function guardarProductoEditado() {
+
     const modal = document.getElementById("modalProducto");
     const inputs = modal.querySelectorAll(".field-edit");
     let updated = {};
@@ -107,16 +128,14 @@ function guardarProductoEditado() {
         updated[input.dataset.field] = input.value;
     });
 
-    // Elimina dosis_ml y peso_kg
-    delete updated.dosis_ml;
-    delete updated.peso_kg;
+    const { dosis_ml, peso_kg } = leerDosisDesdeModal();
+    updated.dosis_ml = dosis_ml;
+    updated.peso_kg = peso_kg;
 
-    // Mapeo para compatibilidad backend
     if (updated.nombre_comercial && !updated.medicamento) {
         updated.medicamento = updated.nombre_comercial;
     }
 
-    // Asegúrate de incluir el idInventario si está en el modal (por ejemplo, como atributo en el modal)
     if (!updated.idInventario && modal.dataset.idinventario) {
         updated.idInventario = modal.dataset.idinventario;
     }
@@ -130,25 +149,35 @@ function guardarProductoEditado() {
         return;
     }
 
-    // Si es edición, enviar AJAX a editar
-    if (updated.idInventario) {
-        fetch(`/hospital/inventario/editar/${updated.idInventario}/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updated)
-        }).then(r => r.json()).then(resp => {
-            if (resp.success) location.reload();
-        });
-    } else {
-        // Si es nuevo, enviar AJAX a crear
-        fetch('/hospital/inventario/crear/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updated)
-        }).then(r => r.json()).then(resp => {
-            if (resp.success) location.reload();
-        });
+    // Actualizar display de dosis sin recargar (opcional)
+    const dosisView = document.querySelector('[data-field="dosis_formula_view"]');
+    if (dosisView) {
+        dosisView.textContent = `${updated.dosis_ml} cada ${updated.peso_kg} kg`;
     }
+
+    // 6) Construir resumen de cambios y mostrarlo ANTES de enviar
+    const resumen = construirResumenCambios(updated);
+    alert(resumen); // el usuario debe dar OK para continuar
+    // 7) Preparar URL según si es edición o creación
+    const url = updated.idInventario
+        ? `/hospital/inventario/editar/${updated.idInventario}/`
+        : `/hospital/inventario/crear/`;
+
+    // 8) Enviar al backend
+    fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated)
+    })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) {
+                // Opcional: alert final de confirmación
+                alert("Datos actualizados correctamente.");
+                closeVetModal("modalProducto");
+                location.reload();
+            }
+        });
 }
 
 function getProductoModalData() {
@@ -383,5 +412,80 @@ function closeProductoModal() {
         }
     } else {
         closeVetModal('modalProducto');
+    }
+}
+
+
+function leerDosisDesdeModal() {
+    const modal = document.getElementById("modalProducto");
+
+    const dosisInput = modal.querySelector('.field-edit[data-field="dosis_ml"]');
+    const pesoInput = modal.querySelector('.field-edit[data-field="peso_kg"]');
+
+    const dosis_ml = dosisInput ? dosisInput.value.trim() : "";
+    const peso_kg = pesoInput ? pesoInput.value.trim() : "";
+
+    console.log("👉 Valor capturado - dosis_ml:", dosis_ml);
+    console.log("👉 Valor capturado - peso_kg:", peso_kg);
+
+    return { dosis_ml, peso_kg };
+}
+
+
+function construirResumenCambios(updated) {
+    const labels = {
+        nombre_comercial: "Nombre Comercial",
+        medicamento: "Medicamento",
+        especie: "Especie",
+        precio_venta: "Precio Venta",
+        stock_actual: "Stock Actual",
+        stock_minimo: "Stock Mínimo",
+        stock_maximo: "Stock Máximo",
+        almacenamiento: "Almacenamiento",
+        precauciones: "Precauciones",
+        contraindicaciones: "Contraindicaciones",
+        efectos_adversos: "Efectos Adversos",
+        dosis_ml: "Dosis (ml)",
+        peso_kg: "Peso (kg)"
+    };
+
+    const lineas = [];
+
+    if (productoDatosOriginales) {
+        // Modo EDICIÓN: comparar antes vs ahora
+        Object.keys(labels).forEach(key => {
+            const antes = productoDatosOriginales[key] ?? "";
+            const ahora = updated[key] ?? "";
+
+            // Normalizar espacios
+            const antesNorm = (antes + "").trim();
+            const ahoraNorm = (ahora + "").trim();
+
+            if (antesNorm !== ahoraNorm) {
+                lineas.push(
+                    `${labels[key]}: "${antesNorm || "-"}" → "${ahoraNorm || "-"}"`
+                );
+            }
+        });
+
+        if (lineas.length === 0) {
+            lineas.push("No se detectaron cambios.");
+        }
+
+        return "Cambios realizados:\n\n" + lineas.join("\n");
+    } else {
+        // Modo NUEVO: solo mostrar lo que tenga valor
+        Object.keys(labels).forEach(key => {
+            const ahora = (updated[key] ?? "").toString().trim();
+            if (ahora !== "") {
+                lineas.push(`${labels[key]}: "${ahora}"`);
+            }
+        });
+
+        if (lineas.length === 0) {
+            lineas.push("No se ingresaron datos.");
+        }
+
+        return "Datos del nuevo producto:\n\n" + lineas.join("\n");
     }
 }

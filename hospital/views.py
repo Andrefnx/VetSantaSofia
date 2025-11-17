@@ -112,7 +112,7 @@ def editar_insumo(request, insumo_id):
 
         numeric_fields = [
             'precio_venta', 'margen', 'stock_actual',
-            'stock_minimo', 'stock_maximo'
+            'stock_minimo', 'stock_maximo', 'dosis_ml', 'peso_kg'
         ]
 
         for field in [
@@ -120,7 +120,7 @@ def editar_insumo(request, insumo_id):
             'especie', 'descripcion', 'unidad_medida', 'precio_venta',
             'margen', 'stock_actual', 'stock_minimo', 'stock_maximo',
             'almacenamiento', 'precauciones', 'contraindicaciones',
-            'efectos_adversos'
+            'efectos_adversos', 'dosis_ml', 'peso_kg'
         ]:
             value = data.get(field)
             if field in numeric_fields:
@@ -164,3 +164,4 @@ def test_view(request):
 
 def dashboard_pacientes(request):
     return render(request, 'dashboard_pacientes.html')
+
