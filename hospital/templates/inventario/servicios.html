@@ -1,6 +1,6 @@
 {% extends "partials/base_table.html" %}
 {% load static %}
-
+{% load duracion_filters %}
 {% block title %}Servicios Veterinarios{% endblock %}
 
 {% block extra_css %}
@@ -34,7 +34,7 @@
     <td>{{ servicio.nombre }}</td>
     <td>{{ servicio.categoria }}</td>
     <td>${{ servicio.precio|floatformat:0 }}</td>
-    <td>{{ servicio.duracion }}</td>
+    <td>{{ servicio.duracion|formato_duracion }}</td>
     <td>
         <div class="manage-wheel">
             <button type="button" onclick="toggleWheel(this)">
@@ -126,8 +126,11 @@
                             <label class="text-muted small">Duración</label>
                             <div class="field-view mb-0" data-field="duracion">-</div>
                             <div class="input-group field-edit d-none">
-                                <input type="number" min="0" class="form-control" data-field="duracion"
-                                       placeholder="Ej: 30">
+                                <input type="number" min="0" 
+       class="form-control field-edit" 
+       data-field="duracion"
+       placeholder="Ej: 30">
+
                                 <span class="input-group-text">min</span>
                             </div>
                         </div>
