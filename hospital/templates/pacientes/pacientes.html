@@ -39,7 +39,6 @@
         </ul>
         <input type="hidden" id="filterSexo" value="">
     </div>
-    <!-- Puedes agregar más filtros aquí -->
 </div>
 {% endblock %}
 
@@ -60,84 +59,41 @@
 {% endblock %}
 
 {% block table_rows %}
-<tr>
-    <td>Max</td>
-    <td>Canino</td>
-    <td>Labrador</td>
-    <td>5 años</td>
-    <td>Macho</td>
-    <td>Juan Pérez</td>
+{% for paciente in pacientes %}
+<tr data-especie="{{ paciente.especie|lower }}" data-sexo="{{ paciente.sexo|lower }}">
+    <td>{{ paciente.nombre }}</td>
+    <td>{{ paciente.get_especie_display|default:paciente.especie|capfirst }}</td>
+    <td>{{ paciente.raza|default:"-" }}</td>
+    <td>{{ paciente.edad|default:"-" }}</td>
+    <td>{{ paciente.get_sexo_display|default:paciente.sexo|capfirst }}</td>
+    <td>{{ paciente.propietario.nombre_completo|default:"-" }}</td>
     <td>
         <div class="manage-wheel">
             <button type="button" onclick="toggleWheel(this)">
                 <i class="fas fa-cog"></i>
             </button>
             <div class="manage-options" style="display: none;">
-                <button type="button" onclick="window.location.href='{% url 'ficha_mascota' %}'">
+                <button type="button" onclick="window.location.href='#'">
                     <i class="bi bi-eye"></i> Ver
                 </button>
-                <button type="button" onclick="abrirModalPaciente(this, 'edit')">
+                <button type="button" onclick="abrirModalPaciente(this, 'edit', {{ paciente.id }})">
                     <i class="fas fa-edit"></i> Editar
                 </button>
-                <button type="button" onclick="abrirModalEliminarPaciente(this)">
+                <button type="button" onclick="abrirModalEliminarPaciente(this, {{ paciente.id }})">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
             </div>
         </div>
     </td>
 </tr>
+{% empty %}
 <tr>
-    <td>Luna</td>
-    <td>Felino</td>
-    <td>Siames</td>
-    <td>2 años</td>
-    <td>Hembra</td>
-    <td>María Gómez</td>
-    <td>
-        <div class="manage-wheel">
-            <button type="button" onclick="toggleWheel(this)">
-                <i class="fas fa-cog"></i>
-            </button>
-            <div class="manage-options" style="display: none;">
-                <button type="button" onclick="abrirModalPaciente(this, 'view')">
-                    <i class="bi bi-eye"></i> Ver
-                </button>
-                <button type="button" onclick="abrirModalPaciente(this, 'edit')">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                <button type="button" onclick="abrirModalEliminarPaciente(this)">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>
-            </div>
-        </div>
+    <td colspan="7" style="text-align: center; padding: 2rem;">
+        <i class="fas fa-paw" style="font-size: 3rem; color: #ccc;"></i>
+        <p style="margin-top: 1rem; color: #666;">No hay pacientes registrados</p>
     </td>
 </tr>
-<tr>
-    <td>Rocky</td>
-    <td>Canino</td>
-    <td>Bulldog</td>
-    <td>3 años</td>
-    <td>Macho</td>
-    <td>Carlos Ruiz</td>
-    <td>
-        <div class="manage-wheel">
-            <button type="button" onclick="toggleWheel(this)">
-                <i class="fas fa-cog"></i>
-            </button>
-            <div class="manage-options" style="display: none;">
-                <button type="button" onclick="abrirModalPaciente(this, 'view')">
-                    <i class="bi bi-eye"></i> Ver
-                </button>
-                <button type="button" onclick="abrirModalPaciente(this, 'edit')">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                <button type="button" onclick="abrirModalEliminarPaciente(this)">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>
-            </div>
-        </div>
-    </td>
-</tr>
+{% endfor %}
 {% endblock %}
 
 {% block modals %}
@@ -298,5 +254,35 @@
 {% endblock %}
 
 {% block extra_js %}
-
+<script>
+// Script para filtrado en tiempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const filterEspecie = document.getElementById('filterEspecie');
+    const filterSexo = document.getElementById('filterSexo');
+    
+    function aplicarFiltros() {
+        const especieValue = filterEspecie.value.toLowerCase();
+        const sexoValue = filterSexo.value.toLowerCase();
+        
+        const filas = document.querySelectorAll('tbody tr[data-especie]');
+        
+        filas.forEach(fila => {
+            const especie = fila.getAttribute('data-especie');
+            const sexo = fila.getAttribute('data-sexo');
+            
+            const cumpleEspecie = !especieValue || especie === especieValue;
+            const cumpleSexo = !sexoValue || sexo === sexoValue;
+            
+            if (cumpleEspecie && cumpleSexo) {
+                fila.style.display = '';
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+    }
+    
+    filterEspecie.addEventListener('change', aplicarFiltros);
+    filterSexo.addEventListener('change', aplicarFiltros);
+});
+</script>
 {% endblock %}

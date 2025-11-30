@@ -129,3 +129,51 @@ class ServicioInsumo(models.Model):
 
     def __str__(self):
         return f"{self.servicio.nombre} → {self.cantidad} x {self.insumo.medicamento}"
+
+class Paciente(models.Model):
+    ESPECIE_CHOICES = [
+        ('canino', 'Canino'),
+        ('felino', 'Felino'),
+        ('otro', 'Otro'),
+    ]
+    
+    SEXO_CHOICES = [
+        ('macho', 'Macho'),
+        ('hembra', 'Hembra'),
+    ]
+    
+    nombre = models.CharField(max_length=100)
+    especie = models.CharField(max_length=20, choices=ESPECIE_CHOICES)
+    raza = models.CharField(max_length=100, blank=True, null=True)
+    edad = models.CharField(max_length=50, blank=True, null=True)
+    sexo = models.CharField(max_length=10, choices=SEXO_CHOICES)
+    propietario = models.ForeignKey('Propietario', on_delete=models.CASCADE, related_name='pacientes')
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    activo = models.BooleanField(default=True)
+    
+    class Meta:
+        verbose_name = 'Paciente'
+        verbose_name_plural = 'Pacientes'
+        ordering = ['-fecha_registro']
+    
+    def __str__(self):
+        return f"{self.nombre} - {self.propietario.nombre_completo}"
+
+class Propietario(models.Model):
+    nombre = models.CharField(max_length=100)
+    apellido = models.CharField(max_length=100)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    direccion = models.TextField(blank=True, null=True)
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Propietario'
+        verbose_name_plural = 'Propietarios'
+    
+    @property
+    def nombre_completo(self):
+        return f"{self.nombre} {self.apellido}"
+    
+    def __str__(self):
+        return self.nombre_completo

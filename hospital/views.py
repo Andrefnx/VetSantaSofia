@@ -1,13 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
-from .models import Insumo, Servicio
+from .models import Insumo, Servicio, Paciente
 from django.views.decorators.csrf import csrf_exempt
 import json
-
-def pacientes(request):
-    return render(request, 'pacientes/pacientes.html')
-
-
+from django.contrib.auth.decorators import login_required
 
 # --- CONSULTAS ---
 def consulta_view(request):
@@ -18,10 +14,16 @@ def hospital_view(request):
     return render(request, 'hospitalizacion/hospital.html')
 
 # --- PACIENTES ---
-
-def pacientes(request):
-    return render(request, 'pacientes/pacientes.html')
-
+@login_required
+def pacientes_view(request):
+    """Vista para listar todos los pacientes"""
+    pacientes = Paciente.objects.select_related('propietario').all().order_by('-fecha_registro')
+    
+    context = {
+        'pacientes': pacientes,
+    }
+    
+    return render(request, 'pacientes/pacientes.html', context)
 
 def ficha_mascota_view(request):
     return render(request, 'pacientes/ficha_mascota.html')
@@ -35,6 +37,7 @@ def vet_disponibilidad_view(request):
 
 def vet_view(request):
     return render(request, 'veterinarios/veterinarios.html')
+
 # --- INVENTARIO ---
 
 
