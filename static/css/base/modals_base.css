@@ -25,12 +25,12 @@
 .vet-modal-overlay.show {
     opacity: 1;
     pointer-events: auto;
-    display: flex;
+    display: flex !important; /* Aseguramos que se muestre */
 }
 .vet-modal-overlay.hide {
     opacity: 0;
     pointer-events: none;
-    /* Quita display: none; para permitir la transición */
+    display: none; /* Agregamos display: none cuando está oculto */
 }
 .vet-custom-modal {
     width: 100%;

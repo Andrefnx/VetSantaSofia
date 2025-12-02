@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
-from .models import Insumo, Servicio, Paciente
+from .models import Insumo, Servicio, Paciente, Propietario
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.contrib.auth.decorators import login_required
@@ -17,7 +17,7 @@ def hospital_view(request):
 @login_required
 def pacientes_view(request):
     """Vista para listar todos los pacientes"""
-    pacientes = Paciente.objects.select_related('propietario').all().order_by('-fecha_registro')
+    pacientes = Paciente.objects.select_related('propietario').filter(activo=True).order_by('-fecha_registro')
     
     context = {
         'pacientes': pacientes,
@@ -25,8 +25,117 @@ def pacientes_view(request):
     
     return render(request, 'pacientes/pacientes.html', context)
 
-def ficha_mascota_view(request):
-    return render(request, 'pacientes/ficha_mascota.html')
+@login_required
+def ficha_mascota_view(request, paciente_id):
+    """Vista para mostrar la ficha de un paciente específico"""
+    paciente = get_object_or_404(Paciente, id=paciente_id, activo=True)
+    
+    context = {
+        'paciente': paciente,
+    }
+    
+    return render(request, 'pacientes/ficha_mascota.html', context)
+
+@csrf_exempt
+@login_required
+def crear_paciente(request):
+    """Vista para crear un nuevo paciente"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            # Buscar o crear propietario
+            propietario_nombre = data.get('propietario', '').strip()
+            nombres = propietario_nombre.split(' ', 1)
+            nombre = nombres[0]
+            apellido = nombres[1] if len(nombres) > 1 else ''
+            
+            propietario, created = Propietario.objects.get_or_create(
+                nombre=nombre,
+                apellido=apellido,
+                defaults={
+                    'telefono': data.get('telefono_propietario', ''),
+                    'email': data.get('email_propietario', ''),
+                }
+            )
+            
+            # Crear paciente
+            paciente = Paciente.objects.create(
+                nombre=data.get('nombre'),
+                especie=data.get('especie'),
+                raza=data.get('raza', ''),
+                edad=data.get('edad', ''),
+                sexo=data.get('sexo'),
+                propietario=propietario
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'paciente_id': paciente.id,
+                'message': 'Paciente creado exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+@csrf_exempt
+@login_required
+def editar_paciente(request, paciente_id):
+    """Vista para editar un paciente"""
+    paciente = get_object_or_404(Paciente, id=paciente_id)
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            paciente.nombre = data.get('nombre', paciente.nombre)
+            paciente.especie = data.get('especie', paciente.especie)
+            paciente.raza = data.get('raza', paciente.raza)
+            paciente.edad = data.get('edad', paciente.edad)
+            paciente.sexo = data.get('sexo', paciente.sexo)
+            paciente.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Paciente actualizado exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+@csrf_exempt
+@login_required
+def eliminar_paciente(request, paciente_id):
+    """Vista para eliminar (marcar como inactivo) un paciente"""
+    paciente = get_object_or_404(Paciente, id=paciente_id)
+    
+    if request.method == 'POST':
+        try:
+            paciente.activo = False
+            paciente.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Paciente eliminado exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 # --- VETERINARIOS ---
 def vet_ficha_view(request):

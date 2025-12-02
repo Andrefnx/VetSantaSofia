@@ -73,7 +73,7 @@
                 <i class="fas fa-cog"></i>
             </button>
             <div class="manage-options" style="display: none;">
-                <button type="button" onclick="window.location.href='#'">
+                <button type="button" onclick="window.location.href='{% url 'ficha_mascota' paciente.id %}'">
                     <i class="bi bi-eye"></i> Ver
                 </button>
                 <button type="button" onclick="abrirModalPaciente(this, 'edit', {{ paciente.id }})">
@@ -89,7 +89,6 @@
 {% empty %}
 <tr>
     <td colspan="7" style="text-align: center; padding: 2rem;">
-        <i class="fas fa-paw" style="font-size: 3rem; color: #ccc;"></i>
         <p style="margin-top: 1rem; color: #666;">No hay pacientes registrados</p>
     </td>
 </tr>
@@ -285,4 +284,6 @@ document.addEventListener('DOMContentLoaded', function() {
     filterSexo.addEventListener('change', aplicarFiltros);
 });
 </script>
+
+<script src="{% static 'js/hospital/pacientes/new_paciente.js' %}?v=4"></script>
 {% endblock %}
