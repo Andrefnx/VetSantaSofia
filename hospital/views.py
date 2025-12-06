@@ -79,6 +79,36 @@ def ficha_mascota_view(request, paciente_id):
     
     return render(request, 'pacientes/ficha_mascota.html', context)
 
+@login_required
+def detalle_paciente(request, paciente_id):
+    """Vista para obtener detalles completos de un paciente (JSON)"""
+    paciente = get_object_or_404(Paciente, id=paciente_id)
+    
+    return JsonResponse({
+        'success': True,
+        'paciente': {
+            'id': paciente.id,
+            'nombre': paciente.nombre,
+            'especie': paciente.especie,
+            'raza': paciente.raza or '',
+            'edad': paciente.edad or '',
+            'sexo': paciente.sexo,
+            'color': paciente.color or '',
+            'microchip': paciente.microchip or '',
+            'ultimo_peso': float(paciente.ultimo_peso) if paciente.ultimo_peso else None,
+            'observaciones': paciente.observaciones or '',
+        },
+        'propietario': {
+            'id': paciente.propietario.id,
+            'nombre': paciente.propietario.nombre,
+            'apellido': paciente.propietario.apellido,
+            'nombre_completo': paciente.propietario.nombre_completo,
+            'telefono': paciente.propietario.telefono or '',
+            'email': paciente.propietario.email or '',
+            'direccion': paciente.propietario.direccion or '',
+        }
+    })
+
 @csrf_exempt
 @login_required
 def crear_paciente(request):
@@ -153,6 +183,20 @@ def editar_paciente(request, paciente_id):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            
+            # Actualizar propietario si se proporcionaron datos
+            propietario_id = data.get('propietario_id')
+            actualizar_propietario = data.get('actualizar_propietario', False)
+            
+            if propietario_id and actualizar_propietario:
+                propietario = get_object_or_404(Propietario, id=propietario_id)
+                propietario_data = data.get('propietario', {})
+                propietario.nombre = propietario_data.get('nombre', propietario.nombre)
+                propietario.apellido = propietario_data.get('apellido', propietario.apellido)
+                propietario.telefono = propietario_data.get('telefono', propietario.telefono)
+                propietario.email = propietario_data.get('email', propietario.email)
+                propietario.direccion = propietario_data.get('direccion', propietario.direccion)
+                propietario.save()
             
             # Actualizar datos del paciente
             paciente_data = data.get('paciente', {})

@@ -169,7 +169,13 @@ class Paciente(models.Model):
     edad = models.CharField(max_length=50, blank=True, null=True, help_text="Ej: 3 años, 6 meses")
     sexo = models.CharField(max_length=10, choices=SEXO_CHOICES)
     color = models.CharField(max_length=100, blank=True, null=True)
-    microchip = models.CharField(max_length=50, blank=True, null=True, unique=True)
+    microchip = models.CharField(
+        max_length=50, 
+        blank=True, 
+        null=True,
+        unique=False,  # Cambiar a False o eliminar esta línea
+        help_text='Número de microchip (opcional)'
+    )
     
     # Relación con propietario
     propietario = models.ForeignKey('Propietario', on_delete=models.CASCADE, related_name='pacientes')

@@ -14,6 +14,7 @@ urlpatterns = [
     # Pacientes
     path('pacientes/', views.pacientes_view, name='pacientes'),
     path('pacientes/<int:paciente_id>/', views.ficha_mascota_view, name='ficha_mascota'),
+    path('pacientes/<int:paciente_id>/detalle/', views.detalle_paciente, name='detalle_paciente'),
     path('pacientes/crear/', views.crear_paciente, name='crear_paciente'),
     path('pacientes/<int:paciente_id>/editar/', views.editar_paciente, name='editar_paciente'),
     path('pacientes/<int:paciente_id>/eliminar/', views.eliminar_paciente, name='eliminar_paciente'),

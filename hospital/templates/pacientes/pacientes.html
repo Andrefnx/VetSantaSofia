@@ -97,20 +97,22 @@
 
 {% block modals %}
 
-<!-- Modal: Nuevo Paciente -->
+<!-- Modal: Nuevo/Editar Paciente -->
 <div class="vet-modal-overlay hide" id="modalNuevoPaciente">
     <div class="vet-custom-modal" style="max-width: 700px;">
         <div class="vet-modal-content">
             <div class="vet-custom-modal-title">
-                <h3><i class="fas fa-paw"></i> Nuevo Paciente</h3>
+                <h3>
+                    <i class="fas fa-paw"></i> 
+                    <span id="tituloModalPaciente">Nuevo Paciente</span>
+                </h3>
                 <i class="bi bi-x" style="margin-left:auto;cursor:pointer;"
                     onclick="closeVetModal('modalNuevoPaciente')"></i>
             </div>
             <div class="vet-modal-body">
-                <!-- filepath: c:\Users\Andrea\Documents\GitHub\VetSantaSofia\hospital\templates\pacientes\pacientes.html -->
-                <!-- En el modal de Nuevo Paciente, cambia el form -->
-
                 <form id="addPacienteForm" onsubmit="event.preventDefault();">
+                    <input type="hidden" id="pacienteIdEdit" value="">
+                    
                     <!-- SECCIÓN PROPIETARIO -->
                     <div class="detail-section mb-4">
                         <h6 class="detail-section-title">
@@ -118,7 +120,7 @@
                         </h6>
 
                         <!-- Búsqueda de propietario existente -->
-                        <div class="mb-3">
+                        <div class="mb-3" id="seccionBusquedaPropietario">
                             <label>Buscar Propietario Existente</label>
                             <div class="input-group">
                                 <input type="text" class="form-control" id="buscarPropietario"
@@ -138,11 +140,11 @@
                             </select>
                         </div>
 
-                        <div class="text-center mb-3">
+                        <div class="text-center mb-3" id="separadorPropietario">
                             <span class="text-muted">- O -</span>
                         </div>
 
-                        <!-- Formulario de nuevo propietario -->
+                        <!-- Formulario de propietario -->
                         <div id="formNuevoPropietario">
                             <input type="hidden" id="propietarioId" name="propietario_id" value="">
 
@@ -217,13 +219,13 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <i class="bi bi-check-circle"></i>
-                                        Propietario seleccionado: <strong id="propietarioNombreDisplay"></strong>
+                                        Propietario: <strong id="propietarioNombreDisplay"></strong>
                                     </div>
                                     <div>
                                         <button type="button" class="btn btn-sm btn-warning me-2" onclick="habilitarEdicionPropietario()">
                                             <i class="bi bi-pencil"></i> Editar datos
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-secondary" onclick="limpiarPropietario()">
+                                        <button type="button" class="btn btn-sm btn-secondary" onclick="limpiarPropietario()" id="btnCambiarPropietario">
                                             <i class="bi bi-arrow-counterclockwise"></i> Cambiar
                                         </button>
                                     </div>
@@ -246,13 +248,13 @@
 
                         <div class="mb-3">
                             <label>Nombre de la Mascota <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="nombre">
+                            <input type="text" class="form-control" name="nombre" id="pacienteNombre">
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label>Especie <span class="text-danger">*</span></label>
-                                <select class="form-control" name="especie">
+                                <select class="form-control" name="especie" id="pacienteEspecie">
                                     <option value="">Selecciona...</option>
                                     <option value="canino">Canino</option>
                                     <option value="felino">Felino</option>
@@ -264,18 +266,18 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label>Raza</label>
-                                <input type="text" class="form-control" name="raza">
+                                <input type="text" class="form-control" name="raza" id="pacienteRaza">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label>Edad</label>
-                                <input type="text" class="form-control" name="edad" placeholder="Ej: 3 años">
+                                <input type="text" class="form-control" name="edad" id="pacienteEdad" placeholder="Ej: 3 años">
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label>Sexo <span class="text-danger">*</span></label>
-                                <select class="form-control" name="sexo">
+                                <select class="form-control" name="sexo" id="pacienteSexo">
                                     <option value="">Selecciona...</option>
                                     <option value="macho">Macho</option>
                                     <option value="hembra">Hembra</option>
@@ -283,24 +285,38 @@
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label>Color</label>
-                                <input type="text" class="form-control" name="color">
+                                <input type="text" class="form-control" name="color" id="pacienteColor">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label>Microchip</label>
-                                <input type="text" class="form-control" name="microchip">
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="microchip" 
+                                       id="pacienteMicrochip"
+                                       pattern="[0-9]*"
+                                       inputmode="numeric"
+                                       placeholder="123456789012345"
+                                        >
+                            
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label>Peso (kg)</label>
-                                <input type="number" step="0.01" class="form-control" name="peso">
+                                <input type="number" 
+                                       step="0.01" 
+                                       min="0"
+                                       class="form-control" 
+                                       name="peso" 
+                                       id="pacientePeso"
+                                       placeholder="0.00">
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label>Observaciones</label>
-                            <textarea class="form-control" name="observaciones" rows="3"></textarea>
+                            <textarea class="form-control" name="observaciones" id="pacienteObservaciones" rows="3"></textarea>
                         </div>
                     </div>
                 </form>
@@ -309,87 +325,8 @@
                 <button type="button" class="vet-btn vet-btn-grey" onclick="closeVetModal('modalNuevoPaciente')">
                     <i class="bi bi-x-circle"></i> Cancelar
                 </button>
-                <button type="button" class="vet-btn vet-btn-primary" onclick="saveNewPaciente()">
-                    <i class="bi bi-floppy-fill"></i> Guardar Paciente
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal: Ver/Editar Paciente -->
-<div class="vet-modal-overlay hide" id="modalPaciente">
-    <div class="vet-custom-modal" style="max-width: 900px; width: 100%;">
-        <div class="vet-modal-content">
-            <div class="vet-custom-modal-title">
-                <h3>
-                    <i class="fas fa-paw"></i>
-                    <span id="modalPacienteTitulo">Detalles del Paciente</span>
-                </h3>
-                <i class="bi bi-x" style="margin-left:auto;cursor:pointer;" onclick="closePacienteModal()"></i>
-            </div>
-            <div class="vet-modal-body" style="max-height: 70vh; overflow-y: auto;">
-                <div class="detail-section mb-4">
-                    <h6 class="detail-section-title"><i class="fas fa-tag"></i> Identificación</h6>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="text-muted small">Nombre</label>
-                            <p class="field-view fw-bold mb-0" data-field="nombre">-</p>
-                            <input class="field-edit form-control d-none" data-field="nombre">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Especie</label>
-                            <p class="field-view mb-0" data-field="especie">-</p>
-                            <select class="field-edit form-control d-none" data-field="especie">
-                                <option value="">Selecciona...</option>
-                                <option value="canino">Canino</option>
-                                <option value="felino">Felino</option>
-                                <option value="otro">Otro</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Raza</label>
-                            <p class="field-view mb-0" data-field="raza">-</p>
-                            <input class="field-edit form-control d-none" data-field="raza">
-                        </div>
-                    </div>
-                </div>
-                <div class="detail-section mb-4">
-                    <h6 class="detail-section-title"><i class="fas fa-birthday-cake"></i> Información General</h6>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="text-muted small">Edad</label>
-                            <p class="field-view fw-bold mb-0" data-field="edad">-</p>
-                            <input class="field-edit form-control d-none" data-field="edad">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Sexo</label>
-                            <p class="field-view mb-0" data-field="sexo">-</p>
-                            <select class="field-edit form-control d-none" data-field="sexo">
-                                <option value="">Selecciona...</option>
-                                <option value="macho">Macho</option>
-                                <option value="hembra">Hembra</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Propietario</label>
-                            <p class="field-view mb-0" data-field="propietario">-</p>
-                            <input class="field-edit form-control d-none" data-field="propietario">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="vet-modal-body" style="border-top:1px solid #eee; text-align:right;">
-                <button type="button" class="vet-btn-grey" id="btnEditarPaciente" onclick="switchToEditModePaciente()">
-                    <i class="bi bi-pencil-fill"></i> Editar
-                </button>
-                <button type="button" class="vet-btn-grey d-none" id="btnGuardarPaciente"
-                    onclick="guardarPacienteEditado()">
-                    <i class="bi bi-floppy-fill"></i> Guardar
-                </button>
-                <button type="button" class="vet-btn-grey error" id="btnEliminarPaciente"
-                    onclick="abrirModalEliminarPaciente(this)">
-                    <i class="bi bi-trash3-fill"></i> Eliminar
+                <button type="button" class="vet-btn vet-btn-primary" onclick="saveNewPaciente()" id="btnGuardarModalPaciente">
+                    <i class="bi bi-floppy-fill"></i> <span id="textoBotonGuardar">Guardar Paciente</span>
                 </button>
             </div>
         </div>

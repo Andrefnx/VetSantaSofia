@@ -1,10 +1,114 @@
-// Abrir modal nuevo paciente
+// Función para obtener el CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Abrir modal en modo nuevo
 function abrirModalNuevoPaciente() {
+    console.log('Abriendo modal nuevo paciente');
+    
+    // Resetear formulario
+    document.getElementById('addPacienteForm').reset();
+    document.getElementById('pacienteIdEdit').value = '';
+    limpiarPropietario();
+    
+    // Cambiar título y botones
+    document.getElementById('tituloModalPaciente').textContent = 'Nuevo Paciente';
+    document.getElementById('textoBotonGuardar').textContent = 'Guardar Paciente';
+    
+    // Mostrar sección de búsqueda
+    document.getElementById('seccionBusquedaPropietario').style.display = 'block';
+    document.getElementById('separadorPropietario').style.display = 'block';
+    const btnCambiar = document.getElementById('btnCambiarPropietario');
+    if (btnCambiar) btnCambiar.style.display = '';
+    
+    // Abrir modal
     const modal = document.getElementById('modalNuevoPaciente');
     modal.classList.remove('hide');
     setTimeout(() => {
         modal.classList.add('show');
     }, 10);
+}
+
+// Abrir modal en modo edición
+function abrirModalPaciente(button, mode, pacienteId) {
+    if (mode !== 'edit') return;
+    
+    console.log('Abriendo modal editar paciente:', pacienteId);
+    
+    // Cargar datos del paciente
+    fetch(`/hospital/pacientes/${pacienteId}/detalle/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const paciente = data.paciente;
+                const propietario = data.propietario;
+                
+                console.log('Datos cargados:', paciente, propietario);
+                
+                // Llenar datos del paciente
+                document.getElementById('pacienteIdEdit').value = paciente.id;
+                document.getElementById('pacienteNombre').value = paciente.nombre;
+                document.getElementById('pacienteEspecie').value = paciente.especie;
+                document.getElementById('pacienteRaza').value = paciente.raza || '';
+                document.getElementById('pacienteEdad').value = paciente.edad || '';
+                document.getElementById('pacienteSexo').value = paciente.sexo;
+                document.getElementById('pacienteColor').value = paciente.color || '';
+                document.getElementById('pacienteMicrochip').value = paciente.microchip || '';
+                document.getElementById('pacientePeso').value = paciente.ultimo_peso || '';
+                document.getElementById('pacienteObservaciones').value = paciente.observaciones || '';
+                
+                // Llenar datos del propietario
+                document.getElementById('propietarioId').value = propietario.id;
+                document.getElementById('propietarioNombre').value = propietario.nombre;
+                document.getElementById('propietarioApellido').value = propietario.apellido;
+                document.getElementById('propietarioTelefono').value = propietario.telefono || '';
+                document.getElementById('propietarioEmail').value = propietario.email || '';
+                document.getElementById('propietarioDireccion').value = propietario.direccion || '';
+                
+                // Bloquear campos de propietario
+                bloquearCamposPropietario();
+                mostrarBotonesEdicion();
+                
+                // Mostrar badge
+                document.getElementById('propietarioNombreDisplay').textContent = propietario.nombre_completo;
+                document.getElementById('propietarioSeleccionadoBadge').style.display = 'block';
+                
+                // Ocultar búsqueda de propietario en modo edición
+                document.getElementById('seccionBusquedaPropietario').style.display = 'none';
+                document.getElementById('separadorPropietario').style.display = 'none';
+                const btnCambiar = document.getElementById('btnCambiarPropietario');
+                if (btnCambiar) btnCambiar.style.display = 'none';
+                
+                // Cambiar título y botones
+                document.getElementById('tituloModalPaciente').textContent = 'Editar Paciente';
+                document.getElementById('textoBotonGuardar').textContent = 'Actualizar Paciente';
+                
+                // Abrir modal
+                const modal = document.getElementById('modalNuevoPaciente');
+                modal.classList.remove('hide');
+                setTimeout(() => {
+                    modal.classList.add('show');
+                }, 10);
+            } else {
+                alert('Error al cargar datos del paciente: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar el paciente');
+        });
 }
 
 // Cerrar modal
@@ -76,10 +180,8 @@ function seleccionarPropietario(propietarioId) {
                 document.getElementById('propietarioEmail').value = prop.email || '';
                 document.getElementById('propietarioDireccion').value = prop.direccion || '';
                 
-                // Deshabilitar campos
+                // Bloquear campos
                 bloquearCamposPropietario();
-                
-                // Mostrar botones de edición
                 mostrarBotonesEdicion();
                 
                 // Mostrar badge de selección
@@ -186,12 +288,12 @@ function limpiarPropietario() {
     document.getElementById('resultadosPropietarios').style.display = 'none';
 }
 
-// Guardar nuevo paciente (actualizado)
+// Guardar paciente (crear o editar)
 function saveNewPaciente() {
     console.log('=== INICIANDO GUARDADO DE PACIENTE ===');
     
-    const form = document.getElementById('addPacienteForm');
-    const formData = new FormData(form);
+    const pacienteId = document.getElementById('pacienteIdEdit').value;
+    const esEdicion = pacienteId !== '';
     
     // Obtener valores
     const propietarioId = document.getElementById('propietarioId').value;
@@ -201,17 +303,13 @@ function saveNewPaciente() {
     const propietarioEmail = document.getElementById('propietarioEmail').value.trim();
     const propietarioDireccion = document.getElementById('propietarioDireccion').value.trim();
     
-    const nombrePaciente = formData.get('nombre').trim();
-    const especiePaciente = formData.get('especie');
-    const sexoPaciente = formData.get('sexo');
+    const nombrePaciente = document.getElementById('pacienteNombre').value.trim();
+    const especiePaciente = document.getElementById('pacienteEspecie').value;
+    const sexoPaciente = document.getElementById('pacienteSexo').value;
     
+    console.log('Es edición:', esEdicion);
+    console.log('Paciente ID:', pacienteId);
     console.log('Propietario ID:', propietarioId);
-    console.log('Propietario Nombre:', propietarioNombre);
-    console.log('Propietario Apellido:', propietarioApellido);
-    console.log('Propietario Teléfono:', propietarioTelefono);
-    console.log('Paciente Nombre:', nombrePaciente);
-    console.log('Paciente Especie:', especiePaciente);
-    console.log('Paciente Sexo:', sexoPaciente);
     
     // Validar propietario
     if (!propietarioNombre || !propietarioApellido || !propietarioTelefono) {
@@ -238,7 +336,7 @@ function saveNewPaciente() {
     // Construir datos
     const data = {
         propietario_id: propietarioId || null,
-        actualizar_propietario: propietarioId ? true : false, // Flag para actualizar propietario existente
+        actualizar_propietario: propietarioId ? true : false,
         propietario: {
             nombre: propietarioNombre,
             apellido: propietarioApellido,
@@ -249,20 +347,25 @@ function saveNewPaciente() {
         paciente: {
             nombre: nombrePaciente,
             especie: especiePaciente,
-            raza: formData.get('raza') || '',
-            edad: formData.get('edad') || '',
+            raza: document.getElementById('pacienteRaza').value || '',
+            edad: document.getElementById('pacienteEdad').value || '',
             sexo: sexoPaciente,
-            color: formData.get('color') || '',
-            microchip: formData.get('microchip') || '',
-            ultimo_peso: formData.get('peso') || null,
-            observaciones: formData.get('observaciones') || '',
+            color: document.getElementById('pacienteColor').value || '',
+            microchip: document.getElementById('pacienteMicrochip').value.trim() || '',
+            ultimo_peso: document.getElementById('pacientePeso').value || null,
+            observaciones: document.getElementById('pacienteObservaciones').value || '',
         }
     };
     
     console.log('Datos a enviar:', JSON.stringify(data, null, 2));
     
+    // Determinar URL
+    const url = esEdicion 
+        ? `/hospital/pacientes/${pacienteId}/editar/` 
+        : '/hospital/pacientes/crear/';
+    
     // Enviar datos
-    fetch('/hospital/pacientes/crear/', {
+    fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -277,13 +380,18 @@ function saveNewPaciente() {
     .then(data => {
         console.log('Response data:', data);
         if (data.success) {
-            alert('¡Paciente creado exitosamente!');
+            const mensaje = esEdicion ? '¡Paciente actualizado exitosamente!' : '¡Paciente creado exitosamente!';
+            alert(mensaje);
             closeVetModal('modalNuevoPaciente');
             setTimeout(() => {
-                window.location.href = `/hospital/pacientes/${data.paciente_id}/`;
+                if (esEdicion) {
+                    window.location.reload();
+                } else {
+                    window.location.href = `/hospital/pacientes/${data.paciente_id}/`;
+                }
             }, 400);
         } else {
-            alert('Error al crear paciente: ' + (data.error || 'Error desconocido'));
+            alert('Error: ' + (data.error || 'Error desconocido'));
         }
     })
     .catch(error => {
@@ -292,23 +400,7 @@ function saveNewPaciente() {
     });
 }
 
-// Función para obtener el CSRF token
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-// Toggle wheel (botón de gestión)
+// Toggle wheel
 function toggleWheel(button) {
     const options = button.parentElement.querySelector('.manage-options');
     document.querySelectorAll('.manage-options').forEach(opt => {
@@ -328,27 +420,7 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// Otras funciones...
-function abrirModalPaciente(button, mode, pacienteId) {
-    console.log('Editar paciente:', pacienteId);
-}
-
-function closePacienteModal() {
-    const modal = document.getElementById('modalPaciente');
-    modal.classList.remove('show');
-    setTimeout(() => {
-        modal.classList.add('hide');
-    }, 350);
-}
-
-function switchToEditModePaciente() {
-    alert('Funcionalidad en desarrollo');
-}
-
-function guardarPacienteEditado() {
-    alert('Funcionalidad en desarrollo');
-}
-
+// Modal eliminar
 function abrirModalEliminarPaciente(button, pacienteId) {
     const modal = document.getElementById('modalEliminarPaciente');
     modal.classList.remove('hide');
@@ -366,7 +438,82 @@ function closeEliminarPacienteModal() {
     }, 350);
 }
 
+// Event listeners
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded - Inicializando validaciones');
+    
+    // ===== VALIDACIÓN DE MICROCHIP (SOLO NÚMEROS) =====
+    const microchipInput = document.getElementById('pacienteMicrochip');
+    if (microchipInput) {
+        console.log('Microchip input encontrado, agregando validaciones');
+        
+        // Validar mientras escribe
+        microchipInput.addEventListener('input', function(e) {
+            const cursorPosition = this.selectionStart;
+            const valorAnterior = this.value;
+            const valorLimpio = this.value.replace(/[^0-9]/g, '');
+            
+            if (valorAnterior !== valorLimpio) {
+                this.value = valorLimpio;
+                this.setSelectionRange(cursorPosition - 1, cursorPosition - 1);
+                console.log('Caracteres no numéricos removidos');
+            }
+        });
+        
+        // Validar al pegar
+        microchipInput.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            const numericOnly = pastedText.replace(/[^0-9]/g, '');
+            
+            // Insertar solo números
+            const start = this.selectionStart;
+            const end = this.selectionEnd;
+            const currentValue = this.value;
+            this.value = currentValue.substring(0, start) + numericOnly + currentValue.substring(end);
+            
+            // Posicionar cursor
+            const newPosition = start + numericOnly.length;
+            this.setSelectionRange(newPosition, newPosition);
+            
+            console.log('Texto pegado filtrado:', numericOnly);
+        });
+        
+        // Prevenir arrastrar y soltar texto
+        microchipInput.addEventListener('drop', function(e) {
+            e.preventDefault();
+            const droppedText = e.dataTransfer.getData('text');
+            const numericOnly = droppedText.replace(/[^0-9]/g, '');
+            this.value = numericOnly;
+            console.log('Texto arrastrado filtrado:', numericOnly);
+        });
+        
+        // Prevenir teclas no numéricas
+        microchipInput.addEventListener('keypress', function(e) {
+            // Permitir teclas especiales (backspace, delete, flechas, etc.)
+            if (e.ctrlKey || e.metaKey || e.altKey) {
+                return;
+            }
+            
+            // Permitir teclas de navegación
+            const specialKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+            if (specialKeys.includes(e.key)) {
+                return;
+            }
+            
+            // Solo permitir números 0-9
+            if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+                console.log('Tecla no numérica bloqueada:', e.key);
+            }
+        });
+        
+        console.log('Validaciones de microchip configuradas correctamente');
+    } else {
+        console.warn('Input de microchip no encontrado');
+    }
+    
+    // ===== MODAL ELIMINAR PACIENTE =====
     const btnConfirmar = document.getElementById('btnConfirmarEliminarPaciente');
     if (btnConfirmar) {
         btnConfirmar.addEventListener('click', function() {
@@ -381,6 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
                 }
             })
             .then(response => response.json())
