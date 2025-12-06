@@ -1,7 +1,7 @@
 {% extends 'partials/base.html' %}
 {% load static %}
 
-{% block title %}Ficha de Mascota{% endblock %}
+{% block title %}Ficha de {{ paciente.nombre }}{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="{% static 'css/base/vet-custom.css' %}">
@@ -14,7 +14,7 @@
         <i class="fas fa-paw"></i> {{ paciente.nombre }}
     </h1>
     <div class="edit-mode">
-        <button class="vet-btn vet-btn-primary">
+        <button class="vet-btn vet-btn-primary" onclick="window.location.href='{% url 'editar_paciente' paciente.id %}'">
             <i class="bi bi-pencil-square"></i> Editar Ficha
         </button>
     </div>
@@ -22,47 +22,55 @@
 
 <div class="general-container">
     <div class="general-information">
-    <div class="general-information">
-        <!-- ...existing info blocks... -->
         <div class="section personal-info">
-            <h2>
-                Información General
-            </h2>
+            <h2>Información General</h2>
             <div class="info">
                 <div class="info-row">
-                    <p><strong>Especie:</strong> Especie de la Mascota</p>
-                    <p><strong>Raza:</strong> Raza de la Mascota</p>
-                    <p><strong>Edad:</strong> Edad de la Mascota</p>
-                    <p><strong>Sexo:</strong> Sexo de la Mascota</p>
-                    <p><strong>Color:</strong> Color de la Mascota</p>
+                    <p><strong>Especie:</strong> {{ paciente.get_especie_display }}</p>
+                    <p><strong>Raza:</strong> {{ paciente.raza|default:"No especificada" }}</p>
+                    <p><strong>Edad:</strong> {{ paciente.edad_formateada }}</p>
+                    <p><strong>Sexo:</strong> {{ paciente.get_sexo_display }}</p>
+                    <p><strong>Color:</strong> {{ paciente.color|default:"No especificado" }}</p>
                 </div>
-                <p><strong>Microchip:</strong> Número de Microchip</p>
+                <p><strong>Microchip:</strong> {{ paciente.microchip|default:"No registrado" }}</p>
+                {% if paciente.observaciones %}
+                <p><strong>Observaciones:</strong> {{ paciente.observaciones }}</p>
+                {% endif %}
             </div>
         </div>
+        
         <div class="section resumen-clinico">
-            <h2>
-                Resumen
-            </h2>
+            <h2>Resumen Clínico</h2>
             <div class="info">
                 <div class="info-row">
-                    <p><strong>Último peso registrado:</strong> Peso de la Mascota</p>
-                    <p><strong>Último control:</strong> Último control</p>
+                    <p><strong>Último peso registrado:</strong> {{ paciente.ultimo_peso_formateado }}</p>
+                    <p><strong>Último control:</strong> 
+                        {% if paciente.fecha_ultimo_control %}
+                            {{ paciente.fecha_ultimo_control|date:"d/m/Y H:i" }}
+                        {% else %}
+                            No registrado
+                        {% endif %}
+                    </p>
                 </div>
+                <p><strong>Fecha de registro:</strong> {{ paciente.fecha_registro|date:"d/m/Y" }}</p>
             </div>
         </div>
+        
         <div class="section responsable">
-            <h2>
-                Responsable
-            </h2>
+            <h2>Responsable</h2>
             <div class="info">
                 <div class="info-row">
-                    <p><strong>Dueño:</strong> Nombre del Dueño</p>
-                    <p><strong>Teléfono:</strong> Teléfono del Dueño</p>
-                    <p><strong>Correo Electrónico:</strong> Correo del Dueño</p>
+                    <p><strong>Dueño:</strong> {{ paciente.propietario.nombre_completo }}</p>
+                    <p><strong>Teléfono:</strong> {{ paciente.propietario.telefono|default:"No registrado" }}</p>
+                    <p><strong>Correo Electrónico:</strong> {{ paciente.propietario.email|default:"No registrado" }}</p>
                 </div>
+                {% if paciente.propietario.direccion %}
+                <p><strong>Dirección:</strong> {{ paciente.propietario.direccion }}</p>
+                {% endif %}
             </div>
         </div>
     </div>
+    
     <div class="section tabs-section">
         <div class="tabs-nav">
             <button class="tab-btn active" data-tab="historial">Historial Clínico</button>
@@ -71,7 +79,6 @@
             <button class="tab-btn" data-tab="docs">Documentos</button>
         </div>
         <div class="tabs-content">
-
             <div class="tab-content active" id="historial">
                 <div class="historial-clinico">
                     <h3>Historial Clínico</h3>
@@ -86,48 +93,34 @@
                             <i class="bi bi-calendar-plus"></i> Agendar Cita
                         </button>
                     </div>
-                    <!-- Instancias de nuevas consultas agendadas (gris) -->
-                    <div id="nuevasConsultas"></div>
-                    <!-- ITEM -->
+                    
+                    {% for consulta in consultas %}
                     <div class="timeline-item">
                         <div class="timeline-date">
-                            <span class="month">Jun</span>
-                            <span class="year">2010</span>
+                            <span class="month">{{ consulta.fecha|date:"M" }}</span>
+                            <span class="year">{{ consulta.fecha|date:"Y" }}</span>
                         </div>
                         <div class="timeline-marker"></div>
                         <div class="timeline-content">
-                            <h3 class="event-title">Depresión</h3>
+                            <h3 class="event-title">{{ consulta.diagnostico|default:"Consulta general" }}</h3>
                             <p class="event-subtitle">
-                                Médico Tratante: Kathleen Curie-Galen, MD <br>
-                                05/26/2012 – Presente
+                                Veterinario: {{ consulta.veterinario.get_full_name|default:"No especificado" }}<br>
+                                {{ consulta.fecha|date:"d/m/Y H:i" }}
                             </p>
-                            <p class="event-notes">
-                                Notes 06/12: Duis sed odio sit amet nibh vulputate cursus a sit amet mauris. Nam nec
-                                tellus a odio tincidunt auctor a ornare odio.
-                            </p>
-                            <button class="timeline-btn">Ver detalle</button>
+                            {% if consulta.notas %}
+                            <p class="event-notes">{{ consulta.notas|truncatewords:20 }}</p>
+                            {% endif %}
+                            <button class="timeline-btn" onclick="verDetalleConsulta({{ consulta.id }})">Ver detalle</button>
                         </div>
                     </div>
-                    <!-- ITEM -->
+                    {% empty %}
                     <div class="timeline-item">
-                        <div class="timeline-date">
-                            <span class="month">Jul</span>
-                            <span class="year">2011</span>
-                        </div>
-                        <div class="timeline-content">
-                            <h3 class="event-title">Fractura de pata</h3>
-                            <p class="event-subtitle">
-                                Veterinario Tratante: Dr. Martínez <br>
-                                07/08/2011 – 08/30/2011
-                            </p>
-                            <p class="event-notes">
-                                Notes 10/11: Proin gravida nibh vel velit auctor aliquet. Aenean sollicitudin lorem quis
-                                bibendum auctor nisi elit consequat.
-                            </p>
-                            <button class="timeline-btn">Ver detalle</button>
+                        <div class="timeline-content" style="text-align: center; padding: 2rem; color: #999;">
+                            <i class="bi bi-clipboard2-pulse" style="font-size: 3rem;"></i>
+                            <p style="margin-top: 1rem;">No hay consultas registradas</p>
                         </div>
                     </div>
-                    <!-- ...otros items... -->
+                    {% endfor %}
                 </div>
             </div>
 
@@ -141,24 +134,31 @@
                                 <th>Fecha alta</th>
                                 <th>Motivo</th>
                                 <th>Veterinario</th>
+                                <th>Estado</th>
                                 <th>Notas</th>
                             </tr>
                         </thead>
                         <tbody>
+                            {% for hosp in hospitalizaciones %}
                             <tr>
-                                <td>12/03/2023</td>
-                                <td>15/03/2023</td>
-                                <td>Cirugía ortopédica</td>
-                                <td>Dr. González</td>
-                                <td>Recuperación sin complicaciones.</td>
+                                <td>{{ hosp.fecha_ingreso|date:"d/m/Y H:i" }}</td>
+                                <td>{{ hosp.fecha_alta|date:"d/m/Y H:i"|default:"-" }}</td>
+                                <td>{{ hosp.motivo }}</td>
+                                <td>{{ hosp.veterinario.get_full_name|default:"-" }}</td>
+                                <td>
+                                    <span class="badge bg-{% if hosp.estado == 'activa' %}warning{% elif hosp.estado == 'alta' %}success{% else %}danger{% endif %}">
+                                        {{ hosp.get_estado_display }}
+                                    </span>
+                                </td>
+                                <td>{{ hosp.notas|default:"-" }}</td>
                             </tr>
+                            {% empty %}
                             <tr>
-                                <td>20/07/2022</td>
-                                <td>22/07/2022</td>
-                                <td>Observación gastroenteritis</td>
-                                <td>Dra. Pérez</td>
-                                <td>Alta con dieta especial.</td>
+                                <td colspan="6" style="text-align: center; padding: 2rem; color: #999;">
+                                    No hay hospitalizaciones registradas
+                                </td>
                             </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -170,7 +170,7 @@
                     <div style="margin-bottom: 1rem;">
                         <label class="vet-btn vet-btn-primary" style="cursor:pointer;">
                             <i class="bi bi-paperclip"></i> Adjuntar Examen
-                            <input type="file" name="adjuntar_examen" style="display:none;">
+                            <input type="file" name="adjuntar_examen" style="display:none;" onchange="subirExamen(this, {{ paciente.id }})">
                         </label>
                     </div>
                     <table class="table table-bordered table-hover">
@@ -184,28 +184,29 @@
                             </tr>
                         </thead>
                         <tbody>
+                            {% for examen in examenes %}
                             <tr>
-                                <td>10/02/2024</td>
-                                <td>Hemograma</td>
-                                <td>Dra. López</td>
-                                <td>Normal</td>
+                                <td>{{ examen.fecha|date:"d/m/Y" }}</td>
+                                <td>{{ examen.tipo }}</td>
+                                <td>{{ examen.veterinario.get_full_name|default:"-" }}</td>
+                                <td>{{ examen.resultado|truncatewords:10 }}</td>
                                 <td>
-                                    <a href="#" target="_blank" class="vet-link-exam">
-                                        <i class="bi bi-file-earmark-text"></i> Ver PDF
+                                    {% if examen.archivo %}
+                                    <a href="{{ examen.archivo.url }}" target="_blank" class="vet-link-exam">
+                                        <i class="bi bi-file-earmark-text"></i> Ver archivo
                                     </a>
+                                    {% else %}
+                                    -
+                                    {% endif %}
                                 </td>
                             </tr>
+                            {% empty %}
                             <tr>
-                                <td>05/11/2023</td>
-                                <td>Radiografía</td>
-                                <td>Dr. Martínez</td>
-                                <td>Fractura detectada</td>
-                                <td>
-                                    <a href="#" target="_blank" class="vet-link-exam">
-                                        <i class="bi bi-file-earmark-text"></i> Ver imagen
-                                    </a>
+                                <td colspan="5" style="text-align: center; padding: 2rem; color: #999;">
+                                    No hay exámenes registrados
                                 </td>
                             </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -217,22 +218,28 @@
                     <div style="margin-bottom: 1rem;">
                         <label class="vet-btn vet-btn-primary" style="cursor:pointer;">
                             <i class="bi bi-paperclip"></i> Adjuntar Documento
-                            <input type="file" name="adjuntar_documento" style="display:none;">
+                            <input type="file" name="adjuntar_documento" style="display:none;" onchange="subirDocumento(this, {{ paciente.id }})">
                         </label>
                     </div>
                     <ul class="list-group">
+                        {% for doc in documentos %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Carnet de Vacunación
-                            <a href="#" target="_blank" class="vet-link-exam">
+                            <div>
+                                <strong>{{ doc.nombre }}</strong>
+                                {% if doc.descripcion %}
+                                <br><small class="text-muted">{{ doc.descripcion }}</small>
+                                {% endif %}
+                                <br><small class="text-muted">{{ doc.fecha_subida|date:"d/m/Y H:i" }}</small>
+                            </div>
+                            <a href="{{ doc.archivo.url }}" target="_blank" class="vet-link-exam">
                                 <i class="bi bi-file-earmark-text"></i> Descargar
                             </a>
                         </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Certificado de Salud
-                            <a href="#" target="_blank" class="vet-link-exam">
-                                <i class="bi bi-file-earmark-text"></i> Descargar
-                            </a>
+                        {% empty %}
+                        <li class="list-group-item" style="text-align: center; padding: 2rem; color: #999;">
+                            No hay documentos adjuntos
                         </li>
+                        {% endfor %}
                     </ul>
                 </div>
             </div>

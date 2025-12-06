@@ -4,6 +4,14 @@ from .models import Insumo, Servicio, Paciente, Propietario
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+
+# Importar solo si existen
+try:
+    from .models import Consulta, Hospitalizacion, Examen, Documento
+    MODELOS_EXTENDIDOS = True
+except ImportError:
+    MODELOS_EXTENDIDOS = False
 
 # --- CONSULTAS ---
 def consulta_view(request):
@@ -33,6 +41,45 @@ def ficha_mascota_view(request, paciente_id):
     context = {
         'paciente': paciente,
     }
+    
+    # Agregar datos relacionados solo si los modelos existen
+    if MODELOS_EXTENDIDOS:
+        # Para Consulta: usar el related_name correcto o filtrar manualmente
+        try:
+            context['consultas'] = Consulta.objects.filter(paciente=paciente).order_by('-fecha')[:10]
+        except:
+            context['consultas'] = []
+        
+        # Para Hospitalizacion: usar idMascota en lugar de paciente
+        try:
+            context['hospitalizaciones'] = Hospitalizacion.objects.filter(idMascota=paciente).order_by('-fecha_ingreso')
+        except:
+            context['hospitalizaciones'] = []
+        
+        # Para Examen
+        try:
+            context['examenes'] = Examen.objects.filter(paciente=paciente).order_by('-fecha')
+        except:
+            context['examenes'] = []
+        
+        # Para Documento
+        try:
+            context['documentos'] = Documento.objects.filter(paciente=paciente).order_by('-fecha_subida')
+        except:
+            context['documentos'] = []
+        
+        # Actualizar último control y peso si hay consultas
+        if context['consultas']:
+            ultima_consulta = context['consultas'][0]
+            paciente.fecha_ultimo_control = ultima_consulta.fecha
+            if hasattr(ultima_consulta, 'peso') and ultima_consulta.peso:
+                paciente.ultimo_peso = ultima_consulta.peso
+            paciente.save()
+    else:
+        context['consultas'] = []
+        context['hospitalizaciones'] = []
+        context['examenes'] = []
+        context['documentos'] = []
     
     return render(request, 'pacientes/ficha_mascota.html', context)
 
@@ -148,11 +195,6 @@ def vet_view(request):
     return render(request, 'veterinarios/veterinarios.html')
 
 # --- INVENTARIO ---
-
-
-
-
-
 def test_view(request):
     return render(request, 'test.html')
 
