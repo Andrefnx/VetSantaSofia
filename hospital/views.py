@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
+from django.db import models
 from .models import Insumo, Servicio, Paciente, Propietario
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -44,31 +45,26 @@ def ficha_mascota_view(request, paciente_id):
     
     # Agregar datos relacionados solo si los modelos existen
     if MODELOS_EXTENDIDOS:
-        # Para Consulta: usar el related_name correcto o filtrar manualmente
         try:
             context['consultas'] = Consulta.objects.filter(paciente=paciente).order_by('-fecha')[:10]
         except:
             context['consultas'] = []
         
-        # Para Hospitalizacion: usar idMascota en lugar de paciente
         try:
             context['hospitalizaciones'] = Hospitalizacion.objects.filter(idMascota=paciente).order_by('-fecha_ingreso')
         except:
             context['hospitalizaciones'] = []
         
-        # Para Examen
         try:
             context['examenes'] = Examen.objects.filter(paciente=paciente).order_by('-fecha')
         except:
             context['examenes'] = []
         
-        # Para Documento
         try:
             context['documentos'] = Documento.objects.filter(paciente=paciente).order_by('-fecha_subida')
         except:
             context['documentos'] = []
         
-        # Actualizar último control y peso si hay consultas
         if context['consultas']:
             ultima_consulta = context['consultas'][0]
             paciente.fecha_ultimo_control = ultima_consulta.fecha
@@ -91,28 +87,46 @@ def crear_paciente(request):
         try:
             data = json.loads(request.body)
             
-            # Buscar o crear propietario
-            propietario_nombre = data.get('propietario', '').strip()
-            nombres = propietario_nombre.split(' ', 1)
-            nombre = nombres[0]
-            apellido = nombres[1] if len(nombres) > 1 else ''
+            # Obtener o crear propietario
+            propietario_id = data.get('propietario_id')
+            actualizar_propietario = data.get('actualizar_propietario', False)
             
-            propietario, created = Propietario.objects.get_or_create(
-                nombre=nombre,
-                apellido=apellido,
-                defaults={
-                    'telefono': data.get('telefono_propietario', ''),
-                    'email': data.get('email_propietario', ''),
-                }
-            )
+            if propietario_id:
+                # Usar propietario existente
+                propietario = get_object_or_404(Propietario, id=propietario_id)
+                
+                # Si se marcó para actualizar, actualizar sus datos
+                if actualizar_propietario:
+                    propietario_data = data.get('propietario', {})
+                    propietario.nombre = propietario_data.get('nombre', propietario.nombre)
+                    propietario.apellido = propietario_data.get('apellido', propietario.apellido)
+                    propietario.telefono = propietario_data.get('telefono', propietario.telefono)
+                    propietario.email = propietario_data.get('email', propietario.email)
+                    propietario.direccion = propietario_data.get('direccion', propietario.direccion)
+                    propietario.save()
+            else:
+                # Crear nuevo propietario
+                propietario_data = data.get('propietario', {})
+                propietario = Propietario.objects.create(
+                    nombre=propietario_data.get('nombre'),
+                    apellido=propietario_data.get('apellido'),
+                    telefono=propietario_data.get('telefono', ''),
+                    email=propietario_data.get('email', ''),
+                    direccion=propietario_data.get('direccion', '')
+                )
             
             # Crear paciente
+            paciente_data = data.get('paciente', {})
             paciente = Paciente.objects.create(
-                nombre=data.get('nombre'),
-                especie=data.get('especie'),
-                raza=data.get('raza', ''),
-                edad=data.get('edad', ''),
-                sexo=data.get('sexo'),
+                nombre=paciente_data.get('nombre'),
+                especie=paciente_data.get('especie'),
+                raza=paciente_data.get('raza', ''),
+                edad=paciente_data.get('edad', ''),
+                sexo=paciente_data.get('sexo'),
+                color=paciente_data.get('color', ''),
+                microchip=paciente_data.get('microchip', ''),
+                ultimo_peso=paciente_data.get('ultimo_peso'),
+                observaciones=paciente_data.get('observaciones', ''),
                 propietario=propietario
             )
             
@@ -140,11 +154,20 @@ def editar_paciente(request, paciente_id):
         try:
             data = json.loads(request.body)
             
-            paciente.nombre = data.get('nombre', paciente.nombre)
-            paciente.especie = data.get('especie', paciente.especie)
-            paciente.raza = data.get('raza', paciente.raza)
-            paciente.edad = data.get('edad', paciente.edad)
-            paciente.sexo = data.get('sexo', paciente.sexo)
+            # Actualizar datos del paciente
+            paciente_data = data.get('paciente', {})
+            paciente.nombre = paciente_data.get('nombre', paciente.nombre)
+            paciente.especie = paciente_data.get('especie', paciente.especie)
+            paciente.raza = paciente_data.get('raza', paciente.raza)
+            paciente.edad = paciente_data.get('edad', paciente.edad)
+            paciente.sexo = paciente_data.get('sexo', paciente.sexo)
+            paciente.color = paciente_data.get('color', paciente.color)
+            paciente.microchip = paciente_data.get('microchip', paciente.microchip)
+            paciente.observaciones = paciente_data.get('observaciones', paciente.observaciones)
+            
+            if paciente_data.get('ultimo_peso'):
+                paciente.ultimo_peso = paciente_data.get('ultimo_peso')
+            
             paciente.save()
             
             return JsonResponse({
@@ -184,6 +207,53 @@ def eliminar_paciente(request, paciente_id):
     
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
+# --- PROPIETARIOS ---
+@login_required
+def buscar_propietarios(request):
+    """Vista para buscar propietarios"""
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 2:
+        return JsonResponse({
+            'success': False,
+            'error': 'La búsqueda debe tener al menos 2 caracteres'
+        })
+    
+    propietarios = Propietario.objects.filter(
+        models.Q(nombre__icontains=query) |
+        models.Q(apellido__icontains=query) |
+        models.Q(telefono__icontains=query) |
+        models.Q(email__icontains=query)
+    )[:10]
+    
+    return JsonResponse({
+        'success': True,
+        'propietarios': [{
+            'id': p.id,
+            'nombre_completo': p.nombre_completo,
+            'telefono': p.telefono,
+            'email': p.email,
+        } for p in propietarios]
+    })
+
+@login_required
+def detalle_propietario(request, propietario_id):
+    """Vista para obtener detalles de un propietario"""
+    propietario = get_object_or_404(Propietario, id=propietario_id)
+    
+    return JsonResponse({
+        'success': True,
+        'propietario': {
+            'id': propietario.id,
+            'nombre': propietario.nombre,
+            'apellido': propietario.apellido,
+            'nombre_completo': propietario.nombre_completo,
+            'telefono': propietario.telefono,
+            'email': propietario.email,
+            'direccion': propietario.direccion,
+        }
+    })
+
 # --- VETERINARIOS ---
 def vet_ficha_view(request):
     return render(request, 'veterinarios/vet_ficha.html')
@@ -195,113 +265,6 @@ def vet_view(request):
     return render(request, 'veterinarios/veterinarios.html')
 
 # --- INVENTARIO ---
-def test_view(request):
-    return render(request, 'test.html')
-
-def dashboard_pacientes(request):
-    return render(request, 'dashboard_pacientes.html')
-
-
-
-# ---------------------------
-#   SERVICIOS VETERINARIOS
-# ---------------------------
-
-def servicios(request):
-    servicios = Servicio.objects.all()
-    return render(request, 'inventario/servicios.html', {
-        'servicios': servicios,
-    })
-
-
-# ---------------------------
-#   CREAR SERVICIO
-# ---------------------------
-@csrf_exempt
-def crear_servicio(request):
-    if request.method == "POST":
-        data = json.loads(request.body)
-
-        servicio = Servicio.objects.create(
-            nombre=data.get("nombre", ""),
-            descripcion=data.get("descripcion", ""),
-            categoria=data.get("categoria", ""),
-            precio=int(float(data.get("precio", 0) or 0)),
-            duracion=int(float(data.get("duracion", 0) or 0)),
-        )
-
-        return JsonResponse({"success": True, "id": servicio.idServicio})
-
-
-# ---------------------------
-#   EDITAR SERVICIO
-# ---------------------------
-@csrf_exempt
-def editar_servicio(request, servicio_id):
-    servicio = get_object_or_404(Servicio, idServicio=servicio_id)
-
-    if request.method == "POST":
-        data = json.loads(request.body)
-
-        servicio.nombre = data.get("nombre", servicio.nombre)
-        servicio.descripcion = data.get("descripcion", servicio.descripcion)
-        servicio.categoria = data.get("categoria", servicio.categoria)
-
-        precio = data.get("precio")
-        duracion = data.get("duracion")
-
-        try:
-            servicio.precio = int(float(precio)) if precio not in ["", None] else 0
-        except:
-            servicio.precio = 0
-
-        try:
-            servicio.duracion = int(float(duracion)) if duracion not in ["", None] else 0
-        except:
-            servicio.duracion = 0
-
-        servicio.save()
-
-        return JsonResponse({"success": True})
-
-
-# ---------------------------
-#   ELIMINAR SERVICIO
-# ---------------------------
-@csrf_exempt
-def eliminar_servicio(request, servicio_id):
-    servicio = get_object_or_404(Servicio, idServicio=servicio_id)
-
-    if request.method == "POST":
-        servicio.delete()
-        return JsonResponse({"success": True})
-
-
-
-
-# ---------------------------
-#   INVENTARIO VETERINARIO
-# ---------------------------
-
-def ver_insumos(request):
-    insumos = Insumo.objects.all()
-    return render(request, 'ver_insumos.html', {'insumos': insumos})
-
-def agregar_insumo(request):
-    if request.method == 'POST':
-        medicamento = request.POST.get('medicamento')
-        dosis = request.POST.get('dosis')
-        valor_unitario = request.POST.get('valor_unitario')
-        cantidad = request.POST.get('cantidad')
-        Insumo.objects.create(
-            medicamento=medicamento,
-            dosis=dosis,
-            valor_unitario=valor_unitario,
-            cantidad=cantidad
-        )
-        return redirect('ver_insumos')
-    return render(request, 'agregar_insumo.html')
-
 def inventario(request):
     insumos = Insumo.objects.all()
     return render(request, 'inventario/inventario.html', {'insumos': insumos})
@@ -309,86 +272,113 @@ def inventario(request):
 @csrf_exempt
 def crear_insumo(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        # Mapeo para que medicamento = nombre_comercial
-        data['medicamento'] = data.get('nombre_comercial', '')
-        numeric_fields = [
-            'precio_venta', 'margen', 'stock_actual',
-            'stock_minimo', 'stock_maximo', 'dosis_ml', 'peso_kg'
-        ]
-        insumo_kwargs = {}
-        for field in [
-            'medicamento', 'categoria', 'sku', 'codigo_barra', 'presentacion',
-            'especie', 'descripcion', 'unidad_medida', 'precio_venta',
-            'margen', 'stock_actual', 'stock_minimo', 'stock_maximo',
-            'almacenamiento', 'precauciones', 'contraindicaciones',
-            'efectos_adversos', 'dosis_ml', 'peso_kg'
-        ]:
-            value = data.get(field)
-            if field in numeric_fields:
-                if value in ("", None):
-                    value = 0
-                else:
-                    try:
-                        value = float(value)
-                        if field.startswith('stock'):
-                            value = int(value)
-                    except Exception:
-                        value = 0
-            insumo_kwargs[field] = value
-        insumo = Insumo.objects.create(**insumo_kwargs)
-        return JsonResponse({'success': True, 'id': insumo.idInventario})
+        try:
+            data = json.loads(request.body)
+            insumo = Insumo.objects.create(
+                medicamento=data.get('medicamento'),
+                categoria=data.get('categoria'),
+                stock_actual=data.get('stock_actual', 0),
+                precio_venta=data.get('precio_venta', 0)
+            )
+            return JsonResponse({'success': True, 'message': 'Insumo creado exitosamente'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 @csrf_exempt
 def editar_insumo(request, insumo_id):
-    if request.method == "POST":
-        insumo = get_object_or_404(Insumo, idInventario=insumo_id)
-        data = json.loads(request.body)
-        # Mapeo para que medicamento = nombre_comercial
-        if 'nombre_comercial' in data:
-            data['medicamento'] = data['nombre_comercial']
-
-        numeric_fields = [
-            'precio_venta', 'margen', 'stock_actual',
-            'stock_minimo', 'stock_maximo', 'dosis_ml', 'peso_kg'
-        ]
-
-        for field, value in data.items():
-            if hasattr(insumo, field):
-                if field in numeric_fields:
-                    if value in ("", None):
-                        value = 0
-                    else:
-                        try:
-                            value = float(value)
-                            if field.startswith('stock'):
-                                value = int(value)
-                        except Exception:
-                            value = 0
-                setattr(insumo, field, value)
-        insumo.save()
-        return JsonResponse({"success": True})
+    insumo = get_object_or_404(Insumo, id=insumo_id)
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            insumo.medicamento = data.get('medicamento', insumo.medicamento)
+            insumo.categoria = data.get('categoria', insumo.categoria)
+            insumo.stock_actual = data.get('stock_actual', insumo.stock_actual)
+            insumo.precio_venta = data.get('precio_venta', insumo.precio_venta)
+            insumo.save()
+            return JsonResponse({'success': True, 'message': 'Insumo actualizado'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 @csrf_exempt
 def eliminar_insumo(request, insumo_id):
-    insumo = get_object_or_404(Insumo, idInventario=insumo_id)
+    insumo = get_object_or_404(Insumo, id=insumo_id)
     if request.method == 'POST':
-        insumo.delete()
-        return JsonResponse({'success': True})
+        try:
+            insumo.delete()
+            return JsonResponse({'success': True, 'message': 'Insumo eliminado'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 @csrf_exempt
 def modificar_stock(request, insumo_id):
-    if request.method == "POST":
-        insumo = get_object_or_404(Insumo, idInventario=insumo_id)
-        data = json.loads(request.body)
-        nuevo_stock = data.get("stock_actual")
-        if nuevo_stock is not None:
-            insumo.stock_actual = int(nuevo_stock)
+    insumo = get_object_or_404(Insumo, id=insumo_id)
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            insumo.stock_actual = data.get('stock_actual', insumo.stock_actual)
             insumo.save()
-            return JsonResponse({"success": True})
-        return JsonResponse({"success": False, "error": "No se envió stock_actual"}, status=400)
-    return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)
+            return JsonResponse({'success': True, 'message': 'Stock actualizado'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+# --- SERVICIOS ---
+def servicios(request):
+    servicios = Servicio.objects.all()
+    return render(request, 'servicios/servicios.html', {'servicios': servicios})
+
+@csrf_exempt
+def crear_servicio(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            servicio = Servicio.objects.create(
+                nombre=data.get('nombre'),
+                categoria=data.get('categoria'),
+                precio=data.get('precio', 0),
+                duracion=data.get('duracion', 0)
+            )
+            return JsonResponse({'success': True, 'message': 'Servicio creado'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+@csrf_exempt
+def editar_servicio(request, servicio_id):
+    servicio = get_object_or_404(Servicio, id=servicio_id)
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            servicio.nombre = data.get('nombre', servicio.nombre)
+            servicio.categoria = data.get('categoria', servicio.categoria)
+            servicio.precio = data.get('precio', servicio.precio)
+            servicio.duracion = data.get('duracion', servicio.duracion)
+            servicio.save()
+            return JsonResponse({'success': True, 'message': 'Servicio actualizado'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+@csrf_exempt
+def eliminar_servicio(request, servicio_id):
+    servicio = get_object_or_404(Servicio, id=servicio_id)
+    if request.method == 'POST':
+        try:
+            servicio.delete()
+            return JsonResponse({'success': True, 'message': 'Servicio eliminado'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+# --- DASHBOARD ---
+def test_view(request):
+    return render(request, 'test.html')
+
+def dashboard_pacientes(request):
+    return render(request, 'dashboard_pacientes.html')
 
 
 

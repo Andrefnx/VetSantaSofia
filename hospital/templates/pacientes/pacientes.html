@@ -99,53 +99,218 @@
 
 <!-- Modal: Nuevo Paciente -->
 <div class="vet-modal-overlay hide" id="modalNuevoPaciente">
-    <div class="vet-custom-modal">
+    <div class="vet-custom-modal" style="max-width: 700px;">
         <div class="vet-modal-content">
             <div class="vet-custom-modal-title">
-                <h3>Nuevo Paciente</h3>
+                <h3><i class="fas fa-paw"></i> Nuevo Paciente</h3>
                 <i class="bi bi-x" style="margin-left:auto;cursor:pointer;"
                     onclick="closeVetModal('modalNuevoPaciente')"></i>
             </div>
             <div class="vet-modal-body">
-                <form id="addPacienteForm">
-                    <div class="mb-3">
-                        <label>Nombre</label>
-                        <input type="text" class="form-control" name="nombre" required>
+                <!-- filepath: c:\Users\Andrea\Documents\GitHub\VetSantaSofia\hospital\templates\pacientes\pacientes.html -->
+                <!-- En el modal de Nuevo Paciente, cambia el form -->
+
+                <form id="addPacienteForm" onsubmit="event.preventDefault();">
+                    <!-- SECCIÓN PROPIETARIO -->
+                    <div class="detail-section mb-4">
+                        <h6 class="detail-section-title">
+                            <i class="fas fa-user"></i> Propietario
+                        </h6>
+
+                        <!-- Búsqueda de propietario existente -->
+                        <div class="mb-3">
+                            <label>Buscar Propietario Existente</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="buscarPropietario"
+                                    placeholder="Buscar por nombre, teléfono o email...">
+                                <button type="button" class="btn btn-secondary" onclick="buscarPropietarios()">
+                                    <i class="bi bi-search"></i> Buscar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Resultados de búsqueda -->
+                        <div id="resultadosPropietarios" class="mb-3" style="display:none;">
+                            <label>Resultados:</label>
+                            <select class="form-control" id="selectPropietario"
+                                onchange="seleccionarPropietario(this.value)">
+                                <option value="">Selecciona un propietario...</option>
+                            </select>
+                        </div>
+
+                        <div class="text-center mb-3">
+                            <span class="text-muted">- O -</span>
+                        </div>
+
+                        <!-- Formulario de nuevo propietario -->
+                        <div id="formNuevoPropietario">
+                            <input type="hidden" id="propietarioId" name="propietario_id" value="">
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label>Nombre <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="propietarioNombre"
+                                            name="propietario_nombre">
+                                        <button type="button" class="btn btn-outline-secondary d-none" id="btnEditarNombre" 
+                                                onclick="habilitarCampoPropietario('propietarioNombre', 'btnEditarNombre')" 
+                                                title="Editar nombre">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Apellido <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="propietarioApellido"
+                                            name="propietario_apellido">
+                                        <button type="button" class="btn btn-outline-secondary d-none" id="btnEditarApellido" 
+                                                onclick="habilitarCampoPropietario('propietarioApellido', 'btnEditarApellido')" 
+                                                title="Editar apellido">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label>Teléfono <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="tel" class="form-control" id="propietarioTelefono"
+                                            name="propietario_telefono">
+                                        <button type="button" class="btn btn-outline-secondary d-none" id="btnEditarTelefono" 
+                                                onclick="habilitarCampoPropietario('propietarioTelefono', 'btnEditarTelefono')" 
+                                                title="Editar teléfono">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Email</label>
+                                    <div class="input-group">
+                                        <input type="email" class="form-control" id="propietarioEmail"
+                                            name="propietario_email">
+                                        <button type="button" class="btn btn-outline-secondary d-none" id="btnEditarEmail" 
+                                                onclick="habilitarCampoPropietario('propietarioEmail', 'btnEditarEmail')" 
+                                                title="Editar email">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label>Dirección</label>
+                                <div class="input-group">
+                                    <textarea class="form-control" id="propietarioDireccion" name="propietario_direccion"
+                                        rows="2"></textarea>
+                                    <button type="button" class="btn btn-outline-secondary d-none" id="btnEditarDireccion" 
+                                            onclick="habilitarCampoPropietario('propietarioDireccion', 'btnEditarDireccion')" 
+                                            title="Editar dirección" style="align-self: flex-start;">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="propietarioSeleccionadoBadge" class="alert alert-info" style="display:none;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-check-circle"></i>
+                                        Propietario seleccionado: <strong id="propietarioNombreDisplay"></strong>
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-sm btn-warning me-2" onclick="habilitarEdicionPropietario()">
+                                            <i class="bi bi-pencil"></i> Editar datos
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-secondary" onclick="limpiarPropietario()">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Cambiar
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="advertenciaEdicion" class="alert alert-warning mt-2" style="display:none;">
+                                    <small>
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        Los cambios se aplicarán a este propietario y afectarán a todas sus mascotas.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label>Especie</label>
-                        <select class="form-control" name="especie" required>
-                            <option value="">Selecciona...</option>
-                            <option value="canino">Canino</option>
-                            <option value="felino">Felino</option>
-                            <option value="otro">Otro</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label>Raza</label>
-                        <input type="text" class="form-control" name="raza">
-                    </div>
-                    <div class="mb-3">
-                        <label>Edad</label>
-                        <input type="text" class="form-control" name="edad">
-                    </div>
-                    <div class="mb-3">
-                        <label>Sexo</label>
-                        <select class="form-control" name="sexo" required>
-                            <option value="">Selecciona...</option>
-                            <option value="macho">Macho</option>
-                            <option value="hembra">Hembra</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label>Propietario</label>
-                        <input type="text" class="form-control" name="propietario" required>
+
+                    <!-- SECCIÓN PACIENTE -->
+                    <div class="detail-section mb-4">
+                        <h6 class="detail-section-title">
+                            <i class="fas fa-paw"></i> Datos del Paciente
+                        </h6>
+
+                        <div class="mb-3">
+                            <label>Nombre de la Mascota <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="nombre">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Especie <span class="text-danger">*</span></label>
+                                <select class="form-control" name="especie">
+                                    <option value="">Selecciona...</option>
+                                    <option value="canino">Canino</option>
+                                    <option value="felino">Felino</option>
+                                    <option value="ave">Ave</option>
+                                    <option value="roedor">Roedor</option>
+                                    <option value="reptil">Reptil</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Raza</label>
+                                <input type="text" class="form-control" name="raza">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label>Edad</label>
+                                <input type="text" class="form-control" name="edad" placeholder="Ej: 3 años">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Sexo <span class="text-danger">*</span></label>
+                                <select class="form-control" name="sexo">
+                                    <option value="">Selecciona...</option>
+                                    <option value="macho">Macho</option>
+                                    <option value="hembra">Hembra</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Color</label>
+                                <input type="text" class="form-control" name="color">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Microchip</label>
+                                <input type="text" class="form-control" name="microchip">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Peso (kg)</label>
+                                <input type="number" step="0.01" class="form-control" name="peso">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Observaciones</label>
+                            <textarea class="form-control" name="observaciones" rows="3"></textarea>
+                        </div>
                     </div>
                 </form>
             </div>
-            <div class="vet-modal-body" style="text-align:right;">
-                <button type="button" class="vet-btn-grey success" onclick="saveNewPaciente()">
-                    <i class="bi bi-floppy-fill"></i> Guardar
+            <div class="vet-modal-footer">
+                <button type="button" class="vet-btn vet-btn-grey" onclick="closeVetModal('modalNuevoPaciente')">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="button" class="vet-btn vet-btn-primary" onclick="saveNewPaciente()">
+                    <i class="bi bi-floppy-fill"></i> Guardar Paciente
                 </button>
             </div>
         </div>
@@ -254,36 +419,36 @@
 
 {% block extra_js %}
 <script>
-// Script para filtrado en tiempo real
-document.addEventListener('DOMContentLoaded', function() {
-    const filterEspecie = document.getElementById('filterEspecie');
-    const filterSexo = document.getElementById('filterSexo');
-    
-    function aplicarFiltros() {
-        const especieValue = filterEspecie.value.toLowerCase();
-        const sexoValue = filterSexo.value.toLowerCase();
-        
-        const filas = document.querySelectorAll('tbody tr[data-especie]');
-        
-        filas.forEach(fila => {
-            const especie = fila.getAttribute('data-especie');
-            const sexo = fila.getAttribute('data-sexo');
-            
-            const cumpleEspecie = !especieValue || especie === especieValue;
-            const cumpleSexo = !sexoValue || sexo === sexoValue;
-            
-            if (cumpleEspecie && cumpleSexo) {
-                fila.style.display = '';
-            } else {
-                fila.style.display = 'none';
-            }
-        });
-    }
-    
-    filterEspecie.addEventListener('change', aplicarFiltros);
-    filterSexo.addEventListener('change', aplicarFiltros);
-});
+    // Script para filtrado en tiempo real
+    document.addEventListener('DOMContentLoaded', function () {
+        const filterEspecie = document.getElementById('filterEspecie');
+        const filterSexo = document.getElementById('filterSexo');
+
+        function aplicarFiltros() {
+            const especieValue = filterEspecie.value.toLowerCase();
+            const sexoValue = filterSexo.value.toLowerCase();
+
+            const filas = document.querySelectorAll('tbody tr[data-especie]');
+
+            filas.forEach(fila => {
+                const especie = fila.getAttribute('data-especie');
+                const sexo = fila.getAttribute('data-sexo');
+
+                const cumpleEspecie = !especieValue || especie === especieValue;
+                const cumpleSexo = !sexoValue || sexo === sexoValue;
+
+                if (cumpleEspecie && cumpleSexo) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+        }
+
+        filterEspecie.addEventListener('change', aplicarFiltros);
+        filterSexo.addEventListener('change', aplicarFiltros);
+    });
 </script>
 
-<script src="{% static 'js/hospital/pacientes/new_paciente.js' %}?v=4"></script>
+<script src="{% static 'js/pacientes/new_paciente.js' %}?v=4"></script>
 {% endblock %}
