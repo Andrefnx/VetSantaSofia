@@ -13,11 +13,16 @@
     <h1>
         <i class="fas fa-paw"></i> {{ paciente.nombre }}
     </h1>
-    <div class="edit-mode">
+
+    <div class="actions-area">
+        
+        <!-- Botón Editar (visible solo en modo vista) -->
         <button class="vet-btn vet-btn-primary" id="btnEditarFicha">
             <i class="bi bi-pencil-square"></i> Editar Ficha
         </button>
-        <div id="btnEditActions" style="display: none;">
+
+        <!-- Botones Guardar / Cancelar (ocultos inicialmente) -->
+        <div id="btnEditActions" style="display:none;">
             <button class="vet-btn vet-btn-grey" id="btnCancelar">
                 <i class="bi bi-x-lg"></i> Cancelar
             </button>
@@ -25,8 +30,10 @@
                 <i class="bi bi-check-lg"></i> Guardar
             </button>
         </div>
+
     </div>
 </div>
+
 
 <div class="general-container">
     <div class="general-information">

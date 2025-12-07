@@ -5,7 +5,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnGuardar = document.getElementById('btnGuardar');
     
     const viewElements = document.querySelectorAll('.view-mode');
-    const editElements = document.querySelectorAll('.edit-mode');
+    const editElements = document.querySelectorAll('input.edit-mode, textarea.edit-mode, select.edit-mode');
+
     
     let originalData = {};
 
@@ -26,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btnEditarFicha.addEventListener('click', function() {
             saveOriginalData();
             
-            btnEditarFicha.style.display = 'none';
+            btnEditarFicha.style.setProperty('display', 'none', 'important');
             btnEditActions.style.display = 'flex';
             
             viewElements.forEach(el => el.style.display = 'none');
@@ -44,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
-            btnEditarFicha.style.display = 'block';
+            btnEditarFicha.style.display = 'inline-block';
             btnEditActions.style.display = 'none';
             
             viewElements.forEach(el => el.style.display = 'inline');
