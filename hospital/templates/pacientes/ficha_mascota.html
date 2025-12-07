@@ -57,6 +57,15 @@
                     <p><strong>Color:</strong> <span class="view-mode">{{ paciente.color|default:"No especificado" }}</span>
                         <input type="text" class="form-control edit-mode" name="color" value="{{ paciente.color }}" style="display:none;">
                     </p>
+                    <p><strong>Sexo:</strong> 
+                        <span class="view-mode">
+                            {% if paciente.sexo == 'M' %}Macho{% elif paciente.sexo == 'H' %}Hembra{% else %}{{ paciente.sexo }}{% endif %}
+                        </span>
+                        <select class="form-control edit-mode" name="sexo" style="display:none;">
+                            <option value="M" {% if paciente.sexo == 'M' %}selected{% endif %}>Macho</option>
+                            <option value="H" {% if paciente.sexo == 'H' %}selected{% endif %}>Hembra</option>
+                        </select>
+                    </p>
                 </div>
                 
                 <!-- Sección de Edad con diseño especial -->
@@ -85,16 +94,7 @@
                     </div>
                 </div>
                 
-                <div class="info-row">
-                    <p><strong>Sexo:</strong> 
-                        <span class="view-mode">
-                            {% if paciente.sexo == 'M' %}Macho{% elif paciente.sexo == 'H' %}Hembra{% else %}{{ paciente.sexo }}{% endif %}
-                        </span>
-                        <select class="form-control edit-mode" name="sexo" style="display:none;">
-                            <option value="M" {% if paciente.sexo == 'M' %}selected{% endif %}>Macho</option>
-                            <option value="H" {% if paciente.sexo == 'H' %}selected{% endif %}>Hembra</option>
-                        </select>
-                    </p>
+                <div class="info-row info-row-full">
                     <p><strong>Microchip:</strong> <span class="view-mode">{{ paciente.microchip|default:"No tiene" }}</span>
                         <input type="text" class="form-control edit-mode" name="microchip" value="{{ paciente.microchip }}" style="display:none;">
                     </p>
