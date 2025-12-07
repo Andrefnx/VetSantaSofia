@@ -34,8 +34,9 @@ urlpatterns = [
     path('inventario/', views.inventario, name='inventario'),
     path('inventario/crear/', views.crear_insumo, name='crear_insumo'),
     path('inventario/editar/<int:insumo_id>/', views.editar_insumo, name='editar_insumo'),
+    path('inventario/detalle/<int:insumo_id>/', views.detalle_insumo, name='detalle_insumo'),
     path('inventario/eliminar/<int:insumo_id>/', views.eliminar_insumo, name='eliminar_insumo'),
-    path('inventario/modificar-stock/<int:insumo_id>/', views.modificar_stock, name='modificar_stock'),
+    path('inventario/modificar_stock/<int:insumo_id>/', views.modificar_stock, name='modificar_stock'),
     
     # API Inventario
     path('inventario/api/productos/', views.api_productos, name='api_productos'),

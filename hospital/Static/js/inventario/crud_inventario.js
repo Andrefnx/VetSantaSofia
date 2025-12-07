@@ -43,27 +43,32 @@ function parseNumeroSeguro(valor) {
 }
 
 /* ============================================================
-   VER / EDITAR PRODUCTO (MODIFICADO)
+   VER / EDITAR PRODUCTO (MODIFICADO - CARGAR TODOS LOS CAMPOS)
 ============================================================ */
 function abrirModalProducto(btn, mode) {
     const tr = btn.closest("tr");
     if (!tr) return;
 
-    const data = {
-        idInventario: tr.getAttribute("data-id"),
-        nombre_comercial: tr.cells[0].textContent.trim(),
-        especie: tr.cells[1].textContent.trim(),
-        precio_venta: normalizarNumero(tr.cells[2].textContent.replace(/[^0-9.,]/g, "").trim()),
-        stock_actual: tr.cells[3].textContent.replace(/\D/g, ""),
-        dosis_ml: normalizarNumero(tr.getAttribute("data-dosis-ml") || ""),
-        peso_kg: normalizarNumero(tr.getAttribute("data-peso-kg") || ""),
-    };
-
-    openProductoModal(mode, data);
+    const idInventario = tr.getAttribute("data-id");
+    
+    // Hacer petición para obtener todos los datos del producto
+    fetch(`/hospital/inventario/detalle/${idInventario}/`)
+        .then(response => response.json())
+        .then(resp => {
+            if (resp.success) {
+                openProductoModal(mode, resp.insumo);
+            } else {
+                alert("Error al cargar datos: " + (resp.error || "Error desconocido"));
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Error al cargar el producto");
+        });
 }
 
 /* ============================================================
-   ABRIR MODAL PRINCIPAL (MODIFICADO)
+   ABRIR MODAL PRINCIPAL (MODIFICADO - INCLUIR TODOS LOS CAMPOS)
 ============================================================ */
 function openProductoModal(mode, data = {}) {
     const modal = document.getElementById("modalProducto");
@@ -91,7 +96,7 @@ function openProductoModal(mode, data = {}) {
             ? "Nuevo Producto"
             : "Detalles del Producto";
 
-    // --- Botones corregidos ---
+    // --- Botones ---
     document
         .getElementById("btnGuardarProductoModal")
         .classList.toggle("d-none", mode === "view");
@@ -113,15 +118,22 @@ function openProductoModal(mode, data = {}) {
         f.classList.toggle("d-none", mode === "view");
     });
 
-    // --- Rellenar campos (MODIFICADO para normalizar números) ---
+    // --- Rellenar campos ---
     Object.keys(data).forEach((key) => {
+        // Para los elementos de vista
         modal.querySelectorAll(`.field-view[data-field="${key}"]`).forEach((el) => {
             el.textContent = data[key] ?? "-";
         });
+        
+        // Para los elementos de edición
         modal.querySelectorAll(`.field-edit[data-field="${key}"]`).forEach((el) => {
             // Normalizar valores numéricos
-            if (['dosis_ml', 'peso_kg', 'precio_venta', 'margen'].includes(key)) {
+            if (['dosis_ml', 'peso_kg', 'precio_venta', 'ml_contenedor', 'stock_actual'].includes(key)) {
                 el.value = normalizarNumero(data[key] ?? "");
+            } else if (el.tagName === 'SELECT') {
+                el.value = data[key] ?? "";
+            } else if (el.tagName === 'TEXTAREA') {
+                el.value = data[key] ?? "";
             } else {
                 el.value = data[key] ?? "";
             }
@@ -144,7 +156,7 @@ function switchToEditModeProducto() {
 }
 
 /* ============================================================
-   GUARDAR PRODUCTO (MODIFICADO)
+   GUARDAR PRODUCTO (MODIFICADO - INCLUIR TODOS LOS CAMPOS)
 ============================================================ */
 function guardarProductoEditado() {
     const modal = document.getElementById("modalProducto");
@@ -154,12 +166,19 @@ function guardarProductoEditado() {
 
     // --- Recoger campos ---
     inputs.forEach((input) => {
-        if (input.dataset.field && typeof input.value === "string") {
+        if (input.dataset.field) {
             const field = input.dataset.field;
-            const value = input.value.trim();
+            let value;
+            
+            // Para textarea y select
+            if (input.tagName === 'TEXTAREA' || input.tagName === 'SELECT') {
+                value = input.value.trim();
+            } else {
+                value = input.value.trim();
+            }
             
             // Normalizar campos numéricos
-            if (['dosis_ml', 'peso_kg', 'precio_venta', 'margen', 'stock_actual', 'stock_minimo', 'stock_maximo'].includes(field)) {
+            if (['dosis_ml', 'peso_kg', 'precio_venta', 'stock_actual', 'ml_contenedor'].includes(field)) {
                 updated[field] = normalizarNumero(value);
             } else {
                 updated[field] = value;
@@ -171,6 +190,10 @@ function guardarProductoEditado() {
     const dosis = leerDosisDesdeModal();
     updated.dosis_ml = normalizarNumero(dosis.dosis_ml || "");
     updated.peso_kg = normalizarNumero(dosis.peso_kg || "");
+
+    // --- ML Contenedor ---
+    const mlContenedor = modal.querySelector('[data-field="ml_contenedor"]')?.value || "";
+    updated.ml_contenedor = normalizarNumero(mlContenedor);
 
     // --- ID ---
     if (modal.dataset.idinventario) {
@@ -188,7 +211,9 @@ function guardarProductoEditado() {
         return;
     }
 
-    // --- Rutas (CORREGIDAS) ---
+    console.log("DEBUG - Datos a enviar:", updated);
+
+    // --- Rutas ---
     const url = updated.idInventario
         ? `/hospital/inventario/editar/${updated.idInventario}/`
         : `/hospital/inventario/crear/`;
@@ -220,22 +245,29 @@ function getProductoModalData() {
     const modal = document.getElementById("modalProducto");
     const data = {};
 
+    // Obtener todos los campos editables
     modal.querySelectorAll(".field-edit").forEach((input) => {
-        if (input.dataset.field && typeof input.value === "string") {
-            data[input.dataset.field] = input.value.trim();
+        if (input.dataset.field) {
+            const field = input.dataset.field;
+            
+            // Para textarea
+            if (input.tagName === 'TEXTAREA') {
+                data[field] = input.value.trim();
+            }
+            // Para select
+            else if (input.tagName === 'SELECT') {
+                data[field] = input.value;
+            }
+            // Para inputs numéricos
+            else if (['dosis_ml', 'peso_kg', 'precio_venta', 'stock_actual', 'ml_contenedor'].includes(field)) {
+                data[field] = normalizarNumero(input.value);
+            }
+            // Para inputs de texto
+            else {
+                data[field] = input.value.trim();
+            }
         }
     });
-
-    modal.querySelectorAll(".field-view").forEach((p) => {
-        if (p.dataset.field && !data[p.dataset.field] && typeof p.textContent === "string") {
-            data[p.dataset.field] = p.textContent.trim();
-        }
-    });
-
-    // --- Asegura que el idInventario esté presente ---
-    if (modal.dataset.idinventario) {
-        data.idInventario = modal.dataset.idinventario;
-    }
 
     return data;
 }

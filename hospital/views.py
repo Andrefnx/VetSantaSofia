@@ -327,15 +327,33 @@ def inventario(request):
 def crear_insumo(request):
     if request.method == 'POST':
         try:
+            import json
             data = json.loads(request.body)
+            
             insumo = Insumo.objects.create(
-                medicamento=data.get('medicamento'),
-                categoria=data.get('categoria'),
-                stock_actual=data.get('stock_actual', 0),
-                precio_venta=data.get('precio_venta', 0)
+                medicamento=data.get('nombre_comercial', data.get('medicamento')),
+                tipo=data.get('tipo'),
+                especie=data.get('especie'),
+                descripcion=data.get('descripcion'),
+                precio_venta=float(data.get('precio_venta', 0)),
+                stock_actual=int(data.get('stock_actual', 0)),
+                dosis_ml=float(data.get('dosis_ml')) if data.get('dosis_ml') else None,
+                peso_kg=float(data.get('peso_kg')) if data.get('peso_kg') else None,
+                ml_contenedor=float(data.get('ml_contenedor')) if data.get('ml_contenedor') else None,
+                precauciones=data.get('precauciones'),
+                contraindicaciones=data.get('contraindicaciones'),
+                efectos_adversos=data.get('efectos_adversos'),
             )
-            return JsonResponse({'success': True, 'message': 'Insumo creado exitosamente'})
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Insumo creado exitosamente',
+                'insumo_id': insumo.idInventario
+            })
         except Exception as e:
+            print(f"ERROR al crear: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
@@ -344,72 +362,40 @@ def editar_insumo(request, insumo_id):
     insumo = get_object_or_404(Insumo, idInventario=insumo_id)
     if request.method == 'POST':
         try:
-            # Debug: Ver qué datos llegan
-            print(f"DEBUG - Content-Type: {request.content_type}")
-            print(f"DEBUG - Body raw: {request.body}")
-            
+            import json
             data = json.loads(request.body)
-            print(f"DEBUG - Data parsed: {data}")
+            print(f"DEBUG - Data recibida: {data}")
             
             # Actualizar campos básicos
-            insumo.medicamento = data.get('medicamento', insumo.medicamento)
-            insumo.categoria = data.get('categoria', insumo.categoria)
+            insumo.medicamento = data.get('nombre_comercial', insumo.medicamento)
+            insumo.tipo = data.get('tipo', insumo.tipo)
+            insumo.especie = data.get('especie', insumo.especie)
+            insumo.descripcion = data.get('descripcion', insumo.descripcion)
             insumo.stock_actual = int(data.get('stock_actual', insumo.stock_actual))
             insumo.precio_venta = float(data.get('precio_venta', insumo.precio_venta))
             
-            # Actualizar campos opcionales
-            campos_opcionales = {
-                'sku': str,
-                'codigo_barra': str,
-                'presentacion': str,
-                'especie': str,
-                'descripcion': str,
-                'unidad_medida': str,
-                'almacenamiento': str,
-                'precauciones': str,
-                'contraindicaciones': str,
-                'efectos_adversos': str,
-            }
-            
-            for campo, tipo in campos_opcionales.items():
-                if campo in data:
-                    valor = data.get(campo)
-                    setattr(insumo, campo, tipo(valor) if valor else None)
+            # Campos de texto largos
+            insumo.precauciones = data.get('precauciones', insumo.precauciones)
+            insumo.contraindicaciones = data.get('contraindicaciones', insumo.contraindicaciones)
+            insumo.efectos_adversos = data.get('efectos_adversos', insumo.efectos_adversos)
             
             # Campos numéricos opcionales
-            if 'margen' in data and data['margen']:
-                insumo.margen = float(data['margen'])
-            if 'stock_minimo' in data and data['stock_minimo']:
-                insumo.stock_minimo = int(data['stock_minimo'])
-            if 'stock_maximo' in data and data['stock_maximo']:
-                insumo.stock_maximo = int(data['stock_maximo'])
             if 'dosis_ml' in data and data['dosis_ml']:
                 insumo.dosis_ml = float(data['dosis_ml'])
             if 'peso_kg' in data and data['peso_kg']:
                 insumo.peso_kg = float(data['peso_kg'])
+            if 'ml_contenedor' in data and data['ml_contenedor']:
+                insumo.ml_contenedor = float(data['ml_contenedor'])
             
             insumo.save()
-            print(f"DEBUG - Insumo guardado exitosamente: {insumo.idInventario}")
+            print(f"DEBUG - Insumo guardado: {insumo.idInventario}")
             
             return JsonResponse({
                 'success': True,
                 'message': 'Insumo actualizado correctamente',
-                'insumo': {
-                    'id': insumo.idInventario,
-                    'medicamento': insumo.medicamento,
-                    'categoria': insumo.categoria,
-                    'stock_actual': insumo.stock_actual,
-                    'precio_venta': float(insumo.precio_venta)
-                }
             })
-        except json.JSONDecodeError as e:
-            print(f"ERROR - JSON Decode: {str(e)}")
-            return JsonResponse({'success': False, 'error': f'Error al decodificar JSON: {str(e)}'}, status=400)
-        except ValueError as e:
-            print(f"ERROR - Valor inválido: {str(e)}")
-            return JsonResponse({'success': False, 'error': f'Valor inválido: {str(e)}'}, status=400)
         except Exception as e:
-            print(f"ERROR - Excepción general: {str(e)}")
+            print(f"ERROR: {str(e)}")
             import traceback
             traceback.print_exc()
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
@@ -727,6 +713,30 @@ def api_productos(request):
         print(f"Error en api_productos: {str(e)}")
         print(traceback.format_exc())
         return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+def detalle_insumo(request, insumo_id):
+    """Vista para obtener detalles completos de un insumo (JSON)"""
+    insumo = get_object_or_404(Insumo, idInventario=insumo_id)
+    
+    return JsonResponse({
+        'success': True,
+        'insumo': {
+            'idInventario': insumo.idInventario,
+            'nombre_comercial': insumo.medicamento,
+            'tipo': insumo.tipo or '',
+            'especie': insumo.especie or '',
+            'descripcion': insumo.descripcion or '',
+            'precio_venta': float(insumo.precio_venta) if insumo.precio_venta else 0,
+            'stock_actual': insumo.stock_actual or 0,
+            'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml else '',
+            'peso_kg': float(insumo.peso_kg) if insumo.peso_kg else '',
+            'ml_contenedor': float(insumo.ml_contenedor) if insumo.ml_contenedor else '',
+            'precauciones': insumo.precauciones or '',
+            'contraindicaciones': insumo.contraindicaciones or '',
+            'efectos_adversos': insumo.efectos_adversos or '',
+        }
+    })
 
 
 

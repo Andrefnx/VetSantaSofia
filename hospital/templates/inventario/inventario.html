@@ -34,8 +34,13 @@
 
 {% block table_rows %}
 {% for insumo in insumos %}
-<tr data-id="{{ insumo.idInventario }}" data-especie="{{ insumo.especie|default_if_none:'' }}" data-stock="ok"
-    data-dosis-ml="{{ insumo.dosis_ml }}" data-peso-kg="{{ insumo.peso_kg }}">
+<tr data-id="{{ insumo.idInventario }}" 
+    data-especie="{{ insumo.especie|default_if_none:'' }}" 
+    data-tipo="{{ insumo.tipo|default_if_none:'' }}"
+    data-stock="ok"
+    data-dosis-ml="{{ insumo.dosis_ml|default_if_none:'' }}" 
+    data-peso-kg="{{ insumo.peso_kg|default_if_none:'' }}"
+    data-ml-contenedor="{{ insumo.ml_contenedor|default_if_none:'' }}">
     <td>{{ insumo.medicamento }}</td>
     <td>{{ insumo.especie }}</td>
     <td>${{ insumo.precio_venta|floatformat:0 }}</td>
@@ -151,18 +156,6 @@
                             <p class="field-view fw-bold mb-0" data-field="stock_actual">-</p>
                             <input type="number" min="0" class="field-edit form-control d-none"
                                 data-field="stock_actual">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="text-muted small">Stock Mínimo</label>
-                            <p class="field-view mb-0" data-field="stock_minimo">-</p>
-                            <input type="number" min="0" class="field-edit form-control d-none"
-                                data-field="stock_minimo">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="text-muted small">Stock Máximo</label>
-                            <p class="field-view mb-0" data-field="stock_maximo">-</p>
-                            <input type="number" min="0" class="field-edit form-control d-none"
-                                data-field="stock_maximo">
                         </div>
                     </div>
                 </div>
