@@ -57,6 +57,7 @@ class Insumo(models.Model):
     dosis_ml = models.FloatField(blank=True, null=True)
     peso_kg = models.FloatField(blank=True, null=True)
     fecha_creacion = models.DateTimeField(default=timezone.now)
+    ml_contenedor = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="ML en Contenedor")
 
     class Meta:
         db_table = "Insumo"

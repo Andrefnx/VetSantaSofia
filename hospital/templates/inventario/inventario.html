@@ -159,10 +159,11 @@
                     <div class="row g-3">
 
                         <!-- VISTA -->
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label class="text-muted small">Dosis Recomendada</label>
                             <p class="field-view mb-0" data-field="dosis_formula_view">-</p>
                         </div>
+
 
                         <!-- EDICIÓN -->
                         <div class="col-md-12 field-edit d-none">
@@ -180,6 +181,14 @@
                             </div>
                         </div>
 
+                    </div>
+
+
+                    <div class="col-md-6" style="margin-top: 10px;">
+                        <label class="text-muted small">Ml en Contenedor</label>
+                        <p class="field-view mb-0" data-field="ml_contenedor">-</p>
+                        <input type="number" step="any" class="field-edit form-control d-none"
+                            data-field="ml_contenedor" placeholder="Ej: 100">
                     </div>
                 </div>
 
@@ -211,7 +220,7 @@
                     <i class="bi bi-pencil-fill"></i> Editar
                 </button>
                 <button type="button" class="vet-btn-grey d-none" id="btnGuardarProductoModal"
-    onclick="guardarProductoEditado()">
+                    onclick="guardarProductoEditado()">
                     <i class="bi bi-floppy-fill"></i> Guardar
                 </button>
                 <button type="button" class="vet-btn-grey error" id="btnEliminarProducto"
@@ -290,7 +299,8 @@
                 <p id="eliminarProductoMensaje">¿Estás seguro que deseas eliminar este producto?</p>
             </div>
             <div class="vet-modal-body" style="text-align:right;">
-                <button type="button" class="vet-btn-grey error" id="btnConfirmarEliminarProducto" onclick="eliminarProductoConfirmado()">
+                <button type="button" class="vet-btn-grey error" id="btnConfirmarEliminarProducto"
+                    onclick="eliminarProductoConfirmado()">
                     <i class="bi bi-trash3-fill"></i> Eliminar
                 </button>
             </div>
