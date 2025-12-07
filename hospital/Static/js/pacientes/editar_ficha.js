@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnGuardar = document.getElementById('btnGuardar');
     
     const viewElements = document.querySelectorAll('.view-mode');
-    const editElements = document.querySelectorAll('input.edit-mode, textarea.edit-mode, select.edit-mode');
+    const editElements = document.querySelectorAll('input.edit-mode, textarea.edit-mode, select.edit-mode, div.edit-mode');
 
     
     let originalData = {};
@@ -22,6 +22,33 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Datos guardados:', originalData);
     }
 
+    // Manejar cambio entre fecha de nacimiento y edad estimada
+    const radioFecha = document.querySelector('input[name="tipo_edad"][value="fecha"]');
+    const radioEstimada = document.querySelector('input[name="tipo_edad"][value="estimada"]');
+    const fechaNacimiento = document.getElementById('fechaNacimiento');
+    const edadEstimadaInputs = document.getElementById('edadEstimadaInputs');
+
+    if (radioFecha && radioEstimada) {
+        radioFecha.addEventListener('change', function() {
+            if (this.checked) {
+                fechaNacimiento.style.display = 'block';
+                edadEstimadaInputs.style.display = 'none';
+                // Limpiar edad estimada
+                edadEstimadaInputs.querySelectorAll('input').forEach(input => {
+                    input.value = '';
+                });
+            }
+        });
+
+        radioEstimada.addEventListener('change', function() {
+            if (this.checked) {
+                fechaNacimiento.style.display = 'none';
+                fechaNacimiento.value = '';
+                edadEstimadaInputs.style.display = 'flex';
+            }
+        });
+    }
+
     // Activar modo edición
     if (btnEditarFicha) {
         btnEditarFicha.addEventListener('click', function() {
@@ -31,7 +58,13 @@ document.addEventListener('DOMContentLoaded', function() {
             btnEditActions.style.display = 'flex';
             
             viewElements.forEach(el => el.style.display = 'none');
-            editElements.forEach(el => el.style.display = 'block');
+            editElements.forEach(el => {
+                if (el.tagName === 'DIV') {
+                    el.style.display = 'block';
+                } else {
+                    el.style.display = 'block';
+                }
+            });
             
             // Mostrar el selector de propietario y campos editables
             const propietarioSelector = document.getElementById('propietarioSelector');
@@ -162,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData();
             
             editElements.forEach(el => {
-                if (el.value !== undefined) {
+                if (el.value !== undefined && el.name) {
                     formData.append(el.name, el.value);
                 }
             });

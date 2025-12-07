@@ -40,6 +40,13 @@ def ficha_mascota_view(request, paciente_id):
     """Vista para mostrar la ficha de un paciente específico"""
     paciente = get_object_or_404(Paciente, id=paciente_id, activo=True)
     
+    # Debug: verificar propietario
+    print(f"Paciente: {paciente.nombre}")
+    print(f"Propietario ID: {paciente.propietario.id}")
+    print(f"Propietario nombre: {paciente.propietario.nombre}")
+    print(f"Propietario apellido: {paciente.propietario.apellido}")
+    print(f"Propietario nombre_completo: {paciente.propietario.nombre_completo}")
+    
     # Obtener todos los propietarios para el selector
     propietarios = Propietario.objects.all().order_by('nombre', 'apellido')
     
@@ -495,6 +502,44 @@ def editar_paciente_ajax(request, paciente_id):
             'success': False,
             'error': str(e)
         }, status=400)
+
+@login_required
+def guardar_edicion_ficha(request, paciente_id):
+    if request.method == 'POST':
+        paciente = get_object_or_404(Paciente, id=paciente_id)
+        
+        # Actualizar datos básicos
+        paciente.nombre = request.POST.get('nombre', paciente.nombre)
+        paciente.especie = request.POST.get('especie', paciente.especie)
+        paciente.raza = request.POST.get('raza', paciente.raza)
+        paciente.sexo = request.POST.get('sexo', paciente.sexo)
+        paciente.color = request.POST.get('color', paciente.color)
+        paciente.microchip = request.POST.get('microchip', paciente.microchip)
+        paciente.observaciones = request.POST.get('observaciones', paciente.observaciones)
+        
+        if request.POST.get('ultimo_peso'):
+            paciente.ultimo_peso = request.POST.get('ultimo_peso')
+        
+        # Manejar edad
+        tipo_edad = request.POST.get('tipo_edad')
+        if tipo_edad == 'fecha':
+            fecha_nac = request.POST.get('fecha_nacimiento')
+            if fecha_nac:
+                paciente.fecha_nacimiento = fecha_nac
+                paciente.edad_anos = None
+                paciente.edad_meses = None
+        else:  # edad estimada
+            paciente.fecha_nacimiento = None
+            edad_anos = request.POST.get('edad_anos')
+            edad_meses = request.POST.get('edad_meses')
+            paciente.edad_anos = int(edad_anos) if edad_anos else None
+            paciente.edad_meses = int(edad_meses) if edad_meses else None
+        
+        paciente.save()
+        
+        return JsonResponse({'success': True})
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
 
 

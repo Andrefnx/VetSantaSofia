@@ -11,13 +11,14 @@
 {% block content %}
 <div class="header">
     <h1>
-        <i class="fas fa-paw"></i> 
+        <i class="fas fa-paw"></i>
         <span class="view-mode">{{ paciente.nombre }}</span>
-        <input type="text" class="form-control edit-mode" name="nombre" value="{{ paciente.nombre }}" style="display:none; max-width: 300px;">
+        <input type="text" class="form-control edit-mode" name="nombre" value="{{ paciente.nombre }}"
+            style="display:none; max-width: 300px;">
     </h1>
 
     <div class="actions-area">
-        
+
         <!-- Botón Editar (visible solo en modo vista) -->
         <button class="vet-btn vet-btn-primary" id="btnEditarFicha">
             <i class="bi bi-pencil-square"></i> Editar Ficha
@@ -43,7 +44,7 @@
             <h2>Información General</h2>
             <div class="info" id="infoGeneral">
                 <div class="info-row">
-                    <p><strong>Especie:</strong> <span class="view-mode">{{ paciente.get_especie_display }}</span>
+                    <p><strong>Especie:</strong> <span class="view-mode">{{ paciente.especie }}</span>
                         <select class="form-control edit-mode" name="especie" style="display:none;">
                             <option value="perro" {% if paciente.especie == 'perro' %}selected{% endif %}>Perro</option>
                             <option value="gato" {% if paciente.especie == 'gato' %}selected{% endif %}>Gato</option>
@@ -53,87 +54,126 @@
                     <p><strong>Raza:</strong> <span class="view-mode">{{ paciente.raza|default:"No especificada" }}</span>
                         <input type="text" class="form-control edit-mode" name="raza" value="{{ paciente.raza }}" style="display:none;">
                     </p>
-                    <p><strong>Edad:</strong> <span class="view-mode">{{ paciente.edad_formateada }}</span>
-                        <input type="number" class="form-control edit-mode" name="edad_anos" value="{{ paciente.edad_anos }}" style="display:none;" placeholder="Años">
-                        <input type="number" class="form-control edit-mode" name="edad_meses" value="{{ paciente.edad_meses }}" style="display:none; margin-top: 5px;" placeholder="Meses">
-                    </p>
-                    <p><strong>Sexo:</strong> 
-    <span class="view-mode">
-        {% if paciente.sexo == 'M' %}Macho{% elif paciente.sexo == 'H' %}Hembra{% else %}{{ paciente.sexo }}{% endif %}
-    </span>
-    <select class="form-control edit-mode" name="sexo" style="display:none;">
-        <option value="M" {% if paciente.sexo == 'M' %}selected{% endif %}>Macho</option>
-        <option value="H" {% if paciente.sexo == 'H' %}selected{% endif %}>Hembra</option>
-    </select>
-</p>
                     <p><strong>Color:</strong> <span class="view-mode">{{ paciente.color|default:"No especificado" }}</span>
                         <input type="text" class="form-control edit-mode" name="color" value="{{ paciente.color }}" style="display:none;">
                     </p>
                 </div>
-                <p><strong>Microchip:</strong> <span class="view-mode">{{ paciente.microchip|default:"No registrado" }}</span>
-                    <input type="text" class="form-control edit-mode" name="microchip" value="{{ paciente.microchip }}" style="display:none;">
-                </p>
+                
+                <!-- Sección de Edad con diseño especial -->
+                <div class="edad-section">
+                    <p><strong>Edad:</strong> <span class="view-mode">{{ paciente.edad_formateada }}</span></p>
+                    
+                    <div class="edit-mode edad-edit-container" style="display:none;">
+                        <div class="edad-option">
+                            <label>
+                                <input type="radio" name="tipo_edad" value="fecha" {% if paciente.fecha_nacimiento %}checked{% endif %}> 
+                                <strong>Fecha de nacimiento</strong>
+                            </label>
+                            <input type="date" class="form-control" name="fecha_nacimiento" value="{{ paciente.fecha_nacimiento|date:'Y-m-d' }}" id="fechaNacimiento" {% if not paciente.fecha_nacimiento %}style="display:none;"{% endif %}>
+                        </div>
+                        
+                        <div class="edad-option">
+                            <label>
+                                <input type="radio" name="tipo_edad" value="estimada" {% if not paciente.fecha_nacimiento %}checked{% endif %}> 
+                                <strong>Edad estimada</strong>
+                            </label>
+                            <div id="edadEstimadaInputs" {% if paciente.fecha_nacimiento %}style="display:none;"{% endif %}>
+                                <input type="number" class="form-control" name="edad_anos" value="{{ paciente.edad_anos|default:'' }}" placeholder="Años" min="0">
+                                <input type="number" class="form-control" name="edad_meses" value="{{ paciente.edad_meses|default:'' }}" placeholder="Meses" min="0" max="11">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-row">
+                    <p><strong>Sexo:</strong> 
+                        <span class="view-mode">
+                            {% if paciente.sexo == 'M' %}Macho{% elif paciente.sexo == 'H' %}Hembra{% else %}{{ paciente.sexo }}{% endif %}
+                        </span>
+                        <select class="form-control edit-mode" name="sexo" style="display:none;">
+                            <option value="M" {% if paciente.sexo == 'M' %}selected{% endif %}>Macho</option>
+                            <option value="H" {% if paciente.sexo == 'H' %}selected{% endif %}>Hembra</option>
+                        </select>
+                    </p>
+                    <p><strong>Microchip:</strong> <span class="view-mode">{{ paciente.microchip|default:"No tiene" }}</span>
+                        <input type="text" class="form-control edit-mode" name="microchip" value="{{ paciente.microchip }}" style="display:none;">
+                    </p>
+                </div>
+
+                <!-- Sección de Observaciones -->
                 {% if paciente.observaciones %}
-                <p><strong>Observaciones:</strong> <span class="view-mode">{{ paciente.observaciones }}</span>
-                    <textarea class="form-control edit-mode" name="observaciones" style="display:none;">{{ paciente.observaciones }}</textarea>
-                </p>
+                <div class="info-row">
+                    <p><strong>Observaciones:</strong> <span class="view-mode">{{ paciente.observaciones }}</span>
+                        <textarea class="form-control edit-mode" name="observaciones"
+                            style="display:none;">{{ paciente.observaciones }}</textarea>
+                    </p>
+                </div>
                 {% endif %}
             </div>
         </div>
-        
+
         <div class="section resumen-clinico">
             <h2>Resumen Clínico</h2>
             <div class="info">
                 <div class="info-row">
                     <p><strong>Último peso registrado:</strong> {{ paciente.ultimo_peso_formateado }}</p>
-                    <p><strong>Último control:</strong> 
+                    <p><strong>Último control:</strong>
                         {% if paciente.fecha_ultimo_control %}
-                            {{ paciente.fecha_ultimo_control|date:"d/m/Y H:i" }}
+                        {{ paciente.fecha_ultimo_control|date:"d/m/Y H:i" }}
                         {% else %}
-                            No registrado
+                        No registrado
                         {% endif %}
                     </p>
                 </div>
                 <p><strong>Fecha de registro:</strong> {{ paciente.fecha_registro|date:"d/m/Y" }}</p>
             </div>
         </div>
-        
+
         <div class="section responsable">
             <h2>Responsable</h2>
             <div class="info">
                 <div class="info-row">
                     <div>
-                        <p><strong>Dueño:</strong> <span class="view-mode">{{ paciente.propietario.nombre_completo }}</span></p>
+                        <p><strong>Dueño:</strong> 
+                            <span class="view-mode">{{ paciente.propietario.nombre_completo }}</span>
+                        </p>
                         <div class="edit-mode" id="propietarioSelector" style="display:none;">
-                            <input type="text" class="form-control" id="buscarPropietario" placeholder="Buscar propietario..." autocomplete="off">
+                            <input type="text" class="form-control" id="buscarPropietario"
+                                placeholder="Buscar propietario..." autocomplete="off">
                             <div id="resultadosBusqueda" class="search-results" style="display:none;"></div>
-                            <button type="button" class="vet-btn vet-btn-secondary" id="btnNuevoPropietario" style="margin-top: 8px;">
+                            <button type="button" class="vet-btn vet-btn-secondary" id="btnNuevoPropietario"
+                                style="margin-top: 8px;">
                                 <i class="bi bi-plus-circle"></i> Crear nuevo responsable
                             </button>
                         </div>
                         <div id="camposNombrePropietario" class="edit-mode" style="display:none;">
-                            <input type="text" class="form-control" name="propietario_nombre_edit" placeholder="Nombre" value="{{ paciente.propietario.nombre }}" style="margin-bottom: 8px;">
-                            <input type="text" class="form-control" name="propietario_apellido_edit" placeholder="Apellido" value="{{ paciente.propietario.apellido }}">
+                            <input type="text" class="form-control" name="propietario_nombre_edit" placeholder="Nombre"
+                                value="{{ paciente.propietario.nombre }}" style="margin-bottom: 8px;">
+                            <input type="text" class="form-control" name="propietario_apellido_edit"
+                                placeholder="Apellido" value="{{ paciente.propietario.apellido }}">
                             <input type="hidden" name="propietario_id" value="{{ paciente.propietario.id }}">
                         </div>
                     </div>
-                    <p><strong>Teléfono:</strong> 
+                    <p><strong>Teléfono:</strong>
                         <span class="view-mode">{{ paciente.propietario.telefono|default:"No registrado" }}</span>
-                        <input type="text" class="form-control edit-mode" name="propietario_telefono" value="{{ paciente.propietario.telefono }}" style="display:none;">
+                        <input type="text" class="form-control edit-mode" name="propietario_telefono"
+                            value="{{ paciente.propietario.telefono }}" style="display:none;">
                     </p>
-                    <p><strong>Correo Electrónico:</strong> 
+                    <p><strong>Correo Electrónico:</strong>
                         <span class="view-mode">{{ paciente.propietario.email|default:"No registrado" }}</span>
-                        <input type="email" class="form-control edit-mode" name="propietario_email" value="{{ paciente.propietario.email }}" style="display:none;">
+                        <input type="email" class="form-control edit-mode" name="propietario_email"
+                            value="{{ paciente.propietario.email }}" style="display:none;">
                     </p>
                 </div>
-                <p><strong>Dirección:</strong> 
+                <p><strong>Dirección:</strong>
                     <span class="view-mode">{{ paciente.propietario.direccion|default:"No registrada" }}</span>
-                    <textarea class="form-control edit-mode" name="propietario_direccion" style="display:none;">{{ paciente.propietario.direccion }}</textarea>
+                    <textarea class="form-control edit-mode" name="propietario_direccion"
+                        style="display:none;">{{ paciente.propietario.direccion }}</textarea>
                 </p>
             </div>
         </div>
     </div>
-    
+
     <div class="section tabs-section">
         <div class="tabs-nav">
             <button class="tab-btn active" data-tab="historial">Historial Clínico</button>
@@ -156,7 +196,7 @@
                             <i class="bi bi-calendar-plus"></i> Agendar Cita
                         </button>
                     </div>
-                    
+
                     {% for consulta in consultas %}
                     <div class="timeline-item">
                         <div class="timeline-date">
@@ -173,7 +213,8 @@
                             {% if consulta.notas %}
                             <p class="event-notes">{{ consulta.notas|truncatewords:20 }}</p>
                             {% endif %}
-                            <button class="timeline-btn" onclick="verDetalleConsulta({{ consulta.id }})">Ver detalle</button>
+                            <button class="timeline-btn" onclick="verDetalleConsulta({{ consulta.id }})">Ver
+                                detalle</button>
                         </div>
                     </div>
                     {% empty %}
@@ -209,7 +250,8 @@
                                 <td>{{ hosp.motivo }}</td>
                                 <td>{{ hosp.veterinario.get_full_name|default:"-" }}</td>
                                 <td>
-                                    <span class="badge bg-{% if hosp.estado == 'activa' %}warning{% elif hosp.estado == 'alta' %}success{% else %}danger{% endif %}">
+                                    <span
+                                        class="badge bg-{% if hosp.estado == 'activa' %}warning{% elif hosp.estado == 'alta' %}success{% else %}danger{% endif %}">
                                         {{ hosp.get_estado_display }}
                                     </span>
                                 </td>
@@ -233,7 +275,8 @@
                     <div style="margin-bottom: 1rem;">
                         <label class="vet-btn vet-btn-primary" style="cursor:pointer;">
                             <i class="bi bi-paperclip"></i> Adjuntar Examen
-                            <input type="file" name="adjuntar_examen" style="display:none;" onchange="subirExamen(this, {{ paciente.id }})">
+                            <input type="file" name="adjuntar_examen" style="display:none;"
+                                onchange="subirExamen(this, {{ paciente.id }})">
                         </label>
                     </div>
                     <table class="table table-bordered table-hover">
@@ -281,7 +324,8 @@
                     <div style="margin-bottom: 1rem;">
                         <label class="vet-btn vet-btn-primary" style="cursor:pointer;">
                             <i class="bi bi-paperclip"></i> Adjuntar Documento
-                            <input type="file" name="adjuntar_documento" style="display:none;" onchange="subirDocumento(this, {{ paciente.id }})">
+                            <input type="file" name="adjuntar_documento" style="display:none;"
+                                onchange="subirDocumento(this, {{ paciente.id }})">
                         </label>
                     </div>
                     <ul class="list-group">
@@ -398,11 +442,13 @@
                     <div class="col-md-8">
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-person-badge"></i> Médico Tratante</div>
-                            <input type="text" class="form-control" name="medico" value="{{ user.nombre }} {{ user.apellido }}" readonly style="background:#f3f3f3;">
+                            <input type="text" class="form-control" name="medico"
+                                value="{{ user.nombre }} {{ user.apellido }}" readonly style="background:#f3f3f3;">
                         </div>
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
-                            <input type="text" class="form-control" name="fecha" value="{% now 'd/m/Y' %}" readonly style="background:#f3f3f3;">
+                            <input type="text" class="form-control" name="fecha" value="{% now 'd/m/Y' %}" readonly
+                                style="background:#f3f3f3;">
                         </div>
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-clipboard2-check"></i> Diagnóstico</div>
