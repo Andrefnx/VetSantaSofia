@@ -156,7 +156,7 @@ def crear_paciente(request):
             paciente_data = data.get('paciente', {})
             paciente = Paciente.objects.create(
                 nombre=paciente_data.get('nombre'),
-                especie=paciente_data.get('especie'),
+                especie=paciente_data.get('especie'),  # <-- FALTABA CERRAR AQUÍ
                 raza=paciente_data.get('raza', ''),
                 edad=paciente_data.get('edad', ''),
                 sexo=paciente_data.get('sexo'),
@@ -341,23 +341,83 @@ def crear_insumo(request):
 
 @csrf_exempt
 def editar_insumo(request, insumo_id):
-    insumo = get_object_or_404(Insumo, id=insumo_id)
+    insumo = get_object_or_404(Insumo, idInventario=insumo_id)
     if request.method == 'POST':
         try:
+            # Debug: Ver qué datos llegan
+            print(f"DEBUG - Content-Type: {request.content_type}")
+            print(f"DEBUG - Body raw: {request.body}")
+            
             data = json.loads(request.body)
+            print(f"DEBUG - Data parsed: {data}")
+            
+            # Actualizar campos básicos
             insumo.medicamento = data.get('medicamento', insumo.medicamento)
             insumo.categoria = data.get('categoria', insumo.categoria)
-            insumo.stock_actual = data.get('stock_actual', insumo.stock_actual)
-            insumo.precio_venta = data.get('precio_venta', insumo.precio_venta)
+            insumo.stock_actual = int(data.get('stock_actual', insumo.stock_actual))
+            insumo.precio_venta = float(data.get('precio_venta', insumo.precio_venta))
+            
+            # Actualizar campos opcionales
+            campos_opcionales = {
+                'sku': str,
+                'codigo_barra': str,
+                'presentacion': str,
+                'especie': str,
+                'descripcion': str,
+                'unidad_medida': str,
+                'almacenamiento': str,
+                'precauciones': str,
+                'contraindicaciones': str,
+                'efectos_adversos': str,
+            }
+            
+            for campo, tipo in campos_opcionales.items():
+                if campo in data:
+                    valor = data.get(campo)
+                    setattr(insumo, campo, tipo(valor) if valor else None)
+            
+            # Campos numéricos opcionales
+            if 'margen' in data and data['margen']:
+                insumo.margen = float(data['margen'])
+            if 'stock_minimo' in data and data['stock_minimo']:
+                insumo.stock_minimo = int(data['stock_minimo'])
+            if 'stock_maximo' in data and data['stock_maximo']:
+                insumo.stock_maximo = int(data['stock_maximo'])
+            if 'dosis_ml' in data and data['dosis_ml']:
+                insumo.dosis_ml = float(data['dosis_ml'])
+            if 'peso_kg' in data and data['peso_kg']:
+                insumo.peso_kg = float(data['peso_kg'])
+            
             insumo.save()
-            return JsonResponse({'success': True, 'message': 'Insumo actualizado'})
+            print(f"DEBUG - Insumo guardado exitosamente: {insumo.idInventario}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Insumo actualizado correctamente',
+                'insumo': {
+                    'id': insumo.idInventario,
+                    'medicamento': insumo.medicamento,
+                    'categoria': insumo.categoria,
+                    'stock_actual': insumo.stock_actual,
+                    'precio_venta': float(insumo.precio_venta)
+                }
+            })
+        except json.JSONDecodeError as e:
+            print(f"ERROR - JSON Decode: {str(e)}")
+            return JsonResponse({'success': False, 'error': f'Error al decodificar JSON: {str(e)}'}, status=400)
+        except ValueError as e:
+            print(f"ERROR - Valor inválido: {str(e)}")
+            return JsonResponse({'success': False, 'error': f'Valor inválido: {str(e)}'}, status=400)
         except Exception as e:
+            print(f"ERROR - Excepción general: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 @csrf_exempt
 def eliminar_insumo(request, insumo_id):
-    insumo = get_object_or_404(Insumo, id=insumo_id)
+    insumo = get_object_or_404(Insumo, idInventario=insumo_id)  # Cambiado de id a idInventario
     if request.method == 'POST':
         try:
             insumo.delete()
@@ -368,7 +428,7 @@ def eliminar_insumo(request, insumo_id):
 
 @csrf_exempt
 def modificar_stock(request, insumo_id):
-    insumo = get_object_or_404(Insumo, id=insumo_id)
+    insumo = get_object_or_404(Insumo, idInventario=insumo_id)  # Cambiado de id a idInventario
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -655,7 +715,10 @@ def api_productos(request):
                 'nombre': insumo.medicamento,
                 'stock': insumo.stock_actual,
                 'categoria': insumo.categoria or '',
-                'precio': float(insumo.precio_venta)
+                'precio': float(insumo.precio_venta),
+                # AGREGAR ESTOS CAMPOS:
+                'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml else 0,
+                'peso_kg': float(insumo.peso_kg) if insumo.peso_kg else 0
             })
         
         return JsonResponse(productos, safe=False)

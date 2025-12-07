@@ -27,7 +27,23 @@ function abrirModalNuevoProducto() {
 }
 
 /* ============================================================
-   VER / EDITAR PRODUCTO
+   FUNCIÓN AUXILIAR PARA NORMALIZAR NÚMEROS
+============================================================ */
+function normalizarNumero(valor) {
+    if (!valor && valor !== 0) return '';
+    // Convierte comas a puntos y asegura formato decimal válido
+    return valor.toString().replace(',', '.');
+}
+
+function parseNumeroSeguro(valor) {
+    if (!valor && valor !== 0) return '';
+    const normalizado = valor.toString().replace(',', '.');
+    const numero = parseFloat(normalizado);
+    return isNaN(numero) ? '' : numero;
+}
+
+/* ============================================================
+   VER / EDITAR PRODUCTO (MODIFICADO)
 ============================================================ */
 function abrirModalProducto(btn, mode) {
     const tr = btn.closest("tr");
@@ -37,17 +53,17 @@ function abrirModalProducto(btn, mode) {
         idInventario: tr.getAttribute("data-id"),
         nombre_comercial: tr.cells[0].textContent.trim(),
         especie: tr.cells[1].textContent.trim(),
-        precio_venta: tr.cells[2].textContent.replace(/[^0-9.,]/g, "").trim(),
+        precio_venta: normalizarNumero(tr.cells[2].textContent.replace(/[^0-9.,]/g, "").trim()),
         stock_actual: tr.cells[3].textContent.replace(/\D/g, ""),
-        dosis_ml: tr.getAttribute("data-dosis-ml") || "",
-        peso_kg: tr.getAttribute("data-peso-kg") || "",
+        dosis_ml: normalizarNumero(tr.getAttribute("data-dosis-ml") || ""),
+        peso_kg: normalizarNumero(tr.getAttribute("data-peso-kg") || ""),
     };
 
     openProductoModal(mode, data);
 }
 
 /* ============================================================
-   ABRIR MODAL PRINCIPAL
+   ABRIR MODAL PRINCIPAL (MODIFICADO)
 ============================================================ */
 function openProductoModal(mode, data = {}) {
     const modal = document.getElementById("modalProducto");
@@ -97,13 +113,18 @@ function openProductoModal(mode, data = {}) {
         f.classList.toggle("d-none", mode === "view");
     });
 
-    // --- Rellenar campos ---
+    // --- Rellenar campos (MODIFICADO para normalizar números) ---
     Object.keys(data).forEach((key) => {
         modal.querySelectorAll(`.field-view[data-field="${key}"]`).forEach((el) => {
             el.textContent = data[key] ?? "-";
         });
         modal.querySelectorAll(`.field-edit[data-field="${key}"]`).forEach((el) => {
-            el.value = data[key] ?? "";
+            // Normalizar valores numéricos
+            if (['dosis_ml', 'peso_kg', 'precio_venta', 'margen'].includes(key)) {
+                el.value = normalizarNumero(data[key] ?? "");
+            } else {
+                el.value = data[key] ?? "";
+            }
         });
     });
 
@@ -123,7 +144,7 @@ function switchToEditModeProducto() {
 }
 
 /* ============================================================
-   GUARDAR PRODUCTO
+   GUARDAR PRODUCTO (MODIFICADO)
 ============================================================ */
 function guardarProductoEditado() {
     const modal = document.getElementById("modalProducto");
@@ -134,14 +155,22 @@ function guardarProductoEditado() {
     // --- Recoger campos ---
     inputs.forEach((input) => {
         if (input.dataset.field && typeof input.value === "string") {
-            updated[input.dataset.field] = input.value.trim();
+            const field = input.dataset.field;
+            const value = input.value.trim();
+            
+            // Normalizar campos numéricos
+            if (['dosis_ml', 'peso_kg', 'precio_venta', 'margen', 'stock_actual', 'stock_minimo', 'stock_maximo'].includes(field)) {
+                updated[field] = normalizarNumero(value);
+            } else {
+                updated[field] = value;
+            }
         }
     });
 
     // --- Dosis ---
     const dosis = leerDosisDesdeModal();
-    updated.dosis_ml = dosis.dosis_ml || null;
-    updated.peso_kg = dosis.peso_kg || null;
+    updated.dosis_ml = normalizarNumero(dosis.dosis_ml || "");
+    updated.peso_kg = normalizarNumero(dosis.peso_kg || "");
 
     // --- ID ---
     if (modal.dataset.idinventario) {
@@ -174,7 +203,13 @@ function guardarProductoEditado() {
             if (resp.success) {
                 closeVetModal("modalProducto");
                 location.reload();
+            } else {
+                alert("Error al guardar: " + (resp.error || "Error desconocido"));
             }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Error al guardar el producto");
         });
 }
 
@@ -206,14 +241,14 @@ function getProductoModalData() {
 }
 
 /* ============================================================
-   LEER DOSIS
+   LEER DOSIS (MODIFICADO)
 ============================================================ */
 function leerDosisDesdeModal() {
     const modal = document.getElementById("modalProducto");
 
     return {
-        dosis_ml: modal.querySelector('[data-field="dosis_ml"]').value.trim(),
-        peso_kg: modal.querySelector('[data-field="peso_kg"]').value.trim(),
+        dosis_ml: normalizarNumero(modal.querySelector('[data-field="dosis_ml"]')?.value || ""),
+        peso_kg: normalizarNumero(modal.querySelector('[data-field="peso_kg"]')?.value || ""),
     };
 }
 
