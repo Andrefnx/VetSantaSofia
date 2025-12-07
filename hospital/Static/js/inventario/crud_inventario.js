@@ -152,7 +152,15 @@ function openProductoModal(mode, data = {}) {
    CAMBIAR A MODO EDICIÓN
 ============================================================ */
 function switchToEditModeProducto() {
-    openProductoModal("edit", getProductoModalData());
+    const modal = document.getElementById("modalProducto");
+    const data = getProductoModalData();
+    
+    // Asegurar que se preserve el ID
+    if (modal.dataset.idinventario) {
+        data.idInventario = modal.dataset.idinventario;
+    }
+    
+    openProductoModal("edit", data);
 }
 
 /* ============================================================
@@ -245,6 +253,11 @@ function getProductoModalData() {
     const modal = document.getElementById("modalProducto");
     const data = {};
 
+    // Obtener ID si existe
+    if (modal.dataset.idinventario) {
+        data.idInventario = modal.dataset.idinventario;
+    }
+
     // Obtener todos los campos editables
     modal.querySelectorAll(".field-edit").forEach((input) => {
         if (input.dataset.field) {
@@ -266,6 +279,13 @@ function getProductoModalData() {
             else {
                 data[field] = input.value.trim();
             }
+        }
+    });
+
+    // Obtener campos de vista también
+    modal.querySelectorAll(".field-view").forEach((el) => {
+        if (el.dataset.field && !data[el.dataset.field]) {
+            data[el.dataset.field] = el.textContent.trim();
         }
     });
 

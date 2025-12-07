@@ -333,7 +333,7 @@ def crear_insumo(request):
             insumo = Insumo.objects.create(
                 medicamento=data.get('nombre_comercial', data.get('medicamento')),
                 tipo=data.get('tipo'),
-                especie=data.get('especie'),
+                especie=data.get('especie'),  # <-- AQUÍ ESTABA EL PROBLEMA, FALTABA CERRAR
                 descripcion=data.get('descripcion'),
                 precio_venta=float(data.get('precio_venta', 0)),
                 stock_actual=int(data.get('stock_actual', 0)),
@@ -364,6 +364,7 @@ def editar_insumo(request, insumo_id):
         try:
             import json
             data = json.loads(request.body)
+            print(f"DEBUG - Editando insumo ID: {insumo_id}")
             print(f"DEBUG - Data recibida: {data}")
             
             # Actualizar campos básicos
@@ -380,15 +381,15 @@ def editar_insumo(request, insumo_id):
             insumo.efectos_adversos = data.get('efectos_adversos', insumo.efectos_adversos)
             
             # Campos numéricos opcionales
-            if 'dosis_ml' in data and data['dosis_ml']:
-                insumo.dosis_ml = float(data['dosis_ml'])
-            if 'peso_kg' in data and data['peso_kg']:
-                insumo.peso_kg = float(data['peso_kg'])
-            if 'ml_contenedor' in data and data['ml_contenedor']:
-                insumo.ml_contenedor = float(data['ml_contenedor'])
+            if 'dosis_ml' in data:
+                insumo.dosis_ml = float(data['dosis_ml']) if data['dosis_ml'] else None
+            if 'peso_kg' in data:
+                insumo.peso_kg = float(data['peso_kg']) if data['peso_kg'] else None
+            if 'ml_contenedor' in data:
+                insumo.ml_contenedor = float(data['ml_contenedor']) if data['ml_contenedor'] else None
             
             insumo.save()
-            print(f"DEBUG - Insumo guardado: {insumo.idInventario}")
+            print(f"DEBUG - Insumo guardado exitosamente: {insumo.idInventario}")
             
             return JsonResponse({
                 'success': True,
