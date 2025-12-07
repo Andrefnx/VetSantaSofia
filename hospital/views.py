@@ -449,19 +449,37 @@ def editar_paciente_ajax(request, paciente_id):
         for key in request.POST:
             data[key] = request.POST[key]
         
-        # Actualizar campos del paciente
-        campos_permitidos = ['nombre', 'especie', 'raza', 'sexo', 'color', 'microchip', 'observaciones', 'edad_anos', 'edad_meses']
+        print(f"DEBUG AJAX - Datos recibidos: {data}")
         
-        for campo in campos_permitidos:
+        # Actualizar campos básicos del paciente
+        campos_basicos = ['nombre', 'especie', 'raza', 'sexo', 'color', 'microchip', 'observaciones']
+        for campo in campos_basicos:
             if campo in data:
-                if campo == 'edad_anos':
-                    paciente.edad_anos = int(data[campo]) if data[campo] else 0
-                elif campo == 'edad_meses':
-                    paciente.edad_meses = int(data[campo]) if data[campo] else 0
-                else:
-                    setattr(paciente, campo, data[campo] or '')
+                setattr(paciente, campo, data[campo] or '')
         
-        # Verificar si hay un propietario_id (editar existente o seleccionar otro)
+        # Manejar edad
+        tipo_edad = data.get('tipo_edad')
+        print(f"DEBUG AJAX - Tipo de edad recibido: {tipo_edad}")
+        
+        if tipo_edad == 'fecha':
+            fecha_nac = data.get('fecha_nacimiento')
+            print(f"DEBUG AJAX - Fecha de nacimiento recibida: {fecha_nac}")
+            if fecha_nac:
+                from datetime import datetime
+                paciente.fecha_nacimiento = datetime.strptime(fecha_nac, '%Y-%m-%d').date()
+                paciente.edad_anos = None
+                paciente.edad_meses = None
+                print(f"DEBUG AJAX - Fecha nacimiento guardada: {paciente.fecha_nacimiento}")
+        elif tipo_edad == 'estimada':
+            paciente.fecha_nacimiento = None
+            edad_anos = data.get('edad_anos')
+            edad_meses = data.get('edad_meses')
+            print(f"DEBUG AJAX - Edad estimada recibida - Años: {edad_anos}, Meses: {edad_meses}")
+            paciente.edad_anos = int(edad_anos) if edad_anos and edad_anos.strip() else None
+            paciente.edad_meses = int(edad_meses) if edad_meses and edad_meses.strip() else None
+            print(f"DEBUG AJAX - Edad estimada guardada - Años: {paciente.edad_anos}, Meses: {paciente.edad_meses}")
+        
+        # Manejar propietario
         if 'propietario_id' in data and data['propietario_id']:
             propietario = get_object_or_404(Propietario, id=data['propietario_id'])
             paciente.propietario = propietario
@@ -479,8 +497,6 @@ def editar_paciente_ajax(request, paciente_id):
                 propietario.direccion = data['propietario_direccion']
             
             propietario.save()
-        
-        # Si no hay ID pero hay nombre, crear nuevo propietario
         elif 'propietario_nombre_edit' in data and data['propietario_nombre_edit']:
             nuevo_propietario = Propietario.objects.create(
                 nombre=data.get('propietario_nombre_edit', ''),
@@ -493,11 +509,27 @@ def editar_paciente_ajax(request, paciente_id):
         
         paciente.save()
         
+        # Debug final
+        print(f"DEBUG AJAX - Paciente guardado:")
+        print(f"  - Fecha nacimiento: {paciente.fecha_nacimiento}")
+        print(f"  - Edad años: {paciente.edad_anos}")
+        print(f"  - Edad meses: {paciente.edad_meses}")
+        print(f"  - Edad formateada: {paciente.edad_formateada}")
+        
         return JsonResponse({
             'success': True,
-            'message': 'Paciente actualizado correctamente'
+            'message': 'Paciente actualizado correctamente',
+            'edad_formateada': paciente.edad_formateada,
+            'debug': {
+                'fecha_nacimiento': str(paciente.fecha_nacimiento) if paciente.fecha_nacimiento else None,
+                'edad_anos': paciente.edad_anos,
+                'edad_meses': paciente.edad_meses
+            }
         })
     except Exception as e:
+        print(f"ERROR AJAX al guardar: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({
             'success': False,
             'error': str(e)
@@ -506,38 +538,94 @@ def editar_paciente_ajax(request, paciente_id):
 @login_required
 def guardar_edicion_ficha(request, paciente_id):
     if request.method == 'POST':
-        paciente = get_object_or_404(Paciente, id=paciente_id)
-        
-        # Actualizar datos básicos
-        paciente.nombre = request.POST.get('nombre', paciente.nombre)
-        paciente.especie = request.POST.get('especie', paciente.especie)
-        paciente.raza = request.POST.get('raza', paciente.raza)
-        paciente.sexo = request.POST.get('sexo', paciente.sexo)
-        paciente.color = request.POST.get('color', paciente.color)
-        paciente.microchip = request.POST.get('microchip', paciente.microchip)
-        paciente.observaciones = request.POST.get('observaciones', paciente.observaciones)
-        
-        if request.POST.get('ultimo_peso'):
-            paciente.ultimo_peso = request.POST.get('ultimo_peso')
-        
-        # Manejar edad
-        tipo_edad = request.POST.get('tipo_edad')
-        if tipo_edad == 'fecha':
-            fecha_nac = request.POST.get('fecha_nacimiento')
-            if fecha_nac:
-                paciente.fecha_nacimiento = fecha_nac
-                paciente.edad_anos = None
-                paciente.edad_meses = None
-        else:  # edad estimada
-            paciente.fecha_nacimiento = None
-            edad_anos = request.POST.get('edad_anos')
-            edad_meses = request.POST.get('edad_meses')
-            paciente.edad_anos = int(edad_anos) if edad_anos else None
-            paciente.edad_meses = int(edad_meses) if edad_meses else None
-        
-        paciente.save()
-        
-        return JsonResponse({'success': True})
+        try:
+            paciente = get_object_or_404(Paciente, id=paciente_id)
+            
+            # Actualizar datos básicos del paciente
+            paciente.nombre = request.POST.get('nombre', paciente.nombre)
+            paciente.especie = request.POST.get('especie', paciente.especie)
+            paciente.raza = request.POST.get('raza', paciente.raza)
+            paciente.sexo = request.POST.get('sexo', paciente.sexo)
+            paciente.color = request.POST.get('color', paciente.color)
+            paciente.microchip = request.POST.get('microchip', paciente.microchip)
+            paciente.observaciones = request.POST.get('observaciones', paciente.observaciones)
+            
+            # Manejar edad
+            tipo_edad = request.POST.get('tipo_edad')
+            print(f"DEBUG - Tipo de edad recibido: {tipo_edad}")
+            
+            if tipo_edad == 'fecha':
+                fecha_nac = request.POST.get('fecha_nacimiento')
+                print(f"DEBUG - Fecha de nacimiento recibida: {fecha_nac}")
+                if fecha_nac:
+                    from datetime import datetime
+                    # Convertir string a objeto date
+                    paciente.fecha_nacimiento = datetime.strptime(fecha_nac, '%Y-%m-%d').date()
+                    paciente.edad_anos = None
+                    paciente.edad_meses = None
+                    print(f"DEBUG - Fecha nacimiento guardada: {paciente.fecha_nacimiento}")
+            elif tipo_edad == 'estimada':
+                paciente.fecha_nacimiento = None
+                edad_anos = request.POST.get('edad_anos')
+                edad_meses = request.POST.get('edad_meses')
+                print(f"DEBUG - Edad estimada recibida - Años: {edad_anos}, Meses: {edad_meses}")
+                paciente.edad_anos = int(edad_anos) if edad_anos and edad_anos.strip() else None
+                paciente.edad_meses = int(edad_meses) if edad_meses and edad_meses.strip() else None
+                print(f"DEBUG - Edad estimada guardada - Años: {paciente.edad_anos}, Meses: {paciente.edad_meses}")
+            
+            # Manejar propietario
+            propietario_id = request.POST.get('propietario_id')
+            propietario_nombre = request.POST.get('propietario_nombre_edit')
+            propietario_apellido = request.POST.get('propietario_apellido_edit')
+            
+            if propietario_id:
+                # Actualizar propietario existente
+                propietario = get_object_or_404(Propietario, id=propietario_id)
+                propietario.nombre = propietario_nombre
+                propietario.apellido = propietario_apellido
+                propietario.telefono = request.POST.get('propietario_telefono', propietario.telefono)
+                propietario.email = request.POST.get('propietario_email', propietario.email)
+                propietario.direccion = request.POST.get('propietario_direccion', propietario.direccion)
+                propietario.save()
+                paciente.propietario = propietario
+            elif propietario_nombre and propietario_apellido:
+                # Crear nuevo propietario
+                nuevo_propietario = Propietario.objects.create(
+                    nombre=propietario_nombre,
+                    apellido=propietario_apellido,
+                    telefono=request.POST.get('propietario_telefono', ''),
+                    email=request.POST.get('propietario_email', ''),
+                    direccion=request.POST.get('propietario_direccion', '')
+                )
+                paciente.propietario = nuevo_propietario
+            
+            paciente.save()
+            
+            # Debug final
+            print(f"DEBUG - Paciente guardado:")
+            print(f"  - Fecha nacimiento: {paciente.fecha_nacimiento}")
+            print(f"  - Edad años: {paciente.edad_anos}")
+            print(f"  - Edad meses: {paciente.edad_meses}")
+            print(f"  - Edad formateada: {paciente.edad_formateada}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Paciente actualizado correctamente',
+                'edad_formateada': paciente.edad_formateada,
+                'debug': {
+                    'fecha_nacimiento': str(paciente.fecha_nacimiento) if paciente.fecha_nacimiento else None,
+                    'edad_anos': paciente.edad_anos,
+                    'edad_meses': paciente.edad_meses
+                }
+            })
+        except Exception as e:
+            print(f"ERROR al guardar: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
     
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
 

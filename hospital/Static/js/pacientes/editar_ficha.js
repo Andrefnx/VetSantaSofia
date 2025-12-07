@@ -195,10 +195,37 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData();
             
             editElements.forEach(el => {
-                if (el.value !== undefined && el.name) {
-                    formData.append(el.name, el.value);
+                if (el.name && (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA')) {
+                    formData.append(el.name, el.value || '');
                 }
             });
+            
+            // Agregar tipo de edad
+            const tipoEdad = document.querySelector('input[name="tipo_edad"]:checked');
+            if (tipoEdad) {
+                formData.append('tipo_edad', tipoEdad.value);
+                console.log('Tipo de edad:', tipoEdad.value);
+            }
+            
+            // Agregar datos de edad según el tipo seleccionado
+            if (tipoEdad && tipoEdad.value === 'fecha') {
+                const fechaNac = document.querySelector('input[name="fecha_nacimiento"]');
+                if (fechaNac && fechaNac.value) {
+                    formData.append('fecha_nacimiento', fechaNac.value);
+                    console.log('Fecha de nacimiento:', fechaNac.value);
+                }
+            } else if (tipoEdad && tipoEdad.value === 'estimada') {
+                const edadAnos = document.querySelector('input[name="edad_anos"]');
+                const edadMeses = document.querySelector('input[name="edad_meses"]');
+                if (edadAnos && edadAnos.value) {
+                    formData.append('edad_anos', edadAnos.value);
+                    console.log('Edad años:', edadAnos.value);
+                }
+                if (edadMeses && edadMeses.value) {
+                    formData.append('edad_meses', edadMeses.value);
+                    console.log('Edad meses:', edadMeses.value);
+                }
+            }
             
             // Agregar campos del propietario
             const inputNombre = document.querySelector('input[name="propietario_nombre_edit"]');
@@ -209,17 +236,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if (inputApellido) formData.append('propietario_apellido_edit', inputApellido.value);
             if (inputId && inputId.value) {
                 formData.append('propietario_id', inputId.value);
-            } else {
-                // Si no hay ID, es un nuevo propietario
-                formData.delete('propietario_id');
             }
             
             const url = `/hospital/pacientes/${pacienteId}/editar/`;
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
             
-            console.log('Datos guardados:', Object.fromEntries(formData));
-            console.log('URL:', url);
-            console.log('CSRF Token:', csrfToken);
+            // Debug: mostrar todos los datos que se enviarán
+            console.log('=== Datos a enviar ===');
+            for (let [key, value] of formData.entries()) {
+                console.log(key + ': ' + value);
+            }
             
             fetch(url, {
                 method: 'POST',
@@ -229,13 +255,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: formData
             })
             .then(response => {
-                console.log('Status:', response.status);
-                console.log('Status Text:', response.statusText);
-                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
                 return response.json();
             })
             .then(data => {
