@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.db import models
 from .models import Insumo, Servicio, Paciente, Propietario
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 import json
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
@@ -423,6 +424,40 @@ def test_view(request):
 
 def dashboard_pacientes(request):
     return render(request, 'dashboard_pacientes.html')
+
+@require_http_methods(["POST"])
+def editar_paciente_ajax(request, paciente_id):
+    try:
+        paciente = get_object_or_404(Paciente, id=paciente_id)
+        
+        # Parsear datos del FormData
+        data = {}
+        for key in request.POST:
+            data[key] = request.POST[key]
+        
+        # Actualizar campos del paciente
+        campos_permitidos = ['especie', 'raza', 'sexo', 'color', 'microchip', 'observaciones', 'edad_anos', 'edad_meses']
+        
+        for campo in campos_permitidos:
+            if campo in data:
+                if campo == 'edad_anos':
+                    paciente.edad_anos = int(data[campo]) if data[campo] else 0
+                elif campo == 'edad_meses':
+                    paciente.edad_meses = int(data[campo]) if data[campo] else 0
+                else:
+                    setattr(paciente, campo, data[campo] or '')
+        
+        paciente.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Paciente actualizado correctamente'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
 
 
 

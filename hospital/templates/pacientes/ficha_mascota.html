@@ -14,9 +14,17 @@
         <i class="fas fa-paw"></i> {{ paciente.nombre }}
     </h1>
     <div class="edit-mode">
-        <button class="vet-btn vet-btn-primary" onclick="window.location.href='{% url 'editar_paciente' paciente.id %}'">
+        <button class="vet-btn vet-btn-primary" id="btnEditarFicha">
             <i class="bi bi-pencil-square"></i> Editar Ficha
         </button>
+        <div id="btnEditActions" style="display: none;">
+            <button class="vet-btn vet-btn-grey" id="btnCancelar">
+                <i class="bi bi-x-lg"></i> Cancelar
+            </button>
+            <button class="vet-btn vet-btn-primary" id="btnGuardar" style="margin-left: 10px;">
+                <i class="bi bi-check-lg"></i> Guardar
+            </button>
+        </div>
     </div>
 </div>
 
@@ -24,17 +32,39 @@
     <div class="general-information">
         <div class="section personal-info">
             <h2>Información General</h2>
-            <div class="info">
+            <div class="info" id="infoGeneral">
                 <div class="info-row">
-                    <p><strong>Especie:</strong> {{ paciente.get_especie_display }}</p>
-                    <p><strong>Raza:</strong> {{ paciente.raza|default:"No especificada" }}</p>
-                    <p><strong>Edad:</strong> {{ paciente.edad_formateada }}</p>
-                    <p><strong>Sexo:</strong> {{ paciente.get_sexo_display }}</p>
-                    <p><strong>Color:</strong> {{ paciente.color|default:"No especificado" }}</p>
+                    <p><strong>Especie:</strong> <span class="view-mode">{{ paciente.get_especie_display }}</span>
+                        <select class="form-control edit-mode" name="especie" style="display:none;">
+                            <option value="perro" {% if paciente.especie == 'perro' %}selected{% endif %}>Perro</option>
+                            <option value="gato" {% if paciente.especie == 'gato' %}selected{% endif %}>Gato</option>
+                            <option value="otro" {% if paciente.especie == 'otro' %}selected{% endif %}>Otro</option>
+                        </select>
+                    </p>
+                    <p><strong>Raza:</strong> <span class="view-mode">{{ paciente.raza|default:"No especificada" }}</span>
+                        <input type="text" class="form-control edit-mode" name="raza" value="{{ paciente.raza }}" style="display:none;">
+                    </p>
+                    <p><strong>Edad:</strong> <span class="view-mode">{{ paciente.edad_formateada }}</span>
+                        <input type="number" class="form-control edit-mode" name="edad_anos" value="{{ paciente.edad_anos }}" style="display:none;" placeholder="Años">
+                        <input type="number" class="form-control edit-mode" name="edad_meses" value="{{ paciente.edad_meses }}" style="display:none; margin-top: 5px;" placeholder="Meses">
+                    </p>
+                    <p><strong>Sexo:</strong> <span class="view-mode">{{ paciente.get_sexo_display }}</span>
+                        <select class="form-control edit-mode" name="sexo" style="display:none;">
+                            <option value="M" {% if paciente.sexo == 'M' %}selected{% endif %}>Macho</option>
+                            <option value="H" {% if paciente.sexo == 'H' %}selected{% endif %}>Hembra</option>
+                        </select>
+                    </p>
+                    <p><strong>Color:</strong> <span class="view-mode">{{ paciente.color|default:"No especificado" }}</span>
+                        <input type="text" class="form-control edit-mode" name="color" value="{{ paciente.color }}" style="display:none;">
+                    </p>
                 </div>
-                <p><strong>Microchip:</strong> {{ paciente.microchip|default:"No registrado" }}</p>
+                <p><strong>Microchip:</strong> <span class="view-mode">{{ paciente.microchip|default:"No registrado" }}</span>
+                    <input type="text" class="form-control edit-mode" name="microchip" value="{{ paciente.microchip }}" style="display:none;">
+                </p>
                 {% if paciente.observaciones %}
-                <p><strong>Observaciones:</strong> {{ paciente.observaciones }}</p>
+                <p><strong>Observaciones:</strong> <span class="view-mode">{{ paciente.observaciones }}</span>
+                    <textarea class="form-control edit-mode" name="observaciones" style="display:none;">{{ paciente.observaciones }}</textarea>
+                </p>
                 {% endif %}
             </div>
         </div>
@@ -427,4 +457,6 @@
 {% block extra_js %}
 <script src="{% static 'js/base/tabs.js' %}"></script>
 <script src="{% static 'js/pacientes/historial_medico.js' %}"></script>
+
+<script src="{% static 'js/pacientes/editar_ficha.js' %}"></script>
 {% endblock %}

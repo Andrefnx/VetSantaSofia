@@ -311,3 +311,16 @@
         grid-template-columns: 1fr;
     }
 }
+
+.edit-mode {
+    margin-bottom: 10px;
+}
+
+.edit-mode input[type="number"] {
+    width: 100%;
+}
+
+#btnEditActions {
+    display: flex;
+    gap: 10px;
+}

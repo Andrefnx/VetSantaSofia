@@ -64,19 +64,10 @@
                 </li>
 
 
-                <!-- SECCIÓN: VETERINARIOS -->
-            <!--
-            <li class="nav-item {% if request.resolver_match.url_name == 'vet_view' %}active{% endif %}">
-                <a href="{% url 'vet_view' %}">
-                    <i class="bi-file-medical"></i>
-                    <p>Veterinarios</p>
-                </a>
-            </li>
-            -->
 
                 <!-- SECCIÓN: PACIENTES -->
                 <li class="nav-item {% if request.resolver_match.url_name == 'pacientes' %}active{% endif %}">
-                    <a href="{% url 'pacientes' %}">
+                    <a href=" {% url 'hospital:pacientes_view' %}">
                         <i class="fas fa-paw"></i>
                         <p>Pacientes</p>
                     </a>
@@ -84,42 +75,20 @@
 
                 <!-- SECCIÓN: INVENTARIO -->
                 <li class="nav-item {% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">
-                    <a href="{% url 'inventario' %}">
+                    <a href="{% url 'hospital:inventario' %}">
                         <i class="bi bi-box-seam"></i>
                         <p>Inventario</p>
                     </a>
                 </li>
                 <!-- SECCIÓN: SERVICIOS -->
                 <li class="nav-item {% if request.resolver_match.url_name == 'servicios' %}active{% endif %}">
-                    <a href="{% url 'servicios' %}">
+                    <a href="{% url 'hospital:servicios' %}">
                         <i class="bi bi-prescription2"></i>
                         <p>Servicios</p>
                     </a>
                 </li>
 
 
-
-<!--  ACCIONES RÁPIDAS --> 
-<!-- <li class="nav-section"> -->
-<!--     <span class="sidebar-mini-icon"><i class="fas fa-bolt"></i></span> -->
-<!--     <h4 class="text-section">Acciones Rápidas</h4> -->
-<!-- </li> -->
-
-<!--  Opción: Nueva Cita --> 
-<!-- <li class="nav-item"> -->
-<!--     <a href="{% url 'agenda:agenda' %}"> -->
-<!--         <i class="fas fa-calendar-plus"></i> -->
-<!--         <p>Nueva Cita</p> -->
-<!--     </a> -->
-<!-- </li> -->
-
-<!--  Opción: Registrar Mascota --> 
-<!-- <li class="nav-item"> -->
-<!--         <i class="fas fa-paw"></i> -->
-<!--         <p>Registrar Mascota</p> -->
-<!--     </a> -->
-<!-- </li> -->
-<!--  End ACCIONES RÁPIDAS -->
 
         </div>
     </div>
