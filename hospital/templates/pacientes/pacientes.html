@@ -73,7 +73,7 @@
                 <i class="fas fa-cog"></i>
             </button>
             <div class="manage-options" style="display: none;">
-                <button type="button" onclick="window.location.href='{% url 'ficha_mascota' paciente.id %}'">
+                <button type="button" onclick="window.location.href='{% url 'hospital:ficha_mascota' paciente.id %}'">
                     <i class="bi bi-eye"></i> Ver
                 </button>
                 <button type="button" onclick="abrirModalPaciente(this, 'edit', {{ paciente.id }})">
@@ -299,7 +299,7 @@
                                        pattern="[0-9]*"
                                        inputmode="numeric"
                                        placeholder="123456789012345"
-                                        >
+                                        
                             
                             </div>
                             <div class="col-md-6 mb-3">

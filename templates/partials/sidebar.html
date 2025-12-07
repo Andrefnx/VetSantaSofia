@@ -67,7 +67,7 @@
 
                 <!-- SECCIÓN: PACIENTES -->
                 <li class="nav-item {% if request.resolver_match.url_name == 'pacientes' %}active{% endif %}">
-                    <a href=" {% url 'hospital:pacientes_view' %}">
+                    <a href="{% url 'hospital:pacientes' %}">
                         <i class="fas fa-paw"></i>
                         <p>Pacientes</p>
                     </a>

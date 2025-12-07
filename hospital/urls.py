@@ -8,12 +8,11 @@ urlpatterns = [
     path('dashboard/', views.dashboard_pacientes, name='dashboard_pacientes'),
     
     # Pacientes
-    path('pacientes/', views.pacientes_view, name='pacientes_view'),
+    path('pacientes/', views.pacientes_view, name='pacientes'),
     path('pacientes/<int:paciente_id>/', views.ficha_mascota_view, name='ficha_mascota'),
-    path('pacientes/crear/', views.crear_paciente, name='crear_paciente'),
-    path('pacientes/editar/<int:paciente_id>/', views.editar_paciente, name='editar_paciente'),
-    path('pacientes/editar/<int:paciente_id>/ajax/', views.editar_paciente_ajax, name='editar_paciente_ajax'),
-    path('pacientes/eliminar/<int:paciente_id>/', views.eliminar_paciente, name='eliminar_paciente'),
+    path('pacientes/nuevo/', views.crear_paciente, name='nuevo_paciente'),
+    path('pacientes/<int:paciente_id>/editar/', views.editar_paciente_ajax, name='editar_paciente'),
+    path('pacientes/<int:paciente_id>/eliminar/', views.eliminar_paciente, name='eliminar_paciente'),
     path('pacientes/detalle/<int:paciente_id>/', views.detalle_paciente, name='detalle_paciente'),
     
     # Propietarios

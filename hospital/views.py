@@ -40,8 +40,12 @@ def ficha_mascota_view(request, paciente_id):
     """Vista para mostrar la ficha de un paciente específico"""
     paciente = get_object_or_404(Paciente, id=paciente_id, activo=True)
     
+    # Obtener todos los propietarios para el selector
+    propietarios = Propietario.objects.all().order_by('nombre', 'apellido')
+    
     context = {
         'paciente': paciente,
+        'propietarios': propietarios,
     }
     
     # Agregar datos relacionados solo si los modelos existen
@@ -436,7 +440,7 @@ def editar_paciente_ajax(request, paciente_id):
             data[key] = request.POST[key]
         
         # Actualizar campos del paciente
-        campos_permitidos = ['especie', 'raza', 'sexo', 'color', 'microchip', 'observaciones', 'edad_anos', 'edad_meses']
+        campos_permitidos = ['nombre', 'especie', 'raza', 'sexo', 'color', 'microchip', 'observaciones', 'edad_anos', 'edad_meses']
         
         for campo in campos_permitidos:
             if campo in data:
@@ -446,6 +450,36 @@ def editar_paciente_ajax(request, paciente_id):
                     paciente.edad_meses = int(data[campo]) if data[campo] else 0
                 else:
                     setattr(paciente, campo, data[campo] or '')
+        
+        # Verificar si se está creando un nuevo propietario
+        if 'propietario_nombre' in data and data['propietario_nombre']:
+            # Crear nuevo propietario
+            nombre_completo = data['propietario_nombre'].strip().split()
+            nombre = nombre_completo[0] if nombre_completo else ''
+            apellido = ' '.join(nombre_completo[1:]) if len(nombre_completo) > 1 else ''
+            
+            nuevo_propietario = Propietario.objects.create(
+                nombre=nombre,
+                apellido=apellido,
+                telefono=data.get('propietario_telefono', ''),
+                email=data.get('propietario_email', ''),
+                direccion=data.get('propietario_direccion', '')
+            )
+            paciente.propietario = nuevo_propietario
+        
+        # Cambiar propietario si se seleccionó uno diferente
+        elif 'propietario_id' in data and data['propietario_id']:
+            nuevo_propietario = get_object_or_404(Propietario, id=data['propietario_id'])
+            paciente.propietario = nuevo_propietario
+            
+            # Actualizar datos del propietario seleccionado
+            if 'propietario_telefono' in data:
+                nuevo_propietario.telefono = data['propietario_telefono']
+            if 'propietario_email' in data:
+                nuevo_propietario.email = data['propietario_email']
+            if 'propietario_direccion' in data:
+                nuevo_propietario.direccion = data['propietario_direccion']
+            nuevo_propietario.save()
         
         paciente.save()
         

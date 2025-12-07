@@ -11,7 +11,9 @@
 {% block content %}
 <div class="header">
     <h1>
-        <i class="fas fa-paw"></i> {{ paciente.nombre }}
+        <i class="fas fa-paw"></i> 
+        <span class="view-mode">{{ paciente.nombre }}</span>
+        <input type="text" class="form-control edit-mode" name="nombre" value="{{ paciente.nombre }}" style="display:none; max-width: 300px;">
     </h1>
 
     <div class="actions-area">
@@ -97,13 +99,40 @@
             <h2>Responsable</h2>
             <div class="info">
                 <div class="info-row">
-                    <p><strong>Dueño:</strong> {{ paciente.propietario.nombre_completo }}</p>
-                    <p><strong>Teléfono:</strong> {{ paciente.propietario.telefono|default:"No registrado" }}</p>
-                    <p><strong>Correo Electrónico:</strong> {{ paciente.propietario.email|default:"No registrado" }}</p>
+                    <div>
+                        <p><strong>Dueño:</strong> <span class="view-mode">{{ paciente.propietario.nombre_completo }}</span></p>
+                        <div class="edit-mode" id="propietarioSelector" style="display:none;">
+                            <select class="form-control" name="propietario_id" id="selectPropietario">
+                                <option value="">-- Seleccionar propietario existente --</option>
+                                {% for prop in propietarios %}
+                                <option value="{{ prop.id }}" {% if prop.id == paciente.propietario.id %}selected{% endif %}>
+                                    {{ prop.nombre_completo }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="vet-btn vet-btn-secondary" id="btnNuevoPropietario" style="margin-top: 8px;">
+                                <i class="bi bi-plus-circle"></i> Crear nuevo responsable
+                            </button>
+                        </div>
+                        <div id="camposNombrePropietario" style="display:none;">
+                            <input type="text" class="form-control" name="propietario_nombre_edit" placeholder="Nombre" value="{{ paciente.propietario.nombre }}" style="margin-bottom: 8px;">
+                            <input type="text" class="form-control" name="propietario_apellido_edit" placeholder="Apellido" value="{{ paciente.propietario.apellido }}">
+                        </div>
+                        <input type="text" class="form-control" id="inputNuevoPropietario" name="propietario_nombre" placeholder="Nombre completo del nuevo responsable" style="display:none;">
+                    </div>
+                    <p><strong>Teléfono:</strong> 
+                        <span class="view-mode">{{ paciente.propietario.telefono|default:"No registrado" }}</span>
+                        <input type="text" class="form-control edit-mode" name="propietario_telefono" value="{{ paciente.propietario.telefono }}" style="display:none;">
+                    </p>
+                    <p><strong>Correo Electrónico:</strong> 
+                        <span class="view-mode">{{ paciente.propietario.email|default:"No registrado" }}</span>
+                        <input type="email" class="form-control edit-mode" name="propietario_email" value="{{ paciente.propietario.email }}" style="display:none;">
+                    </p>
                 </div>
-                {% if paciente.propietario.direccion %}
-                <p><strong>Dirección:</strong> {{ paciente.propietario.direccion }}</p>
-                {% endif %}
+                <p><strong>Dirección:</strong> 
+                    <span class="view-mode">{{ paciente.propietario.direccion|default:"No registrada" }}</span>
+                    <textarea class="form-control edit-mode" name="propietario_direccion" style="display:none;">{{ paciente.propietario.direccion }}</textarea>
+                </p>
             </div>
         </div>
     </div>

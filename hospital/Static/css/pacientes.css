@@ -328,3 +328,11 @@
 .vet-btn.vet-btn-grey i {
     color: var(--text-dark)!important;
 }
+
+#propietarioSelector {
+    margin-top: 8px;
+}
+
+#propietarioSelector select {
+    margin-bottom: 8px;
+}
