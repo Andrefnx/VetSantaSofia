@@ -422,7 +422,16 @@
             <div class="vet-modal-body">
                 <div class="row g-3">
                     <!-- Columna izquierda: Datos fisiológicos -->
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-person-badge"></i> Médico Tratante</div>
+                            <p style="margin-bottom: 0.5rem;">{{ user.nombre }} {{ user.apellido }}</p>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
+                            <p>{% now 'd/m/Y' %}</p>
+                        </div>
+                        <hr style="margin: 1rem 0; border-top: 1px solid #dee2e6;">
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-thermometer-half"></i> Temperatura</div>
                             <input type="text" class="form-control" name="temp" required>
@@ -445,24 +454,14 @@
                         </div>
                     </div>
                     <!-- Columna derecha: Detalles de consulta -->
-                    <div class="col-md-8">
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-person-badge"></i> Médico Tratante</div>
-                            <input type="text" class="form-control" name="medico"
-                                value="{{ user.nombre }} {{ user.apellido }}" readonly style="background:#f3f3f3;">
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
-                            <input type="text" class="form-control" name="fecha" value="{% now 'd/m/Y' %}" readonly
-                                style="background:#f3f3f3;">
-                        </div>
+                    <div class="col-md-9">
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-clipboard2-check"></i> Diagnóstico</div>
-                            <input type="text" class="form-control" name="diagnostico">
+                            <textarea class="form-control" name="diagnostico" rows="5"></textarea>
                         </div>
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-capsule"></i> Tratamiento</div>
-                            <input type="text" class="form-control" name="tratamiento">
+                            <textarea class="form-control" name="tratamiento" rows="5"></textarea>
                         </div>
                         <!-- Exámenes oculto -->
                         <div class="detail-section" style="display:none;">
@@ -471,11 +470,7 @@
                         </div>
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-journal-text"></i> Notas</div>
-                            <textarea class="form-control" name="notas"></textarea>
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-lightbulb"></i> Recomendaciones</div>
-                            <input type="text" class="form-control" name="recomendaciones">
+                            <textarea class="form-control" name="notas" rows="8"></textarea>
                         </div>
                     </div>
                 </div>
