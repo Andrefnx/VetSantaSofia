@@ -33,16 +33,21 @@ document.addEventListener('DOMContentLoaded', function() {
             viewElements.forEach(el => el.style.display = 'none');
             editElements.forEach(el => el.style.display = 'block');
             
-            // Mostrar el selector de propietario manualmente
+            // Mostrar el selector de propietario y campos editables
             const propietarioSelector = document.getElementById('propietarioSelector');
+            const camposNombre = document.getElementById('camposNombrePropietario');
+            
             if (propietarioSelector) {
                 propietarioSelector.style.display = 'block';
             }
+            if (camposNombre) {
+                camposNombre.style.display = 'block';
+            }
             
-            // Agregar evento al selector de propietario
-            const selectPropietario = document.querySelector('select[name="propietario_id"]');
-            if (selectPropietario) {
-                selectPropietario.addEventListener('change', cargarDatosPropietario);
+            // Agregar evento al buscador de propietario
+            const buscarPropietario = document.getElementById('buscarPropietario');
+            if (buscarPropietario) {
+                buscarPropietario.addEventListener('input', buscarPropietarios);
             }
             
             // Agregar evento al botón de nuevo propietario
@@ -53,59 +58,68 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Función para cargar datos del propietario seleccionado
-    function cargarDatosPropietario(event) {
-        const propietarioId = event.target.value;
-        const camposNombre = document.getElementById('camposNombrePropietario');
+    // Función para buscar propietarios
+    function buscarPropietarios(event) {
+        const query = event.target.value.trim();
+        const resultadosDiv = document.getElementById('resultadosBusqueda');
         
-        if (!propietarioId) {
-            if (camposNombre) camposNombre.style.display = 'none';
+        if (query.length < 2) {
+            resultadosDiv.style.display = 'none';
             return;
         }
         
-        // Mostrar campos de nombre cuando se selecciona un propietario
-        if (camposNombre) camposNombre.style.display = 'block';
-        
-        fetch(`/hospital/propietarios/${propietarioId}/`)
+        fetch(`/hospital/propietarios/buscar/?q=${encodeURIComponent(query)}`)
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    const prop = data.propietario;
-                    
-                    // Actualizar campos editables
-                    const inputNombre = document.querySelector('input[name="propietario_nombre_edit"]');
-                    const inputApellido = document.querySelector('input[name="propietario_apellido_edit"]');
-                    const inputTelefono = document.querySelector('input[name="propietario_telefono"]');
-                    const inputEmail = document.querySelector('input[name="propietario_email"]');
-                    const textareaDireccion = document.querySelector('textarea[name="propietario_direccion"]');
-                    
-                    if (inputNombre) inputNombre.value = prop.nombre || '';
-                    if (inputApellido) inputApellido.value = prop.apellido || '';
-                    if (inputTelefono) inputTelefono.value = prop.telefono || '';
-                    if (inputEmail) inputEmail.value = prop.email || '';
-                    if (textareaDireccion) textareaDireccion.value = prop.direccion || '';
+                if (data.success && data.propietarios.length > 0) {
+                    resultadosDiv.innerHTML = data.propietarios.map(prop => `
+                        <div class="search-result-item" data-id="${prop.id}" onclick="seleccionarPropietario(${prop.id}, '${prop.nombre}', '${prop.apellido}', '${prop.telefono}', '${prop.email}', '${prop.direccion}')">
+                            <strong>${prop.nombre} ${prop.apellido}</strong><br>
+                            <small>${prop.telefono || 'Sin teléfono'}</small>
+                        </div>
+                    `).join('');
+                    resultadosDiv.style.display = 'block';
+                } else {
+                    resultadosDiv.innerHTML = '<div class="search-result-item">No se encontraron resultados</div>';
+                    resultadosDiv.style.display = 'block';
                 }
             })
-            .catch(error => console.error('Error al cargar propietario:', error));
+            .catch(error => console.error('Error al buscar propietarios:', error));
+    }
+    
+    // Función para seleccionar un propietario del buscador
+    window.seleccionarPropietario = function(id, nombre, apellido, telefono, email, direccion) {
+        // Ocultar resultados
+        document.getElementById('resultadosBusqueda').style.display = 'none';
+        document.getElementById('buscarPropietario').value = '';
+        
+        // Llenar campos
+        document.querySelector('input[name="propietario_nombre_edit"]').value = nombre || '';
+        document.querySelector('input[name="propietario_apellido_edit"]').value = apellido || '';
+        document.querySelector('input[name="propietario_id"]').value = id;
+        document.querySelector('input[name="propietario_telefono"]').value = telefono || '';
+        document.querySelector('input[name="propietario_email"]').value = email || '';
+        document.querySelector('textarea[name="propietario_direccion"]').value = direccion || '';
     }
     
     // Función para activar modo de nuevo propietario
     function activarModoNuevoPropietario() {
-        const propietarioSelector = document.getElementById('propietarioSelector');
-        const inputNuevoPropietario = document.getElementById('inputNuevoPropietario');
+        const inputNombre = document.querySelector('input[name="propietario_nombre_edit"]');
+        const inputApellido = document.querySelector('input[name="propietario_apellido_edit"]');
+        const inputId = document.querySelector('input[name="propietario_id"]');
         const inputTelefono = document.querySelector('input[name="propietario_telefono"]');
         const inputEmail = document.querySelector('input[name="propietario_email"]');
         const textareaDireccion = document.querySelector('textarea[name="propietario_direccion"]');
         
-        // Ocultar el selector y mostrar input para nuevo nombre
-        propietarioSelector.style.display = 'none';
-        inputNuevoPropietario.style.display = 'block';
-        
         // Limpiar todos los campos
-        inputNuevoPropietario.value = '';
+        if (inputNombre) inputNombre.value = '';
+        if (inputApellido) inputApellido.value = '';
+        if (inputId) inputId.value = '';
         if (inputTelefono) inputTelefono.value = '';
         if (inputEmail) inputEmail.value = '';
         if (textareaDireccion) textareaDireccion.value = '';
+        
+        alert('Complete los datos del nuevo responsable. Se creará al guardar la ficha.');
     }
 
     // Cancelar edición
@@ -127,12 +141,16 @@ document.addEventListener('DOMContentLoaded', function() {
             // Ocultar el selector de propietario y el input de nuevo propietario
             const propietarioSelector = document.getElementById('propietarioSelector');
             const inputNuevoPropietario = document.getElementById('inputNuevoPropietario');
+            const camposNombre = document.getElementById('camposNombrePropietario');
             
             if (propietarioSelector) {
                 propietarioSelector.style.display = 'none';
             }
             if (inputNuevoPropietario) {
                 inputNuevoPropietario.style.display = 'none';
+            }
+            if (camposNombre) {
+                camposNombre.style.display = 'none';
             }
         });
     }
@@ -149,11 +167,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
-            // Agregar el nombre del nuevo propietario si está visible
-            const inputNuevoPropietario = document.getElementById('inputNuevoPropietario');
-            if (inputNuevoPropietario && inputNuevoPropietario.style.display !== 'none') {
-                formData.append('propietario_nombre', inputNuevoPropietario.value);
-                // Eliminar el propietario_id para que cree uno nuevo
+            // Agregar campos del propietario
+            const inputNombre = document.querySelector('input[name="propietario_nombre_edit"]');
+            const inputApellido = document.querySelector('input[name="propietario_apellido_edit"]');
+            const inputId = document.querySelector('input[name="propietario_id"]');
+            
+            if (inputNombre) formData.append('propietario_nombre_edit', inputNombre.value);
+            if (inputApellido) formData.append('propietario_apellido_edit', inputApellido.value);
+            if (inputId && inputId.value) {
+                formData.append('propietario_id', inputId.value);
+            } else {
+                // Si no hay ID, es un nuevo propietario
                 formData.delete('propietario_id');
             }
             

@@ -279,9 +279,12 @@ def buscar_propietarios(request):
         'success': True,
         'propietarios': [{
             'id': p.id,
+            'nombre': p.nombre,
+            'apellido': p.apellido,
             'nombre_completo': p.nombre_completo,
-            'telefono': p.telefono,
-            'email': p.email,
+            'telefono': p.telefono or '',
+            'email': p.email or '',
+            'direccion': p.direccion or '',
         } for p in propietarios]
     })
 
@@ -451,35 +454,35 @@ def editar_paciente_ajax(request, paciente_id):
                 else:
                     setattr(paciente, campo, data[campo] or '')
         
-        # Verificar si se está creando un nuevo propietario
-        if 'propietario_nombre' in data and data['propietario_nombre']:
-            # Crear nuevo propietario
-            nombre_completo = data['propietario_nombre'].strip().split()
-            nombre = nombre_completo[0] if nombre_completo else ''
-            apellido = ' '.join(nombre_completo[1:]) if len(nombre_completo) > 1 else ''
+        # Verificar si hay un propietario_id (editar existente o seleccionar otro)
+        if 'propietario_id' in data and data['propietario_id']:
+            propietario = get_object_or_404(Propietario, id=data['propietario_id'])
+            paciente.propietario = propietario
             
+            # Actualizar datos del propietario
+            if 'propietario_nombre_edit' in data:
+                propietario.nombre = data['propietario_nombre_edit']
+            if 'propietario_apellido_edit' in data:
+                propietario.apellido = data['propietario_apellido_edit']
+            if 'propietario_telefono' in data:
+                propietario.telefono = data['propietario_telefono']
+            if 'propietario_email' in data:
+                propietario.email = data['propietario_email']
+            if 'propietario_direccion' in data:
+                propietario.direccion = data['propietario_direccion']
+            
+            propietario.save()
+        
+        # Si no hay ID pero hay nombre, crear nuevo propietario
+        elif 'propietario_nombre_edit' in data and data['propietario_nombre_edit']:
             nuevo_propietario = Propietario.objects.create(
-                nombre=nombre,
-                apellido=apellido,
+                nombre=data.get('propietario_nombre_edit', ''),
+                apellido=data.get('propietario_apellido_edit', ''),
                 telefono=data.get('propietario_telefono', ''),
                 email=data.get('propietario_email', ''),
                 direccion=data.get('propietario_direccion', '')
             )
             paciente.propietario = nuevo_propietario
-        
-        # Cambiar propietario si se seleccionó uno diferente
-        elif 'propietario_id' in data and data['propietario_id']:
-            nuevo_propietario = get_object_or_404(Propietario, id=data['propietario_id'])
-            paciente.propietario = nuevo_propietario
-            
-            # Actualizar datos del propietario seleccionado
-            if 'propietario_telefono' in data:
-                nuevo_propietario.telefono = data['propietario_telefono']
-            if 'propietario_email' in data:
-                nuevo_propietario.email = data['propietario_email']
-            if 'propietario_direccion' in data:
-                nuevo_propietario.direccion = data['propietario_direccion']
-            nuevo_propietario.save()
         
         paciente.save()
         

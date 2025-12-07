@@ -102,23 +102,17 @@
                     <div>
                         <p><strong>Dueño:</strong> <span class="view-mode">{{ paciente.propietario.nombre_completo }}</span></p>
                         <div class="edit-mode" id="propietarioSelector" style="display:none;">
-                            <select class="form-control" name="propietario_id" id="selectPropietario">
-                                <option value="">-- Seleccionar propietario existente --</option>
-                                {% for prop in propietarios %}
-                                <option value="{{ prop.id }}" {% if prop.id == paciente.propietario.id %}selected{% endif %}>
-                                    {{ prop.nombre_completo }}
-                                </option>
-                                {% endfor %}
-                            </select>
+                            <input type="text" class="form-control" id="buscarPropietario" placeholder="Buscar propietario..." autocomplete="off">
+                            <div id="resultadosBusqueda" class="search-results" style="display:none;"></div>
                             <button type="button" class="vet-btn vet-btn-secondary" id="btnNuevoPropietario" style="margin-top: 8px;">
                                 <i class="bi bi-plus-circle"></i> Crear nuevo responsable
                             </button>
                         </div>
-                        <div id="camposNombrePropietario" style="display:none;">
+                        <div id="camposNombrePropietario" class="edit-mode" style="display:none;">
                             <input type="text" class="form-control" name="propietario_nombre_edit" placeholder="Nombre" value="{{ paciente.propietario.nombre }}" style="margin-bottom: 8px;">
                             <input type="text" class="form-control" name="propietario_apellido_edit" placeholder="Apellido" value="{{ paciente.propietario.apellido }}">
+                            <input type="hidden" name="propietario_id" value="{{ paciente.propietario.id }}">
                         </div>
-                        <input type="text" class="form-control" id="inputNuevoPropietario" name="propietario_nombre" placeholder="Nombre completo del nuevo responsable" style="display:none;">
                     </div>
                     <p><strong>Teléfono:</strong> 
                         <span class="view-mode">{{ paciente.propietario.telefono|default:"No registrado" }}</span>
