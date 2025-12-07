@@ -58,6 +58,7 @@ class Insumo(models.Model):
     peso_kg = models.FloatField(blank=True, null=True)
     fecha_creacion = models.DateTimeField(default=timezone.now)
     ml_contenedor = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="ML en Contenedor")
+    tipo = models.CharField(max_length=50, null=True, blank=True, verbose_name="Tipo de Producto")
 
     class Meta:
         db_table = "Insumo"
