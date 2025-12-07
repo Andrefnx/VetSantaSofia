@@ -7,6 +7,7 @@ from django.views.decorators.http import require_http_methods
 import json
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from datetime import date
 
 # Importar solo si existen
 try:
@@ -40,19 +41,13 @@ def ficha_mascota_view(request, paciente_id):
     """Vista para mostrar la ficha de un paciente específico"""
     paciente = get_object_or_404(Paciente, id=paciente_id, activo=True)
     
-    # Debug: verificar propietario
-    print(f"Paciente: {paciente.nombre}")
-    print(f"Propietario ID: {paciente.propietario.id}")
-    print(f"Propietario nombre: {paciente.propietario.nombre}")
-    print(f"Propietario apellido: {paciente.propietario.apellido}")
-    print(f"Propietario nombre_completo: {paciente.propietario.nombre_completo}")
-    
     # Obtener todos los propietarios para el selector
     propietarios = Propietario.objects.all().order_by('nombre', 'apellido')
     
     context = {
         'paciente': paciente,
         'propietarios': propietarios,
+        'hoy': date.today(),  # Agregar fecha de hoy
     }
     
     # Agregar datos relacionados solo si los modelos existen
@@ -465,8 +460,17 @@ def editar_paciente_ajax(request, paciente_id):
             fecha_nac = data.get('fecha_nacimiento')
             print(f"DEBUG AJAX - Fecha de nacimiento recibida: {fecha_nac}")
             if fecha_nac:
-                from datetime import datetime
-                paciente.fecha_nacimiento = datetime.strptime(fecha_nac, '%Y-%m-%d').date()
+                from datetime import datetime, date
+                fecha_obj = datetime.strptime(fecha_nac, '%Y-%m-%d').date()
+                
+                # Validar que la fecha no sea futura
+                if fecha_obj > date.today():
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'La fecha de nacimiento no puede ser futura'
+                    }, status=400)
+                
+                paciente.fecha_nacimiento = fecha_obj
                 paciente.edad_anos = None
                 paciente.edad_meses = None
                 print(f"DEBUG AJAX - Fecha nacimiento guardada: {paciente.fecha_nacimiento}")
@@ -558,9 +562,18 @@ def guardar_edicion_ficha(request, paciente_id):
                 fecha_nac = request.POST.get('fecha_nacimiento')
                 print(f"DEBUG - Fecha de nacimiento recibida: {fecha_nac}")
                 if fecha_nac:
-                    from datetime import datetime
+                    from datetime import datetime, date
                     # Convertir string a objeto date
-                    paciente.fecha_nacimiento = datetime.strptime(fecha_nac, '%Y-%m-%d').date()
+                    fecha_obj = datetime.strptime(fecha_nac, '%Y-%m-%d').date()
+                    
+                    # Validar que la fecha no sea futura
+                    if fecha_obj > date.today():
+                        return JsonResponse({
+                            'success': False,
+                            'error': 'La fecha de nacimiento no puede ser futura'
+                        })
+                    
+                    paciente.fecha_nacimiento = fecha_obj
                     paciente.edad_anos = None
                     paciente.edad_meses = None
                     print(f"DEBUG - Fecha nacimiento guardada: {paciente.fecha_nacimiento}")

@@ -78,7 +78,13 @@
                                 <input type="radio" name="tipo_edad" value="fecha" {% if paciente.fecha_nacimiento %}checked{% endif %}> 
                                 <strong>Fecha de nacimiento</strong>
                             </label>
-                            <input type="date" class="form-control" name="fecha_nacimiento" value="{{ paciente.fecha_nacimiento|date:'Y-m-d' }}" id="fechaNacimiento" {% if not paciente.fecha_nacimiento %}style="display:none;"{% endif %}>
+                            <input type="date" 
+                                   class="form-control" 
+                                   name="fecha_nacimiento" 
+                                   value="{{ paciente.fecha_nacimiento|date:'Y-m-d' }}" 
+                                   id="fechaNacimiento" 
+                                   max="{{ hoy|date:'Y-m-d' }}"
+                                   {% if not paciente.fecha_nacimiento %}style="display:none;"{% endif %}>
                         </div>
                         
                         <div class="edad-option">

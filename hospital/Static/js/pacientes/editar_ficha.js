@@ -28,6 +28,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const fechaNacimiento = document.getElementById('fechaNacimiento');
     const edadEstimadaInputs = document.getElementById('edadEstimadaInputs');
 
+    // Establecer fecha máxima permitida (hoy)
+    if (fechaNacimiento) {
+        const hoy = new Date().toISOString().split('T')[0];
+        fechaNacimiento.setAttribute('max', hoy);
+        
+        // Validar cuando cambia la fecha
+        fechaNacimiento.addEventListener('change', function() {
+            if (this.value > hoy) {
+                alert('La fecha de nacimiento no puede ser futura');
+                this.value = hoy;
+            }
+        });
+    }
+
     if (radioFecha && radioEstimada) {
         radioFecha.addEventListener('change', function() {
             if (this.checked) {
