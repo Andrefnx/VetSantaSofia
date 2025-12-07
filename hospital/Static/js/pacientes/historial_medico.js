@@ -93,6 +93,8 @@ document.querySelectorAll('.timeline-btn').forEach((btn, idx) => {
 // Modal Nueva Consulta
 document.getElementById('btnNuevaConsulta').onclick = function () {
     openVetModal('nuevaConsultaModal');
+    // Cargar inventario cuando se abre el modal
+    cargarInventario();
 };
 document.getElementById('closeNuevaConsultaModal').onclick = function () {
     closeVetModal('nuevaConsultaModal');
@@ -207,4 +209,154 @@ window.onclick = function (event) {
     const modalNueva = document.getElementById('nuevaConsultaModal');
     if (event.target === modalDetalle) closeVetModal('detalleConsultaModal');
     if (event.target === modalNueva) closeVetModal('nuevaConsultaModal');
-};
+}
+
+// Cargar inventario para el selector de tratamiento
+async function cargarInventario() {
+    try {
+        const response = await fetch('/hospital/inventario/api/productos/');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const productos = await response.json();
+        
+        const inventarioList = document.getElementById('inventarioList');
+        if (!inventarioList) return;
+        
+        inventarioList.innerHTML = '';
+        
+        if (productos.length === 0) {
+            inventarioList.innerHTML = '<p style="text-align:center;color:#888;padding:1rem;font-size:0.75rem;">No hay productos en inventario</p>';
+            return;
+        }
+        
+        productos.forEach(producto => {
+            const item = document.createElement('div');
+            item.className = 'inventario-item';
+            item.innerHTML = `
+                <div class="inventario-item-info">
+                    <div class="inventario-item-nombre">${producto.nombre}</div>
+                    <div class="inventario-item-stock">Stock: ${producto.stock}</div>
+                </div>
+                <button type="button" class="inventario-item-btn" 
+                    data-id="${producto.id}" 
+                    data-nombre="${producto.nombre}"
+                    data-dosis="${producto.dosis_ml || 0}"
+                    data-peso="${producto.peso_kg || 0}">
+                    <i class="bi bi-plus"></i>
+                </button>
+            `;
+            inventarioList.appendChild(item);
+        });
+        
+        // Agregar event listeners a los botones
+        document.querySelectorAll('.inventario-item-btn').forEach(btn => {
+            btn.addEventListener('click', agregarInsumo);
+        });
+        
+    } catch (error) {
+        console.error('Error al cargar inventario:', error);
+        const inventarioList = document.getElementById('inventarioList');
+        if (inventarioList) {
+            inventarioList.innerHTML = '<p style="text-align:center;color:#dc3545;padding:1rem;font-size:0.75rem;">Error al cargar inventario</p>';
+        }
+    }
+}
+
+// Agregar insumo a la lista de utilizados
+function agregarInsumo(e) {
+    const btn = e.currentTarget;
+    const id = btn.dataset.id;
+    const nombre = btn.dataset.nombre;
+    const dosisMl = parseFloat(btn.dataset.dosis) || 0;
+    const pesoRef = parseFloat(btn.dataset.peso) || 1;
+    
+    const container = document.getElementById('insumosSeleccionados');
+    if (!container) return;
+    
+    // Verificar si ya está agregado
+    if (container.querySelector(`[data-insumo-id="${id}"]`)) {
+        return;
+    }
+    
+    // Obtener peso actual del paciente
+    const pesoInput = document.getElementById('pesoConsulta');
+    const pesoActual = parseFloat(pesoInput?.value) || 0;
+    
+    // Calcular dosis según el peso
+    let dosisCalculada = 0;
+    let dosisTexto = 'Peso no ingresado';
+    
+    if (pesoActual > 0 && dosisMl > 0 && pesoRef > 0) {
+        dosisCalculada = (dosisMl * pesoActual) / pesoRef;
+        dosisTexto = `${dosisCalculada.toFixed(2)} ml`;
+    } else if (pesoActual > 0) {
+        dosisTexto = 'Dosis no definida';
+    }
+    
+    const tag = document.createElement('div');
+    tag.className = 'insumo-tag';
+    tag.dataset.insumoId = id;
+    tag.innerHTML = `
+        <div class="insumo-tag-info">
+            <span class="insumo-tag-nombre">${nombre}</span>
+            <span class="insumo-tag-dosis">Dosis: <strong>${dosisTexto}</strong></span>
+        </div>
+        <button type="button" class="insumo-tag-remove" title="Eliminar">×</button>
+    `;
+    
+    tag.querySelector('.insumo-tag-remove').addEventListener('click', () => {
+        tag.remove();
+    });
+    
+    container.appendChild(tag);
+}
+
+// Actualizar dosis cuando cambia el peso
+document.getElementById('pesoConsulta')?.addEventListener('input', function() {
+    const pesoActual = parseFloat(this.value) || 0;
+    
+    // Recalcular todas las dosis
+    document.querySelectorAll('.insumo-tag').forEach(tag => {
+        const id = tag.dataset.insumoId;
+        const btn = document.querySelector(`.inventario-item-btn[data-id="${id}"]`);
+        
+        if (btn) {
+            const dosisMl = parseFloat(btn.dataset.dosis) || 0;
+            const pesoRef = parseFloat(btn.dataset.peso) || 1;
+            
+            let dosisTexto = 'Peso no ingresado';
+            
+            if (pesoActual > 0 && dosisMl > 0 && pesoRef > 0) {
+                const dosisCalculada = (dosisMl * pesoActual) / pesoRef;
+                dosisTexto = `${dosisCalculada.toFixed(2)} ml`;
+            } else if (pesoActual > 0) {
+                dosisTexto = 'Dosis no definida';
+            }
+            
+            const dosisSpan = tag.querySelector('.insumo-tag-dosis strong');
+            if (dosisSpan) {
+                dosisSpan.textContent = dosisTexto;
+            }
+        }
+    });
+});
+
+// Filtrar inventario por búsqueda
+const searchInventario = document.getElementById('searchInventario');
+if (searchInventario) {
+    searchInventario.addEventListener('input', (e) => {
+        const search = e.target.value.toLowerCase();
+        document.querySelectorAll('.inventario-item').forEach(item => {
+            const nombre = item.querySelector('.inventario-item-nombre')?.textContent.toLowerCase() || '';
+            item.style.display = nombre.includes(search) ? 'flex' : 'none';
+        });
+    });
+}
+
+// Cargar inventario al abrir el modal
+document.getElementById('btnNuevaConsulta')?.addEventListener('click', () => {
+    cargarInventario();
+});

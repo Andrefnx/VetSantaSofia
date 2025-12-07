@@ -11,7 +11,7 @@ from datetime import date
 
 # Importar solo si existen
 try:
-    from .models import Consulta, Hospitalizacion, Examen, Documento
+    from .models import Consulta, Hospitalizacion, Examen, Documento, Producto
     MODELOS_EXTENDIDOS = True
 except ImportError:
     MODELOS_EXTENDIDOS = False
@@ -640,7 +640,30 @@ def guardar_edicion_ficha(request, paciente_id):
                 'error': str(e)
             })
     
-    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+@require_http_methods(["GET"])
+def api_productos(request):
+    """API para obtener lista de productos del inventario"""
+    try:
+        insumos = Insumo.objects.all()
+        
+        productos = []
+        for insumo in insumos:
+            productos.append({
+                'id': insumo.idInventario,
+                'nombre': insumo.medicamento,
+                'stock': insumo.stock_actual,
+                'categoria': insumo.categoria or '',
+                'precio': float(insumo.precio_venta)
+            })
+        
+        return JsonResponse(productos, safe=False)
+    except Exception as e:
+        import traceback
+        print(f"Error en api_productos: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 

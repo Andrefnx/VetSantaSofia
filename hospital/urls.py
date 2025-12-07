@@ -37,6 +37,9 @@ urlpatterns = [
     path('inventario/eliminar/<int:insumo_id>/', views.eliminar_insumo, name='eliminar_insumo'),
     path('inventario/modificar-stock/<int:insumo_id>/', views.modificar_stock, name='modificar_stock'),
     
+    # API Inventario
+    path('inventario/api/productos/', views.api_productos, name='api_productos'),
+    
     # Servicios
     path('servicios/', views.servicios, name='servicios'),
     path('servicios/crear/', views.crear_servicio, name='crear_servicio'),

@@ -431,14 +431,14 @@
                             <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
                             <p>{% now 'd/m/Y' %}</p>
                         </div>
-                        <hr style="margin: 1rem 0; border-top: 1px solid #dee2e6;">
+                        <hr style="margin: 0.75rem 0; border-top: 1px solid #dee2e6;">
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-thermometer-half"></i> Temperatura</div>
                             <input type="text" class="form-control" name="temp" required>
                         </div>
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-speedometer2"></i> Peso</div>
-                            <input type="text" class="form-control" name="peso" required>
+                            <input type="text" class="form-control" name="peso" id="pesoConsulta" required>
                         </div>
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-heart-pulse"></i> Frec. Cardíaca</div>
@@ -459,10 +459,31 @@
                             <div class="detail-section-title"><i class="bi bi-clipboard2-check"></i> Diagnóstico</div>
                             <textarea class="form-control" name="diagnostico" rows="5"></textarea>
                         </div>
+                        
+                        <!-- Tratamiento con selector de medicamentos -->
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-capsule"></i> Tratamiento</div>
-                            <textarea class="form-control" name="tratamiento" rows="5"></textarea>
+                            <div class="tratamiento-container">
+                                <textarea class="form-control" name="tratamiento" rows="6" placeholder="Descripción del tratamiento..."></textarea>
+                                
+                                <!-- Selector de inventario -->
+                                <div class="inventario-selector-compact">
+                                    <input type="text" class="form-control form-control-sm" id="searchInventario" placeholder="Buscar medicamento...">
+                                    <div class="inventario-list-compact" id="inventarioList">
+                                        <!-- Lista de inventario se cargará aquí dinámicamente -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Insumos utilizados -->
+                                <div class="insumos-utilizados">
+                                    <div class="insumos-title">Insumos utilizados:</div>
+                                    <div id="insumosSeleccionados">
+                                        <!-- Tags de medicamentos aparecerán aquí -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                        
                         <!-- Exámenes oculto -->
                         <div class="detail-section" style="display:none;">
                             <div class="detail-section-title"><i class="bi bi-file-earmark-medical"></i> Exámenes</div>
@@ -470,7 +491,7 @@
                         </div>
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-journal-text"></i> Notas</div>
-                            <textarea class="form-control" name="notas" rows="8"></textarea>
+                            <textarea class="form-control" name="notas" rows="4"></textarea>
                         </div>
                     </div>
                 </div>
