@@ -824,28 +824,39 @@ def detalle_insumo(request, insumo_id):
     """Vista para obtener detalles completos de un insumo (JSON)"""
     insumo = get_object_or_404(Insumo, idInventario=insumo_id)
     
+    # Formatear usuario
+    usuario_nombre = "(sin registro)"
+    if insumo.usuario_ultimo_movimiento:
+        if hasattr(insumo.usuario_ultimo_movimiento, 'get_full_name'):
+            nombre_completo = insumo.usuario_ultimo_movimiento.get_full_name()
+            usuario_nombre = nombre_completo if nombre_completo.strip() else insumo.usuario_ultimo_movimiento.username
+        else:
+            usuario_nombre = insumo.usuario_ultimo_movimiento.username
+    
     return JsonResponse({
         'success': True,
         'insumo': {
             'idInventario': insumo.idInventario,
             'nombre_comercial': insumo.medicamento,
+            'medicamento': insumo.medicamento,
             'tipo': insumo.tipo or '',
-            'especie': insumo.especie or '',
             'descripcion': insumo.descripcion or '',
+            'especie': insumo.especie or '',
             'precio_venta': float(insumo.precio_venta) if insumo.precio_venta else 0,
-            'stock_actual': insumo.stock_actual or 0,
-            'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml is not None else None,
-            'peso_kg': float(insumo.peso_kg) if insumo.peso_kg is not None else None,
-            'ml_contenedor': float(insumo.ml_contenedor) if insumo.ml_contenedor is not None else None,
+            'stock_actual': insumo.stock_actual,
+            'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml else None,
+            'peso_kg': float(insumo.peso_kg) if insumo.peso_kg else None,
+            'ml_contenedor': float(insumo.ml_contenedor) if insumo.ml_contenedor else None,
             'precauciones': insumo.precauciones or '',
             'contraindicaciones': insumo.contraindicaciones or '',
             'efectos_adversos': insumo.efectos_adversos or '',
-            # FECHAS FORMATEADAS
-            'fecha_creacion_formatted': insumo.fecha_creacion.strftime("%d/%m/%Y %H:%M") if insumo.fecha_creacion else '-',
-            'ultimo_ingreso_formatted': insumo.ultimo_ingreso.strftime("%d/%m/%Y %H:%M") if insumo.ultimo_ingreso else '-',
-            'ultimo_movimiento_formatted': insumo.ultimo_movimiento.strftime("%d/%m/%Y %H:%M") if insumo.ultimo_movimiento else '-',
-            'tipo_ultimo_movimiento_display': insumo.get_tipo_ultimo_movimiento_display() if insumo.tipo_ultimo_movimiento else '-',
-            'usuario_ultimo_movimiento': insumo.get_usuario_nombre_completo(),  # ⭐ USAR EL MÉTODO DEL MODELO
+            
+            # Campos de trazabilidad formateados
+            'fecha_creacion_formatted': insumo.fecha_creacion.strftime('%d/%m/%Y %H:%M') if insumo.fecha_creacion else '-',
+            'ultimo_ingreso_formatted': insumo.ultimo_ingreso.strftime('%d/%m/%Y %H:%M') if insumo.ultimo_ingreso else '-',
+            'ultimo_movimiento_formatted': insumo.ultimo_movimiento.strftime('%d/%m/%Y %H:%M') if insumo.ultimo_movimiento else '-',
+            'tipo_ultimo_movimiento_display': dict(Insumo.TIPO_MOVIMIENTO_CHOICES).get(insumo.tipo_ultimo_movimiento, '-') if insumo.tipo_ultimo_movimiento else '-',
+            'usuario_ultimo_movimiento': usuario_nombre,  # ⭐ CORREGIDO
         }
     })
 

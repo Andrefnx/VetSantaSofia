@@ -330,6 +330,12 @@ function guardarProductoEditado() {
     inputs.forEach((input) => {
         if (input.dataset.field) {
             const field = input.dataset.field;
+            
+            // ⚠️ SKIP dosis_ml, peso_kg y ml_contenedor aquí porque los manejamos después
+            if (['dosis_ml', 'peso_kg', 'ml_contenedor'].includes(field)) {
+                return;
+            }
+            
             let value;
 
             // Para textarea y select
@@ -340,7 +346,7 @@ function guardarProductoEditado() {
             }
 
             // Normalizar campos numéricos
-            if (['dosis_ml', 'peso_kg', 'precio_venta', 'stock_actual', 'ml_contenedor'].includes(field)) {
+            if (['precio_venta', 'stock_actual'].includes(field)) {
                 updated[field] = normalizarNumero(value);
             } else {
                 updated[field] = value;
@@ -348,14 +354,67 @@ function guardarProductoEditado() {
         }
     });
 
-    // --- Dosis ---
-    const dosis = leerDosisDesdeModal();
-    updated.dosis_ml = normalizarNumero(dosis.dosis_ml || "");
-    updated.peso_kg = normalizarNumero(dosis.peso_kg || "");
+    // --- Dosis y ML Contenedor (CORREGIDO CON DEBUG) ---
+    console.log("\n🔍 DEBUG: Buscando campos de dosis y ml_contenedor...");
+    
+    // Intentar con varios selectores posibles
+    let dosisMlInput = modal.querySelector('.field-edit[data-field="dosis_ml"]');
+    if (!dosisMlInput) {
+        dosisMlInput = modal.querySelector('input[data-field="dosis_ml"]');
+    }
+    if (!dosisMlInput) {
+        dosisMlInput = modal.querySelector('[data-field="dosis_ml"]');
+    }
+    console.log("  - Input dosis_ml encontrado:", dosisMlInput);
+    console.log("  - Valor:", dosisMlInput ? dosisMlInput.value : "NO ENCONTRADO");
+    console.log("  - Es visible:", dosisMlInput ? !dosisMlInput.classList.contains('d-none') : "N/A");
 
-    // --- ML Contenedor ---
-    const mlContenedor = modal.querySelector('[data-field="ml_contenedor"]')?.value || "";
-    updated.ml_contenedor = normalizarNumero(mlContenedor);
+    let pesoKgInput = modal.querySelector('.field-edit[data-field="peso_kg"]');
+    if (!pesoKgInput) {
+        pesoKgInput = modal.querySelector('input[data-field="peso_kg"]');
+    }
+    if (!pesoKgInput) {
+        pesoKgInput = modal.querySelector('[data-field="peso_kg"]');
+    }
+    console.log("  - Input peso_kg encontrado:", pesoKgInput);
+    console.log("  - Valor:", pesoKgInput ? pesoKgInput.value : "NO ENCONTRADO");
+    console.log("  - Es visible:", pesoKgInput ? !pesoKgInput.classList.contains('d-none') : "N/A");
+
+    let mlContenedorInput = modal.querySelector('.field-edit[data-field="ml_contenedor"]');
+    if (!mlContenedorInput) {
+        mlContenedorInput = modal.querySelector('input[data-field="ml_contenedor"]');
+    }
+    if (!mlContenedorInput) {
+        mlContenedorInput = modal.querySelector('[data-field="ml_contenedor"]');
+    }
+    console.log("  - Input ml_contenedor encontrado:", mlContenedorInput);
+    console.log("  - Valor:", mlContenedorInput ? mlContenedorInput.value : "NO ENCONTRADO");
+    console.log("  - Es visible:", mlContenedorInput ? !mlContenedorInput.classList.contains('d-none') : "N/A");
+
+    // ⭐ CORREGIDO: Verificar que el input existe, está visible Y tiene valor
+    if (dosisMlInput && !dosisMlInput.classList.contains('d-none') && dosisMlInput.value && dosisMlInput.value.trim() !== '') {
+        updated.dosis_ml = normalizarNumero(dosisMlInput.value);
+        console.log('✅ dosis_ml capturado:', updated.dosis_ml);
+    } else {
+        updated.dosis_ml = null;
+        console.log('⚠️ dosis_ml vacío o no visible');
+    }
+
+    if (pesoKgInput && !pesoKgInput.classList.contains('d-none') && pesoKgInput.value && pesoKgInput.value.trim() !== '') {
+        updated.peso_kg = normalizarNumero(pesoKgInput.value);
+        console.log('✅ peso_kg capturado:', updated.peso_kg);
+    } else {
+        updated.peso_kg = null;
+        console.log('⚠️ peso_kg vacío o no visible');
+    }
+
+    if (mlContenedorInput && !mlContenedorInput.classList.contains('d-none') && mlContenedorInput.value && mlContenedorInput.value.trim() !== '') {
+        updated.ml_contenedor = normalizarNumero(mlContenedorInput.value);
+        console.log('✅ ml_contenedor capturado:', updated.ml_contenedor);
+    } else {
+        updated.ml_contenedor = null;
+        console.log('⚠️ ml_contenedor vacío o no visible');
+    }
 
     // --- ID ---
     if (modal.dataset.idinventario) {
@@ -396,16 +455,21 @@ function guardarProductoEditado() {
         .then((resp) => {
             if (resp.success) {
                 console.log("✅ Producto guardado exitosamente");
+                
+                // Debug de respuesta del servidor
+                if (resp.debug) {
+                    console.log("🔍 Datos guardados en el servidor:");
+                    console.log("  - dosis_ml:", resp.debug.dosis_ml);
+                    console.log("  - peso_kg:", resp.debug.peso_kg);
+                    console.log("  - ml_contenedor:", resp.debug.ml_contenedor);
+                    console.log("  - usuario:", resp.debug.usuario);
+                }
 
-                // OPCIÓN 1: Esperar 3 segundos antes de recargar
+                // Esperar 2 segundos para revisar el log antes de recargar
                 setTimeout(() => {
                     closeVetModal("modalProducto");
                     location.reload();
-                }, 15000);
-
-                // OPCIÓN 2: O mejor aún, comentar el reload para ver el log completo
-                // closeVetModal("modalProducto");
-                // alert("Producto guardado. Revisa la consola para ver el log completo.");
+                }, 2000);
 
             } else {
                 console.error("❌ Error al guardar:", resp.error);
