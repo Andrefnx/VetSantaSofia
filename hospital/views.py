@@ -840,7 +840,7 @@ def api_productos(request):
                 'id': insumo.idInventario,
                 'nombre': insumo.medicamento,
                 'stock': insumo.stock_actual,
-                'categoria': insumo.categoria or '',
+                'tipo': insumo.tipo or '',
                 'precio': float(insumo.precio_venta),
                 # AGREGAR ESTOS CAMPOS:
                 'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml else 0,

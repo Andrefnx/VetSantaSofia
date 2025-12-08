@@ -91,10 +91,10 @@ document.querySelectorAll('.timeline-btn').forEach((btn, idx) => {
 });
 
 // Modal Nueva Consulta
-document.getElementById('btnNuevaConsulta').onclick = function () {
+document.getElementById('btnNuevaConsulta').onclick = async function () {
     openVetModal('nuevaConsultaModal');
-    // Cargar inventario cuando se abre el modal
-    cargarInventario();
+    // Cargar inventario DESPUÉS de abrir el modal
+    await cargarInventario();
 };
 document.getElementById('closeNuevaConsultaModal').onclick = function () {
     closeVetModal('nuevaConsultaModal');
@@ -213,17 +213,38 @@ window.onclick = function (event) {
 
 // Cargar inventario para el selector de tratamiento
 async function cargarInventario() {
+    const inventarioList = document.getElementById('inventarioList');
+    
+    // Verificar que el elemento existe
+    if (!inventarioList) {
+        console.error('No se encontró el elemento #inventarioList');
+        return;
+    }
+    
+    // Mostrar loading
+    inventarioList.innerHTML = '<p style="text-align:center;color:#888;padding:1rem;font-size:0.75rem;"><i class="bi bi-hourglass-split"></i> Cargando...</p>';
+    
     try {
-        const response = await fetch('/hospital/inventario/api/productos/');
+        const url = '/hospital/inventario/api/productos/';
+        console.log('Intentando cargar desde:', url);
+        
+        const response = await fetch(url);
+        
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        // Intentar leer el texto de la respuesta para ver el error
+        const text = await response.text();
+        console.log('Response text:', text);
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status} - ${text}`);
         }
         
-        const productos = await response.json();
+        // Parsear el JSON
+        const productos = JSON.parse(text);
         
-        const inventarioList = document.getElementById('inventarioList');
-        if (!inventarioList) return;
+        console.log('Productos cargados:', productos.length);
         
         inventarioList.innerHTML = '';
         
@@ -257,11 +278,13 @@ async function cargarInventario() {
         });
         
     } catch (error) {
-        console.error('Error al cargar inventario:', error);
-        const inventarioList = document.getElementById('inventarioList');
-        if (inventarioList) {
-            inventarioList.innerHTML = '<p style="text-align:center;color:#dc3545;padding:1rem;font-size:0.75rem;">Error al cargar inventario</p>';
-        }
+        console.error('Error completo:', error);
+        inventarioList.innerHTML = `
+            <p style="text-align:center;color:#dc3545;padding:1rem;font-size:0.75rem;">
+                Error al cargar inventario<br>
+                <small>${error.message}</small>
+            </p>
+        `;
     }
 }
 
