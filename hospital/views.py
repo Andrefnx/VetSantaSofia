@@ -8,6 +8,7 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from datetime import date
+from decimal import Decimal 
 
 # Importar solo si existen
 try:
@@ -324,210 +325,299 @@ def inventario(request):
     return render(request, 'inventario/inventario.html', {'insumos': insumos})
 
 @csrf_exempt
+@login_required
 def crear_insumo(request):
+    """Vista para crear un nuevo insumo"""
     if request.method == 'POST':
         try:
-            import json
             data = json.loads(request.body)
             
-            insumo = Insumo.objects.create(
-                medicamento=data.get('nombre_comercial', data.get('medicamento')),
-                tipo=data.get('tipo'),
-                especie=data.get('especie'),
-                descripcion=data.get('descripcion'),
-                precio_venta=float(data.get('precio_venta', 0)),
-                stock_actual=int(data.get('stock_actual', 0)),
-                dosis_ml=float(data.get('dosis_ml')) if data.get('dosis_ml') else None,
-                peso_kg=float(data.get('peso_kg')) if data.get('peso_kg') else None,
-                ml_contenedor=float(data.get('ml_contenedor')) if data.get('ml_contenedor') else None,
-                precauciones=data.get('precauciones'),
-                contraindicaciones=data.get('contraindicaciones'),
-                efectos_adversos=data.get('efectos_adversos'),
-                fecha_creacion=timezone.now(),
-                tipo_ultimo_movimiento='registro_inicial',
-                usuario_ultimo_movimiento=request.user,  # ⭐ CORREGIDO
-            )
+            # Preparar datos para crear el insumo
+            insumo_data = {
+                'medicamento': data.get('nombre_comercial', ''),
+                'tipo': data.get('tipo', ''),
+                'descripcion': data.get('descripcion', ''),
+                'especie': data.get('especie', ''),
+                'precio_venta': Decimal(str(data.get('precio_venta', 0))) if data.get('precio_venta') else Decimal('0'),
+                'stock_actual': int(data.get('stock_actual', 0)) if data.get('stock_actual') else 0,
+                'dosis_ml': Decimal(str(data.get('dosis_ml'))) if data.get('dosis_ml') else None,
+                'peso_kg': Decimal(str(data.get('peso_kg'))) if data.get('peso_kg') else None,
+                'ml_contenedor': Decimal(str(data.get('ml_contenedor'))) if data.get('ml_contenedor') else None,
+                'precauciones': data.get('precauciones', ''),
+                'contraindicaciones': data.get('contraindicaciones', ''),
+                'efectos_adversos': data.get('efectos_adversos', ''),
+                
+                # Campos de trazabilidad
+                'fecha_creacion': timezone.now(),
+                'ultimo_ingreso': timezone.now(),
+                'ultimo_movimiento': timezone.now(),
+                'tipo_ultimo_movimiento': 'registro_inicial',
+                'usuario_ultimo_movimiento': request.user,  # ✅ Asignar usuario
+            }
             
-            # Si se registra con stock inicial, marcar como entrada
-            if insumo.stock_actual > 0:
-                insumo.ultimo_ingreso = timezone.now()
-                insumo.ultimo_movimiento = timezone.now()
-                insumo.save()
+            # Crear el insumo
+            insumo = Insumo.objects.create(**insumo_data)
+            
+            # Formatear nombre de usuario para respuesta
+            try:
+                if hasattr(request.user, 'nombre') and hasattr(request.user, 'apellido'):
+                    usuario_nombre = f"{request.user.nombre} {request.user.apellido}".strip()
+                    if not usuario_nombre:
+                        usuario_nombre = request.user.username
+                else:
+                    usuario_nombre = request.user.get_full_name() or request.user.username
+            except:
+                usuario_nombre = request.user.username
             
             return JsonResponse({
                 'success': True,
-                'message': 'Insumo creado exitosamente',
-                'insumo_id': insumo.idInventario
+                'message': 'Producto creado correctamente',
+                'insumo_id': insumo.idInventario,
+                'debug': {
+                    'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml else None,
+                    'peso_kg': float(insumo.peso_kg) if insumo.peso_kg else None,
+                    'ml_contenedor': float(insumo.ml_contenedor) if insumo.ml_contenedor else None,
+                    'usuario': usuario_nombre,
+                    'usuario_id': request.user.id,
+                }
             })
+            
         except Exception as e:
-            print(f"ERROR al crear: {str(e)}")
             import traceback
             traceback.print_exc()
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
-    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
 @csrf_exempt
+@login_required
 def editar_insumo(request, insumo_id):
-    insumo = get_object_or_404(Insumo, idInventario=insumo_id)
+    """Vista para editar un insumo existente"""
     if request.method == 'POST':
         try:
-            import json
-            from decimal import Decimal, InvalidOperation
-            
             data = json.loads(request.body)
-            print(f"\n{'='*60}")
-            print(f"DEBUG - Editando insumo ID: {insumo_id}")
-            print(f"DEBUG - Usuario: {request.user.username}")
-            print(f"DEBUG - Datos recibidos: {json.dumps(data, indent=2)}")
+            insumo = get_object_or_404(Insumo, idInventario=insumo_id)
             
-            # Guardar stock anterior para detectar cambios
+            # Guardar stock anterior para calcular el tipo de movimiento
             stock_anterior = insumo.stock_actual
             
             # Actualizar campos básicos
-            insumo.medicamento = data.get('nombre_comercial') or data.get('medicamento') or insumo.medicamento
-            insumo.tipo = data.get('tipo') or insumo.tipo
-            insumo.especie = data.get('especie') or insumo.especie
-            insumo.descripcion = data.get('descripcion') or insumo.descripcion
+            insumo.medicamento = data.get('nombre_comercial', insumo.medicamento)
+            insumo.tipo = data.get('tipo', insumo.tipo)
+            insumo.descripcion = data.get('descripcion', '')
+            insumo.especie = data.get('especie', insumo.especie)
+            insumo.precio_venta = Decimal(str(data.get('precio_venta', 0))) if data.get('precio_venta') else Decimal('0')
             
-            # Actualizar precio
-            try:
-                precio = data.get('precio_venta')
-                if precio not in (None, '', '-'):
-                    insumo.precio_venta = float(precio)
-            except (ValueError, TypeError) as e:
-                print(f"ERROR al convertir precio_venta: {e}")
+            # Actualizar stock
+            nuevo_stock = int(data.get('stock_actual', 0)) if data.get('stock_actual') else 0
+            insumo.stock_actual = nuevo_stock
             
-            # Actualizar stock y detectar cambios
-            try:
-                stock_str = data.get('stock_actual')
-                if stock_str not in (None, '', '-'):
-                    nuevo_stock = int(stock_str)
-                    if stock_anterior != nuevo_stock:
-                        insumo.stock_actual = nuevo_stock
-                        insumo.ultimo_movimiento = timezone.now()
-                        insumo.usuario_ultimo_movimiento = request.user
-                        
-                        # Determinar tipo de movimiento
-                        if nuevo_stock > stock_anterior:
-                            insumo.ultimo_ingreso = timezone.now()
-                            insumo.tipo_ultimo_movimiento = 'entrada'
-                            print(f"DEBUG - Stock incrementado de {stock_anterior} a {nuevo_stock}")
-                        else:
-                            insumo.tipo_ultimo_movimiento = 'ajuste_manual'
-                            print(f"DEBUG - Stock reducido de {stock_anterior} a {nuevo_stock}")
-            except (ValueError, TypeError) as e:
-                print(f"ERROR al convertir stock: {e}")
+            # Actualizar dosis
+            insumo.dosis_ml = Decimal(str(data.get('dosis_ml'))) if data.get('dosis_ml') else None
+            insumo.peso_kg = Decimal(str(data.get('peso_kg'))) if data.get('peso_kg') else None
+            insumo.ml_contenedor = Decimal(str(data.get('ml_contenedor'))) if data.get('ml_contenedor') else None
             
-            # Campos de texto largos
-            insumo.precauciones = data.get('precauciones') or insumo.precauciones
-            insumo.contraindicaciones = data.get('contraindicaciones') or insumo.contraindicaciones
-            insumo.efectos_adversos = data.get('efectos_adversos') or insumo.efectos_adversos
+            # Actualizar precauciones
+            insumo.precauciones = data.get('precauciones', '')
+            insumo.contraindicaciones = data.get('contraindicaciones', '')
+            insumo.efectos_adversos = data.get('efectos_adversos', '')
             
-            # Función auxiliar para convertir a Decimal de manera segura
-            def to_decimal_safe(valor, campo_nombre):
-                if valor in (None, '', '-'):
-                    print(f"DEBUG - {campo_nombre}: valor vacío, se establece None")
-                    return None
-                try:
-                    # Limpiar el valor
-                    valor_limpio = str(valor).strip().replace(',', '.')
-                    if valor_limpio == '':
-                        return None
-                    decimal_val = Decimal(valor_limpio)
-                    print(f"DEBUG - {campo_nombre}: '{valor}' → {decimal_val}")
-                    return decimal_val
-                except (InvalidOperation, ValueError) as e:
-                    print(f"ERROR - {campo_nombre}: no se pudo convertir '{valor}' - {e}")
-                    return None
+            # ✅ ACTUALIZAR INFORMACIÓN DE TRAZABILIDAD
+            insumo.ultimo_movimiento = timezone.now()
+            insumo.usuario_ultimo_movimiento = request.user  # ✅ Asignar usuario
             
-            # Actualizar campos numéricos con validación mejorada
-            insumo.dosis_ml = to_decimal_safe(data.get('dosis_ml'), 'dosis_ml')
-            insumo.peso_kg = to_decimal_safe(data.get('peso_kg'), 'peso_kg')
-            insumo.ml_contenedor = to_decimal_safe(data.get('ml_contenedor'), 'ml_contenedor')
+            # Determinar tipo de movimiento según cambio de stock
+            if nuevo_stock > stock_anterior:
+                insumo.tipo_ultimo_movimiento = 'entrada'
+                insumo.ultimo_ingreso = timezone.now()
+            elif nuevo_stock < stock_anterior:
+                insumo.tipo_ultimo_movimiento = 'salida'
+            else:
+                insumo.tipo_ultimo_movimiento = 'ajuste_manual'
             
-            # Guardar cambios
+            # GUARDAR CAMBIOS
             insumo.save()
             
-            print(f"DEBUG - Insumo guardado exitosamente")
-            print(f"  - dosis_ml: {insumo.dosis_ml}")
-            print(f"  - peso_kg: {insumo.peso_kg}")
-            print(f"  - ml_contenedor: {insumo.ml_contenedor}")
-            print(f"  - usuario_ultimo_movimiento: {insumo.usuario_ultimo_movimiento}")
-            print(f"{'='*60}\n")
+            # ✅ FORMATEAR NOMBRE DE USUARIO PARA RESPUESTA
+            try:
+                if hasattr(request.user, 'nombre') and hasattr(request.user, 'apellido'):
+                    usuario_nombre = f"{request.user.nombre} {request.user.apellido}".strip()
+                    if not usuario_nombre:
+                        usuario_nombre = request.user.username
+                else:
+                    usuario_nombre = request.user.get_full_name() or request.user.username
+            except:
+                usuario_nombre = request.user.username
             
             return JsonResponse({
                 'success': True,
-                'message': 'Insumo actualizado correctamente',
+                'message': 'Producto actualizado correctamente',
                 'debug': {
-                    'dosis_ml': str(insumo.dosis_ml) if insumo.dosis_ml else None,
-                    'peso_kg': str(insumo.peso_kg) if insumo.peso_kg else None,
-                    'ml_contenedor': str(insumo.ml_contenedor) if insumo.ml_contenedor else None,
-                    'usuario': request.user.nombre_completo if hasattr(request.user, 'nombre_completo') else str(request.user),
+                    'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml else None,
+                    'peso_kg': float(insumo.peso_kg) if insumo.peso_kg else None,
+                    'ml_contenedor': float(insumo.ml_contenedor) if insumo.ml_contenedor else None,
+                    'usuario': usuario_nombre,
+                    'usuario_id': request.user.id,
+                    'tipo_movimiento': insumo.tipo_ultimo_movimiento,
+                    'ultimo_movimiento': insumo.ultimo_movimiento.strftime('%d/%m/%Y %H:%M'),
                 }
             })
+            
         except Exception as e:
-            print(f"ERROR: {str(e)}")
             import traceback
             traceback.print_exc()
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
-    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
 @csrf_exempt
-def eliminar_insumo(request, insumo_id):
-    insumo = get_object_or_404(Insumo, idInventario=insumo_id)  # Cambiado de id a idInventario
+@login_required
+def modificar_stock_insumo(request, insumo_id):
+    """Vista para modificar solo el stock de un insumo"""
     if request.method == 'POST':
         try:
-            insumo.delete()
-            return JsonResponse({'success': True, 'message': 'Insumo eliminado'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
-    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
-
-@csrf_exempt
-def modificar_stock(request, insumo_id):
-    if request.method == 'POST':
-        try:
-            import json
             data = json.loads(request.body)
             insumo = get_object_or_404(Insumo, idInventario=insumo_id)
             
             stock_anterior = insumo.stock_actual
             nuevo_stock = int(data.get('stock_actual', 0))
             
-            print(f"DEBUG - Modificando stock - Usuario: {request.user.username}")
-            
-            # Actualizar campos
             insumo.stock_actual = nuevo_stock
+            
+            # Actualizar trazabilidad
             insumo.ultimo_movimiento = timezone.now()
-            insumo.usuario_ultimo_movimiento = request.user  # ⭐ REGISTRAR USUARIO
+            insumo.usuario_ultimo_movimiento = request.user  # ✅ Asignar usuario
             
             # Determinar tipo de movimiento
             if nuevo_stock > stock_anterior:
-                insumo.ultimo_ingreso = timezone.now()
                 insumo.tipo_ultimo_movimiento = 'entrada'
-                tipo_movimiento = 'entrada'
+                insumo.ultimo_ingreso = timezone.now()
             elif nuevo_stock < stock_anterior:
-                insumo.tipo_ultimo_movimiento = 'ajuste_manual'
-                tipo_movimiento = 'ajuste_manual'
+                insumo.tipo_ultimo_movimiento = 'salida'
             else:
                 insumo.tipo_ultimo_movimiento = 'ajuste_manual'
-                tipo_movimiento = 'sin_cambio'
             
             insumo.save()
-            print(f"DEBUG - Stock guardado - Usuario: {request.user.username}")
+            
+            # Formatear nombre de usuario
+            try:
+                if hasattr(request.user, 'nombre') and hasattr(request.user, 'apellido'):
+                    usuario_nombre = f"{request.user.nombre} {request.user.apellido}".strip()
+                    if not usuario_nombre:
+                        usuario_nombre = request.user.username
+                else:
+                    usuario_nombre = request.user.get_full_name() or request.user.username
+            except:
+                usuario_nombre = request.user.username
             
             return JsonResponse({
                 'success': True,
                 'message': 'Stock actualizado correctamente',
-                'stock_actual': nuevo_stock,
-                'tipo_movimiento': tipo_movimiento,
-                'ultimo_movimiento': insumo.ultimo_movimiento.strftime("%d/%m/%Y %H:%M")
+                'debug': {
+                    'stock_anterior': stock_anterior,
+                    'stock_nuevo': nuevo_stock,
+                    'usuario': usuario_nombre,
+                    'usuario_id': request.user.id,
+                    'tipo_movimiento': insumo.tipo_ultimo_movimiento,
+                }
             })
+            
         except Exception as e:
-            print(f"ERROR: {str(e)}")
             import traceback
             traceback.print_exc()
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+@login_required
+def detalle_insumo(request, insumo_id):
+    """Vista para obtener detalles completos de un insumo (JSON)"""
+    insumo = get_object_or_404(Insumo, idInventario=insumo_id)
+    
+    # ✅ FORMATEAR USUARIO CORRECTAMENTE
+    usuario_nombre = "(sin registro)"
+    if insumo.usuario_ultimo_movimiento:
+        try:
+            # Intentar obtener nombre y apellido personalizados
+            if hasattr(insumo.usuario_ultimo_movimiento, 'nombre') and hasattr(insumo.usuario_ultimo_movimiento, 'apellido'):
+                nombre_completo = f"{insumo.usuario_ultimo_movimiento.nombre} {insumo.usuario_ultimo_movimiento.apellido}".strip()
+                usuario_nombre = nombre_completo if nombre_completo else insumo.usuario_ultimo_movimiento.username
+            # Si no, usar get_full_name de Django
+            elif hasattr(insumo.usuario_ultimo_movimiento, 'get_full_name'):
+                nombre_completo = insumo.usuario_ultimo_movimiento.get_full_name()
+                usuario_nombre = nombre_completo if nombre_completo.strip() else insumo.usuario_ultimo_movimiento.username
+            # Como último recurso, usar username
+            else:
+                usuario_nombre = insumo.usuario_ultimo_movimiento.username
+        except Exception as e:
+            print(f"⚠️ Error al formatear usuario: {e}")
+            usuario_nombre = str(insumo.usuario_ultimo_movimiento)
+    
+    # 🔍 DEBUG: Verificar qué se está guardando en BD
+    print(f"🔍 DEBUG detalle_insumo:")
+    print(f"  - ID Usuario en BD: {insumo.usuario_ultimo_movimiento_id}")
+    print(f"  - Objeto Usuario: {insumo.usuario_ultimo_movimiento}")
+    print(f"  - Nombre formateado: {usuario_nombre}")
+    
+    return JsonResponse({
+        'success': True,
+        'insumo': {
+            'idInventario': insumo.idInventario,
+            'nombre_comercial': insumo.medicamento,
+            'medicamento': insumo.medicamento,
+            'tipo': insumo.tipo or '',
+            'descripcion': insumo.descripcion or '',
+            'especie': insumo.especie or '',
+            'precio_venta': float(insumo.precio_venta) if insumo.precio_venta else 0,
+            'stock_actual': insumo.stock_actual,
+            'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml else None,
+            'peso_kg': float(insumo.peso_kg) if insumo.peso_kg else None,
+            'ml_contenedor': float(insumo.ml_contenedor) if insumo.ml_contenedor else None,
+            'precauciones': insumo.precauciones or '',
+            'contraindicaciones': insumo.contraindicaciones or '',
+            'efectos_adversos': insumo.efectos_adversos or '',
+            
+            # Campos de trazabilidad formateados
+            'fecha_creacion_formatted': insumo.fecha_creacion.strftime('%d/%m/%Y %H:%M') if insumo.fecha_creacion else '-',
+            'ultimo_ingreso_formatted': insumo.ultimo_ingreso.strftime('%d/%m/%Y %H:%M') if insumo.ultimo_ingreso else '-',
+            'ultimo_movimiento_formatted': insumo.ultimo_movimiento.strftime('%d/%m/%Y %H:%M') if insumo.ultimo_movimiento else '-',
+            'tipo_ultimo_movimiento_display': dict(Insumo.TIPO_MOVIMIENTO_CHOICES).get(insumo.tipo_ultimo_movimiento, '-') if insumo.tipo_ultimo_movimiento else '-',
+            'usuario_ultimo_movimiento': usuario_nombre,
+        }
+    })
+
+@csrf_exempt
+@login_required
+def eliminar_insumo(request, insumo_id):
+    """Vista para eliminar un insumo"""
+    if request.method == 'POST':
+        try:
+            insumo = get_object_or_404(Insumo, idInventario=insumo_id)
+            nombre_insumo = insumo.medicamento
+            insumo.delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Producto "{nombre_insumo}" eliminado correctamente'
+            })
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 # --- SERVICIOS ---
@@ -824,14 +914,30 @@ def detalle_insumo(request, insumo_id):
     """Vista para obtener detalles completos de un insumo (JSON)"""
     insumo = get_object_or_404(Insumo, idInventario=insumo_id)
     
-    # Formatear usuario
+    # ✅ FORMATEAR USUARIO CORRECTAMENTE
     usuario_nombre = "(sin registro)"
     if insumo.usuario_ultimo_movimiento:
-        if hasattr(insumo.usuario_ultimo_movimiento, 'get_full_name'):
-            nombre_completo = insumo.usuario_ultimo_movimiento.get_full_name()
-            usuario_nombre = nombre_completo if nombre_completo.strip() else insumo.usuario_ultimo_movimiento.username
-        else:
-            usuario_nombre = insumo.usuario_ultimo_movimiento.username
+        try:
+            # Intentar obtener nombre y apellido personalizados
+            if hasattr(insumo.usuario_ultimo_movimiento, 'nombre') and hasattr(insumo.usuario_ultimo_movimiento, 'apellido'):
+                nombre_completo = f"{insumo.usuario_ultimo_movimiento.nombre} {insumo.usuario_ultimo_movimiento.apellido}".strip()
+                usuario_nombre = nombre_completo if nombre_completo else insumo.usuario_ultimo_movimiento.username
+            # Si no, usar get_full_name de Django
+            elif hasattr(insumo.usuario_ultimo_movimiento, 'get_full_name'):
+                nombre_completo = insumo.usuario_ultimo_movimiento.get_full_name()
+                usuario_nombre = nombre_completo if nombre_completo.strip() else insumo.usuario_ultimo_movimiento.username
+            # Como último recurso, usar username
+            else:
+                usuario_nombre = insumo.usuario_ultimo_movimiento.username
+        except Exception as e:
+            print(f"⚠️ Error al formatear usuario: {e}")
+            usuario_nombre = str(insumo.usuario_ultimo_movimiento)
+    
+    # 🔍 DEBUG: Verificar qué se está guardando en BD
+    print(f"🔍 DEBUG detalle_insumo:")
+    print(f"  - ID Usuario en BD: {insumo.usuario_ultimo_movimiento_id}")
+    print(f"  - Objeto Usuario: {insumo.usuario_ultimo_movimiento}")
+    print(f"  - Nombre formateado: {usuario_nombre}")
     
     return JsonResponse({
         'success': True,
@@ -856,9 +962,34 @@ def detalle_insumo(request, insumo_id):
             'ultimo_ingreso_formatted': insumo.ultimo_ingreso.strftime('%d/%m/%Y %H:%M') if insumo.ultimo_ingreso else '-',
             'ultimo_movimiento_formatted': insumo.ultimo_movimiento.strftime('%d/%m/%Y %H:%M') if insumo.ultimo_movimiento else '-',
             'tipo_ultimo_movimiento_display': dict(Insumo.TIPO_MOVIMIENTO_CHOICES).get(insumo.tipo_ultimo_movimiento, '-') if insumo.tipo_ultimo_movimiento else '-',
-            'usuario_ultimo_movimiento': usuario_nombre,  # ⭐ CORREGIDO
+            'usuario_ultimo_movimiento': usuario_nombre,
         }
     })
+
+@csrf_exempt
+@login_required
+def eliminar_insumo(request, insumo_id):
+    """Vista para eliminar un insumo"""
+    if request.method == 'POST':
+        try:
+            insumo = get_object_or_404(Insumo, idInventario=insumo_id)
+            nombre_insumo = insumo.medicamento
+            insumo.delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Producto "{nombre_insumo}" eliminado correctamente'
+            })
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 
 
