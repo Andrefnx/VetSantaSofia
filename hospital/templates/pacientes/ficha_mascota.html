@@ -93,7 +93,7 @@
                                 <strong>Edad estimada</strong>
                             </label>
                             <div id="edadEstimadaInputs" {% if paciente.fecha_nacimiento %}style="display:none;"{% endif %}>
-                                <input type="number" class="form-control" name="edad_anos" value="{{ paciente.edad_anos|default:'' }}" placeholder="Años" min="0">
+                                <input type="number" class="form-control" name="edad" value="{{ paciente.edad|default:'' }}" placeholder="Años" min="0">
                                 <input type="number" class="form-control" name="edad_meses" value="{{ paciente.edad_meses|default:'' }}" placeholder="Meses" min="0" max="11">
                             </div>
                         </div>
