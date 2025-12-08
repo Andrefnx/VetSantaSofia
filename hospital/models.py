@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.conf import settings
 from datetime import date
 from dateutil.relativedelta import relativedelta
+from django.contrib.auth.models import User
 
 class Hospitalizacion(models.Model):
     idHospitalizacion = models.AutoField(primary_key=True)
@@ -36,29 +37,49 @@ class Hospitalizacion(models.Model):
 #   INVENTARIO (INSUMOS)
 # ===========================
 class Insumo(models.Model):
+    TIPO_MOVIMIENTO_CHOICES = [
+        ('entrada', 'Entrada de Stock'),
+        ('venta', 'Venta'),
+        ('consulta', 'Uso en Consulta'),
+        ('hospitalizacion', 'Uso en Hospitalización'),
+        ('ajuste_manual', 'Ajuste Manual'),
+        ('devolucion', 'Devolución'),
+        ('registro_inicial', 'Registro Inicial'),
+    ]
+    
     idInventario = models.AutoField(primary_key=True)
     medicamento = models.CharField(max_length=200)
     categoria = models.CharField(max_length=100, blank=True, null=True)
     sku = models.CharField(max_length=100, blank=True, null=True)
-    codigo_barra = models.CharField(max_length=100, blank=True, null=True)
-    presentacion = models.CharField(max_length=150, blank=True, null=True)
     especie = models.CharField(max_length=50, blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
-    unidad_medida = models.CharField(max_length=50, blank=True, null=True)
+    ml_contenedor = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="ML en Contenedor")
+    tipo = models.CharField(max_length=50, null=True, blank=True, verbose_name="Tipo de Producto")
     precio_venta = models.FloatField(default=0)
-    margen = models.FloatField(default=0)
     stock_actual = models.IntegerField(default=0)
-    stock_minimo = models.IntegerField(default=0)
-    stock_maximo = models.IntegerField(default=0)
-    almacenamiento = models.TextField(blank=True, null=True)
     precauciones = models.TextField(blank=True, null=True)
     contraindicaciones = models.TextField(blank=True, null=True)
     efectos_adversos = models.TextField(blank=True, null=True)
     dosis_ml = models.FloatField(blank=True, null=True)
     peso_kg = models.FloatField(blank=True, null=True)
-    fecha_creacion = models.DateTimeField(default=timezone.now)
-    ml_contenedor = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="ML en Contenedor")
-    tipo = models.CharField(max_length=50, null=True, blank=True, verbose_name="Tipo de Producto")
+    
+    # Campos de trazabilidad
+    fecha_creacion = models.DateTimeField(default=timezone.now, verbose_name="Fecha de Registro")
+    ultimo_ingreso = models.DateTimeField(null=True, blank=True)
+    ultimo_movimiento = models.DateTimeField(null=True, blank=True)
+    tipo_ultimo_movimiento = models.CharField(
+        max_length=20, 
+        choices=TIPO_MOVIMIENTO_CHOICES, 
+        null=True, 
+        blank=True
+    )
+    usuario_ultimo_movimiento = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='movimientos_insumos'
+    )
 
     class Meta:
         db_table = "Insumo"

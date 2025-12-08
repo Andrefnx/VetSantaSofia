@@ -151,11 +151,27 @@
                 <div class="detail-section mb-4">
                     <h6 class="detail-section-title"><i class="fas fa-boxes"></i> Inventario</h6>
                     <div class="row g-3">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="text-muted small">Stock Actual</label>
                             <p class="field-view fw-bold mb-0" data-field="stock_actual">-</p>
                             <input type="number" min="0" class="field-edit form-control d-none"
                                 data-field="stock_actual">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Fecha de Registro</label>
+                            <p class="field-view mb-0" data-field="fecha_creacion_formatted">-</p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Último Ingreso</label>
+                            <p class="field-view mb-0" data-field="ultimo_ingreso_formatted">-</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Último Movimiento</label>
+                            <p class="field-view mb-0" data-field="ultimo_movimiento_formatted">-</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Tipo de Movimiento</label>
+                            <p class="field-view mb-0" data-field="tipo_ultimo_movimiento_display">-</p>
                         </div>
                     </div>
                 </div>

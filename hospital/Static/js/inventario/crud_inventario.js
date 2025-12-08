@@ -50,7 +50,7 @@ function abrirModalProducto(btn, mode) {
     if (!tr) return;
 
     const idInventario = tr.getAttribute("data-id");
-    
+
     // Hacer petición para obtener todos los datos del producto
     fetch(`/hospital/inventario/detalle/${idInventario}/`)
         .then(response => response.json())
@@ -83,6 +83,13 @@ function openProductoModal(mode, data = {}) {
                 : "-";
     }
 
+    // --- ML Contenedor vista ---
+    const mlContenedorView = modal.querySelector('.field-view[data-field="ml_contenedor"]');
+    if (mlContenedorView) {
+        mlContenedorView.textContent =
+            data.ml_contenedor != null ? data.ml_contenedor + " ml" : "-";
+    }
+
     // --- Guardar datos originales ---
     if (mode === "edit") {
         productoDatosOriginales = { ...data };
@@ -93,8 +100,8 @@ function openProductoModal(mode, data = {}) {
         mode === "edit"
             ? "Editar Producto"
             : mode === "nuevo"
-            ? "Nuevo Producto"
-            : "Detalles del Producto";
+                ? "Nuevo Producto"
+                : "Detalles del Producto";
 
     // --- Botones ---
     document
@@ -122,19 +129,34 @@ function openProductoModal(mode, data = {}) {
     Object.keys(data).forEach((key) => {
         // Para los elementos de vista
         modal.querySelectorAll(`.field-view[data-field="${key}"]`).forEach((el) => {
-            el.textContent = data[key] ?? "-";
+            if (key === "ml_contenedor") {
+                el.textContent = data[key] != null ? data[key] + " ml" : "-";
+            } else {
+                el.textContent = (data[key] !== null && data[key] !== undefined) ? data[key] : "(sin registro)";
+
+            }
         });
-        
+
         // Para los elementos de edición
         modal.querySelectorAll(`.field-edit[data-field="${key}"]`).forEach((el) => {
-            // Normalizar valores numéricos
-            if (['dosis_ml', 'peso_kg', 'precio_venta', 'ml_contenedor', 'stock_actual'].includes(key)) {
+            // Para ml_contenedor, dosis_ml, peso_kg
+            if (key === "ml_contenedor" || key === "dosis_ml" || key === "peso_kg") {
+                el.value = data[key] != null ? data[key] : "";
+            }
+            // Otros campos numéricos
+            else if (['precio_venta', 'stock_actual'].includes(key)) {
                 el.value = normalizarNumero(data[key] ?? "");
-            } else if (el.tagName === 'SELECT') {
+            }
+            // Select
+            else if (el.tagName === 'SELECT') {
                 el.value = data[key] ?? "";
-            } else if (el.tagName === 'TEXTAREA') {
+            }
+            // Textarea
+            else if (el.tagName === 'TEXTAREA') {
                 el.value = data[key] ?? "";
-            } else {
+            }
+            // Input text
+            else {
                 el.value = data[key] ?? "";
             }
         });
@@ -154,17 +176,141 @@ function openProductoModal(mode, data = {}) {
 function switchToEditModeProducto() {
     const modal = document.getElementById("modalProducto");
     const data = getProductoModalData();
-    
+
     // Asegurar que se preserve el ID
     if (modal.dataset.idinventario) {
         data.idInventario = modal.dataset.idinventario;
     }
-    
+
     openProductoModal("edit", data);
 }
 
 /* ============================================================
-   GUARDAR PRODUCTO (MODIFICADO - INCLUIR TODOS LOS CAMPOS)
+   GENERAR LOG DE DATOS DEL PRODUCTO
+============================================================ */
+function generarLogProducto() {
+    const modal = document.getElementById("modalProducto");
+    
+    // Obtener todos los valores priorizando elementos visibles O de solo lectura
+    const obtenerValor = (field) => {
+        // Buscar todos los elementos con este data-field
+        const elementos = modal.querySelectorAll(`[data-field="${field}"]`);
+        
+        if (elementos.length === 0) {
+            console.warn(`⚠️ Campo no encontrado: ${field}`);
+            return '(no encontrado)';
+        }
+        
+        // Campos de solo lectura (fechas, movimientos) - tomar el primero aunque esté oculto
+        const camposSoloLectura = [
+            'fecha_creacion_formatted',
+            'ultimo_ingreso_formatted', 
+            'ultimo_movimiento_formatted',
+            'tipo_ultimo_movimiento_display',
+            'dosis_formula_view'
+        ];
+        
+        let elementoSeleccionado = null;
+        
+        if (camposSoloLectura.includes(field)) {
+            // Para campos de solo lectura, tomar el primero (campo de vista)
+            elementoSeleccionado = elementos[0];
+        } else {
+            // Para campos editables, priorizar el visible
+            elementos.forEach(el => {
+                if (!el.classList.contains('d-none')) {
+                    elementoSeleccionado = el;
+                }
+            });
+            elementoSeleccionado = elementoSeleccionado || elementos[0];
+        }
+        
+        let valor;
+        
+        // Si es un SELECT en modo edición
+        if (elementoSeleccionado.tagName === 'SELECT' && !elementoSeleccionado.classList.contains('d-none')) {
+            const selectedOption = elementoSeleccionado.options[elementoSeleccionado.selectedIndex];
+            valor = selectedOption ? selectedOption.text.trim() : elementoSeleccionado.value;
+        }
+        // Si es un INPUT o TEXTAREA en modo edición
+        else if ((elementoSeleccionado.tagName === 'INPUT' || elementoSeleccionado.tagName === 'TEXTAREA') && 
+                 !elementoSeleccionado.classList.contains('d-none')) {
+            valor = elementoSeleccionado.value;
+        }
+        // Si es elemento de vista (span, div, etc.)
+        else {
+            valor = elementoSeleccionado.textContent;
+        }
+        
+        // Limpiar y validar
+        valor = valor ? valor.trim() : '';
+        
+        // Filtrar valores que deben considerarse como vacíos
+        const valoresVacios = ['', '-', 'Selecciona...', 'selecciona...', '(vacío)', null, undefined];
+        
+        // Verificar si el valor está en la lista de valores vacíos
+        if (valoresVacios.includes(valor) || !valor) {
+            return '(sin registro)';
+        }
+        
+        return valor;
+    };
+
+    // DEBUG: Listar todos los elementos con data-field y su visibilidad
+    console.log("🔍 DEBUG: Elementos encontrados en el modal:");
+    modal.querySelectorAll('[data-field]').forEach(el => {
+        const visible = !el.classList.contains('d-none');
+        const valor = (el.textContent || el.value).trim();
+        console.log(`  - data-field="${el.dataset.field}" [${visible ? 'VISIBLE' : 'OCULTO'}]: "${valor.substring(0, 50)}"`);
+    });
+
+    // Construir el log
+    const log = `
+═══════════════════════════════════════════════════════════
+              RESUMEN COMPLETO DEL PRODUCTO
+═══════════════════════════════════════════════════════════
+
+1. IDENTIFICACIÓN GENERAL
+   ─────────────────────────────────────────────────────────
+   Nombre Comercial: ${obtenerValor('nombre_comercial')}
+   Tipo: ${obtenerValor('tipo')}
+   Descripción: ${obtenerValor('descripcion')}
+   Especie: ${obtenerValor('especie')}
+
+2. INFORMACIÓN COMERCIAL
+   ─────────────────────────────────────────────────────────
+   Precio Venta: $${obtenerValor('precio_venta')}
+
+3. INVENTARIO
+   ─────────────────────────────────────────────────────────
+   Stock Actual: ${obtenerValor('stock_actual')}
+   Fecha de Registro: ${obtenerValor('fecha_creacion_formatted')}
+   Último Ingreso: ${obtenerValor('ultimo_ingreso_formatted')}
+   Último Movimiento: ${obtenerValor('ultimo_movimiento_formatted')}
+   Tipo de Movimiento: ${obtenerValor('tipo_ultimo_movimiento_display')}
+
+4. DOSIS
+   ─────────────────────────────────────────────────────────
+   Dosis Recomendada: ${obtenerValor('dosis_formula_view')}
+   Dosis: ${obtenerValor('dosis_ml')} ml
+   Frecuencia por peso: cada ${obtenerValor('peso_kg')} kg
+   ML en contenedor: ${obtenerValor('ml_contenedor')} ml
+
+5. PRECAUCIONES Y OTROS
+   ─────────────────────────────────────────────────────────
+   Precauciones: ${obtenerValor('precauciones')}
+   Contraindicaciones: ${obtenerValor('contraindicaciones')}
+   Efectos Adversos: ${obtenerValor('efectos_adversos')}
+
+═══════════════════════════════════════════════════════════
+`;
+
+    console.log(log);
+    return log;
+}
+
+/* ============================================================
+   GUARDAR PRODUCTO (MODIFICADO - CON LOG)
 ============================================================ */
 function guardarProductoEditado() {
     const modal = document.getElementById("modalProducto");
@@ -177,14 +323,14 @@ function guardarProductoEditado() {
         if (input.dataset.field) {
             const field = input.dataset.field;
             let value;
-            
+
             // Para textarea y select
             if (input.tagName === 'TEXTAREA' || input.tagName === 'SELECT') {
                 value = input.value.trim();
             } else {
                 value = input.value.trim();
             }
-            
+
             // Normalizar campos numéricos
             if (['dosis_ml', 'peso_kg', 'precio_venta', 'stock_actual', 'ml_contenedor'].includes(field)) {
                 updated[field] = normalizarNumero(value);
@@ -219,7 +365,14 @@ function guardarProductoEditado() {
         return;
     }
 
-    console.log("DEBUG - Datos a enviar:", updated);
+    // *** GENERAR LOG ANTES DE GUARDAR ***
+    console.log("═══════════════════════════════════════════════════════════");
+    console.log("         🔍 LOG DE EDICIÓN DE PRODUCTO");
+    console.log("═══════════════════════════════════════════════════════════");
+    const logCompleto = generarLogProducto();
+    console.log("\n📦 Datos que se enviarán al servidor:");
+    console.log(JSON.stringify(updated, null, 2));
+    console.log("═══════════════════════════════════════════════════════════\n");
 
     // --- Rutas ---
     const url = updated.idInventario
@@ -234,14 +387,25 @@ function guardarProductoEditado() {
         .then((r) => r.json())
         .then((resp) => {
             if (resp.success) {
-                closeVetModal("modalProducto");
-                location.reload();
+                console.log("✅ Producto guardado exitosamente");
+
+                // OPCIÓN 1: Esperar 3 segundos antes de recargar
+                setTimeout(() => {
+                    closeVetModal("modalProducto");
+                    location.reload();
+                }, 15000);
+
+                // OPCIÓN 2: O mejor aún, comentar el reload para ver el log completo
+                // closeVetModal("modalProducto");
+                // alert("Producto guardado. Revisa la consola para ver el log completo.");
+
             } else {
+                console.error("❌ Error al guardar:", resp.error);
                 alert("Error al guardar: " + (resp.error || "Error desconocido"));
             }
         })
         .catch(error => {
-            console.error("Error:", error);
+            console.error("❌ Error de red:", error);
             alert("Error al guardar el producto");
         });
 }
@@ -262,7 +426,7 @@ function getProductoModalData() {
     modal.querySelectorAll(".field-edit").forEach((input) => {
         if (input.dataset.field) {
             const field = input.dataset.field;
-            
+
             // Para textarea
             if (input.tagName === 'TEXTAREA') {
                 data[field] = input.value.trim();

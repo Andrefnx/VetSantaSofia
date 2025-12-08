@@ -333,7 +333,7 @@ def crear_insumo(request):
             insumo = Insumo.objects.create(
                 medicamento=data.get('nombre_comercial', data.get('medicamento')),
                 tipo=data.get('tipo'),
-                especie=data.get('especie'),  # <-- AQUÍ ESTABA EL PROBLEMA, FALTABA CERRAR
+                especie=data.get('especie'),
                 descripcion=data.get('descripcion'),
                 precio_venta=float(data.get('precio_venta', 0)),
                 stock_actual=int(data.get('stock_actual', 0)),
@@ -343,7 +343,15 @@ def crear_insumo(request):
                 precauciones=data.get('precauciones'),
                 contraindicaciones=data.get('contraindicaciones'),
                 efectos_adversos=data.get('efectos_adversos'),
+                fecha_creacion=timezone.now(),
+                tipo_ultimo_movimiento='registro_inicial'
             )
+            
+            # Si se registra con stock inicial, marcar como entrada
+            if insumo.stock_actual > 0:
+                insumo.ultimo_ingreso = timezone.now()
+                insumo.ultimo_movimiento = timezone.now()
+                insumo.save()
             
             return JsonResponse({
                 'success': True,
@@ -363,16 +371,39 @@ def editar_insumo(request, insumo_id):
     if request.method == 'POST':
         try:
             import json
+            from decimal import Decimal
+            
             data = json.loads(request.body)
             print(f"DEBUG - Editando insumo ID: {insumo_id}")
             print(f"DEBUG - Data recibida: {data}")
+            
+            # Guardar stock anterior para detectar cambios
+            stock_anterior = insumo.stock_actual
             
             # Actualizar campos básicos
             insumo.medicamento = data.get('nombre_comercial', insumo.medicamento)
             insumo.tipo = data.get('tipo', insumo.tipo)
             insumo.especie = data.get('especie', insumo.especie)
             insumo.descripcion = data.get('descripcion', insumo.descripcion)
-            insumo.stock_actual = int(data.get('stock_actual', insumo.stock_actual))
+            
+            # Actualizar stock y detectar cambios
+            if 'stock_actual' in data:
+                nuevo_stock = int(data.get('stock_actual', insumo.stock_actual))
+                if stock_anterior != nuevo_stock:
+                    insumo.stock_actual = nuevo_stock
+                    insumo.ultimo_movimiento = timezone.now()
+                    
+                    # Determinar tipo de movimiento
+                    if nuevo_stock > stock_anterior:
+                        insumo.ultimo_ingreso = timezone.now()
+                        insumo.tipo_ultimo_movimiento = 'entrada'
+                        print(f"DEBUG - Stock incrementado de {stock_anterior} a {nuevo_stock} - Tipo: entrada")
+                    else:
+                        insumo.tipo_ultimo_movimiento = 'ajuste_manual'
+                        print(f"DEBUG - Stock reducido de {stock_anterior} a {nuevo_stock} - Tipo: ajuste_manual")
+                else:
+                    insumo.stock_actual = nuevo_stock
+            
             insumo.precio_venta = float(data.get('precio_venta', insumo.precio_venta))
             
             # Campos de texto largos
@@ -382,14 +413,21 @@ def editar_insumo(request, insumo_id):
             
             # Campos numéricos opcionales
             if 'dosis_ml' in data:
-                insumo.dosis_ml = float(data['dosis_ml']) if data['dosis_ml'] else None
+                valor = data['dosis_ml']
+                insumo.dosis_ml = Decimal(str(valor)) if valor not in ("", None) else None
+            
             if 'peso_kg' in data:
-                insumo.peso_kg = float(data['peso_kg']) if data['peso_kg'] else None
+                valor = data['peso_kg']
+                insumo.peso_kg = Decimal(str(valor)) if valor not in ("", None) else None
+            
             if 'ml_contenedor' in data:
-                insumo.ml_contenedor = float(data['ml_contenedor']) if data['ml_contenedor'] else None
+                valor = data['ml_contenedor']
+                insumo.ml_contenedor = Decimal(str(valor)) if valor not in ("", None) else None
             
             insumo.save()
-            print(f"DEBUG - Insumo guardado exitosamente: {insumo.idInventario}")
+            print(f"DEBUG - Insumo guardado exitosamente")
+            print(f"DEBUG - Último movimiento: {insumo.ultimo_movimiento}")
+            print(f"DEBUG - Tipo movimiento: {insumo.tipo_ultimo_movimiento}")
             
             return JsonResponse({
                 'success': True,
@@ -415,14 +453,51 @@ def eliminar_insumo(request, insumo_id):
 
 @csrf_exempt
 def modificar_stock(request, insumo_id):
-    insumo = get_object_or_404(Insumo, idInventario=insumo_id)  # Cambiado de id a idInventario
     if request.method == 'POST':
         try:
+            import json
             data = json.loads(request.body)
-            insumo.stock_actual = data.get('stock_actual', insumo.stock_actual)
+            insumo = get_object_or_404(Insumo, idInventario=insumo_id)
+            
+            stock_anterior = insumo.stock_actual
+            nuevo_stock = int(data.get('stock_actual', 0))
+            
+            print(f"DEBUG - Modificando stock del insumo ID: {insumo_id}")
+            print(f"DEBUG - Stock anterior: {stock_anterior}, Nuevo stock: {nuevo_stock}")
+            
+            # Actualizar campos
+            insumo.stock_actual = nuevo_stock
+            insumo.ultimo_movimiento = timezone.now()
+            
+            # Determinar tipo de movimiento
+            if nuevo_stock > stock_anterior:
+                insumo.ultimo_ingreso = timezone.now()
+                insumo.tipo_ultimo_movimiento = 'entrada'
+                tipo_movimiento = 'entrada'
+                print(f"DEBUG - Tipo de movimiento: entrada")
+            elif nuevo_stock < stock_anterior:
+                insumo.tipo_ultimo_movimiento = 'ajuste_manual'
+                tipo_movimiento = 'ajuste_manual'
+                print(f"DEBUG - Tipo de movimiento: ajuste_manual")
+            else:
+                insumo.tipo_ultimo_movimiento = 'ajuste_manual'
+                tipo_movimiento = 'sin_cambio'
+                print(f"DEBUG - Sin cambio en stock")
+            
             insumo.save()
-            return JsonResponse({'success': True, 'message': 'Stock actualizado'})
+            print(f"DEBUG - Stock guardado exitosamente")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Stock actualizado correctamente',
+                'stock_actual': nuevo_stock,
+                'tipo_movimiento': tipo_movimiento,
+                'ultimo_movimiento': insumo.ultimo_movimiento.strftime("%d/%m/%Y %H:%M")
+            })
         except Exception as e:
+            print(f"ERROR: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
@@ -730,12 +805,17 @@ def detalle_insumo(request, insumo_id):
             'descripcion': insumo.descripcion or '',
             'precio_venta': float(insumo.precio_venta) if insumo.precio_venta else 0,
             'stock_actual': insumo.stock_actual or 0,
-            'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml else '',
-            'peso_kg': float(insumo.peso_kg) if insumo.peso_kg else '',
-            'ml_contenedor': float(insumo.ml_contenedor) if insumo.ml_contenedor else '',
+            'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml is not None else None,
+            'peso_kg': float(insumo.peso_kg) if insumo.peso_kg is not None else None,
+            'ml_contenedor': float(insumo.ml_contenedor) if insumo.ml_contenedor is not None else None,
             'precauciones': insumo.precauciones or '',
             'contraindicaciones': insumo.contraindicaciones or '',
             'efectos_adversos': insumo.efectos_adversos or '',
+            # FECHAS FORMATEADAS
+            'fecha_creacion_formatted': insumo.fecha_creacion.strftime("%d/%m/%Y %H:%M") if insumo.fecha_creacion else '-',
+            'ultimo_ingreso_formatted': insumo.ultimo_ingreso.strftime("%d/%m/%Y %H:%M") if insumo.ultimo_ingreso else '-',
+            'ultimo_movimiento_formatted': insumo.ultimo_movimiento.strftime("%d/%m/%Y %H:%M") if insumo.ultimo_movimiento else '-',
+            'tipo_ultimo_movimiento_display': insumo.get_tipo_ultimo_movimiento_display() if insumo.tipo_ultimo_movimiento else '-',
         }
     })
 
