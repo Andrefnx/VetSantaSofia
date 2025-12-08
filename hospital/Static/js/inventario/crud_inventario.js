@@ -197,15 +197,58 @@ function openProductoModal(mode, data = {}) {
    CAMBIAR A MODO EDICIÓN
 ============================================================ */
 function switchToEditModeProducto() {
-    const modal = document.getElementById('modalProducto'); // ⭐ CORREGIDO
-    const data = getProductoModalData();
+    const modal = document.getElementById('modalProducto');
+    const data = JSON.parse(modal.dataset.originalData || '{}');
 
     // Asegurar que se preserve el ID
-    if (modal.dataset.idinventario) {
-        data.idInventario = modal.dataset.idinventario;
+    if (data.idInventario) {
+        modal.dataset.idinventario = data.idInventario;
     }
 
-    openProductoModal("edit", data);
+    // ⭐ RELLENAR INPUTS DE DOSIS ANTES DE CAMBIAR DE MODO
+    const dosisMlInput = modal.querySelector('input[data-field="dosis_ml"]');
+    const pesoKgInput = modal.querySelector('input[data-field="peso_kg"]');
+    const mlContenedorInput = modal.querySelector('input[data-field="ml_contenedor"]');
+    
+    if (dosisMlInput && data.dosis_ml !== undefined) {
+        dosisMlInput.value = data.dosis_ml || "";
+    }
+    if (pesoKgInput && data.peso_kg !== undefined) {
+        pesoKgInput.value = data.peso_kg || "";
+    }
+    if (mlContenedorInput && data.ml_contenedor !== undefined) {
+        mlContenedorInput.value = data.ml_contenedor || "";
+    }
+
+    // Cambiar todos los campos de vista a edición
+    modal.querySelectorAll(".field-view").forEach((f) => {
+        if (!f.classList.contains('field-readonly')) {
+            f.classList.add("d-none");
+        }
+    });
+
+    modal.querySelectorAll(".field-edit").forEach((f) => {
+        f.classList.remove("d-none");
+    });
+
+    // Rellenar todos los demás campos editables
+    Object.keys(data).forEach((key) => {
+        const editEl = modal.querySelector(`.field-edit[data-field="${key}"], .field-edit [data-field="${key}"]`);
+        if (editEl) {
+            if (editEl.tagName === "SELECT") {
+                editEl.value = data[key] || "";
+            } else {
+                editEl.value = data[key] || "";
+            }
+        }
+    });
+
+    // Cambiar botones
+    const btnGuardar = document.getElementById("btnGuardarProductoModal");
+    const btnEditar = document.getElementById("btnEditarProducto");
+
+    if (btnGuardar) btnGuardar.classList.remove("d-none");
+    if (btnEditar) btnEditar.classList.add("d-none");
 }
 
 /* ============================================================
