@@ -48,7 +48,6 @@ class Insumo(models.Model):
     
     idInventario = models.AutoField(primary_key=True)
     medicamento = models.CharField(max_length=200)
-    categoria = models.CharField(max_length=100, blank=True, null=True)
     sku = models.CharField(max_length=100, blank=True, null=True)
     especie = models.CharField(max_length=50, blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
@@ -90,12 +89,15 @@ class Insumo(models.Model):
     def get_usuario_nombre_completo(self):
         """Retorna el nombre completo del usuario que realizó el último movimiento"""
         if self.usuario_ultimo_movimiento:
-            # Intentar obtener nombre_completo, si no existe, usar nombre y apellido directamente
             try:
+                # Usar la propiedad nombre_completo del modelo CustomUser
                 return self.usuario_ultimo_movimiento.nombre_completo
             except AttributeError:
-                # Fallback si no existe la propiedad nombre_completo
-                return f"{self.usuario_ultimo_movimiento.nombre} {self.usuario_ultimo_movimiento.apellido}".strip()
+                # Fallback si no existe la propiedad
+                try:
+                    return f"{self.usuario_ultimo_movimiento.nombre} {self.usuario_ultimo_movimiento.apellido}".strip()
+                except AttributeError:
+                    return str(self.usuario_ultimo_movimiento)
         return "-"
     
 

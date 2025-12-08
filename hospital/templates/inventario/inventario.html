@@ -186,38 +186,41 @@
                     </h6>
 
                     <div class="row g-3">
-
-                        <!-- VISTA -->
+                        <!-- VISTA: Dosis Recomendada -->
                         <div class="col-md-6">
                             <label class="text-muted small">Dosis Recomendada</label>
                             <p class="field-view mb-0" data-field="dosis_formula_view">-</p>
                         </div>
 
+                        <!-- VISTA: ML en Contenedor -->
+                        <div class="col-md-6">
+                            <label class="text-muted small">ML en Contenedor</label>
+                            <p class="field-view mb-0" data-field="ml_contenedor">-</p>
+                        </div>
 
-                        <!-- EDICIÓN -->
+                        <!-- EDICIÓN: Dosis -->
                         <div class="col-md-12 field-edit d-none">
+                            <label class="text-muted small">Configurar Dosis</label>
                             <div class="input-group">
                                 <span class="input-group-text">Dosis</span>
-                                <input type="number" step="any" class="form-control field-edit" data-field="dosis_ml"
+                                <input type="number" step="any" class="form-control" data-field="dosis_ml"
                                     placeholder="Ej: 0.3">
 
                                 <span class="input-group-text">ml cada</span>
 
-                                <input type="number" step="any" class="form-control field-edit" data-field="peso_kg"
+                                <input type="number" step="any" class="form-control" data-field="peso_kg"
                                     placeholder="Ej: 5">
 
                                 <span class="input-group-text">kg</span>
                             </div>
                         </div>
 
-                    </div>
-
-
-                    <div class="col-md-6" style="margin-top: 10px;">
-                        <label class="text-muted small">Ml en Contenedor</label>
-                        <p class="field-view mb-0" data-field="ml_contenedor">-</p>
-                        <input type="number" step="any" class="field-edit form-control d-none"
-                            data-field="ml_contenedor" placeholder="Ej: 100">
+                        <!-- EDICIÓN: ML en Contenedor -->
+                        <div class="col-md-6 field-edit d-none">
+                            <label class="text-muted small">ML en Contenedor</label>
+                            <input type="number" step="0.01" class="form-control" data-field="ml_contenedor" 
+                                   placeholder="Ej: 100">
+                        </div>
                     </div>
                 </div>
 

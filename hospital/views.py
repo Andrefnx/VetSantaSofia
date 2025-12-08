@@ -372,66 +372,98 @@ def editar_insumo(request, insumo_id):
     if request.method == 'POST':
         try:
             import json
-            from decimal import Decimal
+            from decimal import Decimal, InvalidOperation
             
             data = json.loads(request.body)
+            print(f"\n{'='*60}")
             print(f"DEBUG - Editando insumo ID: {insumo_id}")
             print(f"DEBUG - Usuario: {request.user.username}")
+            print(f"DEBUG - Datos recibidos: {json.dumps(data, indent=2)}")
             
             # Guardar stock anterior para detectar cambios
             stock_anterior = insumo.stock_actual
             
             # Actualizar campos básicos
-            insumo.medicamento = data.get('nombre_comercial', insumo.medicamento)
-            insumo.tipo = data.get('tipo', insumo.tipo)
-            insumo.especie = data.get('especie', insumo.especie)
-            insumo.descripcion = data.get('descripcion', insumo.descripcion)
+            insumo.medicamento = data.get('nombre_comercial') or data.get('medicamento') or insumo.medicamento
+            insumo.tipo = data.get('tipo') or insumo.tipo
+            insumo.especie = data.get('especie') or insumo.especie
+            insumo.descripcion = data.get('descripcion') or insumo.descripcion
+            
+            # Actualizar precio
+            try:
+                precio = data.get('precio_venta')
+                if precio not in (None, '', '-'):
+                    insumo.precio_venta = float(precio)
+            except (ValueError, TypeError) as e:
+                print(f"ERROR al convertir precio_venta: {e}")
             
             # Actualizar stock y detectar cambios
-            if 'stock_actual' in data:
-                nuevo_stock = int(data.get('stock_actual', insumo.stock_actual))
-                if stock_anterior != nuevo_stock:
-                    insumo.stock_actual = nuevo_stock
-                    insumo.ultimo_movimiento = timezone.now()
-                    insumo.usuario_ultimo_movimiento = request.user  # ⭐ REGISTRAR USUARIO
-                    
-                    # Determinar tipo de movimiento
-                    if nuevo_stock > stock_anterior:
-                        insumo.ultimo_ingreso = timezone.now()
-                        insumo.tipo_ultimo_movimiento = 'entrada'
-                        print(f"DEBUG - Stock incrementado - Usuario: {request.user.username}")
-                    else:
-                        insumo.tipo_ultimo_movimiento = 'ajuste_manual'
-                        print(f"DEBUG - Stock reducido - Usuario: {request.user.username}")
-                else:
-                    insumo.stock_actual = nuevo_stock
-            
-            insumo.precio_venta = float(data.get('precio_venta', insumo.precio_venta))
+            try:
+                stock_str = data.get('stock_actual')
+                if stock_str not in (None, '', '-'):
+                    nuevo_stock = int(stock_str)
+                    if stock_anterior != nuevo_stock:
+                        insumo.stock_actual = nuevo_stock
+                        insumo.ultimo_movimiento = timezone.now()
+                        insumo.usuario_ultimo_movimiento = request.user
+                        
+                        # Determinar tipo de movimiento
+                        if nuevo_stock > stock_anterior:
+                            insumo.ultimo_ingreso = timezone.now()
+                            insumo.tipo_ultimo_movimiento = 'entrada'
+                            print(f"DEBUG - Stock incrementado de {stock_anterior} a {nuevo_stock}")
+                        else:
+                            insumo.tipo_ultimo_movimiento = 'ajuste_manual'
+                            print(f"DEBUG - Stock reducido de {stock_anterior} a {nuevo_stock}")
+            except (ValueError, TypeError) as e:
+                print(f"ERROR al convertir stock: {e}")
             
             # Campos de texto largos
-            insumo.precauciones = data.get('precauciones', insumo.precauciones)
-            insumo.contraindicaciones = data.get('contraindicaciones', insumo.contraindicaciones)
-            insumo.efectos_adversos = data.get('efectos_adversos', insumo.efectos_adversos)
+            insumo.precauciones = data.get('precauciones') or insumo.precauciones
+            insumo.contraindicaciones = data.get('contraindicaciones') or insumo.contraindicaciones
+            insumo.efectos_adversos = data.get('efectos_adversos') or insumo.efectos_adversos
             
-            # Campos numéricos opcionales
-            if 'dosis_ml' in data:
-                valor = data['dosis_ml']
-                insumo.dosis_ml = Decimal(str(valor)) if valor not in ("", None) else None
+            # Función auxiliar para convertir a Decimal de manera segura
+            def to_decimal_safe(valor, campo_nombre):
+                if valor in (None, '', '-'):
+                    print(f"DEBUG - {campo_nombre}: valor vacío, se establece None")
+                    return None
+                try:
+                    # Limpiar el valor
+                    valor_limpio = str(valor).strip().replace(',', '.')
+                    if valor_limpio == '':
+                        return None
+                    decimal_val = Decimal(valor_limpio)
+                    print(f"DEBUG - {campo_nombre}: '{valor}' → {decimal_val}")
+                    return decimal_val
+                except (InvalidOperation, ValueError) as e:
+                    print(f"ERROR - {campo_nombre}: no se pudo convertir '{valor}' - {e}")
+                    return None
             
-            if 'peso_kg' in data:
-                valor = data['peso_kg']
-                insumo.peso_kg = Decimal(str(valor)) if valor not in ("", None) else None
+            # Actualizar campos numéricos con validación mejorada
+            insumo.dosis_ml = to_decimal_safe(data.get('dosis_ml'), 'dosis_ml')
+            insumo.peso_kg = to_decimal_safe(data.get('peso_kg'), 'peso_kg')
+            insumo.ml_contenedor = to_decimal_safe(data.get('ml_contenedor'), 'ml_contenedor')
             
-            if 'ml_contenedor' in data:
-                valor = data['ml_contenedor']
-                insumo.ml_contenedor = Decimal(str(valor)) if valor not in ("", None) else None
-            
+            # Guardar cambios
             insumo.save()
+            
             print(f"DEBUG - Insumo guardado exitosamente")
+            print(f"  - dosis_ml: {insumo.dosis_ml}")
+            print(f"  - peso_kg: {insumo.peso_kg}")
+            print(f"  - ml_contenedor: {insumo.ml_contenedor}")
+            print(f"  - usuario_ultimo_movimiento: {insumo.usuario_ultimo_movimiento}")
+            print(f"{'='*60}\n")
             
             return JsonResponse({
                 'success': True,
                 'message': 'Insumo actualizado correctamente',
+                'debug': {
+                    'dosis_ml': str(insumo.dosis_ml) if insumo.dosis_ml else None,
+                    'peso_kg': str(insumo.peso_kg) if insumo.peso_kg else None,
+                    'ml_contenedor': str(insumo.ml_contenedor) if insumo.ml_contenedor else None,
+                    'usuario': request.user.nombre_completo if hasattr(request.user, 'nombre_completo') else str(request.user),
+                }
             })
         except Exception as e:
             print(f"ERROR: {str(e)}")

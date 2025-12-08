@@ -43,7 +43,7 @@ function parseNumeroSeguro(valor) {
 }
 
 /* ============================================================
-   VER / EDITAR PRODUCTO (MODIFICADO - CARGAR TODOS LOS CAMPOS)
+   VER / EDITAR PRODUCTO (CORREGIDO)
 ============================================================ */
 function abrirModalProducto(btn, mode) {
     const tr = btn.closest("tr");
@@ -68,12 +68,17 @@ function abrirModalProducto(btn, mode) {
 }
 
 /* ============================================================
-   ABRIR MODAL PRINCIPAL (MODIFICADO - INCLUIR TODOS LOS CAMPOS)
+   ABRIR MODAL PRINCIPAL (CORREGIDO)
 ============================================================ */
 function openProductoModal(mode, data = {}) {
-    const modal = document.getElementById("modalProducto");
-    if (!modal) return;
-
+    const modalId = 'modalProducto';
+    const modal = document.getElementById(modalId);
+    
+    if (!modal) {
+        console.error('Modal no encontrado:', modalId);
+        return;
+    }
+    
     // --- Dosis vista ---
     const dosisView = modal.querySelector('[data-field="dosis_formula_view"]');
     if (dosisView) {
@@ -92,29 +97,28 @@ function openProductoModal(mode, data = {}) {
 
     // --- Guardar datos originales ---
     if (mode === "edit") {
-        productoDatosOriginales = { ...data };
+        window.productoDatosOriginales = { ...data };
     }
 
     // --- Título del modal ---
-    document.getElementById("modalProductoTitulo").textContent =
-        mode === "edit"
-            ? "Editar Producto"
-            : mode === "nuevo"
-                ? "Nuevo Producto"
-                : "Detalles del Producto";
+    const titulo = document.getElementById("modalProductoTitulo");
+    if (titulo) {
+        titulo.textContent =
+            mode === "edit"
+                ? "Editar Producto"
+                : mode === "nuevo"
+                    ? "Nuevo Producto"
+                    : "Detalles del Producto";
+    }
 
     // --- Botones ---
-    document
-        .getElementById("btnGuardarProductoModal")
-        .classList.toggle("d-none", mode === "view");
-
-    document
-        .getElementById("btnEditarProducto")
-        .classList.toggle("d-none", mode !== "view");
-
-    document
-        .getElementById("btnEliminarProducto")
-        .classList.toggle("d-none", mode === "nuevo");
+    const btnGuardar = document.getElementById("btnGuardarProductoModal");
+    const btnEditar = document.getElementById("btnEditarProducto");
+    const btnEliminar = document.getElementById("btnEliminarProducto");
+    
+    if (btnGuardar) btnGuardar.classList.toggle("d-none", mode === "view");
+    if (btnEditar) btnEditar.classList.toggle("d-none", mode !== "view");
+    if (btnEliminar) btnEliminar.classList.toggle("d-none", mode === "nuevo");
 
     // --- Mostrar / ocultar campos ---
     modal.querySelectorAll(".field-view").forEach((f) => {
@@ -133,7 +137,6 @@ function openProductoModal(mode, data = {}) {
                 el.textContent = data[key] != null ? data[key] + " ml" : "-";
             } else {
                 el.textContent = (data[key] !== null && data[key] !== undefined) ? data[key] : "(sin registro)";
-
             }
         });
 
@@ -163,18 +166,21 @@ function openProductoModal(mode, data = {}) {
     });
 
     // --- Guardar ID ---
-    if (data.idInventario) modal.dataset.idinventario = data.idInventario;
-    else delete modal.dataset.idinventario;
+    if (data.idInventario) {
+        modal.dataset.idinventario = data.idInventario;
+    } else {
+        delete modal.dataset.idinventario;
+    }
 
-    modal.classList.add("show");
-    modal.classList.remove("hide");
+    // ⭐ MOSTRAR MODAL CORRECTAMENTE
+    openVetModal(modalId);
 }
 
 /* ============================================================
    CAMBIAR A MODO EDICIÓN
 ============================================================ */
 function switchToEditModeProducto() {
-    const modal = document.getElementById("modalProducto");
+    const modal = document.getElementById('modalProducto'); // ⭐ CORREGIDO
     const data = getProductoModalData();
 
     // Asegurar que se preserve el ID
@@ -189,7 +195,7 @@ function switchToEditModeProducto() {
    GENERAR LOG DE DATOS DEL PRODUCTO
 ============================================================ */
 function generarLogProducto() {
-    const modal = document.getElementById("modalProducto");
+    const modal = document.getElementById('modalProducto');
     
     // Obtener todos los valores priorizando elementos visibles O de solo lectura
     const obtenerValor = (field) => {
@@ -207,7 +213,7 @@ function generarLogProducto() {
             'ultimo_ingreso_formatted', 
             'ultimo_movimiento_formatted',
             'tipo_ultimo_movimiento_display',
-            'usuario_ultimo_movimiento',  // ⭐ AGREGAR ESTA LÍNEA
+            'usuario_ultimo_movimiento',
             'dosis_formula_view'
         ];
         
@@ -236,11 +242,11 @@ function generarLogProducto() {
         // Si es un INPUT o TEXTAREA en modo edición
         else if ((elementoSeleccionado.tagName === 'INPUT' || elementoSeleccionado.tagName === 'TEXTAREA') && 
                  !elementoSeleccionado.classList.contains('d-none')) {
-            valor = elementoSeleccionado.value;
+            valor = elementoSeleccionado.value || '';
         }
         // Si es elemento de vista (span, div, etc.)
         else {
-            valor = elementoSeleccionado.textContent;
+            valor = elementoSeleccionado.textContent || '';
         }
         
         // Limpiar y validar
@@ -261,7 +267,7 @@ function generarLogProducto() {
     console.log("🔍 DEBUG: Elementos encontrados en el modal:");
     modal.querySelectorAll('[data-field]').forEach(el => {
         const visible = !el.classList.contains('d-none');
-        const valor = (el.textContent || el.value).trim();
+        const valor = (el.textContent || el.value || '').trim();
         console.log(`  - data-field="${el.dataset.field}" [${visible ? 'VISIBLE' : 'OCULTO'}]: "${valor.substring(0, 50)}"`);
     });
 
@@ -416,45 +422,56 @@ function guardarProductoEditado() {
    OBTENER DATOS DEL MODAL
 ============================================================ */
 function getProductoModalData() {
-    const modal = document.getElementById("modalProducto");
-    const data = {};
-
-    // Obtener ID si existe
-    if (modal.dataset.idinventario) {
-        data.idInventario = modal.dataset.idinventario;
-    }
-
-    // Obtener todos los campos editables
-    modal.querySelectorAll(".field-edit").forEach((input) => {
-        if (input.dataset.field) {
-            const field = input.dataset.field;
-
-            // Para textarea
-            if (input.tagName === 'TEXTAREA') {
-                data[field] = input.value.trim();
+    const modal = document.getElementById('modalProducto'); // ⭐ CORREGIDO: era 'productoModal'
+    
+    // Función mejorada para obtener valor de campo visible
+    const getVisibleValue = (fieldName) => {
+        const elementos = modal.querySelectorAll(`[data-field="${fieldName}"]`);
+        
+        for (let elem of elementos) {
+            // Verificar si el elemento es visible
+            const isVisible = elem.offsetParent !== null;
+            
+            // Obtener el valor según el tipo de elemento
+            let value = '';
+            if (elem.tagName === 'INPUT' || elem.tagName === 'TEXTAREA' || elem.tagName === 'SELECT') {
+                value = elem.value;
+            } else {
+                value = elem.textContent.trim();
             }
-            // Para select
-            else if (input.tagName === 'SELECT') {
-                data[field] = input.value;
-            }
-            // Para inputs numéricos
-            else if (['dosis_ml', 'peso_kg', 'precio_venta', 'stock_actual', 'ml_contenedor'].includes(field)) {
-                data[field] = normalizarNumero(input.value);
-            }
-            // Para inputs de texto
-            else {
-                data[field] = input.value.trim();
+            
+            // Si es visible y tiene valor, retornarlo
+            if (isVisible && value !== '' && value !== '-') {
+                return value;
             }
         }
-    });
+        
+        return '';
+    };
+    
+    // Función para obtener valor numérico limpio
+    const getNumericValue = (fieldName) => {
+        const valor = getVisibleValue(fieldName);
+        if (!valor || valor === '' || valor === '-') return '';
+        // Limpiar el valor pero mantener puntos decimales
+        return valor.toString().replace(/[^\d.]/g, '');
+    };
 
-    // Obtener campos de vista también
-    modal.querySelectorAll(".field-view").forEach((el) => {
-        if (el.dataset.field && !data[el.dataset.field]) {
-            data[el.dataset.field] = el.textContent.trim();
-        }
-    });
-
+    const data = {
+        nombre_comercial: getVisibleValue('nombre_comercial'),
+        tipo: getVisibleValue('tipo'),
+        descripcion: getVisibleValue('descripcion'),
+        especie: getVisibleValue('especie'),
+        precio_venta: getNumericValue('precio_venta'),
+        stock_actual: getNumericValue('stock_actual'),
+        dosis_ml: getNumericValue('dosis_ml'),
+        peso_kg: getNumericValue('peso_kg'),
+        ml_contenedor: getNumericValue('ml_contenedor'),
+        precauciones: getVisibleValue('precauciones'),
+        contraindicaciones: getVisibleValue('contraindicaciones'),
+        efectos_adversos: getVisibleValue('efectos_adversos'),
+    };
+    
     return data;
 }
 
@@ -559,4 +576,11 @@ function guardarStock() {
         .then((resp) => {
             if (resp.success) location.reload();
         });
+}
+
+/* ============================================================
+   CERRAR MODAL ELIMINAR PRODUCTO (AGREGAR FUNCIÓN FALTANTE)
+============================================================ */
+function closeEliminarProductoModal() {
+    closeVetModal('modalEliminarProducto');
 }
