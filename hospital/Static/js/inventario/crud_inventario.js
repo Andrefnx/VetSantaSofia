@@ -75,40 +75,41 @@ function openProductoModal(mode, data = {}) {
     const modal = document.getElementById(modalId);
     
     if (!modal) {
-        console.error('Modal no encontrado:', modalId);
+        console.error("No se encuentra el modal:", modalId);
         return;
     }
     
     // --- Dosis vista ---
     const dosisView = modal.querySelector('[data-field="dosis_formula_view"]');
     if (dosisView) {
-        dosisView.textContent =
-            data.dosis_ml && data.peso_kg
-                ? `${data.dosis_ml} ml cada ${data.peso_kg} kg`
-                : "-";
+        if (data.dosis_ml && data.peso_kg) {
+            dosisView.textContent = `${data.dosis_ml} ml cada ${data.peso_kg} kg`;
+        } else {
+            dosisView.textContent = "-";
+        }
+    }
+
+    // ⭐ NUEVO: Vista de peso_kg separada
+    const pesoView = modal.querySelector('[data-field="peso_kg_view"]');
+    if (pesoView) {
+        pesoView.textContent = data.peso_kg ? `${data.peso_kg} kg` : "-";
     }
 
     // --- ML Contenedor vista ---
-    const mlContenedorView = modal.querySelector('.field-view[data-field="ml_contenedor"]');
+    const mlContenedorView = modal.querySelector('[data-field="ml_contenedor_view"]');
     if (mlContenedorView) {
-        mlContenedorView.textContent =
-            data.ml_contenedor != null ? data.ml_contenedor + " ml" : "-";
+        mlContenedorView.textContent = data.ml_contenedor ? `${data.ml_contenedor} ml` : "-";
     }
 
     // --- Guardar datos originales ---
     if (mode === "edit") {
-        window.productoDatosOriginales = { ...data };
+        modal.dataset.originalData = JSON.stringify(data);
     }
 
     // --- Título del modal ---
     const titulo = document.getElementById("modalProductoTitulo");
     if (titulo) {
-        titulo.textContent =
-            mode === "edit"
-                ? "Editar Producto"
-                : mode === "nuevo"
-                    ? "Nuevo Producto"
-                    : "Detalles del Producto";
+        titulo.textContent = mode === "nuevo" ? "Nuevo Producto" : mode === "edit" ? "Editar Producto" : "Detalles del Producto";
     }
 
     // --- Botones ---
@@ -122,10 +123,7 @@ function openProductoModal(mode, data = {}) {
 
     // --- Mostrar / ocultar campos (sin afectar field-readonly) ---
     modal.querySelectorAll(".field-view").forEach((f) => {
-        // No ocultar si tiene la clase field-readonly
-        if (!f.classList.contains('field-readonly')) {
-            f.classList.toggle("d-none", mode !== "view");
-        }
+        f.classList.toggle("d-none", mode === "edit" || mode === "nuevo");
     });
 
     modal.querySelectorAll(".field-edit").forEach((f) => {
@@ -134,39 +132,39 @@ function openProductoModal(mode, data = {}) {
 
     // --- Rellenar campos ---
     Object.keys(data).forEach((key) => {
-        // Para los elementos de vista
-        modal.querySelectorAll(`.field-view[data-field="${key}"]`).forEach((el) => {
-            if (key === "ml_contenedor") {
-                el.textContent = data[key] != null ? data[key] + " ml" : "-";
-            } else {
-                el.textContent = (data[key] !== null && data[key] !== undefined) ? data[key] : "(sin registro)";
-            }
-        });
+        const viewEl = modal.querySelector(`.field-view[data-field="${key}"]`);
+        const editEl = modal.querySelector(`.field-edit[data-field="${key}"], .field-edit [data-field="${key}"]`);
 
-        // Para los elementos de edición
-        modal.querySelectorAll(`.field-edit[data-field="${key}"]`).forEach((el) => {
-            // Para ml_contenedor, dosis_ml, peso_kg
-            if (key === "ml_contenedor" || key === "dosis_ml" || key === "peso_kg") {
-                el.value = data[key] != null ? data[key] : "";
+        if (viewEl && !viewEl.classList.contains('field-readonly')) {
+            viewEl.textContent = data[key] || "-";
+        }
+
+        if (editEl) {
+            if (editEl.tagName === "SELECT") {
+                editEl.value = data[key] || "";
+            } else {
+                editEl.value = data[key] || "";
             }
-            // Otros campos numéricos
-            else if (['precio_venta', 'stock_actual'].includes(key)) {
-                el.value = normalizarNumero(data[key] ?? "");
-            }
-            // Select
-            else if (el.tagName === 'SELECT') {
-                el.value = data[key] ?? "";
-            }
-            // Textarea
-            else if (el.tagName === 'TEXTAREA') {
-                el.value = data[key] ?? "";
-            }
-            // Input text
-            else {
-                el.value = data[key] ?? "";
-            }
-        });
+        }
     });
+    
+    // ⭐ ASEGURAR que los inputs de dosis se rellenen
+    const dosisMlInput = modal.querySelector('input[data-field="dosis_ml"]');
+    const pesoKgInput = modal.querySelector('input[data-field="peso_kg"]');
+    const mlContenedorInput = modal.querySelector('input[data-field="ml_contenedor"]');
+    
+    if (dosisMlInput) {
+        dosisMlInput.value = data.dosis_ml || "";
+        console.log("✅ dosis_ml input rellenado:", dosisMlInput.value);
+    }
+    if (pesoKgInput) {
+        pesoKgInput.value = data.peso_kg || "";
+        console.log("✅ peso_kg input rellenado:", pesoKgInput.value);
+    }
+    if (mlContenedorInput) {
+        mlContenedorInput.value = data.ml_contenedor || "";
+        console.log("✅ ml_contenedor input rellenado:", mlContenedorInput.value);
+    }
     
     // ⭐ RELLENAR campos de solo lectura (field-readonly)
     const camposSoloLectura = [
@@ -178,9 +176,10 @@ function openProductoModal(mode, data = {}) {
     ];
     
     camposSoloLectura.forEach(key => {
-        modal.querySelectorAll(`[data-field="${key}"]`).forEach((el) => {
-            el.textContent = (data[key] !== null && data[key] !== undefined && data[key] !== '') ? data[key] : "-";
-        });
+        const readonlyEl = modal.querySelector(`.field-readonly[data-field="${key}"]`);
+        if (readonlyEl) {
+            readonlyEl.textContent = data[key] || "-";
+        }
     });
 
     // --- Guardar ID ---

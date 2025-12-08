@@ -195,36 +195,37 @@
                         <div class="col-md-6">
                             <label class="text-muted small">Dosis Recomendada</label>
                             <p class="field-view mb-0" data-field="dosis_formula_view">-</p>
+                            
+                            <!-- ⭐ EDICIÓN: Input de dosis_ml (individual) -->
+                            <input type="number" step="any" class="field-edit form-control d-none" data-field="dosis_ml" placeholder="Ej: 0.3">
                         </div>
 
-                        <!-- VISTA: ML en Contenedor -->
+                        <!-- VISTA: Peso -->
                         <div class="col-md-6">
-                            <label class="text-muted small">ML en Contenedor</label>
-                            <p class="field-view mb-0" data-field="ml_contenedor">-</p>
-                        </div>
-
-                        <!-- EDICIÓN: Dosis -->
-                        <div class="col-md-12 field-edit d-none">
-                            <label class="text-muted small">Configurar Dosis</label>
-                            <div class="input-group">
-                                <span class="input-group-text">Dosis</span>
-                                <input type="number" step="any" class="form-control" data-field="dosis_ml"
-                                    placeholder="Ej: 0.3">
-
-                                <span class="input-group-text">ml cada</span>
-
-                                <input type="number" step="any" class="form-control" data-field="peso_kg"
-                                    placeholder="Ej: 5">
-
-                                <span class="input-group-text">kg</span>
+                            <label class="text-muted small">Cada</label>
+                            <p class="field-view mb-0" data-field="peso_kg_view">-</p>
+                            
+                            <!-- ⭐ EDICIÓN: Input de peso_kg (individual) -->
+                            <div class="field-edit d-none">
+                                <div class="input-group">
+                                    <input type="number" step="any" class="form-control" data-field="peso_kg" placeholder="Ej: 5">
+                                    <span class="input-group-text">kg</span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- EDICIÓN: ML en Contenedor -->
-                        <div class="col-md-6 field-edit d-none">
+                        <!-- ML en Contenedor -->
+                        <div class="col-md-6">
                             <label class="text-muted small">ML en Contenedor</label>
-                            <input type="number" step="0.01" class="form-control" data-field="ml_contenedor" 
-                                   placeholder="Ej: 100">
+                            <p class="field-view mb-0" data-field="ml_contenedor_view">-</p>
+                            
+                            <!-- ⭐ EDICIÓN: Input de ml_contenedor (individual) -->
+                            <div class="field-edit d-none">
+                                <div class="input-group">
+                                    <input type="number" step="0.01" class="form-control" data-field="ml_contenedor" placeholder="Ej: 100">
+                                    <span class="input-group-text">ml</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
