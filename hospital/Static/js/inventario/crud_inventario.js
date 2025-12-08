@@ -120,9 +120,12 @@ function openProductoModal(mode, data = {}) {
     if (btnEditar) btnEditar.classList.toggle("d-none", mode !== "view");
     if (btnEliminar) btnEliminar.classList.toggle("d-none", mode === "nuevo");
 
-    // --- Mostrar / ocultar campos ---
+    // --- Mostrar / ocultar campos (sin afectar field-readonly) ---
     modal.querySelectorAll(".field-view").forEach((f) => {
-        f.classList.toggle("d-none", mode !== "view");
+        // No ocultar si tiene la clase field-readonly
+        if (!f.classList.contains('field-readonly')) {
+            f.classList.toggle("d-none", mode !== "view");
+        }
     });
 
     modal.querySelectorAll(".field-edit").forEach((f) => {
@@ -162,6 +165,21 @@ function openProductoModal(mode, data = {}) {
             else {
                 el.value = data[key] ?? "";
             }
+        });
+    });
+    
+    // ⭐ RELLENAR campos de solo lectura (field-readonly)
+    const camposSoloLectura = [
+        'fecha_creacion_formatted',
+        'ultimo_ingreso_formatted',
+        'ultimo_movimiento_formatted',
+        'tipo_ultimo_movimiento_display',
+        'usuario_ultimo_movimiento'
+    ];
+    
+    camposSoloLectura.forEach(key => {
+        modal.querySelectorAll(`[data-field="${key}"]`).forEach((el) => {
+            el.textContent = (data[key] !== null && data[key] !== undefined && data[key] !== '') ? data[key] : "-";
         });
     });
 
@@ -514,6 +532,15 @@ function getProductoModalData() {
         return '';
     };
     
+    // ⭐ NUEVA: Función para obtener valor de campos de solo lectura (siempre del primer elemento)
+    const getReadonlyValue = (fieldName) => {
+        const elem = modal.querySelector(`[data-field="${fieldName}"]`);
+        if (!elem) return '';
+        
+        const value = elem.textContent.trim();
+        return (value && value !== '-') ? value : '';
+    };
+    
     // Función para obtener valor numérico limpio
     const getNumericValue = (fieldName) => {
         const valor = getVisibleValue(fieldName);
@@ -524,7 +551,7 @@ function getProductoModalData() {
 
     const data = {
         nombre_comercial: getVisibleValue('nombre_comercial'),
-        sku: getVisibleValue('sku'),  // ⭐ AGREGAR
+        sku: getVisibleValue('sku'),
         tipo: getVisibleValue('tipo'),
         descripcion: getVisibleValue('descripcion'),
         especie: getVisibleValue('especie'),
@@ -536,7 +563,19 @@ function getProductoModalData() {
         precauciones: getVisibleValue('precauciones'),
         contraindicaciones: getVisibleValue('contraindicaciones'),
         efectos_adversos: getVisibleValue('efectos_adversos'),
+        
+        // ⭐ AGREGAR: Campos de solo lectura (fechas y trazabilidad)
+        fecha_creacion_formatted: getReadonlyValue('fecha_creacion_formatted'),
+        ultimo_ingreso_formatted: getReadonlyValue('ultimo_ingreso_formatted'),
+        ultimo_movimiento_formatted: getReadonlyValue('ultimo_movimiento_formatted'),
+        tipo_ultimo_movimiento_display: getReadonlyValue('tipo_ultimo_movimiento_display'),
+        usuario_ultimo_movimiento: getReadonlyValue('usuario_ultimo_movimiento'),
     };
+    
+    // ⭐ AGREGAR: Preservar el ID del inventario si existe
+    if (modal.dataset.idinventario) {
+        data.idInventario = modal.dataset.idinventario;
+    }
     
     return data;
 }

@@ -162,29 +162,26 @@
                             <input type="number" min="0" class="field-edit form-control d-none"
                                 data-field="stock_actual">
                         </div>
+                        <!-- ⭐ CORREGIDO: Campos siempre visibles con clase especial -->
                         <div class="col-md-4">
                             <label class="text-muted small">Fecha de Registro</label>
-                            <p class="field-view mb-0" data-field="fecha_creacion_formatted">-</p>
+                            <p class="mb-0 field-readonly" data-field="fecha_creacion_formatted">-</p>
                         </div>
                         <div class="col-md-4">
                             <label class="text-muted small">Último Ingreso</label>
-                            <p class="field-view mb-0" data-field="ultimo_ingreso_formatted">-</p>
+                            <p class="mb-0 field-readonly" data-field="ultimo_ingreso_formatted">-</p>
                         </div>
                         <div class="col-md-6">
                             <label class="text-muted small">Último Movimiento</label>
-                            <p class="field-view mb-0" data-field="ultimo_movimiento_formatted">-</p>
+                            <p class="mb-0 field-readonly" data-field="ultimo_movimiento_formatted">-</p>
                         </div>
                         <div class="col-md-6">
                             <label class="text-muted small">Tipo de Movimiento</label>
-                            <p class="field-view mb-0" data-field="tipo_ultimo_movimiento_display">-</p>
+                            <p class="mb-0 field-readonly" data-field="tipo_ultimo_movimiento_display">-</p>
                         </div>
-                    </div>
-
-                    <!-- ⭐ AGREGAR ESTE NUEVO CAMPO -->
-                    <div class="row mb-2">
-                        <div class="col-12">
-                            <label class="form-label fw-bold">Modificado por:</label>
-                            <span class="field-view" data-field="usuario_ultimo_movimiento">-</span>
+                        <div class="col-md-12">
+                            <label class="text-muted small">Modificado por</label>
+                            <p class="mb-0 field-readonly" data-field="usuario_ultimo_movimiento">-</p>
                         </div>
                     </div>
                 </div>
