@@ -335,6 +335,7 @@ def crear_insumo(request):
             # Preparar datos para crear el insumo
             insumo_data = {
                 'medicamento': data.get('nombre_comercial', ''),
+                'sku': data.get('sku', ''),  # ⭐ AGREGAR
                 'tipo': data.get('tipo', ''),
                 'descripcion': data.get('descripcion', ''),
                 'especie': data.get('especie', ''),
@@ -406,6 +407,7 @@ def editar_insumo(request, insumo_id):
             
             # Actualizar campos básicos
             insumo.medicamento = data.get('nombre_comercial', insumo.medicamento)
+            insumo.sku = data.get('sku', insumo.sku)  # ⭐ AGREGAR
             insumo.tipo = data.get('tipo', insumo.tipo)
             insumo.descripcion = data.get('descripcion', '')
             insumo.especie = data.get('especie', insumo.especie)
@@ -574,6 +576,7 @@ def detalle_insumo(request, insumo_id):
             'idInventario': insumo.idInventario,
             'nombre_comercial': insumo.medicamento,
             'medicamento': insumo.medicamento,
+            'sku': insumo.sku or '',  # ⭐ AGREGAR
             'tipo': insumo.tipo or '',
             'descripcion': insumo.descripcion or '',
             'especie': insumo.especie or '',
@@ -945,6 +948,7 @@ def detalle_insumo(request, insumo_id):
             'idInventario': insumo.idInventario,
             'nombre_comercial': insumo.medicamento,
             'medicamento': insumo.medicamento,
+            'sku': insumo.sku or '',  # ⭐ AGREGAR
             'tipo': insumo.tipo or '',
             'descripcion': insumo.descripcion or '',
             'especie': insumo.especie or '',

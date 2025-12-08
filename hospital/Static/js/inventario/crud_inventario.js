@@ -5,7 +5,7 @@ function abrirModalNuevoProducto() {
     const data = {
         nombre_comercial: "",
         categoria: "",
-        sku: "",
+        sku: "",  // ⭐ AGREGAR
         codigo_barra: "",
         presentacion: "",
         especie: "",
@@ -280,6 +280,7 @@ function generarLogProducto() {
 1. IDENTIFICACIÓN GENERAL
    ─────────────────────────────────────────────────────────
    Nombre Comercial: ${obtenerValor('nombre_comercial')}
+   SKU: ${obtenerValor('sku')}  // ⭐ AGREGAR
    Tipo: ${obtenerValor('tipo')}
    Descripción: ${obtenerValor('descripcion')}
    Especie: ${obtenerValor('especie')}
@@ -349,7 +350,7 @@ function guardarProductoEditado() {
             if (['precio_venta', 'stock_actual'].includes(field)) {
                 updated[field] = normalizarNumero(value);
             } else {
-                updated[field] = value;
+                updated[field] = value;  // ⭐ Esto incluirá SKU automáticamente
             }
         }
     });
@@ -486,7 +487,7 @@ function guardarProductoEditado() {
    OBTENER DATOS DEL MODAL
 ============================================================ */
 function getProductoModalData() {
-    const modal = document.getElementById('modalProducto'); // ⭐ CORREGIDO: era 'productoModal'
+    const modal = document.getElementById('modalProducto');
     
     // Función mejorada para obtener valor de campo visible
     const getVisibleValue = (fieldName) => {
@@ -523,6 +524,7 @@ function getProductoModalData() {
 
     const data = {
         nombre_comercial: getVisibleValue('nombre_comercial'),
+        sku: getVisibleValue('sku'),  // ⭐ AGREGAR
         tipo: getVisibleValue('tipo'),
         descripcion: getVisibleValue('descripcion'),
         especie: getVisibleValue('especie'),
