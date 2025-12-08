@@ -27,8 +27,8 @@
 <th>Especie</th>
 <th>Precio</th>
 <th>Stock</th>
-<th>Último Ingreso</th>
-<th>Último Salida</th>
+<th>Último Movimiento</th>
+<th>Tipo</th>
 <th>Gestión</th>
 {% endblock %}
 
@@ -42,8 +42,8 @@
     <td>{{ insumo.especie }}</td>
     <td>${{ insumo.precio_venta|floatformat:0 }}</td>
     <td><span class="badge stock-ok">{{ insumo.stock_actual }}</span></td>
-    <td>-</td>
-    <td>-</td>
+    <td>{% if insumo.ultimo_movimiento %}{{ insumo.ultimo_movimiento|date:"d/m/Y H:i" }}{% else %}-{% endif %}</td>
+    <td>{% if insumo.tipo_ultimo_movimiento %}{{ insumo.get_tipo_ultimo_movimiento_display }}{% else %}-{% endif %}</td>
     <td>
         <div class="manage-wheel">
             <button type="button" onclick="toggleWheel(this)">
