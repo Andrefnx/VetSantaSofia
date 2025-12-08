@@ -25,7 +25,11 @@ class CustomUserManager(BaseUserManager):
             raise ValueError("El usuario debe tener un RUT")
 
         rut = self.normalize_rut(rut)
-        user = self.model(rut=rut, **extra_fields)
+        
+        # Generar username automáticamente desde el RUT
+        username = rut.replace('.', '').replace('-', '').replace(' ', '')
+        
+        user = self.model(rut=rut, username=username, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -52,6 +56,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     ]
     
     rut = models.CharField(max_length=12, unique=True, verbose_name="RUT")
+    username = models.CharField(max_length=20, unique=True, editable=False)
     nombre = models.CharField(max_length=50)
     apellido = models.CharField(max_length=50)
     correo = models.EmailField(unique=True)
@@ -70,11 +75,15 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['correo', 'nombre', 'apellido']
 
     def save(self, *args, **kwargs):
-        """Normaliza el RUT antes de guardar"""
+        """Normaliza el RUT y genera username antes de guardar"""
         if self.rut:
             self.rut = self.rut.strip().replace('.', '').replace(' ', '').upper()
             if '-' not in self.rut and len(self.rut) >= 2:
                 self.rut = f"{self.rut[:-1]}-{self.rut[-1]}"
+            
+            # Generar username automáticamente
+            self.username = self.rut.replace('.', '').replace('-', '').replace(' ', '')
+        
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -85,3 +94,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         if self.is_staff and self.is_superuser:
             return 'Administración'
         return self.get_rol_display()
+    
+    @property
+    def nombre_completo(self):
+        """Retorna el nombre completo del usuario"""
+        return f"{self.nombre} {self.apellido}".strip()

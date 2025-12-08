@@ -34,12 +34,9 @@
 
 {% block table_rows %}
 {% for insumo in insumos %}
-<tr data-id="{{ insumo.idInventario }}" 
-    data-especie="{{ insumo.especie|default_if_none:'' }}" 
-    data-tipo="{{ insumo.tipo|default_if_none:'' }}"
-    data-stock="ok"
-    data-dosis-ml="{{ insumo.dosis_ml|default_if_none:'' }}" 
-    data-peso-kg="{{ insumo.peso_kg|default_if_none:'' }}"
+<tr data-id="{{ insumo.idInventario }}" data-especie="{{ insumo.especie|default_if_none:'' }}"
+    data-tipo="{{ insumo.tipo|default_if_none:'' }}" data-stock="ok"
+    data-dosis-ml="{{ insumo.dosis_ml|default_if_none:'' }}" data-peso-kg="{{ insumo.peso_kg|default_if_none:'' }}"
     data-ml-contenedor="{{ insumo.ml_contenedor|default_if_none:'' }}">
     <td>{{ insumo.medicamento }}</td>
     <td>{{ insumo.especie }}</td>
@@ -172,6 +169,14 @@
                         <div class="col-md-6">
                             <label class="text-muted small">Tipo de Movimiento</label>
                             <p class="field-view mb-0" data-field="tipo_ultimo_movimiento_display">-</p>
+                        </div>
+                    </div>
+
+                    <!-- ⭐ AGREGAR ESTE NUEVO CAMPO -->
+                    <div class="row mb-2">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Modificado por:</label>
+                            <span class="field-view" data-field="usuario_ultimo_movimiento">-</span>
                         </div>
                     </div>
                 </div>

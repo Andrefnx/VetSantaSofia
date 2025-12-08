@@ -5,12 +5,11 @@ from django.utils import timezone
 from django.conf import settings
 from datetime import date
 from dateutil.relativedelta import relativedelta
-from django.contrib.auth.models import User
 
 class Hospitalizacion(models.Model):
     idHospitalizacion = models.AutoField(primary_key=True)
     idMascota = models.ForeignKey(Mascota, on_delete=models.CASCADE)
-    idIns = models.ForeignKey('Insumo', on_delete=models.CASCADE)  # <-- Pon el nombre entre comillas
+    idIns = models.ForeignKey('Insumo', on_delete=models.CASCADE)
     fecha_ingreso = models.DateField()
     fecha_egreso = models.DateField()
     motivo_hospitalizacion = models.TextField()
@@ -74,7 +73,7 @@ class Insumo(models.Model):
         blank=True
     )
     usuario_ultimo_movimiento = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -87,7 +86,18 @@ class Insumo(models.Model):
 
     def __str__(self):
         return self.medicamento
-
+    
+    def get_usuario_nombre_completo(self):
+        """Retorna el nombre completo del usuario que realizó el último movimiento"""
+        if self.usuario_ultimo_movimiento:
+            # Intentar obtener nombre_completo, si no existe, usar nombre y apellido directamente
+            try:
+                return self.usuario_ultimo_movimiento.nombre_completo
+            except AttributeError:
+                # Fallback si no existe la propiedad nombre_completo
+                return f"{self.usuario_ultimo_movimiento.nombre} {self.usuario_ultimo_movimiento.apellido}".strip()
+        return "-"
+    
 
 # ===========================
 #   SERVICIOS

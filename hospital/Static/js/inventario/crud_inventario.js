@@ -207,6 +207,7 @@ function generarLogProducto() {
             'ultimo_ingreso_formatted', 
             'ultimo_movimiento_formatted',
             'tipo_ultimo_movimiento_display',
+            'usuario_ultimo_movimiento',  // ⭐ AGREGAR ESTA LÍNEA
             'dosis_formula_view'
         ];
         
@@ -288,6 +289,7 @@ function generarLogProducto() {
    Último Ingreso: ${obtenerValor('ultimo_ingreso_formatted')}
    Último Movimiento: ${obtenerValor('ultimo_movimiento_formatted')}
    Tipo de Movimiento: ${obtenerValor('tipo_ultimo_movimiento_display')}
+   Modificado por: ${obtenerValor('usuario_ultimo_movimiento')}
 
 4. DOSIS
    ─────────────────────────────────────────────────────────

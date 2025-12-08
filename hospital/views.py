@@ -344,7 +344,8 @@ def crear_insumo(request):
                 contraindicaciones=data.get('contraindicaciones'),
                 efectos_adversos=data.get('efectos_adversos'),
                 fecha_creacion=timezone.now(),
-                tipo_ultimo_movimiento='registro_inicial'
+                tipo_ultimo_movimiento='registro_inicial',
+                usuario_ultimo_movimiento=request.user,  # ⭐ CORREGIDO
             )
             
             # Si se registra con stock inicial, marcar como entrada
@@ -375,7 +376,7 @@ def editar_insumo(request, insumo_id):
             
             data = json.loads(request.body)
             print(f"DEBUG - Editando insumo ID: {insumo_id}")
-            print(f"DEBUG - Data recibida: {data}")
+            print(f"DEBUG - Usuario: {request.user.username}")
             
             # Guardar stock anterior para detectar cambios
             stock_anterior = insumo.stock_actual
@@ -392,15 +393,16 @@ def editar_insumo(request, insumo_id):
                 if stock_anterior != nuevo_stock:
                     insumo.stock_actual = nuevo_stock
                     insumo.ultimo_movimiento = timezone.now()
+                    insumo.usuario_ultimo_movimiento = request.user  # ⭐ REGISTRAR USUARIO
                     
                     # Determinar tipo de movimiento
                     if nuevo_stock > stock_anterior:
                         insumo.ultimo_ingreso = timezone.now()
                         insumo.tipo_ultimo_movimiento = 'entrada'
-                        print(f"DEBUG - Stock incrementado de {stock_anterior} a {nuevo_stock} - Tipo: entrada")
+                        print(f"DEBUG - Stock incrementado - Usuario: {request.user.username}")
                     else:
                         insumo.tipo_ultimo_movimiento = 'ajuste_manual'
-                        print(f"DEBUG - Stock reducido de {stock_anterior} a {nuevo_stock} - Tipo: ajuste_manual")
+                        print(f"DEBUG - Stock reducido - Usuario: {request.user.username}")
                 else:
                     insumo.stock_actual = nuevo_stock
             
@@ -426,8 +428,6 @@ def editar_insumo(request, insumo_id):
             
             insumo.save()
             print(f"DEBUG - Insumo guardado exitosamente")
-            print(f"DEBUG - Último movimiento: {insumo.ultimo_movimiento}")
-            print(f"DEBUG - Tipo movimiento: {insumo.tipo_ultimo_movimiento}")
             
             return JsonResponse({
                 'success': True,
@@ -462,30 +462,27 @@ def modificar_stock(request, insumo_id):
             stock_anterior = insumo.stock_actual
             nuevo_stock = int(data.get('stock_actual', 0))
             
-            print(f"DEBUG - Modificando stock del insumo ID: {insumo_id}")
-            print(f"DEBUG - Stock anterior: {stock_anterior}, Nuevo stock: {nuevo_stock}")
+            print(f"DEBUG - Modificando stock - Usuario: {request.user.username}")
             
             # Actualizar campos
             insumo.stock_actual = nuevo_stock
             insumo.ultimo_movimiento = timezone.now()
+            insumo.usuario_ultimo_movimiento = request.user  # ⭐ REGISTRAR USUARIO
             
             # Determinar tipo de movimiento
             if nuevo_stock > stock_anterior:
                 insumo.ultimo_ingreso = timezone.now()
                 insumo.tipo_ultimo_movimiento = 'entrada'
                 tipo_movimiento = 'entrada'
-                print(f"DEBUG - Tipo de movimiento: entrada")
             elif nuevo_stock < stock_anterior:
                 insumo.tipo_ultimo_movimiento = 'ajuste_manual'
                 tipo_movimiento = 'ajuste_manual'
-                print(f"DEBUG - Tipo de movimiento: ajuste_manual")
             else:
                 insumo.tipo_ultimo_movimiento = 'ajuste_manual'
                 tipo_movimiento = 'sin_cambio'
-                print(f"DEBUG - Sin cambio en stock")
             
             insumo.save()
-            print(f"DEBUG - Stock guardado exitosamente")
+            print(f"DEBUG - Stock guardado - Usuario: {request.user.username}")
             
             return JsonResponse({
                 'success': True,
@@ -816,6 +813,7 @@ def detalle_insumo(request, insumo_id):
             'ultimo_ingreso_formatted': insumo.ultimo_ingreso.strftime("%d/%m/%Y %H:%M") if insumo.ultimo_ingreso else '-',
             'ultimo_movimiento_formatted': insumo.ultimo_movimiento.strftime("%d/%m/%Y %H:%M") if insumo.ultimo_movimiento else '-',
             'tipo_ultimo_movimiento_display': insumo.get_tipo_ultimo_movimiento_display() if insumo.tipo_ultimo_movimiento else '-',
+            'usuario_ultimo_movimiento': insumo.get_usuario_nombre_completo(),  # ⭐ USAR EL MÉTODO DEL MODELO
         }
     })
 
