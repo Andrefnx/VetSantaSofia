@@ -100,7 +100,6 @@
                             <input class="field-edit form-control d-none" data-field="nombre_comercial">
                         </div>
                         
-                        <!-- ⭐ AGREGAR ESTE BLOQUE -->
                         <div class="col-md-6">
                             <label class="text-muted small">SKU</label>
                             <p class="field-view mb-0" data-field="sku">-</p>
@@ -122,11 +121,7 @@
                                 <option value="Otro">Otro</option>
                             </select>
                         </div>
-                        <div class="col-md-12">
-                            <label class="text-muted small">Descripción</label>
-                            <p class="field-view mb-0" data-field="descripcion">-</p>
-                            <textarea class="field-edit form-control d-none" data-field="descripcion"></textarea>
-                        </div>
+                        
                         <div class="col-md-6">
                             <label class="text-muted small">Especie</label>
                             <p class="field-view mb-0" data-field="especie">-</p>
@@ -136,6 +131,12 @@
                                 <option value="Felino">Felino</option>
                                 <option value="Todos">Todos</option>
                             </select>
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <label class="text-muted small">Descripción</label>
+                            <p class="field-view mb-0" data-field="descripcion">-</p>
+                            <textarea class="field-edit form-control d-none" data-field="descripcion"></textarea>
                         </div>
                     </div>
                 </div>
@@ -162,26 +163,33 @@
                             <input type="number" min="0" class="field-edit form-control d-none"
                                 data-field="stock_actual">
                         </div>
-                        <!-- ⭐ CORREGIDO: Campos siempre visibles con clase especial -->
-                        <div class="col-md-4">
-                            <label class="text-muted small">Fecha de Registro</label>
-                            <p class="mb-0 field-readonly" data-field="fecha_creacion_formatted">-</p>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Último Ingreso</label>
-                            <p class="mb-0 field-readonly" data-field="ultimo_ingreso_formatted">-</p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small">Último Movimiento</label>
-                            <p class="mb-0 field-readonly" data-field="ultimo_movimiento_formatted">-</p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small">Tipo de Movimiento</label>
-                            <p class="mb-0 field-readonly" data-field="tipo_ultimo_movimiento_display">-</p>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="text-muted small">Modificado por</label>
-                            <p class="mb-0 field-readonly" data-field="usuario_ultimo_movimiento">-</p>
+                        
+                        <!-- ⭐ METADATA EN RECUADRO A LA DERECHA -->
+                        <div class="col-md-8">
+                            <div class="metadata-box">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="text-muted small">Fecha de Registro</label>
+                                        <p class="mb-0 field-readonly" data-field="fecha_creacion_formatted">-</p>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="text-muted small">Último Ingreso</label>
+                                        <p class="mb-0 field-readonly" data-field="ultimo_ingreso_formatted">-</p>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="text-muted small">Último Movimiento</label>
+                                        <p class="mb-0 field-readonly" data-field="ultimo_movimiento_formatted">-</p>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="text-muted small">Tipo de Movimiento</label>
+                                        <p class="mb-0 field-readonly" data-field="tipo_ultimo_movimiento_display">-</p>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="text-muted small">Modificado por</label>
+                                        <p class="mb-0 field-readonly" data-field="usuario_ultimo_movimiento">-</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
