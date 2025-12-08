@@ -38,6 +38,7 @@ class Hospitalizacion(models.Model):
 class Insumo(models.Model):
     TIPO_MOVIMIENTO_CHOICES = [
         ('entrada', 'Entrada de Stock'),
+        ('salida', 'Salida de Stock'),  # ⭐ ASEGURAR que diga "Salida de Stock"
         ('venta', 'Venta'),
         ('consulta', 'Uso en Consulta'),
         ('hospitalizacion', 'Uso en Hospitalización'),

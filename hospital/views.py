@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from datetime import date
 from decimal import Decimal 
-
+import pytz
 # Importar solo si existen
 try:
     from .models import Consulta, Hospitalizacion, Examen, Documento, Producto
@@ -407,7 +407,7 @@ def editar_insumo(request, insumo_id):
             
             # Actualizar campos básicos
             insumo.medicamento = data.get('nombre_comercial', insumo.medicamento)
-            insumo.sku = data.get('sku', insumo.sku)  # ⭐ AGREGAR
+            insumo.sku = data.get('sku', insumo.sku)
             insumo.tipo = data.get('tipo', insumo.tipo)
             insumo.descripcion = data.get('descripcion', '')
             insumo.especie = data.get('especie', insumo.especie)
@@ -429,7 +429,7 @@ def editar_insumo(request, insumo_id):
             
             # ✅ ACTUALIZAR INFORMACIÓN DE TRAZABILIDAD
             insumo.ultimo_movimiento = timezone.now()
-            insumo.usuario_ultimo_movimiento = request.user  # ✅ Asignar usuario
+            insumo.usuario_ultimo_movimiento = request.user
             
             # Determinar tipo de movimiento según cambio de stock
             if nuevo_stock > stock_anterior:
@@ -454,6 +454,16 @@ def editar_insumo(request, insumo_id):
             except:
                 usuario_nombre = request.user.username
             
+            # 🕒 CONVERTIR A HORA LOCAL
+            from django.utils.timezone import localtime
+            ultimo_movimiento_local = localtime(insumo.ultimo_movimiento)
+            
+            # ✅ OBTENER DISPLAY DEL TIPO DE MOVIMIENTO
+            tipo_movimiento_display = dict(Insumo.TIPO_MOVIMIENTO_CHOICES).get(
+                insumo.tipo_ultimo_movimiento, 
+                insumo.tipo_ultimo_movimiento
+            )
+            
             return JsonResponse({
                 'success': True,
                 'message': 'Producto actualizado correctamente',
@@ -463,8 +473,11 @@ def editar_insumo(request, insumo_id):
                     'ml_contenedor': float(insumo.ml_contenedor) if insumo.ml_contenedor else None,
                     'usuario': usuario_nombre,
                     'usuario_id': request.user.id,
+                    'stock_anterior': stock_anterior,
+                    'stock_nuevo': nuevo_stock,
                     'tipo_movimiento': insumo.tipo_ultimo_movimiento,
-                    'ultimo_movimiento': insumo.ultimo_movimiento.strftime('%d/%m/%Y %H:%M'),
+                    'tipo_movimiento_display': tipo_movimiento_display,  # ⭐ AGREGAR
+                    'ultimo_movimiento': ultimo_movimiento_local.strftime('%d/%m/%Y %H:%M'),
                 }
             })
             
@@ -494,7 +507,7 @@ def modificar_stock_insumo(request, insumo_id):
             
             # Actualizar trazabilidad
             insumo.ultimo_movimiento = timezone.now()
-            insumo.usuario_ultimo_movimiento = request.user  # ✅ Asignar usuario
+            insumo.usuario_ultimo_movimiento = request.user
             
             # Determinar tipo de movimiento
             if nuevo_stock > stock_anterior:
@@ -518,6 +531,16 @@ def modificar_stock_insumo(request, insumo_id):
             except:
                 usuario_nombre = request.user.username
             
+            # 🕒 CONVERTIR A HORA LOCAL
+            from django.utils.timezone import localtime
+            ultimo_movimiento_local = localtime(insumo.ultimo_movimiento)
+            
+            # ✅ OBTENER DISPLAY DEL TIPO DE MOVIMIENTO
+            tipo_movimiento_display = dict(Insumo.TIPO_MOVIMIENTO_CHOICES).get(
+                insumo.tipo_ultimo_movimiento, 
+                insumo.tipo_ultimo_movimiento
+            )
+            
             return JsonResponse({
                 'success': True,
                 'message': 'Stock actualizado correctamente',
@@ -527,6 +550,8 @@ def modificar_stock_insumo(request, insumo_id):
                     'usuario': usuario_nombre,
                     'usuario_id': request.user.id,
                     'tipo_movimiento': insumo.tipo_ultimo_movimiento,
+                    'tipo_movimiento_display': tipo_movimiento_display,  # ⭐ AGREGAR
+                    'ultimo_movimiento': ultimo_movimiento_local.strftime('%d/%m/%Y %H:%M'),
                 }
             })
             
@@ -539,89 +564,6 @@ def modificar_stock_insumo(request, insumo_id):
             })
     
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
-
-@login_required
-def detalle_insumo(request, insumo_id):
-    """Vista para obtener detalles completos de un insumo (JSON)"""
-    insumo = get_object_or_404(Insumo, idInventario=insumo_id)
-    
-    # ✅ FORMATEAR USUARIO CORRECTAMENTE
-    usuario_nombre = "(sin registro)"
-    if insumo.usuario_ultimo_movimiento:
-        try:
-            # Intentar obtener nombre y apellido personalizados
-            if hasattr(insumo.usuario_ultimo_movimiento, 'nombre') and hasattr(insumo.usuario_ultimo_movimiento, 'apellido'):
-                nombre_completo = f"{insumo.usuario_ultimo_movimiento.nombre} {insumo.usuario_ultimo_movimiento.apellido}".strip()
-                usuario_nombre = nombre_completo if nombre_completo else insumo.usuario_ultimo_movimiento.username
-            # Si no, usar get_full_name de Django
-            elif hasattr(insumo.usuario_ultimo_movimiento, 'get_full_name'):
-                nombre_completo = insumo.usuario_ultimo_movimiento.get_full_name()
-                usuario_nombre = nombre_completo if nombre_completo.strip() else insumo.usuario_ultimo_movimiento.username
-            # Como último recurso, usar username
-            else:
-                usuario_nombre = insumo.usuario_ultimo_movimiento.username
-        except Exception as e:
-            print(f"⚠️ Error al formatear usuario: {e}")
-            usuario_nombre = str(insumo.usuario_ultimo_movimiento)
-    
-    # 🔍 DEBUG: Verificar qué se está guardando en BD
-    print(f"🔍 DEBUG detalle_insumo:")
-    print(f"  - ID Usuario en BD: {insumo.usuario_ultimo_movimiento_id}")
-    print(f"  - Objeto Usuario: {insumo.usuario_ultimo_movimiento}")
-    print(f"  - Nombre formateado: {usuario_nombre}")
-    
-    return JsonResponse({
-        'success': True,
-        'insumo': {
-            'idInventario': insumo.idInventario,
-            'nombre_comercial': insumo.medicamento,
-            'medicamento': insumo.medicamento,
-            'sku': insumo.sku or '',  # ⭐ AGREGAR
-            'tipo': insumo.tipo or '',
-            'descripcion': insumo.descripcion or '',
-            'especie': insumo.especie or '',
-            'precio_venta': float(insumo.precio_venta) if insumo.precio_venta else 0,
-            'stock_actual': insumo.stock_actual,
-            'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml else None,
-            'peso_kg': float(insumo.peso_kg) if insumo.peso_kg else None,
-            'ml_contenedor': float(insumo.ml_contenedor) if insumo.ml_contenedor else None,
-            'precauciones': insumo.precauciones or '',
-            'contraindicaciones': insumo.contraindicaciones or '',
-            'efectos_adversos': insumo.efectos_adversos or '',
-            
-            # Campos de trazabilidad formateados
-            'fecha_creacion_formatted': insumo.fecha_creacion.strftime('%d/%m/%Y %H:%M') if insumo.fecha_creacion else '-',
-            'ultimo_ingreso_formatted': insumo.ultimo_ingreso.strftime('%d/%m/%Y %H:%M') if insumo.ultimo_ingreso else '-',
-            'ultimo_movimiento_formatted': insumo.ultimo_movimiento.strftime('%d/%m/%Y %H:%M') if insumo.ultimo_movimiento else '-',
-            'tipo_ultimo_movimiento_display': dict(Insumo.TIPO_MOVIMIENTO_CHOICES).get(insumo.tipo_ultimo_movimiento, '-') if insumo.tipo_ultimo_movimiento else '-',
-            'usuario_ultimo_movimiento': usuario_nombre,
-        }
-    })
-
-@csrf_exempt
-@login_required
-def eliminar_insumo(request, insumo_id):
-    """Vista para eliminar un insumo"""
-    if request.method == 'POST':
-        try:
-            insumo = get_object_or_404(Insumo, idInventario=insumo_id)
-            nombre_insumo = insumo.medicamento
-            insumo.delete()
-            
-            return JsonResponse({
-                'success': True,
-                'message': f'Producto "{nombre_insumo}" eliminado correctamente'
-            })
-            
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return JsonResponse({
-                'success': False,
-                'error': str(e)
-            })
-    
-    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 # --- SERVICIOS ---
 def servicios(request):
@@ -915,60 +857,73 @@ def api_productos(request):
 @login_required
 def detalle_insumo(request, insumo_id):
     """Vista para obtener detalles completos de un insumo (JSON)"""
-    insumo = get_object_or_404(Insumo, idInventario=insumo_id)
-    
-    # ✅ FORMATEAR USUARIO CORRECTAMENTE
-    usuario_nombre = "(sin registro)"
-    if insumo.usuario_ultimo_movimiento:
-        try:
-            # Intentar obtener nombre y apellido personalizados
-            if hasattr(insumo.usuario_ultimo_movimiento, 'nombre') and hasattr(insumo.usuario_ultimo_movimiento, 'apellido'):
-                nombre_completo = f"{insumo.usuario_ultimo_movimiento.nombre} {insumo.usuario_ultimo_movimiento.apellido}".strip()
-                usuario_nombre = nombre_completo if nombre_completo else insumo.usuario_ultimo_movimiento.username
-            # Si no, usar get_full_name de Django
-            elif hasattr(insumo.usuario_ultimo_movimiento, 'get_full_name'):
-                nombre_completo = insumo.usuario_ultimo_movimiento.get_full_name()
-                usuario_nombre = nombre_completo if nombre_completo.strip() else insumo.usuario_ultimo_movimiento.username
-            # Como último recurso, usar username
-            else:
-                usuario_nombre = insumo.usuario_ultimo_movimiento.username
-        except Exception as e:
-            print(f"⚠️ Error al formatear usuario: {e}")
-            usuario_nombre = str(insumo.usuario_ultimo_movimiento)
-    
-    # 🔍 DEBUG: Verificar qué se está guardando en BD
-    print(f"🔍 DEBUG detalle_insumo:")
-    print(f"  - ID Usuario en BD: {insumo.usuario_ultimo_movimiento_id}")
-    print(f"  - Objeto Usuario: {insumo.usuario_ultimo_movimiento}")
-    print(f"  - Nombre formateado: {usuario_nombre}")
-    
-    return JsonResponse({
-        'success': True,
-        'insumo': {
-            'idInventario': insumo.idInventario,
-            'nombre_comercial': insumo.medicamento,
-            'medicamento': insumo.medicamento,
-            'sku': insumo.sku or '',  # ⭐ AGREGAR
-            'tipo': insumo.tipo or '',
-            'descripcion': insumo.descripcion or '',
-            'especie': insumo.especie or '',
-            'precio_venta': float(insumo.precio_venta) if insumo.precio_venta else 0,
-            'stock_actual': insumo.stock_actual,
-            'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml else None,
-            'peso_kg': float(insumo.peso_kg) if insumo.peso_kg else None,
-            'ml_contenedor': float(insumo.ml_contenedor) if insumo.ml_contenedor else None,
-            'precauciones': insumo.precauciones or '',
-            'contraindicaciones': insumo.contraindicaciones or '',
-            'efectos_adversos': insumo.efectos_adversos or '',
-            
-            # Campos de trazabilidad formateados
-            'fecha_creacion_formatted': insumo.fecha_creacion.strftime('%d/%m/%Y %H:%M') if insumo.fecha_creacion else '-',
-            'ultimo_ingreso_formatted': insumo.ultimo_ingreso.strftime('%d/%m/%Y %H:%M') if insumo.ultimo_ingreso else '-',
-            'ultimo_movimiento_formatted': insumo.ultimo_movimiento.strftime('%d/%m/%Y %H:%M') if insumo.ultimo_movimiento else '-',
-            'tipo_ultimo_movimiento_display': dict(Insumo.TIPO_MOVIMIENTO_CHOICES).get(insumo.tipo_ultimo_movimiento, '-') if insumo.tipo_ultimo_movimiento else '-',
-            'usuario_ultimo_movimiento': usuario_nombre,
-        }
-    })
+    try:
+        insumo = get_object_or_404(Insumo, idInventario=insumo_id)
+        
+        # ✅ FORMATEAR USUARIO CORRECTAMENTE
+        usuario_nombre = "(sin registro)"
+        if insumo.usuario_ultimo_movimiento:
+            try:
+                if hasattr(insumo.usuario_ultimo_movimiento, 'nombre') and hasattr(insumo.usuario_ultimo_movimiento, 'apellido'):
+                    nombre_completo = f"{insumo.usuario_ultimo_movimiento.nombre} {insumo.usuario_ultimo_movimiento.apellido}".strip()
+                    usuario_nombre = nombre_completo if nombre_completo else insumo.usuario_ultimo_movimiento.username
+                elif hasattr(insumo.usuario_ultimo_movimiento, 'get_full_name'):
+                    nombre_completo = insumo.usuario_ultimo_movimiento.get_full_name()
+                    usuario_nombre = nombre_completo if nombre_completo.strip() else insumo.usuario_ultimo_movimiento.username
+                else:
+                    usuario_nombre = insumo.usuario_ultimo_movimiento.username
+            except Exception as e:
+                print(f"⚠️ Error al formatear usuario: {e}")
+                usuario_nombre = str(insumo.usuario_ultimo_movimiento)
+        
+        # Obtener zona horaria local
+        import pytz
+        local_tz = pytz.timezone('America/Santiago')
+        
+        # Convertir fechas a zona horaria local si existen
+        fecha_creacion = insumo.fecha_creacion.astimezone(local_tz) if insumo.fecha_creacion else None
+        ultimo_ingreso = insumo.ultimo_ingreso.astimezone(local_tz) if insumo.ultimo_ingreso else None
+        ultimo_movimiento = insumo.ultimo_movimiento.astimezone(local_tz) if insumo.ultimo_movimiento else None
+        
+        print(f"🔍 DEBUG detalle_insumo - ID: {insumo_id}")
+        print(f"  - Último movimiento BD (UTC): {insumo.ultimo_movimiento}")
+        print(f"  - Último movimiento local: {ultimo_movimiento}")
+        
+        return JsonResponse({
+            'success': True,
+            'insumo': {
+                'idInventario': insumo.idInventario,
+                'nombre_comercial': insumo.medicamento,
+                'medicamento': insumo.medicamento,
+                'sku': insumo.sku or '',
+                'tipo': insumo.tipo or '',
+                'descripcion': insumo.descripcion or '',
+                'especie': insumo.especie or '',
+                'precio_venta': float(insumo.precio_venta) if insumo.precio_venta else 0,
+                'stock_actual': insumo.stock_actual,
+                'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml else None,
+                'peso_kg': float(insumo.peso_kg) if insumo.peso_kg else None,
+                'ml_contenedor': float(insumo.ml_contenedor) if insumo.ml_contenedor else None,
+                'precauciones': insumo.precauciones or '',
+                'contraindicaciones': insumo.contraindicaciones or '',
+                'efectos_adversos': insumo.efectos_adversos or '',
+                
+                # Campos de trazabilidad formateados
+                'fecha_creacion_formatted': fecha_creacion.strftime('%d/%m/%Y %H:%M') if fecha_creacion else '-',
+                'ultimo_ingreso_formatted': ultimo_ingreso.strftime('%d/%m/%Y %H:%M') if ultimo_ingreso else '-',
+                'ultimo_movimiento_formatted': ultimo_movimiento.strftime('%d/%m/%Y %H:%M') if ultimo_movimiento else '-',
+                'tipo_ultimo_movimiento_display': dict(Insumo.TIPO_MOVIMIENTO_CHOICES).get(insumo.tipo_ultimo_movimiento, '-') if insumo.tipo_ultimo_movimiento else '-',
+                'usuario_ultimo_movimiento': usuario_nombre,
+            }
+        })
+    except Exception as e:
+        import traceback
+        print(f"❌ ERROR en detalle_insumo:")
+        print(traceback.format_exc())
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 @csrf_exempt
 @login_required

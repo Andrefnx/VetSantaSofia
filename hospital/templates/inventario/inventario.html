@@ -43,7 +43,14 @@
     <td>${{ insumo.precio_venta|floatformat:0 }}</td>
     <td><span class="badge stock-ok">{{ insumo.stock_actual }}</span></td>
     <td>{% if insumo.ultimo_movimiento %}{{ insumo.ultimo_movimiento|date:"d/m/Y H:i" }}{% else %}-{% endif %}</td>
-    <td>{% if insumo.tipo_ultimo_movimiento %}{{ insumo.get_tipo_ultimo_movimiento_display }}{% else %}-{% endif %}</td>
+    <td class="tipo-movimiento-cell" data-id="{{ insumo.idInventario }}">
+        {# ⭐ CAMBIO AQUÍ: Usar get_tipo_ultimo_movimiento_display en lugar de tipo_ultimo_movimiento #}
+        {% if insumo.tipo_ultimo_movimiento %}
+            {{ insumo.get_tipo_ultimo_movimiento_display }}
+        {% else %}
+            -
+        {% endif %}
+    </td>
     <td>
         <div class="manage-wheel">
             <button type="button" onclick="toggleWheel(this)">
@@ -260,6 +267,30 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- METADATAS DEL ÚLTIMO MOVIMIENTO -->
+                <div class="detail-section mb-4">
+                    <h6 class="detail-section-title"><i class="fas fa-history"></i> Último Movimiento</h6>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="metadata-item">
+                                <i class="bi bi-arrow-left-right"></i>
+                                <span>Último movimiento:</span>
+                                <strong id="tipo_movimiento">-</strong>
+                            </div>
+                            <div class="metadata-item">
+                                <i class="bi bi-calendar-event"></i>
+                                <span>Fecha:</span>
+                                <strong id="ultimo_movimiento">-</strong>
+                            </div>
+                            <div class="metadata-item">
+                                <i class="bi bi-person"></i>
+                                <span>Usuario:</span>
+                                <strong id="usuario_ultimo_movimiento">-</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="vet-modal-body" style="border-top:1px solid #eee; text-align:right;">
                 <button type="button" class="vet-btn-grey" id="btnEditarProducto" onclick="switchToEditModeProducto()">
@@ -357,5 +388,183 @@
 
 {% block extra_js %}
 <script src="{% static 'js/inventario/crud_inventario.js' %}"></script>
+<script>
+function guardarProducto() {
+    const data = {
+        nombre_comercial: document.getElementById('nombre_comercial').value,
+        sku: document.getElementById('sku').value,
+        tipo: document.getElementById('tipo').value,
+        descripcion: document.getElementById('descripcion').value,
+        especie: document.getElementById('especie').value,
+        precio_venta: document.getElementById('precio_venta').value,
+        stock_actual: document.getElementById('stock_actual').value,
+        dosis_ml: document.getElementById('dosis_ml').value || null,
+        peso_kg: document.getElementById('peso_kg').value || null,
+        ml_contenedor: document.getElementById('ml_contenedor').value || null,
+        precauciones: document.getElementById('precauciones').value,
+        contraindicaciones: document.getElementById('contraindicaciones').value,
+        efectos_adversos: document.getElementById('efectos_adversos').value
+    };
 
+    const url = currentProductId 
+        ? `/hospital/inventario/editar/${currentProductId}/`
+        : '/hospital/inventario/crear/';
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert(result.message);
+            
+            // ⭐ ACTUALIZAR METADATA SI HAY DEBUG INFO
+            if (result.debug) {
+                console.log('📊 Actualizando metadata con:', result.debug);
+                
+                // Actualizar tipo de movimiento EN EL MODAL
+                if (result.debug.tipo_movimiento_display) {
+                    const tipoMovElement = document.getElementById('tipo_movimiento');
+                    if (tipoMovElement) {
+                        tipoMovElement.textContent = result.debug.tipo_movimiento_display;
+                        console.log('✅ Tipo movimiento actualizado:', result.debug.tipo_movimiento_display);
+                    }
+                }
+                
+                // Actualizar fecha último movimiento EN EL MODAL
+                if (result.debug.ultimo_movimiento) {
+                    const fechaMovElement = document.getElementById('ultimo_movimiento');
+                    if (fechaMovElement) {
+                        fechaMovElement.textContent = result.debug.ultimo_movimiento;
+                        console.log('✅ Fecha movimiento actualizada:', result.debug.ultimo_movimiento);
+                    }
+                }
+                
+                // Actualizar usuario EN EL MODAL
+                if (result.debug.usuario) {
+                    const usuarioElement = document.getElementById('usuario_ultimo_movimiento');
+                    if (usuarioElement) {
+                        usuarioElement.textContent = result.debug.usuario;
+                        console.log('✅ Usuario actualizado:', result.debug.usuario);
+                    }
+                }
+
+                // ⭐ ACTUALIZAR TABLA - Buscar la fila correspondiente
+                const modal = document.getElementById('modalProducto');
+                const insumoId = modal.dataset.idinventario;
+                
+                if (insumoId && result.debug.tipo_movimiento_display) {
+                    // Actualizar celda de tipo de movimiento en la tabla
+                    const tableCells = document.querySelectorAll('.tipo-movimiento-cell');
+                    tableCells.forEach(cell => {
+                        if (cell.dataset.id === insumoId) {
+                            cell.textContent = result.debug.tipo_movimiento_display;
+                            console.log('✅ Tipo movimiento en tabla actualizado:', result.debug.tipo_movimiento_display);
+                        }
+                    });
+                }
+            }
+            
+            location.reload();
+        } else {
+            alert('Error: ' + result.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al guardar el producto');
+    });
+}
+
+// Guardar stock rápido
+function guardarStock() {
+    if (!productoIdStock) return;
+
+    fetch(`/hospital/inventario/modificar-stock/${productoIdStock}/`, {
+        method: "POST",
+        headers: { 
+            "Content-Type": "application/json",
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ stock_actual: stockActualTemp }),
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            console.log('📦 Stock actualizado:', result.debug);
+            
+            // ⭐ ACTUALIZAR METADATA EN EL MODAL SI ESTÁ ABIERTO
+            if (result.debug) {
+                // Actualizar tipo de movimiento
+                if (result.debug.tipo_movimiento_display) {
+                    const tipoMovElement = document.getElementById('tipo_movimiento');
+                    if (tipoMovElement) {
+                        tipoMovElement.textContent = result.debug.tipo_movimiento_display;
+                    }
+                }
+                
+                // Actualizar fecha último movimiento
+                if (result.debug.ultimo_movimiento) {
+                    const fechaMovElement = document.getElementById('ultimo_movimiento');
+                    if (fechaMovElement) {
+                        fechaMovElement.textContent = result.debug.ultimo_movimiento;
+                    }
+                }
+                
+                // Actualizar usuario
+                if (result.debug.usuario) {
+                    const usuarioElement = document.getElementById('usuario_ultimo_movimiento');
+                    if (usuarioElement) {
+                        usuarioElement.textContent = result.debug.usuario;
+                    }
+                }
+
+                // ⭐ ACTUALIZAR TABLA - Buscar la celda correspondiente
+                if (result.debug.tipo_movimiento_display) {
+                    const tableCells = document.querySelectorAll('.tipo-movimiento-cell');
+                    tableCells.forEach(cell => {
+                        if (cell.dataset.id === productoIdStock) {
+                            cell.textContent = result.debug.tipo_movimiento_display;
+                            console.log('✅ Tipo movimiento en tabla actualizado:', result.debug.tipo_movimiento_display);
+                        }
+                    });
+                }
+            }
+            
+            alert(result.message);
+            closeVetModal('modalModificarStock');
+            
+            // Recargar para actualizar stock en tabla
+            location.reload();
+        } else {
+            alert('Error: ' + result.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al actualizar el stock');
+    });
+}
+
+// Función auxiliar para obtener cookie CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
 {% endblock %}
