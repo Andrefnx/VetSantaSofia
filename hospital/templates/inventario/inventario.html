@@ -197,20 +197,20 @@
                             <p class="field-view mb-0" data-field="dosis_formula_view">-</p>
                             
                             <!-- ⭐ EDICIÓN: Input de dosis_ml (individual) -->
-                            <input type="number" step="any" class="field-edit form-control d-none" data-field="dosis_ml" placeholder="Ej: 0.3">
-                        </div>
-
-                        <!-- VISTA: Peso -->
-                        <div class="col-md-6">
-                            <label class="text-muted small">Cada</label>
-                            <p class="field-view mb-0" data-field="peso_kg_view">-</p>
-                            
-                            <!-- ⭐ EDICIÓN: Input de peso_kg (individual) -->
                             <div class="field-edit d-none">
                                 <div class="input-group">
-                                    <input type="number" step="any" class="form-control" data-field="peso_kg" placeholder="Ej: 5">
-                                    <span class="input-group-text">kg</span>
+                                    <input type="number" step="any" class="form-control" data-field="dosis_ml" placeholder="Ej: 0.3">
+                                    <span class="input-group-text">ml</span>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- ⭐ EDICIÓN SOLAMENTE: Peso -->
+                        <div class="col-md-6 field-edit d-none">
+                            <label class="text-muted small">Cada</label>
+                            <div class="input-group">
+                                <input type="number" step="any" class="form-control" data-field="peso_kg" placeholder="Ej: 5">
+                                <span class="input-group-text">kg</span>
                             </div>
                         </div>
 
