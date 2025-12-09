@@ -399,11 +399,103 @@ function guardarProducto() {
         return response.json();
     })
     .then(result => {
-        console.log('📊 Resultado:', result);
+        console.log('📊 Resultado completo:', result);
         
         if (result.success) {
             alert(result.message);
-            location.reload();
+            
+            // ⭐ ACTUALIZAR DATOS EN EL MODAL SIN RECARGAR
+            if (currentProductId) {
+                // Actualizar datos guardados
+                const updatedData = {
+                    idInventario: currentProductId,
+                    nombre_comercial: data.nombre_comercial,
+                    sku: data.sku,
+                    tipo: data.tipo,
+                    descripcion: data.descripcion,
+                    especie: data.especie,
+                    precio_venta: data.precio_venta,
+                    stock_actual: data.stock_actual,
+                    dosis_ml: data.dosis_ml,
+                    peso_kg: data.peso_kg,
+                    ml_contenedor: data.ml_contenedor,
+                    precauciones: data.precauciones,
+                    contraindicaciones: data.contraindicaciones,
+                    efectos_adversos: data.efectos_adversos
+                };
+                
+                // Actualizar metadata si viene en la respuesta
+                if (result.debug) {
+                    updatedData.ultimo_ingreso_formatted = result.debug.ultimo_ingreso;
+                    updatedData.ultimo_movimiento_formatted = result.debug.ultimo_movimiento;
+                    updatedData.tipo_ultimo_movimiento_display = result.debug.tipo_movimiento_display;
+                    updatedData.usuario_ultimo_movimiento = result.debug.usuario;
+                }
+                
+                // Guardar en dataset
+                modal.dataset.originalData = JSON.stringify(updatedData);
+                
+                // ⭐ ACTUALIZAR CAMPOS DE VISTA
+                Object.keys(updatedData).forEach(key => {
+                    const value = updatedData[key];
+                    
+                    // Actualizar campos de vista normales
+                    if (key !== 'dosis_ml' && key !== 'peso_kg' && key !== 'ml_contenedor') {
+                        const viewEl = modal.querySelector(`.field-view[data-field="${key}"]`);
+                        if (viewEl && !viewEl.classList.contains('field-readonly')) {
+                            viewEl.textContent = value || "-";
+                        }
+                    }
+                });
+                
+                // Actualizar campos de vista especiales (dosis)
+                const dosisFormulaView = modal.querySelector('[data-field="dosis_formula_view"]');
+                if (dosisFormulaView) {
+                    if (updatedData.dosis_ml && updatedData.peso_kg) {
+                        dosisFormulaView.textContent = `${updatedData.dosis_ml} ml cada ${updatedData.peso_kg} kg`;
+                    } else {
+                        dosisFormulaView.textContent = "-";
+                    }
+                }
+                
+                const mlContenedorView = modal.querySelector('[data-field="ml_contenedor_view"]');
+                if (mlContenedorView) {
+                    if (updatedData.ml_contenedor) {
+                        mlContenedorView.textContent = `${updatedData.ml_contenedor} ml`;
+                    } else {
+                        mlContenedorView.textContent = "-";
+                    }
+                }
+                
+                // Actualizar campos de solo lectura (metadata)
+                if (result.debug) {
+                    const metadataFields = {
+                        'ultimo_ingreso_formatted': result.debug.ultimo_ingreso,
+                        'ultimo_movimiento_formatted': result.debug.ultimo_movimiento,
+                        'tipo_ultimo_movimiento_display': result.debug.tipo_movimiento_display,
+                        'usuario_ultimo_movimiento': result.debug.usuario
+                    };
+                    
+                    Object.entries(metadataFields).forEach(([key, value]) => {
+                        const el = modal.querySelector(`.field-readonly[data-field="${key}"]`);
+                        if (el) {
+                            el.textContent = value || '-';
+                            console.log(`✅ Metadata actualizada ${key}:`, value);
+                        }
+                    });
+                }
+                
+                // ⭐ CAMBIAR A MODO VISTA
+                switchToViewModeProducto();
+                
+                // Actualizar tabla (solo la fila correspondiente)
+                actualizarFilaTabla(currentProductId, updatedData);
+                
+            } else {
+                // Si es nuevo producto, recargar para mostrarlo en la tabla
+                location.reload();
+            }
+            
         } else {
             alert('Error: ' + result.error);
         }
@@ -412,6 +504,88 @@ function guardarProducto() {
         console.error('❌ Error completo:', error);
         alert('Error al guardar el producto: ' + error.message);
     });
+}
+
+/* ============================================================
+   CAMBIAR A MODO VISTA
+============================================================ */
+function switchToViewModeProducto() {
+    const modal = document.getElementById('modalProducto');
+    
+    console.log('👁️ Cambiando a modo vista');
+    
+    // Mostrar campos de vista (excepto readonly que siempre están visibles)
+    modal.querySelectorAll(".field-view").forEach((f) => {
+        if (!f.classList.contains('field-readonly')) {
+            f.classList.remove("d-none");
+        }
+    });
+
+    // Ocultar campos de edición
+    modal.querySelectorAll(".field-edit").forEach((f) => {
+        f.classList.add("d-none");
+    });
+
+    // Cambiar botones
+    const btnGuardar = document.getElementById("btnGuardarProductoModal");
+    const btnEditar = document.getElementById("btnEditarProducto");
+
+    if (btnGuardar) btnGuardar.classList.add("d-none");
+    if (btnEditar) btnEditar.classList.remove("d-none");
+    
+    // Cambiar título
+    const titulo = document.getElementById("modalProductoTitulo");
+    if (titulo) {
+        titulo.textContent = "Detalles del Producto";
+    }
+    
+    console.log('✅ Modo vista activado');
+}
+
+/* ============================================================
+   ACTUALIZAR FILA EN LA TABLA
+============================================================ */
+function actualizarFilaTabla(insumoId, data) {
+    const fila = document.querySelector(`tr[data-id="${insumoId}"]`);
+    if (!fila) return;
+    
+    console.log('🔄 Actualizando fila de la tabla para ID:', insumoId);
+    
+    // Actualizar nombre del producto (celda 0)
+    if (fila.cells[0]) {
+        fila.cells[0].textContent = data.nombre_comercial;
+    }
+    
+    // Actualizar especie (celda 1)
+    if (fila.cells[1]) {
+        fila.cells[1].textContent = data.especie || '-';
+    }
+    
+    // Actualizar precio (celda 2)
+    if (fila.cells[2]) {
+        const precio = parseFloat(data.precio_venta) || 0;
+        fila.cells[2].textContent = `$${precio.toLocaleString('es-CL')}`;
+    }
+    
+    // Actualizar stock (celda 3)
+    if (fila.cells[3]) {
+        const stockBadge = fila.cells[3].querySelector('.vet-badge');
+        if (stockBadge) {
+            stockBadge.textContent = data.stock_actual || 0;
+        }
+    }
+    
+    // Actualizar último movimiento (celda 4)
+    if (fila.cells[4] && data.ultimo_movimiento_formatted) {
+        fila.cells[4].textContent = data.ultimo_movimiento_formatted;
+    }
+    
+    // Actualizar tipo de movimiento (celda 5)
+    if (fila.cells[5] && data.tipo_ultimo_movimiento_display) {
+        fila.cells[5].textContent = data.tipo_ultimo_movimiento_display;
+    }
+    
+    console.log('✅ Fila actualizada');
 }
 
 /* ============================================================
