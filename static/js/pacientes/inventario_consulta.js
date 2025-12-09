@@ -410,6 +410,39 @@ function mostrarAlertaModal(mensaje, tipo = 'info') {
 }
 
 /**
+ * Obtener medicamentos seleccionados para enviar al backend
+ */
+function obtenerMedicamentosParaGuardar() {
+    return medicamentosSeleccionados.map(med => ({
+        producto_id: med.id,
+        nombre: med.nombre,
+        dosis: med.dosisPersonalizada || med.dosis,
+        peso_aplicado: med.peso
+    }));
+}
+
+/**
+ * Preparar datos de la consulta antes de enviar
+ */
+function prepararDatosConsulta(formData) {
+    // Agregar medicamentos seleccionados como JSON
+    const medicamentos = obtenerMedicamentosParaGuardar();
+    formData.append('medicamentos_json', JSON.stringify(medicamentos));
+    
+    console.log('📦 Medicamentos a guardar:', medicamentos);
+    
+    return formData;
+}
+
+/**
+ * Limpiar selección al cerrar/cancelar el modal
+ */
+function limpiarSeleccionMedicamentos() {
+    medicamentosSeleccionados = [];
+    actualizarMedicamentosSeleccionados();
+}
+
+/**
  * Inicializar cuando se abre el modal de nueva consulta
  */
 document.addEventListener('DOMContentLoaded', function() {
@@ -451,4 +484,73 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 500);
         });
     }
+
+    // Interceptar el envío del formulario de nueva consulta
+    const formNuevaConsulta = document.querySelector('#nuevaConsultaModal form');
+    if (formNuevaConsulta) {
+        formNuevaConsulta.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            // Agregar medicamentos seleccionados
+            prepararDatosConsulta(formData);
+            
+            // Enviar con fetch
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('✅ Consulta guardada correctamente');
+                    mostrarAlertaModal('Consulta registrada correctamente', 'success');
+                    
+                    // Limpiar selección
+                    limpiarSeleccionMedicamentos();
+                    
+                    // Cerrar modal y recargar
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    console.error('❌ Error al guardar:', data.error);
+                    mostrarAlertaModal(data.error || 'Error al guardar la consulta', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error:', error);
+                mostrarAlertaModal('Error de conexión al guardar la consulta', 'error');
+            });
+        });
+    }
+
+    // Limpiar al cerrar el modal
+    const modalOverlay = document.getElementById('nuevaConsultaModal');
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                limpiarSeleccionMedicamentos();
+            }
+        });
+    }
+
+    // Botón de cancelar
+    const btnCancelar = document.querySelector('#nuevaConsultaModal .vet-btn-secondary');
+    if (btnCancelar) {
+        btnCancelar.addEventListener('click', function() {
+            limpiarSeleccionMedicamentos();
+        });
+    }
 });
+
+// Exportar funciones para uso externo
+window.inventarioConsulta = {
+    obtenerMedicamentosSeleccionados: obtenerMedicamentosParaGuardar,
+    limpiarSeleccion: limpiarSeleccionMedicamentos,
+    prepararDatos: prepararDatosConsulta
+};

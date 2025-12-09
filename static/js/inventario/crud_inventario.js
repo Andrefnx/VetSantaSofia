@@ -148,7 +148,18 @@ function openProductoModal(mode, data = {}) {
         tipo_ultimo_movimiento_display: data.tipo_ultimo_movimiento_display || "",
         usuario_ultimo_movimiento: data.usuario_ultimo_movimiento || "",
         
-        dosis_display: data.dosis_display || "-"
+        dosis_display: data.dosis_display || "-",
+        categoria: data.categoria || "",
+        codigo_barra: data.codigo_barra || "",
+        presentacion: data.presentacion || "",
+        unidad_medida: data.unidad_medida || "",
+        almacenamiento: data.almacenamiento || "",
+        stock_minimo: data.stock_minimo || "",
+        stock_maximo: data.stock_maximo || "",
+        precio_compra: data.precio_compra || "",
+        stock: data.stock || "",
+        proveedor: data.proveedor || "",
+        especie: data.especie || "todos",
     };
     
     console.log('🗺️ Datos mapeados:', mappedData);
@@ -398,181 +409,188 @@ function switchToViewModeProducto() {
 /* ============================================================
    GUARDAR PRODUCTO
 ============================================================ */
-function guardarProducto() {
+async function guardarProducto() {
+    console.log('💾 Intentando guardar producto...');
+    
     const modal = document.getElementById('modalProducto');
-    const currentProductId = modal.dataset.idinventario;
+    const idInventario = modal?.dataset?.idinventario;
     
-    console.log('💾 Intentando guardar producto ID:', currentProductId);
+    // ⭐ URL CORREGIDA - Según tus rutas en urls.py
+    const url = idInventario 
+        ? `/inventario/${idInventario}/editar/` 
+        : '/inventario/crear/';
     
-    // Función para obtener datos
-    const getData = (field) => {
-        let element = modal.querySelector(`input[data-field="${field}"], select[data-field="${field}"], textarea[data-field="${field}"]`);
+    console.log('💾 Modo:', idInventario ? 'Editar' : 'Crear');
+    console.log('🆔 ID:', idInventario);
+    
+    // Función para buscar campos por data-field o ID
+    const getFieldValue = (fieldName, defaultValue = '') => {
+        let element = document.getElementById(fieldName);
         
-        if (element) {
-            if (element.type === 'checkbox') {
-                return element.checked;
-            }
-            return element.value;
+        if (!element) {
+            element = modal.querySelector(`input[data-field="${fieldName}"], select[data-field="${fieldName}"], textarea[data-field="${fieldName}"]`);
         }
         
-        const fieldEditDiv = modal.querySelector(`.field-edit[data-field="${field}"]`);
-        if (fieldEditDiv) {
-            const input = fieldEditDiv.querySelector('input, select, textarea');
-            if (input) {
-                if (input.type === 'checkbox') {
-                    return input.checked;
-                }
-                return input.value;
+        if (!element) {
+            const fieldEdit = modal.querySelector(`.field-edit[data-field="${fieldName}"]`);
+            if (fieldEdit) {
+                element = fieldEdit.querySelector('input, select, textarea');
             }
         }
         
-        return '';
+        if (!element) {
+            const camposOpcionales = ['precio_compra', 'stock_minimo', 'stock_maximo', 'proveedor', 
+                                     'categoria', 'codigo_barra', 'presentacion', 'unidad_medida', 
+                                     'almacenamiento', 'precauciones', 'contraindicaciones', 'efectos_adversos'];
+            
+            if (!camposOpcionales.includes(fieldName)) {
+                console.warn(`⚠️ Campo no encontrado: ${fieldName}`);
+            }
+            return defaultValue;
+        }
+        
+        return element.value?.trim() || defaultValue;
     };
     
-    const data = {
-        nombre_comercial: getData('nombre_comercial'),
-        marca: getData('marca'),
-        sku: getData('sku'),
-        tipo: getData('tipo'),
-        formato: getData('formato'),
-        descripcion: getData('descripcion'),
-        especie: getData('especie'),
-        precio_venta: getData('precio_venta'),
-        stock_actual: getData('stock_actual'),
-        
-        // Dosis líquidos
-        dosis_ml: getData('dosis_ml') || null,
-        ml_contenedor: getData('ml_contenedor') || null,
-        
-        // Dosis pastillas
-        cantidad_pastillas: getData('cantidad_pastillas') || null,
-        
-        // Dosis pipetas
-        unidades_pipeta: getData('unidades_pipeta') || null,
-        
-        // Peso
-        peso_kg: getData('peso_kg') || null,
-        tiene_rango_peso: getData('tiene_rango_peso'),
-        peso_min_kg: getData('peso_min_kg') || null,
-        peso_max_kg: getData('peso_max_kg') || null,
-        
-        precauciones: getData('precauciones'),
-        contraindicaciones: getData('contraindicaciones'),
-        efectos_adversos: getData('efectos_adversos')
+    const getNumberValue = (fieldName, defaultValue = null) => {
+        const value = getFieldValue(fieldName);
+        if (!value && value !== 0) return defaultValue;
+        const num = parseFloat(value);
+        return isNaN(num) ? defaultValue : num;
     };
     
-    console.log('📤 Datos completos a enviar:', data);
-
-    // Validación básica
-    if (!data.nombre_comercial) {
-        alert('El nombre comercial es obligatorio');
+    const getIntValue = (fieldName, defaultValue = null) => {
+        const value = getFieldValue(fieldName);
+        if (!value && value !== 0) return defaultValue;
+        const num = parseInt(value);
+        return isNaN(num) ? defaultValue : num;
+    };
+    
+    const getCheckboxValue = (fieldName) => {
+        let element = document.getElementById(fieldName);
+        
+        if (!element) {
+            element = modal.querySelector(`input[data-field="${fieldName}"][type="checkbox"]`);
+        }
+        
+        if (!element) {
+            const fieldEdit = modal.querySelector(`.field-edit[data-field="${fieldName}"]`);
+            if (fieldEdit) {
+                element = fieldEdit.querySelector('input[type="checkbox"]');
+            }
+        }
+        
+        return element ? element.checked : false;
+    };
+    
+    // Recopilar datos
+    const formData = {
+        medicamento: getFieldValue('nombre_comercial'),
+        nombre_comercial: getFieldValue('nombre_comercial'),
+        marca: getFieldValue('marca'),
+        sku: getFieldValue('sku'),
+        tipo: getFieldValue('tipo'),
+        formato: getFieldValue('formato'),
+        descripcion: getFieldValue('descripcion'),
+        especie: getFieldValue('especie', 'todos'),
+        precio_venta: getNumberValue('precio_venta', 0),
+        stock_actual: getIntValue('stock_actual', 0),
+        peso_kg: getNumberValue('peso_kg'),
+        tiene_rango_peso: getCheckboxValue('tiene_rango_peso'),
+        peso_min_kg: getNumberValue('peso_min_kg'),
+        peso_max_kg: getNumberValue('peso_max_kg'),
+    };
+    
+    // Campos opcionales
+    const camposOpcionales = {
+        precio_compra: getNumberValue('precio_compra'),
+        stock_minimo: getIntValue('stock_minimo'),
+        stock_maximo: getIntValue('stock_maximo'),
+        proveedor: getFieldValue('proveedor'),
+        categoria: getFieldValue('categoria'),
+        codigo_barra: getFieldValue('codigo_barra'),
+        presentacion: getFieldValue('presentacion'),
+        unidad_medida: getFieldValue('unidad_medida'),
+        almacenamiento: getFieldValue('almacenamiento'),
+        precauciones: getFieldValue('precauciones'),
+        contraindicaciones: getFieldValue('contraindicaciones'),
+        efectos_adversos: getFieldValue('efectos_adversos'),
+    };
+    
+    Object.keys(camposOpcionales).forEach(key => {
+        if (camposOpcionales[key] !== null && camposOpcionales[key] !== '') {
+            formData[key] = camposOpcionales[key];
+        }
+    });
+    
+    // Campos según formato
+    const formato = formData.formato?.toLowerCase() || '';
+    console.log('📦 Formato detectado:', formato);
+    
+    if (formato === 'liquido' || formato === 'inyectable') {
+        formData.dosis_ml = getNumberValue('dosis_ml');
+        formData.ml_contenedor = getNumberValue('ml_contenedor');
+        console.log('💧 Dosis líquido:', formData.dosis_ml, 'ml');
+    } else if (formato === 'pastilla' || formato === 'comprimido' || formato === 'tableta') {
+        formData.cantidad_pastillas = getIntValue('cantidad_pastillas');
+        console.log('💊 Cantidad pastillas:', formData.cantidad_pastillas);
+    } else if (formato === 'pipeta') {
+        formData.unidades_pipeta = getIntValue('unidades_pipeta');
+        console.log('💉 Unidades pipeta:', formData.unidades_pipeta);
+    } else if (formato === 'polvo' || formato === 'crema' || formato === 'gel') {
+        formData.dosis_ml = getNumberValue('dosis_ml');
+        console.log('🧪 Dosis:', formData.dosis_ml, 'gr');
+    }
+    
+    console.log('📤 Datos completos a enviar:', formData);
+    
+    // Validación
+    if (!formData.nombre_comercial) {
+        alert('⚠️ El nombre del medicamento es obligatorio');
         return;
     }
     
-    // ⭐ Validar dosis según formato
-    if (data.formato && typeof validarDatosDosis === 'function') {
-        const validacion = validarDatosDosis(data.formato, data);
-        if (!validacion.valido) {
-            alert('Errores en la dosis:\n' + validacion.errores.join('\n'));
-            return;
-        }
+    if (!formData.formato) {
+        alert('⚠️ Debe seleccionar un formato');
+        return;
     }
-
-    const url = currentProductId 
-        ? `/inventario/${currentProductId}/editar/`
-        : '/inventario/crear/';
     
     console.log('🌐 URL:', url);
-
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => {
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(formData)
+        });
+        
         console.log('📡 Response status:', response.status);
-        return response.json();
-    })
-    .then(result => {
-        console.log('📊 Resultado completo:', result);
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const textResponse = await response.text();
+            console.error('❌ Respuesta no es JSON:', textResponse.substring(0, 500));
+            throw new Error('La URL no devuelve JSON. Verifica la ruta en Django.');
+        }
+        
+        const result = await response.json();
+        console.log('📊 Resultado:', result);
         
         if (result.success) {
-            alert(result.message);
-            
-            if (currentProductId) {
-                // Actualizar datos en el modal
-                const updatedData = {
-                    ...data,
-                    idInventario: currentProductId
-                };
-                
-                if (result.debug) {
-                    updatedData.ultimo_ingreso_formatted = result.debug.ultimo_ingreso;
-                    updatedData.ultimo_movimiento_formatted = result.debug.ultimo_movimiento;
-                    updatedData.tipo_ultimo_movimiento_display = result.debug.tipo_movimiento_display;
-                    updatedData.usuario_ultimo_movimiento = result.debug.usuario;
-                    updatedData.dosis_display = result.debug.dosis_display;
-                }
-                
-                modal.dataset.originalData = JSON.stringify(updatedData);
-                
-                // Actualizar campos de vista
-                Object.keys(updatedData).forEach(key => {
-                    const value = updatedData[key];
-                    
-                    if (!['dosis_ml', 'peso_kg', 'ml_contenedor', 'cantidad_pastillas', 
-                          'unidades_pipeta', 'peso_min_kg', 'peso_max_kg', 'tiene_rango_peso'].includes(key)) {
-                        const viewEl = modal.querySelector(`.field-view[data-field="${key}"]`);
-                        if (viewEl && !viewEl.classList.contains('field-readonly')) {
-                            viewEl.textContent = value || "-";
-                        }
-                    }
-                });
-                
-                // Actualizar dosis display
-                const dosisFormulaView = modal.querySelector('[data-field="dosis_formula_view"]');
-                if (dosisFormulaView && updatedData.dosis_display) {
-                    dosisFormulaView.textContent = updatedData.dosis_display;
-                }
-                
-                // Actualizar metadata
-                if (result.debug) {
-                    const metadataFields = {
-                        'ultimo_ingreso_formatted': result.debug.ultimo_ingreso,
-                        'ultimo_movimiento_formatted': result.debug.ultimo_movimiento,
-                        'tipo_ultimo_movimiento_display': result.debug.tipo_movimiento_display,
-                        'usuario_ultimo_movimiento': result.debug.usuario
-                    };
-                    
-                    Object.entries(metadataFields).forEach(([key, value]) => {
-                        const el = modal.querySelector(`.field-readonly[data-field="${key}"]`);
-                        if (el) {
-                            el.textContent = value || '-';
-                        }
-                    });
-                }
-                
-                // Cambiar a modo vista
-                switchToViewModeProducto();
-                
-                // Actualizar tabla
-                actualizarFilaTabla(currentProductId, updatedData);
-                
-            } else {
-                location.reload();
-            }
-            
+            alert('✅ Producto guardado correctamente');
+            closeVetModal('modalProducto');
+            location.reload();
         } else {
-            alert('Error: ' + result.error);
+            alert(`❌ Error: ${result.error || 'No se pudo guardar'}`);
         }
-    })
-    .catch(error => {
-        console.error('❌ Error completo:', error);
-        alert('Error al guardar el producto: ' + error.message);
-    });
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        alert(`Error: ${error.message}`);
+    }
 }
 
 /* ============================================================
