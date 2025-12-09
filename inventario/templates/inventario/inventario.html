@@ -4,7 +4,7 @@
 {% block title %}Inventario{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/style_inventario.css' %}" type="text/css" media="all">
+<link rel="stylesheet" href="{% static 'css/custom/style_inventario.css' %}" type="text/css" media="all">
 
 {% endblock %}
 
@@ -385,9 +385,10 @@ function guardarProducto() {
         efectos_adversos: document.getElementById('efectos_adversos').value
     };
 
+    // ⭐ URL CORREGIDA
     const url = currentProductId 
-        ? `/hospital/inventario/editar/${currentProductId}/`
-        : '/hospital/inventario/crear/';
+        ? `/inventario/${currentProductId}/editar/`
+        : '/inventario/crear/';
 
     fetch(url, {
         method: 'POST',
@@ -402,11 +403,9 @@ function guardarProducto() {
         if (result.success) {
             alert(result.message);
             
-            // ⭐ ACTUALIZAR METADATA SI HAY DEBUG INFO
             if (result.debug) {
                 console.log('📊 Actualizando metadata con:', result.debug);
                 
-                // Actualizar tipo de movimiento EN EL MODAL
                 if (result.debug.tipo_movimiento_display) {
                     const tipoMovElement = document.getElementById('tipo_movimiento');
                     if (tipoMovElement) {
@@ -415,7 +414,6 @@ function guardarProducto() {
                     }
                 }
                 
-                // Actualizar fecha último movimiento EN EL MODAL
                 if (result.debug.ultimo_movimiento) {
                     const fechaMovElement = document.getElementById('ultimo_movimiento');
                     if (fechaMovElement) {
@@ -424,7 +422,6 @@ function guardarProducto() {
                     }
                 }
                 
-                // Actualizar usuario EN EL MODAL
                 if (result.debug.usuario) {
                     const usuarioElement = document.getElementById('usuario_ultimo_movimiento');
                     if (usuarioElement) {
@@ -433,12 +430,10 @@ function guardarProducto() {
                     }
                 }
 
-                // ⭐ ACTUALIZAR TABLA - Buscar la fila correspondiente
                 const modal = document.getElementById('modalProducto');
                 const insumoId = modal.dataset.idinventario;
                 
                 if (insumoId && result.debug.tipo_movimiento_display) {
-                    // Actualizar celda de tipo de movimiento en la tabla
                     const tableCells = document.querySelectorAll('.tipo-movimiento-cell');
                     tableCells.forEach(cell => {
                         if (cell.dataset.id === insumoId) {
@@ -464,7 +459,8 @@ function guardarProducto() {
 function guardarStock() {
     if (!productoIdStock) return;
 
-    fetch(`/hospital/inventario/modificar-stock/${productoIdStock}/`, {
+    // ⭐ URL CORREGIDA
+    fetch(`/inventario/${productoIdStock}/modificar-stock/`, {
         method: "POST",
         headers: { 
             "Content-Type": "application/json",
@@ -477,9 +473,7 @@ function guardarStock() {
         if (result.success) {
             console.log('📦 Stock actualizado:', result.debug);
             
-            // ⭐ ACTUALIZAR METADATA EN EL MODAL SI ESTÁ ABIERTO
             if (result.debug) {
-                // Actualizar tipo de movimiento
                 if (result.debug.tipo_movimiento_display) {
                     const tipoMovElement = document.getElementById('tipo_movimiento');
                     if (tipoMovElement) {
@@ -487,7 +481,6 @@ function guardarStock() {
                     }
                 }
                 
-                // Actualizar fecha último movimiento
                 if (result.debug.ultimo_movimiento) {
                     const fechaMovElement = document.getElementById('ultimo_movimiento');
                     if (fechaMovElement) {
@@ -495,7 +488,6 @@ function guardarStock() {
                     }
                 }
                 
-                // Actualizar usuario
                 if (result.debug.usuario) {
                     const usuarioElement = document.getElementById('usuario_ultimo_movimiento');
                     if (usuarioElement) {
@@ -503,7 +495,6 @@ function guardarStock() {
                     }
                 }
 
-                // ⭐ ACTUALIZAR TABLA - Buscar la celda correspondiente
                 if (result.debug.tipo_movimiento_display) {
                     const tableCells = document.querySelectorAll('.tipo-movimiento-cell');
                     tableCells.forEach(cell => {
@@ -517,8 +508,6 @@ function guardarStock() {
             
             alert(result.message);
             closeVetModal('modalModificarStock');
-            
-            // Recargar para actualizar stock en tabla
             location.reload();
         } else {
             alert('Error: ' + result.error);
@@ -530,7 +519,6 @@ function guardarStock() {
     });
 }
 
-// Función auxiliar para obtener cookie CSRF
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
