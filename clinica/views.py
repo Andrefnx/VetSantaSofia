@@ -33,11 +33,15 @@ def ficha_paciente(request, paciente_id):
     paciente = get_object_or_404(Paciente, id=paciente_id)
     
     # Obtener consultas del paciente ordenadas por fecha
-    consultas = Consulta.objects.filter(paciente=paciente).select_related('veterinario').order_by('-created_at')
+    consultas = Consulta.objects.filter(paciente=paciente).select_related('veterinario').order_by('-fecha')
+    
+    # Obtener nombre completo del veterinario logueado
+    nombre_veterinario = f"{request.user.nombre} {request.user.apellido}".strip()
     
     context = {
         'paciente': paciente,
-        'consultas': consultas
+        'consultas': consultas,
+        'nombre_veterinario': nombre_veterinario
     }
     
     return render(request, 'consulta/ficha_mascota.html', context)

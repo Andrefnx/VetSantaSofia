@@ -436,11 +436,11 @@
                     <div class="col-md-3">
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-person-badge"></i> Médico Tratante</div>
-                            <p style="margin-bottom: 0.5rem;">{{ user.get_full_name }}</p>
+                            <p id="medicoTratante">{{ user.nombre }} {{ user.apellido }}</p>
                         </div>
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
-                            <p>{% now 'd/m/Y' %}</p>
+                            <p id="fechaConsulta">{% now "d/m/Y" %}</p>
                         </div>
                         <hr style="margin: 0.75rem 0; border-top: 1px solid #dee2e6;">
                         <div class="detail-section">
@@ -499,7 +499,9 @@
                 </div>
             </div>
             <div class="vet-modal-footer d-flex justify-content-between align-items-center">
-                <span></span>
+                <button type="button" class="vet-btn vet-btn-grey" id="btnRecuperarDatos">
+                    <i class="bi bi-bug"></i> Recuperar Datos (DEBUG)
+                </button>
                 <button type="submit" class="vet-btn vet-btn-primary" id="btnAgendarNuevaCita">
                     <i class="bi bi-calendar-plus"></i> Agendar y guardar en historial
                 </button>

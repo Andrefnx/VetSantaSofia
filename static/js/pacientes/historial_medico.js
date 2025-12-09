@@ -1,4 +1,3 @@
-
 // Mostrar modal de detalle
 document.querySelectorAll('.timeline-btn').forEach((btn, idx) => {
     btn.addEventListener('click', () => {
@@ -377,4 +376,30 @@ if (searchInventario) {
 // Cargar inventario al abrir el modal
 document.getElementById('btnNuevaConsulta')?.addEventListener('click', () => {
     cargarInventario();
+});
+
+// ⭐ BOTÓN TEMPORAL PARA DEBUG - Recuperar datos del formulario
+document.getElementById('btnRecuperarDatos')?.addEventListener('click', function() {
+    const form = document.getElementById('formNuevaConsulta');
+    const formData = new FormData(form);
+    
+    // Obtener datos del médico y fecha desde los IDs específicos
+    const medico = document.getElementById('medicoTratante')?.textContent.trim() || 'No disponible';
+    const fecha = document.getElementById('fechaConsulta')?.textContent.trim() || 'No disponible';
+    
+    console.log('🔍 ===== RECUPERACIÓN DE DATOS DEL FORMULARIO =====');
+    console.log('medico:', medico);
+    console.log('fecha:', fecha);
+    console.log('temperatura:', formData.get('temperatura'));
+    console.log('peso:', formData.get('peso'));
+    console.log('frecuencia_cardiaca:', formData.get('frecuencia_cardiaca'));
+    console.log('frecuencia_respiratoria:', formData.get('frecuencia_respiratoria'));
+    console.log('otros:', formData.get('otros'));
+    console.log('diagnostico:', formData.get('diagnostico'));
+    console.log('tratamiento:', formData.get('tratamiento'));
+    console.log('notas:', formData.get('notas'));
+    console.log('medicamentos_seleccionados:', medicamentosSeleccionados);
+    console.log('🔍 ===== FIN DE RECUPERACIÓN =====');
+    
+    alert('✅ Datos recuperados correctamente. Revisa la consola (F12)');
 });
