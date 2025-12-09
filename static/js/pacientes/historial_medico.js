@@ -1,3 +1,28 @@
+// ⭐ SISTEMA DE TABS
+document.addEventListener('DOMContentLoaded', function() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetTab = this.getAttribute('data-tab');
+            
+            // Remover clase active de todos los botones y contenidos
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Agregar clase active al botón clickeado
+            this.classList.add('active');
+            
+            // Mostrar el contenido correspondiente
+            const targetContent = document.getElementById(targetTab);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+        });
+    });
+});
+
 // Modal Nueva Consulta
 document.getElementById('btnNuevaConsulta').onclick = async function () {
     openVetModal('nuevaConsultaModal');
