@@ -250,3 +250,37 @@ def api_productos(request):
         print(f"Error en api_productos: {str(e)}")
         traceback.print_exc()
         return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+def inventario_view(request):
+    """Vista principal del inventario"""
+    insumos = Insumo.objects.all()
+    return render(request, 'inventario/inventario.html', {'insumos': insumos})
+
+@login_required
+def productos_api(request):
+    """API para búsqueda de productos en el inventario"""
+    try:
+        search = request.GET.get('search', '')
+        
+        if search:
+            productos = Insumo.objects.filter(medicamento__icontains=search)[:10]
+        else:
+            productos = Insumo.objects.all()[:20]
+        
+        data = []
+        for p in productos:
+            data.append({
+                'id': p.idInventario,  # Cambiado de idInsumo a idInventario
+                'nombre': p.medicamento,
+                'stock': p.stock_actual,
+                'precio': float(p.precio_venta) if p.precio_venta else 0,
+            })
+        
+        return JsonResponse(data, safe=False)
+    except Exception as e:
+        # Log del error para debugging
+        import traceback
+        print(f"Error en productos_api: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse({'error': str(e)}, status=500)

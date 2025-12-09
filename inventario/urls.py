@@ -13,5 +13,5 @@ urlpatterns = [
     path('modificar_stock/<int:insumo_id>/', views.modificar_stock_insumo, name='modificar_stock'),
     
     # API
-    path('api/productos/', views.api_productos, name='api_productos'),
+    path('api/productos/', views.productos_api, name='productos_api'),
 ]

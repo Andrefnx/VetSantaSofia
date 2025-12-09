@@ -1,4 +1,5 @@
 from django.db import models
+from inventario.models import Insumo
 
 # Create your models here.
 
@@ -56,15 +57,13 @@ class Servicio(models.Model):
 
 
 class ServicioInsumo(models.Model):
-    servicio = models.ForeignKey('Servicio', on_delete=models.CASCADE, related_name='insumos_servicio')
-    insumo = models.ForeignKey('inventario.Insumo', on_delete=models.CASCADE, related_name='servicios_insumo')
-    cantidad = models.IntegerField(default=1, verbose_name="Cantidad")
+    servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE)
+    insumo = models.ForeignKey(Insumo, on_delete=models.CASCADE)
+    cantidad = models.IntegerField()
 
     class Meta:
-        unique_together = ('servicio', 'insumo')
-        db_table = "ServicioInsumo"
-        verbose_name = "Insumo del Servicio"
-        verbose_name_plural = "Insumos de los Servicios"
+        db_table = 'servicio_insumo'
+        managed = False
 
     def __str__(self):
         return f"{self.servicio.nombre} → {self.cantidad} x {self.insumo.medicamento}"
