@@ -215,47 +215,36 @@ window.onclick = function (event) {
 async function cargarInventario() {
     const inventarioList = document.getElementById('inventarioList');
     
-    // Verificar que el elemento existe
     if (!inventarioList) {
         console.error('No se encontró el elemento #inventarioList');
         return;
     }
     
-    // Mostrar loading
-    inventarioList.innerHTML = '<p style="text-align:center;color:#888;padding:1rem;font-size:0.75rem;"><i class="bi bi-hourglass-split"></i> Cargando...</p>';
+    inventarioList.innerHTML = '<p style="text-align:center;color:#888;padding:1rem;font-size:0.85rem;"><i class="bi bi-hourglass-split"></i> Cargando...</p>';
     
     try {
-        const url = '/hospital/inventario/api/productos/';
-        console.log('Intentando cargar desde:', url);
-        
-        const response = await fetch(url);
-        
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
-        
-        // Intentar leer el texto de la respuesta para ver el error
-        const text = await response.text();
-        console.log('Response text:', text);
+        // URL CORREGIDA - sin /hospital/
+        const response = await fetch('/inventario/api/productos/');
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status} - ${text}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        // Parsear el JSON
-        const productos = JSON.parse(text);
+        const productos = await response.json();
         
         console.log('Productos cargados:', productos.length);
         
         inventarioList.innerHTML = '';
         
         if (productos.length === 0) {
-            inventarioList.innerHTML = '<p style="text-align:center;color:#888;padding:1rem;font-size:0.75rem;">No hay productos en inventario</p>';
+            inventarioList.innerHTML = '<p style="text-align:center;color:#888;padding:1rem;font-size:0.85rem;">No hay productos en inventario</p>';
             return;
         }
         
         productos.forEach(producto => {
             const item = document.createElement('div');
             item.className = 'inventario-item';
+            item.dataset.productoId = producto.id;
             item.innerHTML = `
                 <div class="inventario-item-info">
                     <div class="inventario-item-nombre">${producto.nombre}</div>
@@ -265,8 +254,8 @@ async function cargarInventario() {
                     data-id="${producto.id}" 
                     data-nombre="${producto.nombre}"
                     data-dosis="${producto.dosis_ml || 0}"
-                    data-peso="${producto.peso_kg || 0}">
-                    <i class="bi bi-plus"></i>
+                    data-peso="${producto.peso_kg || 1}">
+                    +
                 </button>
             `;
             inventarioList.appendChild(item);
@@ -280,7 +269,7 @@ async function cargarInventario() {
     } catch (error) {
         console.error('Error completo:', error);
         inventarioList.innerHTML = `
-            <p style="text-align:center;color:#dc3545;padding:1rem;font-size:0.75rem;">
+            <p style="text-align:center;color:#dc3545;padding:1rem;font-size:0.85rem;">
                 Error al cargar inventario<br>
                 <small>${error.message}</small>
             </p>
@@ -301,7 +290,23 @@ function agregarInsumo(e) {
     
     // Verificar si ya está agregado
     if (container.querySelector(`[data-insumo-id="${id}"]`)) {
+        const existingTag = container.querySelector(`[data-insumo-id="${id}"]`);
+        existingTag.style.animation = 'none';
+        setTimeout(() => {
+            existingTag.style.animation = 'pulse 0.5s ease';
+        }, 10);
         return;
+    }
+    
+    // Obtener el item completo del inventario
+    const inventarioItem = btn.closest('.inventario-item');
+    
+    if (inventarioItem) {
+        inventarioItem.classList.add('adding');
+        setTimeout(() => {
+            inventarioItem.style.display = 'none';
+            inventarioItem.classList.remove('adding');
+        }, 400);
     }
     
     // Obtener peso actual del paciente
@@ -330,42 +335,26 @@ function agregarInsumo(e) {
         <button type="button" class="insumo-tag-remove" title="Eliminar">×</button>
     `;
     
-    tag.querySelector('.insumo-tag-remove').addEventListener('click', () => {
-        tag.remove();
+    // Event listener para el botón de eliminar
+    tag.querySelector('.insumo-tag-remove').addEventListener('click', function() {
+        tag.classList.add('removing');
+        setTimeout(() => {
+            tag.remove();
+            // Volver a mostrar el item en el inventario
+            if (inventarioItem) {
+                inventarioItem.style.display = 'flex';
+                inventarioItem.style.animation = 'fadeInInventory 0.3s ease';
+            }
+        }, 300);
     });
     
     container.appendChild(tag);
-}
-
-// Actualizar dosis cuando cambia el peso
-document.getElementById('pesoConsulta')?.addEventListener('input', function() {
-    const pesoActual = parseFloat(this.value) || 0;
     
-    // Recalcular todas las dosis
-    document.querySelectorAll('.insumo-tag').forEach(tag => {
-        const id = tag.dataset.insumoId;
-        const btn = document.querySelector(`.inventario-item-btn[data-id="${id}"]`);
-        
-        if (btn) {
-            const dosisMl = parseFloat(btn.dataset.dosis) || 0;
-            const pesoRef = parseFloat(btn.dataset.peso) || 1;
-            
-            let dosisTexto = 'Peso no ingresado';
-            
-            if (pesoActual > 0 && dosisMl > 0 && pesoRef > 0) {
-                const dosisCalculada = (dosisMl * pesoActual) / pesoRef;
-                dosisTexto = `${dosisCalculada.toFixed(2)} ml`;
-            } else if (pesoActual > 0) {
-                dosisTexto = 'Dosis no definida';
-            }
-            
-            const dosisSpan = tag.querySelector('.insumo-tag-dosis strong');
-            if (dosisSpan) {
-                dosisSpan.textContent = dosisTexto;
-            }
-        }
-    });
-});
+    // Scroll automático
+    setTimeout(() => {
+        tag.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+}
 
 // Filtrar inventario por búsqueda
 const searchInventario = document.getElementById('searchInventario');
@@ -374,7 +363,15 @@ if (searchInventario) {
         const search = e.target.value.toLowerCase();
         document.querySelectorAll('.inventario-item').forEach(item => {
             const nombre = item.querySelector('.inventario-item-nombre')?.textContent.toLowerCase() || '';
-            item.style.display = nombre.includes(search) ? 'flex' : 'none';
+            const id = item.dataset.productoId;
+            const estaSeleccionado = document.querySelector(`#insumosSeleccionados [data-insumo-id="${id}"]`);
+            
+            // Solo mostrar si coincide con la búsqueda Y no está seleccionado
+            if (nombre.includes(search) && !estaSeleccionado) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
         });
     });
 }

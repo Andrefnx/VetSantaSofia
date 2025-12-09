@@ -755,10 +755,13 @@ td[colspan][style*="text-align: center"] {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.4rem 0.5rem;
+    padding: 0.7rem 0.8rem;
     border-bottom: 1px solid #e9ecef;
     font-size: 0.85rem;
-    transition: background 0.2s;
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: pointer;
+    background: white;
 }
 
 .inventario-item:last-child {
@@ -766,69 +769,146 @@ td[colspan][style*="text-align: center"] {
 }
 
 .inventario-item:hover {
-    background: white;
+    background: #f8f9fa;
+    transform: translateX(3px);
+    box-shadow: -3px 0 8px rgba(159, 207, 159, 0.25);
 }
 
 .inventario-item-info {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
-.inventario-item-name {
+.inventario-item-nombre {
     font-weight: 600;
-    color: #333;
-    margin-bottom: 2px;
+    color: #2c3e50;
 }
 
 .inventario-item-stock {
     font-size: 0.75rem;
-    color: #666;
+    color: #7f8c8d;
 }
 
-.inventario-item button {
+.inventario-item-btn {
     background: var(--primary-color);
     border: none;
     color: white;
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.inventario-item button:hover {
+.inventario-item-btn:hover {
     background: var(--primary-hover);
+    transform: scale(1.15);
+    box-shadow: 0 4px 8px rgba(159, 207, 159, 0.4);
+}
+
+.inventario-item-btn:active {
+    transform: scale(0.95);
+}
+
+/* Animación al agregar */
+.inventario-item.adding {
+    animation: slideOut 0.4s ease forwards;
+    pointer-events: none;
+}
+
+@keyframes slideOut {
+    0% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translateX(100%);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(100%);
+        height: 0;
+        padding: 0;
+        margin: 0;
+        border: 0;
+    }
+}
+
+@keyframes fadeInInventory {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 2px 8px rgba(159, 207, 159, 0.3);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 4px 16px rgba(159, 207, 159, 0.6);
+        background: #e8f5e9;
+    }
 }
 
 /* Sección de insumos utilizados */
 .insumos-utilizados {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.6rem;
 }
 
 .insumos-title {
     font-weight: 600;
-    color: #333;
+    color: #2c3e50;
     margin-bottom: 0;
     font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.insumos-title::before {
+    content: "✓";
+    background: var(--primary-color);
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
 }
 
 #insumosSeleccionados {
     min-height: 250px;
     max-height: 250px;
     overflow-y: auto;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    padding: 0.5rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0.6rem;
     background: #f8f9fa;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-    align-content: flex-start;
+    gap: 0.5rem;
 }
 
 /* Tags de insumos seleccionados */
@@ -837,58 +917,141 @@ td[colspan][style*="text-align: center"] {
     align-items: center;
     justify-content: space-between;
     background: white;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    padding: 0.4rem 0.6rem;
+    border: 2px solid var(--primary-color);
+    border-left: 5px solid var(--primary-color);
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
     font-size: 0.85rem;
-    gap: 0.5rem;
+    gap: 0.6rem;
+    animation: slideIn 0.4s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.insumo-tag:hover {
+    box-shadow: 0 4px 12px rgba(159, 207, 159, 0.3);
+    transform: translateY(-2px);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-100%) scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
 }
 
 .insumo-tag-info {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
 }
 
-.insumo-tag-name {
+.insumo-tag-nombre {
     font-weight: 600;
-    color: #333;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.insumo-tag-nombre::before {
+    content: "•";
+    color: var(--primary-color);
+    font-size: 1.3rem;
+    line-height: 1;
 }
 
 .insumo-tag-dosis {
     font-size: 0.75rem;
-    color: #666;
+    color: #7f8c8d;
+    padding-left: 1.1rem;
 }
 
-.insumo-tag button {
+.insumo-tag-dosis strong {
+    color: var(--primary-hover);
+    font-weight: 700;
+}
+
+.insumo-tag-remove {
     background: #dc3545;
     border: none;
     color: white;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 1.1rem;
+    line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s;
+    transition: all 0.3s ease;
     flex-shrink: 0;
+    font-weight: 600;
 }
 
-.insumo-tag button:hover {
+.insumo-tag-remove:hover {
     background: #c82333;
+    transform: scale(1.2) rotate(90deg);
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
+}
+
+.insumo-tag-remove:active {
+    transform: scale(0.9) rotate(90deg);
+}
+
+/* Animación al eliminar */
+.insumo-tag.removing {
+    animation: slideOutTag 0.3s ease forwards;
+}
+
+@keyframes slideOutTag {
+    to {
+        opacity: 0;
+        transform: translateX(100%) scale(0.8);
+        height: 0;
+        padding: 0;
+        margin: 0;
+    }
 }
 
 /* Mensaje cuando no hay insumos */
 #insumosSeleccionados:empty::after {
-    content: 'No hay insumos seleccionados';
-    color: #999;
+    content: 'Haz clic en los medicamentos para agregarlos';
+    color: #95a5a6;
     font-size: 0.85rem;
     text-align: center;
-    padding: 1rem;
+    padding: 3rem 1rem;
     display: block;
+    font-style: italic;
+}
+
+/* Scroll personalizado */
+.inventario-list-compact::-webkit-scrollbar,
+#insumosSeleccionados::-webkit-scrollbar {
+    width: 6px;
+}
+
+.inventario-list-compact::-webkit-scrollbar-track,
+#insumosSeleccionados::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.inventario-list-compact::-webkit-scrollbar-thumb,
+#insumosSeleccionados::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 10px;
+}
+
+.inventario-list-compact::-webkit-scrollbar-thumb:hover,
+#insumosSeleccionados::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-hover);
 }
 
 /* Responsive: en pantallas pequeñas vuelve a 1 columna */
@@ -900,5 +1063,17 @@ td[colspan][style*="text-align: center"] {
     #insumosSeleccionados {
         min-height: 150px;
         max-height: 200px;
+    }
+}
+
+/* Animación de entrada para el inventario */
+@keyframes fadeInInventory {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
     }
 }

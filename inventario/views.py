@@ -243,10 +243,13 @@ def api_productos(request):
                 'tipo': insumo.tipo or '',
                 'precio': float(insumo.precio_venta) if insumo.precio_venta else 0,
                 'stock': insumo.stock_actual,
+                'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml else 0,
+                'peso_kg': float(insumo.peso_kg) if insumo.peso_kg else 1,
             })
         
         return JsonResponse(productos, safe=False)
     except Exception as e:
+        import traceback
         print(f"Error en api_productos: {str(e)}")
         traceback.print_exc()
         return JsonResponse({'error': str(e)}, status=500)
