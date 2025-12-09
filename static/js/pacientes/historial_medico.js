@@ -113,9 +113,15 @@ document.getElementById('formNuevaConsulta').onsubmit = async function (e) {
     const form = e.target;
     const formData = new FormData(form);
     
-    // ⭐ Usar los nombres correctos directamente
+    // ⭐ Recuperar datos exactamente como en el botón de debug
+    const medico = document.getElementById('medicoTratante')?.textContent.trim() || '';
+    const fecha = document.getElementById('fechaConsulta')?.textContent.trim() || '';
+    
+    // ⭐ Construir objeto de datos con los mismos nombres
     const data = {
         paciente_id: window.pacienteData.id,
+        medico: medico,
+        fecha: fecha,
         temperatura: formData.get('temperatura'),
         peso: formData.get('peso'),
         frecuencia_cardiaca: formData.get('frecuencia_cardiaca'),
@@ -124,12 +130,7 @@ document.getElementById('formNuevaConsulta').onsubmit = async function (e) {
         diagnostico: formData.get('diagnostico') || '',
         tratamiento: formData.get('tratamiento') || '',
         notas: formData.get('notas') || '',
-        medicamentos: medicamentosSeleccionados.map(med => ({
-            inventario_id: med.id,
-            nombre: med.nombre,
-            dosis: med.dosis,
-            peso_paciente: med.peso
-        }))
+        medicamentos: medicamentosSeleccionados
     };
     
     console.log('📤 Enviando consulta:', data);
@@ -378,14 +379,29 @@ document.getElementById('btnNuevaConsulta')?.addEventListener('click', () => {
     cargarInventario();
 });
 
-// ⭐ BOTÓN TEMPORAL PARA DEBUG - Recuperar datos del formulario
-document.getElementById('btnRecuperarDatos')?.addEventListener('click', function() {
+// ⭐ BOTÓN TEMPORAL PARA DEBUG - Recuperar datos del formulario Y GUARDAR
+document.getElementById('btnRecuperarDatos')?.addEventListener('click', async function() {
     const form = document.getElementById('formNuevaConsulta');
     const formData = new FormData(form);
     
-    // Obtener datos del médico y fecha desde los IDs específicos
-    const medico = document.getElementById('medicoTratante')?.textContent.trim() || 'No disponible';
-    const fecha = document.getElementById('fechaConsulta')?.textContent.trim() || 'No disponible';
+    // Recuperar datos exactamente como en el botón de debug
+    const medico = document.getElementById('medicoTratante')?.textContent.trim() || '';
+    const fecha = document.getElementById('fechaConsulta')?.textContent.trim() || '';
+    
+    const data = {
+        paciente_id: window.pacienteData.id,
+        medico: medico,
+        fecha: fecha,
+        temperatura: formData.get('temperatura'),
+        peso: formData.get('peso'),
+        frecuencia_cardiaca: formData.get('frecuencia_cardiaca'),
+        frecuencia_respiratoria: formData.get('frecuencia_respiratoria'),
+        otros: formData.get('otros') || '',
+        diagnostico: formData.get('diagnostico') || '',
+        tratamiento: formData.get('tratamiento') || '',
+        notas: formData.get('notas') || '',
+        medicamentos: medicamentosSeleccionados
+    };
     
     console.log('🔍 ===== RECUPERACIÓN DE DATOS DEL FORMULARIO =====');
     console.log('medico:', medico);
@@ -401,5 +417,37 @@ document.getElementById('btnRecuperarDatos')?.addEventListener('click', function
     console.log('medicamentos_seleccionados:', medicamentosSeleccionados);
     console.log('🔍 ===== FIN DE RECUPERACIÓN =====');
     
-    alert('✅ Datos recuperados correctamente. Revisa la consola (F12)');
+    // ⭐ GUARDAR EN BASE DE DATOS
+    console.log('📤 Enviando a la base de datos...');
+    
+    try {
+        const response = await fetch(`/clinica/pacientes/${window.pacienteData.id}/consulta/crear/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('✅ Consulta guardada exitosamente:', result);
+            alert('✅ Datos recuperados y guardados. ID: ' + result.consulta_id + '\nRevisa la consola (F12)');
+            
+            // Cerrar modal y recargar
+            closeVetModal('nuevaConsultaModal');
+            form.reset();
+            medicamentosSeleccionados = [];
+            location.reload();
+        } else {
+            console.error('❌ Error al guardar:', result.error);
+            alert('❌ Error al guardar: ' + result.error);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error de red:', error);
+        alert('❌ Error de red al guardar');
+    }
 });

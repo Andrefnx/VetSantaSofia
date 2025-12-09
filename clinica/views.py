@@ -5,6 +5,7 @@ from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from .models import Consulta
 from pacientes.models import Paciente
+from inventario.models import Insumo
 import json
 
 @login_required
@@ -50,33 +51,76 @@ def ficha_paciente(request, paciente_id):
 @require_http_methods(["POST"])
 def crear_consulta(request, paciente_id):
     try:
+        print('=' * 50)
+        print('🔵 INICIANDO CREACIÓN DE CONSULTA')
+        print('=' * 50)
+        
         paciente = get_object_or_404(Paciente, id=paciente_id)
-        data = json.loads(request.body)
+        print(f'✅ Paciente encontrado: {paciente.nombre} (ID: {paciente.id})')
         
-        print('📥 Datos recibidos:', data)
+        # Parsear el body
+        try:
+            data = json.loads(request.body)
+            print(f'✅ JSON parseado correctamente')
+            print(f'📥 Datos recibidos: {json.dumps(data, indent=2, ensure_ascii=False)}')
+        except json.JSONDecodeError as e:
+            print(f'❌ Error al parsear JSON: {str(e)}')
+            return JsonResponse({
+                'success': False,
+                'error': f'JSON inválido: {str(e)}'
+            }, status=400)
         
-        # Crear la consulta con los datos reales del formulario
+        # Extraer y validar campos
+        temperatura = data.get('temperatura')
+        peso = data.get('peso')
+        fc = data.get('frecuencia_cardiaca')
+        fr = data.get('frecuencia_respiratoria')
+        
+        print(f'🌡️  Temperatura: {temperatura}')
+        print(f'⚖️  Peso: {peso}')
+        print(f'❤️  FC: {fc}')
+        print(f'🫁 FR: {fr}')
+        
+        # Crear la consulta
+        print('📝 Creando consulta...')
         consulta = Consulta.objects.create(
             paciente=paciente,
             veterinario=request.user,
-            temperatura=data.get('temperatura') or None,
-            peso=data.get('peso') or None,
-            frecuencia_cardiaca=data.get('frecuencia_cardiaca') or None,
-            frecuencia_respiratoria=data.get('frecuencia_respiratoria') or None,
+            temperatura=temperatura if temperatura else None,
+            peso=peso if peso else None,
+            frecuencia_cardiaca=fc if fc else None,
+            frecuencia_respiratoria=fr if fr else None,
             otros=data.get('otros', ''),
             diagnostico=data.get('diagnostico', ''),
             tratamiento=data.get('tratamiento', ''),
             notas=data.get('notas', '')
         )
+        print(f'✅ Consulta creada con ID: {consulta.id}')
         
-        # Procesar medicamentos si existen
+        # Procesar medicamentos
         medicamentos = data.get('medicamentos', [])
-        if medicamentos:
-            for med in medicamentos:
-                print(f'💊 Medicamento: {med}')
-                # Aquí puedes agregar lógica para guardar los medicamentos
+        print(f'💊 Medicamentos recibidos: {len(medicamentos)}')
         
-        print(f'✅ Consulta creada: ID {consulta.id}')
+        if medicamentos and hasattr(consulta, 'medicamentos'):
+            for med in medicamentos:
+                try:
+                    insumo = Insumo.objects.get(idInventario=med['id'])
+                    consulta.medicamentos.add(insumo)
+                    print(f'  ✅ Medicamento asociado: {med["nombre"]} - Dosis: {med["dosis"]}')
+                except Insumo.DoesNotExist:
+                    print(f'  ⚠️  Insumo no encontrado: ID {med["id"]}')
+                except Exception as e:
+                    print(f'  ❌ Error al asociar medicamento: {str(e)}')
+        elif medicamentos:
+            print(f'⚠️  Modelo Consulta no tiene campo medicamentos')
+            print(f'   {len(medicamentos)} medicamentos no fueron asociados')
+        
+        print('=' * 50)
+        print(f'✅ CONSULTA CREADA EXITOSAMENTE')
+        print(f'   ID: {consulta.id}')
+        print(f'   Paciente: {paciente.nombre}')
+        print(f'   Veterinario: {request.user.nombre} {request.user.apellido}')
+        print('=' * 50)
         
         return JsonResponse({
             'success': True,
@@ -85,9 +129,16 @@ def crear_consulta(request, paciente_id):
         })
         
     except Exception as e:
-        print(f'❌ Error al crear consulta: {str(e)}')
+        print('=' * 50)
+        print('❌ ERROR AL CREAR CONSULTA')
+        print('=' * 50)
+        print(f'Tipo de error: {type(e).__name__}')
+        print(f'Mensaje: {str(e)}')
         import traceback
+        print('Traceback completo:')
         traceback.print_exc()
+        print('=' * 50)
+        
         return JsonResponse({
             'success': False,
             'error': str(e)
@@ -102,13 +153,11 @@ def detalle_consulta(request, paciente_id, consulta_id):
             paciente_id=paciente_id
         )
         
-        # Obtener nombre del veterinario de forma segura
-        veterinario_nombre = f"{consulta.veterinario.first_name} {consulta.veterinario.last_name}".strip()
+        veterinario_nombre = f"{consulta.veterinario.nombre} {consulta.veterinario.apellido}".strip()
         if not veterinario_nombre:
             veterinario_nombre = consulta.veterinario.username
         
-        # Obtener fecha de creación
-        fecha_str = consulta.created_at.strftime('%d/%m/%Y %H:%M') if hasattr(consulta, 'created_at') else timezone.now().strftime('%d/%m/%Y %H:%M')
+        fecha_str = consulta.fecha.strftime('%d/%m/%Y') if consulta.fecha else timezone.now().strftime('%d/%m/%Y')
         
         return JsonResponse({
             'success': True,
@@ -129,7 +178,7 @@ def detalle_consulta(request, paciente_id, consulta_id):
     except Consulta.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Consulta no encontrada'}, status=404)
     except Exception as e:
-        print(f'❌ Error en detalle_consulta: {str(e)}')
+        print(f'❌ Error: {str(e)}')
         import traceback
         traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
