@@ -1,12 +1,13 @@
 # hospital/models.py
 from django.db import models
-from gestion.models import Mascota
-from django.utils import timezone
-from django.conf import settings
+from django.contrib.auth import get_user_model
 from datetime import date
 from dateutil.relativedelta import relativedelta
 
+User = get_user_model()
+
 class Propietario(models.Model):
+    """Modelo para los dueños de mascotas"""
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     telefono = models.CharField(max_length=20, blank=True, null=True)
@@ -15,85 +16,77 @@ class Propietario(models.Model):
     fecha_registro = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        verbose_name = "Propietario"
-        verbose_name_plural = "Propietarios"
+        verbose_name = 'Propietario'
+        verbose_name_plural = 'Propietarios'
         ordering = ['apellido', 'nombre']
     
     def __str__(self):
-        return self.nombre_completo
+        return f"{self.nombre} {self.apellido}"
     
     @property
     def nombre_completo(self):
-        return f"{self.nombre} {self.apellido}".strip()
+        return f"{self.nombre} {self.apellido}"
+
 
 class Paciente(models.Model):
+    """Modelo para las mascotas/pacientes"""
+    ESPECIE_CHOICES = [
+        ('perro', 'Perro'),
+        ('gato', 'Gato'),
+        ('otro', 'Otro'),
+    ]
+    
     SEXO_CHOICES = [
         ('M', 'Macho'),
         ('H', 'Hembra'),
     ]
     
     nombre = models.CharField(max_length=100)
-    especie = models.CharField(max_length=50)
+    especie = models.CharField(max_length=20, choices=ESPECIE_CHOICES)
     raza = models.CharField(max_length=100, blank=True, null=True)
-    sexo = models.CharField(max_length=1, choices=SEXO_CHOICES)
     color = models.CharField(max_length=50, blank=True, null=True)
-    microchip = models.CharField(max_length=50, blank=True, null=True)
+    sexo = models.CharField(max_length=1, choices=SEXO_CHOICES)
     
-    # Campos de edad
-    fecha_nacimiento = models.DateField(null=True, blank=True, verbose_name="Fecha de nacimiento")
-    edad_anos = models.IntegerField(null=True, blank=True, verbose_name="Edad en años")
-    edad_meses = models.IntegerField(null=True, blank=True, verbose_name="Edad en meses")
+    # Edad
+    fecha_nacimiento = models.DateField(blank=True, null=True)
+    edad_anos = models.IntegerField(blank=True, null=True)
+    edad_meses = models.IntegerField(blank=True, null=True)
     
-    ultimo_peso = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    microchip = models.CharField(max_length=50, blank=True, null=True, unique=True)
+    ultimo_peso = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
     observaciones = models.TextField(blank=True, null=True)
-    propietario = models.ForeignKey('Propietario', on_delete=models.CASCADE, related_name='pacientes')
     
-    # Campos de control
+    propietario = models.ForeignKey(Propietario, on_delete=models.CASCADE, related_name='mascotas')
     activo = models.BooleanField(default=True)
     fecha_registro = models.DateTimeField(auto_now_add=True)
-    fecha_ultima_modificacion = models.DateTimeField(auto_now=True)
-    
-    fecha_ultimo_control = models.DateField(blank=True, null=True)
     
     class Meta:
-        verbose_name = "Paciente"
-        verbose_name_plural = "Pacientes"
+        verbose_name = 'Paciente'
+        verbose_name_plural = 'Pacientes'
         ordering = ['-fecha_registro']
     
     def __str__(self):
-        return f"{self.nombre} - {self.propietario.nombre_completo}"
+        return f"{self.nombre} ({self.get_especie_display()})"
     
     @property
     def edad_formateada(self):
+        """Retorna la edad formateada según disponibilidad de datos"""
         if self.fecha_nacimiento:
             hoy = date.today()
-            edad = relativedelta(hoy, self.fecha_nacimiento)
+            delta = relativedelta(hoy, self.fecha_nacimiento)
             
-            # Si tiene menos de 1 mes, mostrar días
-            if edad.years == 0 and edad.months == 0:
-                dias = (hoy - self.fecha_nacimiento).days
-                return f"{dias} día{'s' if dias != 1 else ''}"
-            # Si tiene menos de 1 año, mostrar meses y días
-            elif edad.years == 0:
-                if edad.days > 0:
-                    return f"{edad.months} mes{'es' if edad.months != 1 else ''} y {edad.days} día{'s' if edad.days != 1 else ''}"
-                return f"{edad.months} mes{'es' if edad.months != 1 else ''}"
-            # Si tiene más de 1 año, mostrar años y meses
+            if delta.years > 0 and delta.months > 0:
+                return f"{delta.years} año{'s' if delta.years != 1 else ''} y {delta.months} mes{'es' if delta.months != 1 else ''}"
+            elif delta.years > 0:
+                return f"{delta.years} año{'s' if delta.years != 1 else ''}"
+            elif delta.months > 0:
+                return f"{delta.months} mes{'es' if delta.months != 1 else ''}"
             else:
-                if edad.months > 0:
-                    return f"{edad.years} año{'s' if edad.years != 1 else ''} y {edad.months} mes{'es' if edad.months != 1 else ''}"
-                return f"{edad.years} año{'s' if edad.years != 1 else ''}"
-        elif self.edad_anos or self.edad_meses:
-            partes = []
-            if self.edad_anos:
-                partes.append(f"{self.edad_anos} año{'s' if self.edad_anos != 1 else ''}")
+                return f"{delta.days} día{'s' if delta.days != 1 else ''}"
+        elif self.edad_anos is not None:
+            texto = f"{self.edad_anos} año{'s' if self.edad_anos != 1 else ''}"
             if self.edad_meses:
-                partes.append(f"{self.edad_meses} mes{'es' if self.edad_meses != 1 else ''}")
-            return " y ".join(partes) + " (estimado)"
+                texto += f" y {self.edad_meses} mes{'es' if self.edad_meses != 1 else ''}"
+            return f"~{texto} (estimado)"
         return "No especificada"
-    
-    @property
-    def ultimo_peso_formateado(self):
-        """Retorna el último peso con unidad"""
-        return f"{self.ultimo_peso} kg" if self.ultimo_peso else "No registrado"
 

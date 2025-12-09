@@ -1,23 +1,21 @@
 {% extends 'partials/base.html' %}
 {% load static %}
-
 {% block title %}Ficha de {{ paciente.nombre }}{% endblock %}
 
-{% block styles %}
-<link rel="stylesheet" href="{% static 'css/base/vet-custom.css' %}">
+{% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/custom/pacientes.css' %}">
 <link rel="stylesheet" href="{% static 'css/custom/consulta_inventario.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="header">
-    <h1>
-        <i class="fas fa-paw"></i>
-        <span class="view-mode">{{ paciente.nombre }}</span>
-        <input type="text" class="form-control edit-mode" name="nombre" value="{{ paciente.nombre }}"
-            style="display:none; max-width: 300px;">
-    </h1>
-
+<div class="container-fluid py-4">
+    <!-- Header con información del paciente -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h2><i class="bi bi-heart-pulse"></i> {{ paciente.nombre }}</h2>
+                    <p class="mb-0">
     <div class="actions-area">
 
         <!-- Botón Editar (visible solo en modo vista) -->
@@ -84,7 +82,7 @@
                                    name="fecha_nacimiento" 
                                    value="{{ paciente.fecha_nacimiento|date:'Y-m-d' }}" 
                                    id="fechaNacimiento" 
-                                   max="{{ hoy|date:'Y-m-d' }}"
+                                   max="{% now 'Y-m-d' %}"
                                    {% if not paciente.fecha_nacimiento %}style="display:none;"{% endif %}>
                         </div>
                         
@@ -94,7 +92,7 @@
                                 <strong>Edad estimada</strong>
                             </label>
                             <div id="edadEstimadaInputs" {% if paciente.fecha_nacimiento %}style="display:none;"{% endif %}>
-                                <input type="number" class="form-control" name="edad" value="{{ paciente.edad|default:'' }}" placeholder="Años" min="0">
+                                <input type="number" class="form-control" name="edad" value="{{ paciente.edad_anos|default:'' }}" placeholder="Años" min="0">
                                 <input type="number" class="form-control" name="edad_meses" value="{{ paciente.edad_meses|default:'' }}" placeholder="Meses" min="0" max="11">
                             </div>
                         </div>
@@ -123,10 +121,10 @@
             <h2>Resumen Clínico</h2>
             <div class="info">
                 <div class="info-row">
-                    <p><strong>Último peso registrado:</strong> {{ paciente.ultimo_peso_formateado }}</p>
+                    <p><strong>Último peso registrado:</strong> {{ paciente.ultimo_peso|default:"No registrado" }} kg</p>
                     <p><strong>Último control:</strong>
-                        {% if paciente.fecha_ultimo_control %}
-                        {{ paciente.fecha_ultimo_control|date:"d/m/Y H:i" }}
+                        {% if paciente.consultas.first %}
+                        {{ paciente.consultas.first.fecha|date:"d/m/Y H:i" }}
                         {% else %}
                         No registrado
                         {% endif %}
@@ -217,11 +215,26 @@
                                 Veterinario: {{ consulta.veterinario.get_full_name|default:"No especificado" }}<br>
                                 {{ consulta.fecha|date:"d/m/Y H:i" }}
                             </p>
+                            
+                            {% if consulta.medicamentos.exists %}
+                            <div class="medicamentos-utilizados" style="margin-top: 0.5rem;">
+                                <strong style="font-size: 0.85rem; color: #666;">
+                                    <i class="bi bi-capsule"></i> Medicamentos:
+                                </strong>
+                                <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.3rem;">
+                                    {% for med in consulta.medicamentos.all %}
+                                    <span class="badge bg-primary" style="font-size: 0.75rem;">
+                                        {{ med.nombre }}{% if med.dosis %} - {{ med.dosis }}{% endif %}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
                             {% if consulta.notas %}
                             <p class="event-notes">{{ consulta.notas|truncatewords:20 }}</p>
                             {% endif %}
-                            <button class="timeline-btn" onclick="verDetalleConsulta({{ consulta.id }})">Ver
-                                detalle</button>
+                            <button class="timeline-btn" onclick="verDetalleConsulta({{ consulta.id }})">Ver detalle</button>
                         </div>
                     </div>
                     {% empty %}
@@ -360,9 +373,9 @@
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block modals %}
+<!-- ⭐ MODALES - DENTRO DE CONTENT -->
+
 <!-- Modal Detalle Consulta -->
 <div id="detalleConsultaModal" class="vet-modal-overlay hide">
     <div class="vet-custom-modal">
@@ -372,7 +385,6 @@
         </div>
         <div class="vet-modal-body">
             <div class="row g-3">
-                <!-- Columna izquierda: Datos fisiológicos -->
                 <div class="col-md-4" id="detalleDatosMascota">
                     <div class="detail-section">
                         <div class="detail-section-title"><i class="bi bi-thermometer-half"></i> Temperatura</div>
@@ -395,9 +407,8 @@
                         <p id="detalleOtros">-</p>
                     </div>
                 </div>
-                <!-- Columna derecha: Detalles de consulta -->
                 <div class="col-md-8" id="detalleContenido">
-                    <!-- Aquí se llenarán los detalles dinámicamente -->
+                    <!-- Detalles dinámicos -->
                 </div>
             </div>
         </div>
@@ -422,11 +433,10 @@
         <form id="formNuevaConsulta">
             <div class="vet-modal-body">
                 <div class="row g-3">
-                    <!-- Columna izquierda: Datos fisiológicos -->
                     <div class="col-md-3">
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-person-badge"></i> Médico Tratante</div>
-                            <p style="margin-bottom: 0.5rem;">{{ user.nombre }} {{ user.apellido }}</p>
+                            <p style="margin-bottom: 0.5rem;">{{ user.get_full_name }}</p>
                         </div>
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
@@ -454,42 +464,33 @@
                             <input type="text" class="form-control" name="otros">
                         </div>
                     </div>
-                    <!-- Columna derecha: Detalles de consulta -->
                     <div class="col-md-9">
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-clipboard2-check"></i> Diagnóstico</div>
                             <textarea class="form-control" name="diagnostico" rows="5"></textarea>
                         </div>
                         
-                        <!-- Tratamiento con selector de medicamentos -->
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-capsule"></i> Tratamiento</div>
                             <div class="tratamiento-container">
                                 <textarea class="form-control" name="tratamiento" rows="6" placeholder="Descripción del tratamiento..."></textarea>
                                 
-                                <!-- Selector de inventario -->
                                 <div class="inventario-selector-compact">
                                     <input type="text" class="form-control form-control-sm" id="searchInventario" placeholder="Buscar medicamento...">
                                     <div class="inventario-list-compact" id="inventarioList">
-                                        <!-- Lista de inventario se cargará aquí dinámicamente -->
+                                        <!-- Lista dinámica -->
                                     </div>
                                 </div>
                                 
-                                <!-- Insumos utilizados -->
                                 <div class="insumos-utilizados">
                                     <div class="insumos-title">Insumos utilizados:</div>
                                     <div id="insumosSeleccionados">
-                                        <!-- Tags de medicamentos aparecerán aquí -->
+                                        <!-- Tags dinámicos -->
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Exámenes oculto -->
-                        <div class="detail-section" style="display:none;">
-                            <div class="detail-section-title"><i class="bi bi-file-earmark-medical"></i> Exámenes</div>
-                            <input type="text" class="form-control" name="examenes" placeholder="Separar por coma">
-                        </div>
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-journal-text"></i> Notas</div>
                             <textarea class="form-control" name="notas" rows="4"></textarea>
@@ -554,24 +555,23 @@
         </form>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="{% static 'js/base/tabs.js' %}"></script>
-<script src="{% static 'js/pacientes/historial_medico.js' %}"></script>
-<script src="{% static 'js/pacientes/editar_ficha.js' %}"></script>
-<script src="{% static 'js/pacientes/inventario_consulta.js' %}"></script>
 
 <script>
+    // ⭐ Datos del paciente para JavaScript
     window.pacienteData = {
         id: {{ paciente.id }},
         nombre: "{{ paciente.nombre|escapejs }}",
-        especie: "{{ paciente.especie|lower|escapejs }}",
+        especie: "{{ paciente.especie }}",
         peso: {{ paciente.ultimo_peso|default:"null" }},
-        edad: {{ paciente.edad|default:"null" }},
-        edad_meses: {{ paciente.edad_meses|default:"null" }}
+        edad: "{{ paciente.edad_formateada|escapejs }}",
+        propietario: "{{ paciente.propietario.nombre_completo|escapejs }}"
     };
-    
     console.log('📋 Datos del paciente cargados:', window.pacienteData);
 </script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/base/modals_base.js' %}"></script>
+<script src="{% static 'js/pacientes/historial_medico.js' %}"></script>
+<script src="{% static 'js/pacientes/inventario_consulta.js' %}"></script>
 {% endblock %}

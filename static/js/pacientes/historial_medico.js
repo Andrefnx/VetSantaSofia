@@ -148,47 +148,66 @@ document.getElementById('formAgendarCita').onsubmit = function (e) {
 };
 
 // Guardar nueva consulta en historial (blanca)
-document.getElementById('formNuevaConsulta').onsubmit = function (e) {
+document.getElementById('formNuevaConsulta').onsubmit = async function (e) {
     e.preventDefault();
     const form = e.target;
-    const data = Object.fromEntries(new FormData(form).entries());
-
-    // Obtener fecha del input (ya viene en formato dd/mm/yyyy)
-    const fecha = data.fecha || new Date().toLocaleDateString('es-CL');
-    // Extraer mes y año para la barra de la izquierda
-    let mes = '', anio = '';
-    if (fecha.includes('/')) {
-        const partes = fecha.split('/');
-        mes = new Date(`${partes[2]}-${partes[1]}-${partes[0]}`).toLocaleString('es-CL', { month: 'short' });
-        anio = partes[2];
-    } else {
-        mes = new Date().toLocaleString('es-CL', { month: 'short' });
-        anio = new Date().getFullYear();
+    const formData = new FormData(form);
+    
+    // ⭐ Agregar medicamentos seleccionados
+    const medicamentos = medicamentosSeleccionados.map(med => ({
+        inventario_id: med.id,
+        nombre: med.nombre,
+        dosis: med.dosis,
+        peso_paciente: med.peso
+    }));
+    
+    // Convertir FormData a objeto
+    const data = {
+        paciente_id: window.pacienteData.id,
+        temperatura: formData.get('temp'),
+        peso: formData.get('peso'),
+        frecuencia_cardiaca: formData.get('fc'),
+        frecuencia_respiratoria: formData.get('fr'),
+        otros: formData.get('otros'),
+        diagnostico: formData.get('diagnostico'),
+        tratamiento: formData.get('tratamiento'),
+        notas: formData.get('notas'),
+        medicamentos: medicamentos
+    };
+    
+    console.log('📤 Enviando consulta:', data);
+    
+    try {
+        const response = await fetch(`/veterinarios/pacientes/${window.pacienteData.id}/consulta/crear/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('✅ Consulta guardada:', result);
+            
+            // Cerrar modal y limpiar
+            closeVetModal('nuevaConsultaModal');
+            form.reset();
+            medicamentosSeleccionados = [];
+            
+            // Recargar la página para mostrar la nueva consulta
+            location.reload();
+        } else {
+            console.error('❌ Error al guardar:', result.error);
+            alert(`Error: ${result.error}`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error de red:', error);
+        alert('Error al guardar la consulta. Por favor intente nuevamente.');
     }
-
-    const nuevaConsultaHTML = `
-        <div class="timeline-item">
-            <div class="timeline-date">
-                <span class="month">${mes.charAt(0).toUpperCase() + mes.slice(1)}</span>
-                <span class="year">${anio}</span>
-            </div>
-            <div class="timeline-marker"></div>
-            <div class="timeline-content">
-                <h3 class="event-title">${data.diagnostico || 'Consulta'}</h3>
-                <p class="event-subtitle">
-                    Médico Tratante: ${data.medico} <br>
-                    ${fecha}
-                </p>
-                <p class="event-notes">
-                    ${data.notas || ''}
-                </p>
-                <button class="timeline-btn">Ver detalle</button>
-            </div>
-        </div>
-    `;
-    document.getElementById('timeline').insertAdjacentHTML('beforeend', nuevaConsultaHTML);
-    closeVetModal('nuevaConsultaModal');
-    form.reset();
 };
 
 // Modal detalle: cerrar y editar
@@ -219,13 +238,11 @@ async function cargarInventario() {
         
         console.log('📦 Respuesta API:', data);
         
-        // ⭐ Verificar que la respuesta es válida
         if (!data.success) {
             console.error('❌ Error del servidor:', data.error);
             return;
         }
         
-        // ⭐ Verificar que productos es un array
         if (!Array.isArray(data.productos)) {
             console.error('❌ productos no es un array:', typeof data.productos);
             return;
@@ -233,15 +250,27 @@ async function cargarInventario() {
         
         console.log(`✅ ${data.productos.length} productos cargados`);
         
-        // Ahora sí, iterar sobre los productos
-        data.productos.forEach(producto => {
-            // Tu código para procesar cada producto
-            console.log('Producto:', producto.nombre);
-        });
+        // La función cargarInventarioFiltrado() de inventario_consulta.js se encarga del resto
         
     } catch (error) {
         console.error('❌ Error de red:', error);
     }
+}
+
+// Función auxiliar para obtener CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
 }
 
 // Agregar insumo a la lista de utilizados

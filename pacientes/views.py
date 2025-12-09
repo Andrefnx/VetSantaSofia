@@ -29,8 +29,37 @@ def pacientes_view(request):
 
 @login_required
 def ficha_mascota_view(request, paciente_id):
+    """Vista de la ficha de la mascota"""
     paciente = get_object_or_404(Paciente, id=paciente_id)
-    return render(request, 'veterinarios/ficha_mascota.html', {'paciente': paciente})
+    
+    # Obtener consultas con medicamentos (ahora funcionará)
+    consultas = paciente.consultas.prefetch_related('medicamentos').all()
+    
+    # Obtener otros datos relacionados
+    hospitalizaciones = paciente.hospitalizaciones.all() if hasattr(paciente, 'hospitalizaciones') else []
+    examenes = paciente.examenes.all() if hasattr(paciente, 'examenes') else []
+    documentos = paciente.documentos.all() if hasattr(paciente, 'documentos') else []
+    
+    # Serializar datos del paciente para JavaScript
+    paciente_data = {
+        'id': paciente.id,
+        'nombre': paciente.nombre,
+        'especie': paciente.especie,
+        'peso': float(paciente.ultimo_peso) if paciente.ultimo_peso else None,
+        'edad': paciente.edad_formateada,
+        'propietario': paciente.propietario.nombre_completo,
+    }
+    
+    context = {
+        'paciente': paciente,
+        'paciente_data_json': paciente_data,
+        'consultas': consultas,
+        'hospitalizaciones': hospitalizaciones,
+        'examenes': examenes,
+        'documentos': documentos,
+    }
+    
+    return render(request, 'consulta/ficha_mascota.html', context)
 
 @login_required
 def detalle_paciente(request, paciente_id):

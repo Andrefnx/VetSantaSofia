@@ -4,5 +4,13 @@ from . import views
 app_name = 'clinica'
 
 urlpatterns = [
-    # Deja esta lista vacía por ahora o agrega las URLs que realmente existan en clinica/views.py
+    # Vistas existentes
+    path('consultas/', views.consulta_view, name='consultas'),
+    path('veterinarios/', views.vet_view, name='veterinarios'),
+    path('veterinarios/ficha/', views.vet_ficha_view, name='vet_ficha'),
+    path('veterinarios/disponibilidad/', views.vet_disponibilidad_view, name='vet_disponibilidad'),
+    
+    # ⭐ Nuevas rutas para pacientes
+    path('veterinarios/pacientes/<int:paciente_id>/', views.ficha_paciente, name='ficha_paciente'),
+    path('veterinarios/pacientes/<int:paciente_id>/consulta/crear/', views.crear_consulta, name='crear_consulta'),
 ]
