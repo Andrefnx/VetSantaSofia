@@ -88,7 +88,7 @@ def crear_consulta(request, paciente_id):
         consulta = Consulta.objects.create(
             paciente=paciente,
             veterinario=request.user,
-            tipo_consulta=tipo_consulta,  # ⭐ AGREGAR ESTE CAMPO
+            tipo_consulta=tipo_consulta,
             temperatura=temperatura if temperatura else None,
             peso=peso if peso else None,
             frecuencia_cardiaca=fc if fc else None,
@@ -101,23 +101,23 @@ def crear_consulta(request, paciente_id):
         print(f'✅ Consulta creada con ID: {consulta.id}')
         print(f'✅ Tipo guardado: {consulta.tipo_consulta}')
         
-        # Procesar medicamentos
+        # Procesar medicamentos - CREAR MedicamentoUtilizado
+        from .models import MedicamentoUtilizado
         medicamentos = data.get('medicamentos', [])
         print(f'💊 Medicamentos recibidos: {len(medicamentos)}')
         
-        if medicamentos and hasattr(consulta, 'medicamentos'):
-            for med in medicamentos:
-                try:
-                    insumo = Insumo.objects.get(idInventario=med['id'])
-                    consulta.medicamentos.add(insumo)
-                    print(f'  ✅ Medicamento asociado: {med["nombre"]} - Dosis: {med["dosis"]}')
-                except Insumo.DoesNotExist:
-                    print(f'  ⚠️  Insumo no encontrado: ID {med["id"]}')
-                except Exception as e:
-                    print(f'  ❌ Error al asociar medicamento: {str(e)}')
-        elif medicamentos:
-            print(f'⚠️  Modelo Consulta no tiene campo medicamentos')
-            print(f'   {len(medicamentos)} medicamentos no fueron asociados')
+        for med in medicamentos:
+            try:
+                MedicamentoUtilizado.objects.create(
+                    consulta=consulta,
+                    inventario_id=med.get('id'),
+                    nombre=med.get('nombre'),
+                    dosis=med.get('dosis', ''),
+                    peso_paciente=peso if peso else None
+                )
+                print(f'  ✅ Medicamento guardado: {med["nombre"]} - Dosis: {med.get("dosis", "Sin dosis")}')
+            except Exception as e:
+                print(f'  ❌ Error al guardar medicamento {med.get("nombre")}: {str(e)}')
         
         print('=' * 50)
         print(f'✅ CONSULTA CREADA EXITOSAMENTE')
@@ -125,6 +125,7 @@ def crear_consulta(request, paciente_id):
         print(f'   Tipo: {consulta.tipo_consulta}')
         print(f'   Paciente: {paciente.nombre}')
         print(f'   Veterinario: {request.user.nombre} {request.user.apellido}')
+        print(f'   Medicamentos guardados: {consulta.medicamentos_detalle.count()}')
         print('=' * 50)
         
         return JsonResponse({
@@ -153,19 +154,20 @@ def crear_consulta(request, paciente_id):
 @require_http_methods(["GET"])
 def detalle_consulta(request, paciente_id, consulta_id):
     try:
-        consulta = Consulta.objects.select_related('veterinario', 'paciente').prefetch_related('medicamentos').get(
+        consulta = Consulta.objects.select_related('veterinario', 'paciente').prefetch_related('medicamentos_detalle').get(
             id=consulta_id,
             paciente_id=paciente_id
         )
         
-        # Obtener medicamentos utilizados
-        medicamentos = [
-            {
-                'nombre': med.nombre,
-                'dosis': med.dosis if hasattr(med, 'dosis') else None
+        # Obtener medicamentos utilizados desde MedicamentoUtilizado
+        medicamentos = []
+        for med_detalle in consulta.medicamentos_detalle.all():
+            med_info = {
+                'nombre': med_detalle.nombre,
             }
-            for med in consulta.medicamentos.all()
-        ]
+            if med_detalle.dosis:
+                med_info['dosis'] = med_detalle.dosis
+            medicamentos.append(med_info)
         
         veterinario_nombre = f"{consulta.veterinario.nombre} {consulta.veterinario.apellido}".strip()
         
@@ -191,6 +193,7 @@ def detalle_consulta(request, paciente_id, consulta_id):
     except Consulta.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Consulta no encontrada'}, status=404)
     except Exception as e:
+        print(f"Error en detalle_consulta: {str(e)}")
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 @login_required

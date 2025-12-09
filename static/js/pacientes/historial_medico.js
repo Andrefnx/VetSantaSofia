@@ -1,12 +1,13 @@
 // Modal Nueva Consulta
 document.getElementById('btnNuevaConsulta').onclick = async function () {
     openVetModal('nuevaConsultaModal');
-    // Cargar inventario DESPUÉS de abrir el modal
     await cargarInventario();
 };
+
 document.getElementById('closeNuevaConsultaModal').onclick = function () {
     closeVetModal('nuevaConsultaModal');
 };
+
 document.getElementById('closeNuevaConsultaModal').onkeydown = function (e) {
     if (e.key === "Enter" || e.key === " ") closeVetModal('nuevaConsultaModal');
 };
@@ -15,61 +16,23 @@ document.getElementById('closeNuevaConsultaModal').onkeydown = function (e) {
 document.getElementById('btnAgendarCitaModal').onclick = function () {
     openVetModal('agendarCitaModal');
 };
+
 document.getElementById('closeAgendarCitaModal').onclick = function () {
     closeVetModal('agendarCitaModal');
 };
+
 document.getElementById('closeAgendarCitaModal').onkeydown = function (e) {
     if (e.key === "Enter" || e.key === " ") closeVetModal('agendarCitaModal');
 };
 
-// Guardar cita agendada en gris
-document.getElementById('formAgendarCita').onsubmit = function (e) {
-    e.preventDefault();
-    const form = e.target;
-    const data = Object.fromEntries(new FormData(form).entries());
-    // Formatea fecha y hora
-    const fecha = data.fecha ? data.fecha.split('-').reverse().join('/') : '-';
-    const hora = data.hora || '-';
-    const tipo = {
-        hospitalizacion: 'Hospitalización',
-        consulta: 'Consulta general',
-        control: 'Control',
-        vacunacion: 'Vacunación'
-    }[data.tipo] || '-';
-    const nuevaCitaHTML = `
-            <div class="timeline-item nueva-consulta-agendada">
-                <div class="timeline-content">
-                    <h3 class="event-title" style="color:#555;"><i class="bi bi-calendar-plus"></i> Cita Agendada</h3>
-                    <p class="event-subtitle" style="color:#888;">
-                        Tipo: ${tipo}<br>
-                        Fecha: ${fecha} ${hora ? 'a las ' + hora : ''}
-                    </p>
-                    <p class="event-notes" style="color:#888;">
-                        ${data.notas || ''}
-                    </p>
-                </div>
-            </div>
-        `;
-    document.getElementById('nuevasConsultas').insertAdjacentHTML('beforeend', nuevaCitaHTML);
-    closeVetModal('agendarCitaModal');
-    form.reset();
-};
-
-// Guardar nueva consulta en historial (blanca)
+// Guardar nueva consulta
 document.getElementById('formNuevaConsulta').onsubmit = async function (e) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
     
-    // ⭐ Recuperar datos exactamente como en el botón de debug
-    const medico = document.getElementById('medicoTratante')?.textContent.trim() || '';
-    const fecha = document.getElementById('fechaConsulta')?.textContent.trim() || '';
-    
-    // ⭐ Construir objeto de datos con los mismos nombres
     const data = {
         paciente_id: window.pacienteData.id,
-        medico: medico,
-        fecha: fecha,
         tipo_consulta: formData.get('tipo_consulta'),
         temperatura: formData.get('temperatura'),
         peso: formData.get('peso'),
@@ -113,33 +76,36 @@ document.getElementById('formNuevaConsulta').onsubmit = async function (e) {
     }
 };
 
-// Modal detalle: cerrar y editar
+// Modal detalle
 document.getElementById('closeDetalleModal').onclick = function () {
     closeVetModal('detalleConsultaModal');
 };
+
 document.getElementById('closeDetalleModal').onkeydown = function (e) {
     if (e.key === "Enter" || e.key === " ") closeVetModal('detalleConsultaModal');
 };
+
 document.getElementById('btnAgendarCita').onclick = function () {
-    alert('Funcionalidad para agendar próxima cita');
+    closeVetModal('detalleConsultaModal');
+    openVetModal('agendarCitaModal');
 };
-document.getElementById('editarConsultaBtn').onclick = function () {
-    alert('Funcionalidad para editar consulta');
-};
+
 window.onclick = function (event) {
     const modalDetalle = document.getElementById('detalleConsultaModal');
     const modalNueva = document.getElementById('nuevaConsultaModal');
+    const modalCita = document.getElementById('agendarCitaModal');
     if (event.target === modalDetalle) closeVetModal('detalleConsultaModal');
     if (event.target === modalNueva) closeVetModal('nuevaConsultaModal');
+    if (event.target === modalCita) closeVetModal('agendarCitaModal');
 }
 
-// Cargar inventario para el selector de tratamiento
+// Cargar inventario
 async function cargarInventario() {
     try {
         const response = await fetch('/inventario/api/productos/');
         const data = await response.json();
         
-        console.log('📦 Respuesta API:', data);
+        console.log('📦 Inventario cargado:', data);
         
         if (!data.success) {
             console.error('❌ Error del servidor:', data.error);
@@ -147,20 +113,18 @@ async function cargarInventario() {
         }
         
         if (!Array.isArray(data.productos)) {
-            console.error('❌ productos no es un array:', typeof data.productos);
+            console.error('❌ productos no es un array');
             return;
         }
         
-        console.log(`✅ ${data.productos.length} productos cargados`);
-        
-        // La función cargarInventarioFiltrado() de inventario_consulta.js se encarga del resto
+        console.log(`✅ ${data.productos.length} productos disponibles`);
         
     } catch (error) {
         console.error('❌ Error de red:', error);
     }
 }
 
-// Función para obtener el CSRF token
+// Obtener CSRF token
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -176,7 +140,7 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// ⭐ Función para ver el detalle de una consulta
+// Ver detalle de consulta
 function verDetalleConsulta(consultaId) {
     const pacienteId = window.pacienteData.id;
     
@@ -186,132 +150,82 @@ function verDetalleConsulta(consultaId) {
             if (data.success) {
                 const c = data.consulta;
                 
-                // Actualizar contenido del modal
                 document.getElementById('detalleTitulo').innerHTML = 
                     `<i class="bi bi-clipboard2-pulse"></i> ${c.tipo_consulta} - ${c.fecha}`;
                 
-                // Datos vitales
-                document.getElementById('detalleTemp').textContent = c.temperatura;
-                document.getElementById('detallePeso').textContent = c.peso;
-                document.getElementById('detalleFC').textContent = c.frecuencia_cardiaca;
-                document.getElementById('detalleFR').textContent = c.frecuencia_respiratoria;
-                document.getElementById('detalleOtros').textContent = c.otros;
+                let datosVitales = [];
+                if (c.temperatura !== '-') datosVitales.push(`<div style="margin-bottom: 0.5rem;"><i class="bi bi-thermometer-half"></i> Temp: <strong>${c.temperatura}°C</strong></div>`);
+                if (c.peso !== '-') datosVitales.push(`<div style="margin-bottom: 0.5rem;"><i class="bi bi-heart-pulse"></i> Peso: <strong>${c.peso} kg</strong></div>`);
+                if (c.frecuencia_cardiaca !== '-') datosVitales.push(`<div style="margin-bottom: 0.5rem;"><i class="bi bi-heart"></i> FC: <strong>${c.frecuencia_cardiaca} lpm</strong></div>`);
+                if (c.frecuencia_respiratoria !== '-') datosVitales.push(`<div style="margin-bottom: 0.5rem;"><i class="bi bi-lungs"></i> FR: <strong>${c.frecuencia_respiratoria} rpm</strong></div>`);
                 
-                // Contenido principal
                 let medicamentosHTML = '';
                 if (c.medicamentos && c.medicamentos.length > 0) {
-                    medicamentosHTML = '<p style="margin-top: 0.5rem; font-size: 0.85rem; color: #999;"><i class="bi bi-capsule"></i> <strong>Medicamentos utilizados:</strong> ';
-                    medicamentosHTML += c.medicamentos.map(med => med.nombre).join(', ');
-                    medicamentosHTML += '</p>';
+                    medicamentosHTML = '<div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #eee;">';
+                    medicamentosHTML += '<p style="margin-bottom: 0.5rem; font-size: 0.85rem; color: #999;"><i class="bi bi-capsule"></i> <strong>Medicamentos utilizados:</strong></p>';
+                    medicamentosHTML += '<ul style="margin: 0; padding-left: 1.5rem; font-size: 0.85rem; color: #666;">';
+                    medicamentosHTML += c.medicamentos.map(med => {
+                        let texto = med.nombre;
+                        if (med.dosis) {
+                            texto += ` - <em>${med.dosis}</em>`;
+                        }
+                        return `<li>${texto}</li>`;
+                    }).join('');
+                    medicamentosHTML += '</ul></div>';
                 }
                 
                 document.getElementById('detalleContenido').innerHTML = `
-                    <div class="detail-section">
-                        <div class="detail-section-title"><i class="bi bi-person-badge"></i> Veterinario</div>
-                        <p>${c.veterinario}</p>
-                    </div>
-                    <div class="detail-section">
-                        <div class="detail-section-title"><i class="bi bi-clipboard2-check"></i> Diagnóstico</div>
-                        <p>${c.diagnostico}</p>
-                    </div>
-                    <div class="detail-section">
-                        <div class="detail-section-title"><i class="bi bi-capsule"></i> Tratamiento</div>
-                        <p>${c.tratamiento}</p>
-                        ${medicamentosHTML}
-                    </div>
-                    <div class="detail-section">
-                        <div class="detail-section-title"><i class="bi bi-journal-text"></i> Notas</div>
-                        <p>${c.notas}</p>
+                    <div style="display: grid; grid-template-columns: 200px 1fr; gap: 1.5rem;">
+                        <div>
+                            <!-- Veterinario -->
+                            <div style="padding-bottom: 1rem; margin-bottom: 1rem; border-bottom: 1px solid #dee2e6;">
+                                <div style="font-size: 0.75rem; color: #999; margin-bottom: 0.5rem; text-transform: uppercase; font-weight: 600;">
+                                    <i class="bi bi-person-badge"></i> Veterinario
+                                </div>
+                                <div style="font-weight: 600; color: #2e7d32; font-size: 0.95rem;">
+                                    ${c.veterinario}
+                                </div>
+                            </div>
+                            
+                            <!-- Datos Vitales -->
+                            ${datosVitales.length > 0 ? `
+                                <div>
+                                    <div style="font-size: 0.75rem; color: #999; margin-bottom: 0.5rem; text-transform: uppercase; font-weight: 600;">
+                                        <i class="bi bi-clipboard2-pulse"></i> Datos Vitales
+                                    </div>
+                                    <div style="font-size: 0.85rem; color: #333;">
+                                        ${datosVitales.join('')}
+                                    </div>
+                                    ${c.otros !== '-' ? `<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #dee2e6; font-size: 0.8rem; color: #666;"><strong>Otros:</strong> ${c.otros}</div>` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div>
+                            <div class="detail-section">
+                                <div class="detail-section-title"><i class="bi bi-clipboard2-check"></i> Diagnóstico</div>
+                                <p>${c.diagnostico}</p>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-section-title"><i class="bi bi-capsule"></i> Tratamiento</div>
+                                <p>${c.tratamiento}</p>
+                                ${medicamentosHTML}
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-section-title"><i class="bi bi-journal-text"></i> Notas</div>
+                                <p>${c.notas}</p>
+                            </div>
+                        </div>
                     </div>
                 `;
                 
-                // Mostrar modal
                 openVetModal('detalleConsultaModal');
             }
         })
         .catch(error => console.error('Error:', error));
 }
 
-// Agregar insumo a la lista de utilizados
-function agregarInsumo(e) {
-    const btn = e.currentTarget;
-    const id = btn.dataset.id;
-    const nombre = btn.dataset.nombre;
-    const dosisMl = parseFloat(btn.dataset.dosis) || 0;
-    const pesoRef = parseFloat(btn.dataset.peso) || 1;
-    
-    const container = document.getElementById('insumosSeleccionados');
-    if (!container) return;
-    
-    // Verificar si ya está agregado
-    if (container.querySelector(`[data-insumo-id="${id}"]`)) {
-        const existingTag = container.querySelector(`[data-insumo-id="${id}"]`);
-        existingTag.style.animation = 'none';
-        setTimeout(() => {
-            existingTag.style.animation = 'pulse 0.5s ease';
-        }, 10);
-        return;
-    }
-    
-    // Obtener el item completo del inventario
-    const inventarioItem = btn.closest('.inventario-item');
-    
-    if (inventarioItem) {
-        inventarioItem.classList.add('adding');
-        setTimeout(() => {
-            inventarioItem.style.display = 'none';
-            inventarioItem.classList.remove('adding');
-        }, 400);
-    }
-    
-    // Obtener peso actual del paciente
-    const pesoInput = document.getElementById('pesoConsulta');
-    const pesoActual = parseFloat(pesoInput?.value) || 0;
-    
-    // Calcular dosis según el peso
-    let dosisCalculada = 0;
-    let dosisTexto = 'Peso no ingresado';
-    
-    if (pesoActual > 0 && dosisMl > 0 && pesoRef > 0) {
-        dosisCalculada = (dosisMl * pesoActual) / pesoRef;
-        dosisTexto = `${dosisCalculada.toFixed(2)} ml`;
-    } else if (pesoActual > 0) {
-        dosisTexto = 'Dosis no definida';
-    }
-    
-    const tag = document.createElement('div');
-    tag.className = 'insumo-tag';
-    tag.dataset.insumoId = id;
-    tag.innerHTML = `
-        <div class="insumo-tag-info">
-            <span class="insumo-tag-nombre">${nombre}</span>
-            <span class="insumo-tag-dosis">Dosis: <strong>${dosisTexto}</strong></span>
-        </div>
-        <button type="button" class="insumo-tag-remove" title="Eliminar">×</button>
-    `;
-    
-    // Event listener para el botón de eliminar
-    tag.querySelector('.insumo-tag-remove').addEventListener('click', function() {
-        tag.classList.add('removing');
-        setTimeout(() => {
-            tag.remove();
-            // Volver a mostrar el item en el inventario
-            if (inventarioItem) {
-                inventarioItem.style.display = 'flex';
-                inventarioItem.style.animation = 'fadeInInventory 0.3s ease';
-            }
-        }, 300);
-    });
-    
-    container.appendChild(tag);
-    
-    // Scroll automático
-    setTimeout(() => {
-        tag.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 100);
-}
-
-// Filtrar inventario por búsqueda
+// Filtrar inventario
 const searchInventario = document.getElementById('searchInventario');
 if (searchInventario) {
     searchInventario.addEventListener('input', (e) => {
@@ -321,7 +235,6 @@ if (searchInventario) {
             const id = item.dataset.productoId;
             const estaSeleccionado = document.querySelector(`#insumosSeleccionados [data-insumo-id="${id}"]`);
             
-            // Solo mostrar si coincide con la búsqueda Y no está seleccionado
             if (nombre.includes(search) && !estaSeleccionado) {
                 item.style.display = 'flex';
             } else {
