@@ -188,12 +188,9 @@
         </div>
         <div class="tabs-content">
             <div class="tab-content active" id="historial">
-                <div class="historial-clinico">
-                    <h3>Historial Clínico</h3>
-                </div>
-
-                <div class="timeline" id="timeline">
-                    <div class="timeline-item new-event">
+                <div class="historial-clinico" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0;">Historial Clínico</h3>
+                    <div>
                         <button class="vet-btn vet-btn-primary" id="btnNuevaConsulta">
                             <i class="bi bi-plus-lg"></i> Nueva Consulta
                         </button>
@@ -201,40 +198,33 @@
                             <i class="bi bi-calendar-plus"></i> Agendar Cita
                         </button>
                     </div>
+                </div>
 
+                <div class="timeline" id="timeline">
                     {% for consulta in consultas %}
                     <div class="timeline-item">
                         <div class="timeline-date">
-                            <span class="month">{{ consulta.fecha|date:"M" }}</span>
-                            <span class="year">{{ consulta.fecha|date:"Y" }}</span>
+                            <span class="month">{{ consulta.fecha|date:"d" }}</span>
+                            <span class="day">{{ consulta.fecha|date:"M" }}</span>
                         </div>
                         <div class="timeline-marker"></div>
                         <div class="timeline-content">
-                            <h3 class="event-title">{{ consulta.diagnostico|default:"Consulta general" }}</h3>
-                            <p class="event-subtitle">
-                                Veterinario: {{ consulta.veterinario.get_full_name|default:"No especificado" }}<br>
-                                {{ consulta.fecha|date:"d/m/Y H:i" }}
-                            </p>
-                            
-                            {% if consulta.medicamentos.exists %}
-                            <div class="medicamentos-utilizados" style="margin-top: 0.5rem;">
-                                <strong style="font-size: 0.85rem; color: #666;">
-                                    <i class="bi bi-capsule"></i> Medicamentos:
-                                </strong>
-                                <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.3rem;">
-                                    {% for med in consulta.medicamentos.all %}
-                                    <span class="badge bg-primary" style="font-size: 0.75rem;">
-                                        {{ med.nombre }}{% if med.dosis %} - {{ med.dosis }}{% endif %}
-                                    </span>
-                                    {% endfor %}
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div style="flex: 1;">
+                                    <h3 class="event-title" style="margin-bottom: 0.25rem;">
+                                        {{ consulta.get_tipo_consulta_display|default:"Consulta general" }}
+                                        <span style="font-size: 0.85rem; color: #999; font-weight: normal; margin-left: 0.5rem;">
+                                            {{ consulta.fecha|date:"d/m/Y H:i" }}
+                                        </span>
+                                    </h3>
+                                    <p class="event-subtitle" style="margin-bottom: 0;">
+                                        <i class="bi bi-person"></i> {{ consulta.veterinario.nombre }} {{ consulta.veterinario.apellido }}
+                                    </p>
                                 </div>
+                                <button class="timeline-btn" onclick="verDetalleConsulta({{ consulta.id }})" style="margin-left: 1rem;">
+                                    Ver detalle
+                                </button>
                             </div>
-                            {% endif %}
-                            
-                            {% if consulta.notas %}
-                            <p class="event-notes">{{ consulta.notas|truncatewords:20 }}</p>
-                            {% endif %}
-                            <button class="timeline-btn" onclick="verDetalleConsulta({{ consulta.id }})">Ver detalle</button>
                         </div>
                     </div>
                     {% empty %}

@@ -153,40 +153,45 @@ def crear_consulta(request, paciente_id):
 @require_http_methods(["GET"])
 def detalle_consulta(request, paciente_id, consulta_id):
     try:
-        consulta = Consulta.objects.select_related('veterinario').get(
-            id=consulta_id, 
+        consulta = Consulta.objects.select_related('veterinario', 'paciente').prefetch_related('medicamentos').get(
+            id=consulta_id,
             paciente_id=paciente_id
         )
         
+        # Obtener medicamentos utilizados
+        medicamentos = [
+            {
+                'nombre': med.nombre,
+                'dosis': med.dosis if hasattr(med, 'dosis') else None
+            }
+            for med in consulta.medicamentos.all()
+        ]
+        
         veterinario_nombre = f"{consulta.veterinario.nombre} {consulta.veterinario.apellido}".strip()
-        if not veterinario_nombre:
-            veterinario_nombre = consulta.veterinario.username
         
-        fecha_str = consulta.fecha.strftime('%d/%m/%Y') if consulta.fecha else timezone.now().strftime('%d/%m/%Y')
-        
-        return JsonResponse({
+        data = {
             'success': True,
             'consulta': {
                 'id': consulta.id,
-                'fecha': fecha_str,
+                'fecha': consulta.fecha.strftime('%d/%m/%Y %H:%M'),
+                'tipo_consulta': consulta.get_tipo_consulta_display(),
                 'veterinario': veterinario_nombre,
-                'temperatura': str(consulta.temperatura) if consulta.temperatura else '',
-                'peso': str(consulta.peso) if consulta.peso else '',
-                'frecuencia_cardiaca': str(consulta.frecuencia_cardiaca) if consulta.frecuencia_cardiaca else '',
-                'frecuencia_respiratoria': str(consulta.frecuencia_respiratoria) if consulta.frecuencia_respiratoria else '',
-                'otros': consulta.otros or '',
-                'diagnostico': consulta.diagnostico or '',
-                'tratamiento': consulta.tratamiento or '',
-                'notas': consulta.notas or ''
+                'temperatura': str(consulta.temperatura) if consulta.temperatura else '-',
+                'peso': str(consulta.peso) if consulta.peso else '-',
+                'frecuencia_cardiaca': str(consulta.frecuencia_cardiaca) if consulta.frecuencia_cardiaca else '-',
+                'frecuencia_respiratoria': str(consulta.frecuencia_respiratoria) if consulta.frecuencia_respiratoria else '-',
+                'otros': consulta.otros or '-',
+                'diagnostico': consulta.diagnostico,
+                'tratamiento': consulta.tratamiento or '-',
+                'medicamentos': medicamentos,
+                'notas': consulta.notas or '-',
             }
-        })
+        }
+        return JsonResponse(data)
     except Consulta.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Consulta no encontrada'}, status=404)
+        return JsonResponse({'success': False, 'message': 'Consulta no encontrada'}, status=404)
     except Exception as e:
-        print(f'❌ Error: {str(e)}')
-        import traceback
-        traceback.print_exc()
-        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 @login_required
 def guardar_consulta(request, paciente_id):

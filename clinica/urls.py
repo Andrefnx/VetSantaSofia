@@ -13,5 +13,5 @@ urlpatterns = [
     # ⭐ Nuevas rutas para pacientes
     path('veterinarios/pacientes/<int:paciente_id>/', views.ficha_paciente, name='ficha_paciente'),
     path('pacientes/<int:paciente_id>/consulta/crear/', views.crear_consulta, name='crear_consulta'),
-    path('pacientes/<int:paciente_id>/consulta/<int:consulta_id>/', views.detalle_consulta, name='detalle_consulta'),
+    path('pacientes/<int:paciente_id>/consulta/<int:consulta_id>/detalle/', views.detalle_consulta, name='detalle_consulta'),
 ]

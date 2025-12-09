@@ -1,55 +1,3 @@
-// Mostrar modal de detalle
-document.querySelectorAll('.timeline-btn').forEach((btn, idx) => {
-    btn.addEventListener('click', () => {
-        const consulta = consultas[idx] || consultas[0];
-        document.getElementById('detalleTemp').textContent = consulta.temp || '-';
-        document.getElementById('detallePeso').textContent = consulta.peso || '-';
-        document.getElementById('detalleFC').textContent = consulta.fc || '-';
-        document.getElementById('detalleFR').textContent = consulta.fr || '-';
-        document.getElementById('detalleOtros').textContent = consulta.otros || '-';
-        document.getElementById('detalleTitulo').innerHTML = `<i class="bi bi-clipboard2-pulse"></i> ${consulta.titulo}`;
-        document.getElementById('detalleContenido').innerHTML = `
-                <div class="detail-section">
-                    <div class="detail-section-title"><i class="bi bi-person-badge"></i> Médico Tratante</div>
-                    <p>${consulta.medico}</p>
-                </div>
-                <div class="detail-section">
-                    <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
-                    <p>${consulta.fecha}</p>
-                </div>
-                <div class="detail-section">
-                    <div class="detail-section-title"><i class="bi bi-clipboard2-check"></i> Diagnóstico</div>
-                    <p>${consulta.diagnostico}</p>
-                </div>
-                <div class="detail-section">
-                    <div class="detail-section-title"><i class="bi bi-capsule"></i> Tratamiento</div>
-                    <p>${consulta.tratamiento}</p>
-                </div>
-                <div class="detail-section">
-                    <div class="detail-section-title"><i class="bi bi-file-earmark-medical"></i> Exámenes</div>
-                    <ul style="padding-left:1.2em;">
-                        ${consulta.examenes.map(exam => `
-                            <li>
-                                <a href="${exam.url}" target="_blank" class="vet-link-exam">
-                                    <i class="bi bi-file-earmark-text"></i> ${exam.nombre}
-                                </a>
-                            </li>
-                        `).join('')}
-                    </ul>
-                </div>
-                <div class="detail-section">
-                    <div class="detail-section-title"><i class="bi bi-journal-text"></i> Notas</div>
-                    <p>${consulta.notas}</p>
-                </div>
-                <div class="detail-section">
-                    <div class="detail-section-title"><i class="bi bi-lightbulb"></i> Recomendaciones</div>
-                    <p>${consulta.recomendaciones}</p>
-                </div>
-            `;
-        openVetModal('detalleConsultaModal');
-    });
-});
-
 // Modal Nueva Consulta
 document.getElementById('btnNuevaConsulta').onclick = async function () {
     openVetModal('nuevaConsultaModal');
@@ -230,50 +178,58 @@ function getCookie(name) {
 
 // ⭐ Función para ver el detalle de una consulta
 function verDetalleConsulta(consultaId) {
-    // Buscar la consulta por ID (puedes hacer fetch al backend o usar datos cargados)
-    fetch(`/clinica/pacientes/${window.pacienteData.id}/consulta/${consultaId}/`)
+    const pacienteId = window.pacienteData.id;
+    
+    fetch(`/clinica/pacientes/${pacienteId}/consulta/${consultaId}/detalle/`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                const consulta = data.consulta;
+                const c = data.consulta;
                 
-                // Llenar el modal con los datos
-                document.getElementById('detalleTemp').textContent = consulta.temperatura ? consulta.temperatura + '°C' : '-';
-                document.getElementById('detallePeso').textContent = consulta.peso ? consulta.peso + ' kg' : '-';
-                document.getElementById('detalleFC').textContent = consulta.frecuencia_cardiaca ? consulta.frecuencia_cardiaca + ' lpm' : '-';
-                document.getElementById('detalleFR').textContent = consulta.frecuencia_respiratoria ? consulta.frecuencia_respiratoria + ' rpm' : '-';
-                document.getElementById('detalleOtros').textContent = consulta.otros || '-';
-                document.getElementById('detalleTitulo').innerHTML = `<i class="bi bi-clipboard2-pulse"></i> Consulta del ${consulta.fecha}`;
+                // Actualizar contenido del modal
+                document.getElementById('detalleTitulo').innerHTML = 
+                    `<i class="bi bi-clipboard2-pulse"></i> ${c.tipo_consulta} - ${c.fecha}`;
+                
+                // Datos vitales
+                document.getElementById('detalleTemp').textContent = c.temperatura;
+                document.getElementById('detallePeso').textContent = c.peso;
+                document.getElementById('detalleFC').textContent = c.frecuencia_cardiaca;
+                document.getElementById('detalleFR').textContent = c.frecuencia_respiratoria;
+                document.getElementById('detalleOtros').textContent = c.otros;
+                
+                // Contenido principal
+                let medicamentosHTML = '';
+                if (c.medicamentos && c.medicamentos.length > 0) {
+                    medicamentosHTML = '<p style="margin-top: 0.5rem; font-size: 0.85rem; color: #999;"><i class="bi bi-capsule"></i> <strong>Medicamentos utilizados:</strong> ';
+                    medicamentosHTML += c.medicamentos.map(med => med.nombre).join(', ');
+                    medicamentosHTML += '</p>';
+                }
+                
                 document.getElementById('detalleContenido').innerHTML = `
                     <div class="detail-section">
-                        <div class="detail-section-title"><i class="bi bi-person-badge"></i> Médico Tratante</div>
-                        <p>${consulta.veterinario}</p>
-                    </div>
-                    <div class="detail-section">
-                        <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
-                        <p>${consulta.fecha}</p>
+                        <div class="detail-section-title"><i class="bi bi-person-badge"></i> Veterinario</div>
+                        <p>${c.veterinario}</p>
                     </div>
                     <div class="detail-section">
                         <div class="detail-section-title"><i class="bi bi-clipboard2-check"></i> Diagnóstico</div>
-                        <p>${consulta.diagnostico || 'No especificado'}</p>
+                        <p>${c.diagnostico}</p>
                     </div>
                     <div class="detail-section">
                         <div class="detail-section-title"><i class="bi bi-capsule"></i> Tratamiento</div>
-                        <p>${consulta.tratamiento || 'No especificado'}</p>
+                        <p>${c.tratamiento}</p>
+                        ${medicamentosHTML}
                     </div>
                     <div class="detail-section">
                         <div class="detail-section-title"><i class="bi bi-journal-text"></i> Notas</div>
-                        <p>${consulta.notas || 'Sin notas'}</p>
+                        <p>${c.notas}</p>
                     </div>
                 `;
                 
+                // Mostrar modal
                 openVetModal('detalleConsultaModal');
             }
         })
-        .catch(error => {
-            console.error('❌ Error al cargar consulta:', error);
-            alert('Error al cargar la consulta');
-        });
+        .catch(error => console.error('Error:', error));
 }
 
 // Agregar insumo a la lista de utilizados
