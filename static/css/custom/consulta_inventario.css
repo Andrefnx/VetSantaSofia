@@ -16,6 +16,50 @@
 }
 
 /* ============================================================
+   DATOS FISIOLÓGICOS - ULTRA COMPACTOS
+============================================================ */
+
+.col-md-3 .detail-section {
+    margin-bottom: 0.5rem !important;
+    padding: 0.4rem 0.6rem !important;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.col-md-3 .detail-section-title {
+    font-size: 0.7rem !important;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 0.25rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.col-md-3 .detail-section-title i {
+    font-size: 0.75rem;
+    margin-right: 0.25rem;
+    color: var(--primary-color);
+}
+
+.col-md-3 .detail-section p {
+    margin: 0 !important;
+    font-size: 0.85rem;
+    color: #2c3e50;
+}
+
+.col-md-3 .detail-section input.form-control {
+    padding: 0.35rem 0.5rem !important;
+    font-size: 0.85rem !important;
+    height: auto !important;
+    border: 1px solid #dee2e6;
+}
+
+.col-md-3 hr {
+    margin: 0.5rem 0 !important;
+    border-top: 1px solid #dee2e6;
+}
+
+/* ============================================================
    INVENTARIO SELECTOR COMPACT
 ============================================================ */
 
@@ -73,7 +117,7 @@
 }
 
 .inventario-item:hover {
-    border-color: #4CAF50;
+    border-color: var(--primary-color);
     background: #f8fdf8;
     box-shadow: 0 1px 4px rgba(76, 175, 80, 0.15);
 }
@@ -191,7 +235,7 @@
 }
 
 .insumos-title i {
-    color: #4CAF50;
+    color: var(--primary-color);
 }
 
 #insumosSeleccionados {
@@ -252,7 +296,7 @@
 
 .medicamento-dosis i {
     font-size: 0.7rem;
-    color: #4CAF50;
+    color: var(--primary-color);
 }
 
 .medicamento-dosis span {
@@ -262,11 +306,11 @@
 /* ⭐ Botón remover - IMPORTANTE */
 .btn-remover {
     border: none !important;
-    background: #dc3545 !important;
+    background: var(--danger-color) !important;
     color: white !important;
     width: 30px;
     height: 30px;
-    border-radius: 10px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -277,7 +321,7 @@
 }
 
 .btn-remover:hover {
-    background: #c82333 !important;
+    background: var(--danger-hover) !important;
     transform: translateY(-2px) !important;
 }
 
@@ -372,11 +416,11 @@
 }
 
 .modal-alert-success::before {
-    background: #4CAF50;
+    background: var(--primary-color);
 }
 
 .modal-alert-success i:first-child {
-    color: #4CAF50;
+    color: var(--primary-color);
 }
 
 .modal-alert-warning {
@@ -399,11 +443,11 @@
 }
 
 .modal-alert-error::before {
-    background: #f44336;
+    background: var(--danger-color);
 }
 
 .modal-alert-error i:first-child {
-    color: #f44336;
+    color: var(--danger-color);
 }
 
 .modal-alert-info {
