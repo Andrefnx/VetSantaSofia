@@ -223,7 +223,7 @@ async function cargarInventario() {
     inventarioList.innerHTML = '<p style="text-align:center;color:#888;padding:1rem;font-size:0.85rem;"><i class="bi bi-hourglass-split"></i> Cargando...</p>';
     
     try {
-        // URL CORREGIDA - sin /hospital/
+        // URL actualizada según la nueva estructura
         const response = await fetch('/inventario/api/productos/');
         
         if (!response.ok) {

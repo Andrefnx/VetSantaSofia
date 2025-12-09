@@ -9,6 +9,12 @@
     --border-color: #e0e0e0;
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+    /* Z-index hierarchy */
+    --z-sidebar: 1000;
+    --z-header: 1001;
+    --z-dropdown: 1002;
+    --z-modal-overlay: 9998;
+    --z-modal: 9999;
 }
 h1 {
     margin-bottom: 1.5rem;
@@ -423,4 +429,79 @@ MODALES PERSONALIZADOS
     font-size: 0.95em;
     margin-right: 8px;
     margin-top: 8px;
+}
+
+/* Sidebar */
+.sidebar {
+    z-index: var(--z-sidebar);
+}
+
+/* Header/Navbar */
+.navbar,
+.header {
+    z-index: var(--z-header);
+}
+
+/* Dropdowns y menus */
+.dropdown-menu,
+.actions-wheel {
+    z-index: var(--z-dropdown);
+}
+
+/* Modal overlay - debe estar sobre TODO */
+.vet-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: var(--z-modal-overlay) !important; /* Fuerza el z-index */
+}
+
+.vet-modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Modal contenido */
+.vet-custom-modal {
+    position: relative;
+    z-index: var(--z-modal) !important; /* Fuerza el z-index */
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    max-width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.vet-modal-overlay.show .vet-custom-modal {
+    transform: scale(1);
+}
+
+/* Asegurar que el backdrop del modal esté sobre el sidebar */
+.modal-backdrop {
+    z-index: var(--z-modal-overlay) !important;
+}
+
+.modal {
+    z-index: var(--z-modal) !important;
+}
+
+/* Para modales de Bootstrap si los usas */
+.modal-open {
+    overflow: hidden;
+}
+
+.modal-open .sidebar {
+    z-index: var(--z-sidebar) !important; /* Mantener sidebar debajo */
 }
