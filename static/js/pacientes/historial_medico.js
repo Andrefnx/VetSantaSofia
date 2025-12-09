@@ -213,67 +213,34 @@ window.onclick = function (event) {
 
 // Cargar inventario para el selector de tratamiento
 async function cargarInventario() {
-    const inventarioList = document.getElementById('inventarioList');
-    
-    if (!inventarioList) {
-        console.error('No se encontró el elemento #inventarioList');
-        return;
-    }
-    
-    inventarioList.innerHTML = '<p style="text-align:center;color:#888;padding:1rem;font-size:0.85rem;"><i class="bi bi-hourglass-split"></i> Cargando...</p>';
-    
     try {
-        // URL actualizada según la nueva estructura
         const response = await fetch('/inventario/api/productos/');
+        const data = await response.json();
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        console.log('📦 Respuesta API:', data);
         
-        const productos = await response.json();
-        
-        console.log('Productos cargados:', productos.length);
-        
-        inventarioList.innerHTML = '';
-        
-        if (productos.length === 0) {
-            inventarioList.innerHTML = '<p style="text-align:center;color:#888;padding:1rem;font-size:0.85rem;">No hay productos en inventario</p>';
+        // ⭐ Verificar que la respuesta es válida
+        if (!data.success) {
+            console.error('❌ Error del servidor:', data.error);
             return;
         }
         
-        productos.forEach(producto => {
-            const item = document.createElement('div');
-            item.className = 'inventario-item';
-            item.dataset.productoId = producto.id;
-            item.innerHTML = `
-                <div class="inventario-item-info">
-                    <div class="inventario-item-nombre">${producto.nombre}</div>
-                    <div class="inventario-item-stock">Stock: ${producto.stock}</div>
-                </div>
-                <button type="button" class="inventario-item-btn" 
-                    data-id="${producto.id}" 
-                    data-nombre="${producto.nombre}"
-                    data-dosis="${producto.dosis_ml || 0}"
-                    data-peso="${producto.peso_kg || 1}">
-                    +
-                </button>
-            `;
-            inventarioList.appendChild(item);
-        });
+        // ⭐ Verificar que productos es un array
+        if (!Array.isArray(data.productos)) {
+            console.error('❌ productos no es un array:', typeof data.productos);
+            return;
+        }
         
-        // Agregar event listeners a los botones
-        document.querySelectorAll('.inventario-item-btn').forEach(btn => {
-            btn.addEventListener('click', agregarInsumo);
+        console.log(`✅ ${data.productos.length} productos cargados`);
+        
+        // Ahora sí, iterar sobre los productos
+        data.productos.forEach(producto => {
+            // Tu código para procesar cada producto
+            console.log('Producto:', producto.nombre);
         });
         
     } catch (error) {
-        console.error('Error completo:', error);
-        inventarioList.innerHTML = `
-            <p style="text-align:center;color:#dc3545;padding:1rem;font-size:0.85rem;">
-                Error al cargar inventario<br>
-                <small>${error.message}</small>
-            </p>
-        `;
+        console.error('❌ Error de red:', error);
     }
 }
 
