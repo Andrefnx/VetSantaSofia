@@ -6,6 +6,7 @@
 {% block styles %}
 <link rel="stylesheet" href="{% static 'css/base/vet-custom.css' %}">
 <link rel="stylesheet" href="{% static 'css/custom/pacientes.css' %}">
+<link rel="stylesheet" href="{% static 'css/custom/consulta_inventario.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -559,4 +560,18 @@
 <script src="{% static 'js/base/tabs.js' %}"></script>
 <script src="{% static 'js/pacientes/historial_medico.js' %}"></script>
 <script src="{% static 'js/pacientes/editar_ficha.js' %}"></script>
+<script src="{% static 'js/pacientes/inventario_consulta.js' %}"></script>
+
+<script>
+    window.pacienteData = {
+        id: {{ paciente.id }},
+        nombre: "{{ paciente.nombre|escapejs }}",
+        especie: "{{ paciente.especie|lower|escapejs }}",
+        peso: {{ paciente.ultimo_peso|default:"null" }},
+        edad: {{ paciente.edad|default:"null" }},
+        edad_meses: {{ paciente.edad_meses|default:"null" }}
+    };
+    
+    console.log('📋 Datos del paciente cargados:', window.pacienteData);
+</script>
 {% endblock %}

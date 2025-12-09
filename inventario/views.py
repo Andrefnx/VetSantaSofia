@@ -9,6 +9,7 @@ import json
 import pytz
 import traceback
 from .models import Insumo
+from django.db.models import Q
 
 @login_required
 def inventario(request):
@@ -338,29 +339,90 @@ def modificar_stock_insumo(request, insumo_id):
 
 @require_http_methods(["GET"])
 def api_productos(request):
-    """API para obtener lista de productos del inventario"""
+    """
+    API para obtener productos del inventario
+    Filtros disponibles:
+    - especie: perro, gato, ambos
+    - peso: peso del paciente en kg (para filtrar por rango)
+    """
     try:
-        insumos = Insumo.objects.all()
+        # Obtener parámetros de filtro
+        especie_filtro = request.GET.get('especie', '').lower()
+        peso_filtro = request.GET.get('peso', None)
         
-        productos = []
-        for insumo in insumos:
-            productos.append({
-                'id': insumo.idInventario,
-                'nombre': insumo.medicamento,
-                'sku': insumo.sku or '',
-                'tipo': insumo.tipo or '',
-                'precio': float(insumo.precio_venta) if insumo.precio_venta else 0,
-                'stock': insumo.stock_actual,
-                'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml else 0,
-                'peso_kg': float(insumo.peso_kg) if insumo.peso_kg else 1,
+        # Query base
+        productos = Insumo.objects.filter(stock_actual__gt=0)
+        
+        # Filtrar por especie
+        if especie_filtro:
+            # Incluir productos para la especie específica o "ambos" o "todos"
+            productos = productos.filter(
+                Q(especie__iexact=especie_filtro) | 
+                Q(especie__iexact='ambos') | 
+                Q(especie__iexact='todos') |
+                Q(especie__isnull=True) |
+                Q(especie='')
+            )
+        
+        # Filtrar por peso (si tiene rango de peso definido)
+        if peso_filtro:
+            try:
+                peso = float(peso_filtro)
+                # Incluir productos sin rango de peso O que el peso esté dentro del rango
+                productos = productos.filter(
+                    Q(tiene_rango_peso=False) |
+                    Q(tiene_rango_peso__isnull=True) |
+                    (
+                        Q(tiene_rango_peso=True) &
+                        Q(peso_min_kg__lte=peso) &
+                        Q(peso_max_kg__gte=peso)
+                    )
+                )
+            except ValueError:
+                pass  # Si el peso no es válido, ignorar este filtro
+        
+        # Construir respuesta
+        productos_data = []
+        for producto in productos:
+            productos_data.append({
+                'id': producto.idInventario,
+                'nombre': producto.medicamento,
+                'marca': producto.marca or '',
+                'especie': producto.especie or 'Todos',
+                'formato': producto.formato or '',
+                'stock': producto.stock_actual,
+                'precio': float(producto.precio_venta) if producto.precio_venta else 0,
+                'dosis_display': producto.get_dosis_display(),
+                
+                # Datos para cálculo de dosis
+                'dosis_ml': float(producto.dosis_ml) if producto.dosis_ml else None,
+                'cantidad_pastillas': producto.cantidad_pastillas,
+                'unidades_pipeta': producto.unidades_pipeta,
+                'peso_kg': float(producto.peso_kg) if producto.peso_kg else None,
+                
+                # Rango de peso
+                'tiene_rango_peso': producto.tiene_rango_peso,
+                'peso_min_kg': float(producto.peso_min_kg) if producto.peso_min_kg else None,
+                'peso_max_kg': float(producto.peso_max_kg) if producto.peso_max_kg else None,
             })
         
-        return JsonResponse(productos, safe=False)
+        return JsonResponse({
+            'success': True,
+            'productos': productos_data,
+            'total': len(productos_data),
+            'filtros_aplicados': {
+                'especie': especie_filtro or 'todos',
+                'peso': peso_filtro
+            }
+        })
+        
     except Exception as e:
-        import traceback
-        print(f"Error en api_productos: {str(e)}")
+        print(f"❌ Error en api_productos: {str(e)}")
         traceback.print_exc()
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 @login_required
 def inventario_view(request):

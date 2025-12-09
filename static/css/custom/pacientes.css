@@ -730,26 +730,6 @@ td[colspan][style*="text-align: center"] {
     min-height: 80px;
 }
 
-.inventario-selector-compact {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.inventario-selector-compact input[type="text"] {
-    font-size: 0.85rem !important;
-    padding: 0.4rem !important;
-}
-
-.inventario-list-compact {
-    max-height: 250px;
-    overflow-y: auto;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    padding: 0.4rem;
-    background: #f8f9fa;
-}
-
 /* Items del inventario */
 .inventario-item {
     display: flex;
