@@ -1,67 +1,118 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-from .models import Cita
-from hospital.models import Mascota
+from django.views.decorators.csrf import csrf_exempt
 import json
-from datetime import datetime
-from django.contrib.auth import get_user_model
+from datetime import date
+from pacientes.models import Paciente
+from .models import Cita
 
 @login_required
 def agenda(request):
-    horas = ["08","09","10","11","12","13","14","15","16","17"]
-    minutos = ["00", "15", "30", "45"]
+    """Vista principal de la agenda"""
+    citas = Cita.objects.select_related('paciente', 'veterinario').all()
+    pacientes = Paciente.objects.filter(activo=True).select_related('propietario')
+    
+    context = {
+        'citas': citas,
+        'pacientes': pacientes,
+    }
+    return render(request, 'agenda/agenda.html', context)
 
-    mascotas = Mascota.objects.all()
-    User = get_user_model()
-    veterinarios = User.objects.filter(rol="veterinario")
-
-    return render(request, 'agenda/agenda.html', {
-        "horas": horas,
-        "minutos": minutos,
-        "mascotas": mascotas,
-        'veterinarios': veterinarios,
-    })
 @login_required
-def citas_dia(request, fecha):
-    fecha = datetime.strptime(fecha, "%Y-%m-%d").date()
-    citas = Cita.objects.filter(fecha=fecha)
-
-    data = []
-    for c in citas:
-        data.append({
-            "id": c.id,
-            "hora": c.hora.strftime("%H:%M"),
-            "duracion": c.duracion,
-            "tipo": c.get_tipo_display(),
-            "mascota": c.mascota.nombre,
-            "veterinario": f"{c.veterinario.nombre} {c.veterinario.apellido}" if c.veterinario else "",
-            "notas": c.notas or "",
-        })
-
-    return JsonResponse({"citas": data})
-
+def citas_dia(request, year, month, day):
+    """Vista para obtener citas de un día específico"""
+    fecha = date(year, month, day)
+    citas = Cita.objects.filter(fecha=fecha).select_related('paciente', 'veterinario')
+    
+    citas_data = [{
+        'id': cita.id,
+        'paciente': cita.paciente.nombre,
+        'veterinario': f"{cita.veterinario.first_name} {cita.veterinario.last_name}" if cita.veterinario else 'Sin asignar',
+        'hora_inicio': cita.hora_inicio.strftime('%H:%M'),
+        'hora_fin': cita.hora_fin.strftime('%H:%M') if cita.hora_fin else '',
+        'tipo': cita.get_tipo_display(),
+        'estado': cita.get_estado_display(),
+        'motivo': cita.motivo,
+    } for cita in citas]
+    
+    return JsonResponse({'success': True, 'citas': citas_data})
 
 @csrf_exempt
 @login_required
 def crear_cita(request):
-    if request.method == "POST":
-        data = json.loads(request.body)
-        mascota = Mascota.objects.get(id=data["mascota_id"])
-        User = get_user_model()
-        veterinario = User.objects.get(id=data["veterinario_id"])  # <-- usa el id enviado
+    """Vista para crear una nueva cita"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            cita = Cita.objects.create(
+                paciente_id=data.get('paciente_id'),
+                veterinario_id=data.get('veterinario_id'),
+                fecha=data.get('fecha'),
+                hora_inicio=data.get('hora_inicio'),
+                hora_fin=data.get('hora_fin'),
+                tipo=data.get('tipo', 'consulta'),
+                motivo=data.get('motivo', ''),
+                notas=data.get('notas', ''),
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'cita_id': cita.id,
+                'message': 'Cita creada exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
-        nueva = Cita.objects.create(
-            mascota=mascota,
-            veterinario=veterinario,
-            fecha=data["fecha"],
-            hora=data["hora"],
-            duracion=data["duracion"],
-            tipo=data["tipo"],
-            notas=data.get("notas", ""),
-        )
+@csrf_exempt
+@login_required
+def editar_cita(request, cita_id):
+    """Vista para editar una cita"""
+    if request.method == 'POST':
+        try:
+            cita = Cita.objects.get(id=cita_id)
+            data = json.loads(request.body)
+            
+            cita.paciente_id = data.get('paciente_id', cita.paciente_id)
+            cita.veterinario_id = data.get('veterinario_id', cita.veterinario_id)
+            cita.fecha = data.get('fecha', cita.fecha)
+            cita.hora_inicio = data.get('hora_inicio', cita.hora_inicio)
+            cita.hora_fin = data.get('hora_fin', cita.hora_fin)
+            cita.tipo = data.get('tipo', cita.tipo)
+            cita.estado = data.get('estado', cita.estado)
+            cita.motivo = data.get('motivo', cita.motivo)
+            cita.notas = data.get('notas', cita.notas)
+            cita.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Cita actualizada exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
-        return JsonResponse({"success": True, "id": nueva.id})
-
-    return JsonResponse({"error": "Método no permitido"}, status=405)
+@csrf_exempt
+@login_required
+def eliminar_cita(request, cita_id):
+    """Vista para eliminar una cita"""
+    if request.method == 'POST':
+        try:
+            cita = Cita.objects.get(id=cita_id)
+            cita.delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Cita eliminada exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)

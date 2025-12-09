@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
@@ -7,47 +7,26 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 def login_view(request):
+    """Vista de login - NO debe tener @login_required"""
     if request.user.is_authenticated:
-        return redirect('dashboard')
+        return redirect('dashboard:dashboard')
     
     if request.method == 'POST':
-        rut = request.POST.get('rut_input')
+        rut = request.POST.get('rut')
         password = request.POST.get('password')
         
-        # Debug: verifica que los datos lleguen
-        print(f"RUT recibido: {rut}")
-        print(f"Password recibido: {'***' if password else 'vacío'}")
-        
-        # Intentar autenticar con el RUT como username
         user = authenticate(request, username=rut, password=password)
         
-        # Si no funciona, intenta buscar el usuario directamente
-        if user is None:
-            try:
-                user_obj = User.objects.get(rut=rut)
-                print(f"Usuario encontrado: {user_obj.rut}")
-                # Verificar contraseña manualmente
-                if user_obj.check_password(password):
-                    auth_login(request, user_obj)
-                    messages.success(request, f'Bienvenido {user_obj.nombre} {user_obj.apellido}')
-                    return redirect('dashboard')
-                else:
-                    print("Contraseña incorrecta")
-                    messages.error(request, 'RUT o contraseña incorrectos')
-            except User.DoesNotExist:
-                print("Usuario no encontrado")
-                messages.error(request, 'RUT o contraseña incorrectos')
+        if user is not None:
+            login(request, user)
+            return redirect('dashboard:dashboard')
         else:
-            auth_login(request, user)
-            messages.success(request, f'Bienvenido {user.nombre} {user.apellido}')
-            return redirect('dashboard')
+            messages.error(request, 'RUT o contraseña incorrectos')
     
     return render(request, 'validacion/login.html')
 
 def register_view(request):
-    if request.user.is_authenticated:
-        return redirect('dashboard')
-    
+    """Vista de registro"""
     if request.method == 'POST':
         rut = request.POST.get('rut_input')
         nombre = request.POST.get('nombre')
@@ -96,8 +75,6 @@ def register_view(request):
     return render(request, 'validacion/register.html')
 
 def logout_view(request):
-    """Vista de logout que cierra sesión y redirige inmediatamente al login"""
-    if request.method == 'POST':
-        auth_logout(request)
-        messages.success(request, 'Has cerrado sesión exitosamente')
+    """Vista de logout"""
+    logout(request)
     return redirect('login')

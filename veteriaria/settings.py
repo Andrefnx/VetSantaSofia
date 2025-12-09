@@ -38,10 +38,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
-    'dashboard',
+     'dashboard',
     'caja',
     'gestion',
-    'hospital',
+    'hospital',  
+    'inventario',
+    'servicios',  
+    'pacientes',
+    'clinica',    
     'login',
     'cuentas',
     'agenda',
@@ -130,7 +134,6 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     BASE_DIR / 'static',  # Carpeta static global
-    BASE_DIR / 'hospital/Static',
       BASE_DIR / 'agenda/Static',
 ]
 
@@ -145,10 +148,10 @@ AUTHENTICATION_BACKENDS = ['cuentas.auth_backend.RUTAuthBackend']
 
 
 
-LOGOUT_REDIRECT_URL = 'login'
-LOGIN_URL = 'login'  
-LOGIN_REDIRECT_URL = 'dashboard'
-
+# Login/Logout URLs
+LOGIN_URL = 'login'  # Cambiado de '/login/' a 'login'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = 'login'  # Cambiado de '/login/' a 'login'
 
 AUTHENTICATION_BACKENDS = [
     'cuentas.backends.RutBackend',  # Backend personalizado para RUT

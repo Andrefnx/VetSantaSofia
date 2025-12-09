@@ -12,7 +12,7 @@
     <div class="sidebar-logo">
         <!-- Logo Header -->
         <div class="logo-header" data-background-color="dark">
-            <a href="{% url 'dashboard' %}" class="logo">
+            <a href="{% url 'dashboard:dashboard' %}" class="logo">
                 <img src="{% static 'img/logo.png' %}" alt="navbar brand" class="navbar-brand" height="40" />
             </a>
             <div class="nav-toggle">
@@ -35,8 +35,8 @@
             <ul class="nav nav-secondary">
 
                 <!-- DASHBOARD -->
-                <li class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                    <a href="{% url 'dashboard' %}">
+                <li class="nav-item {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}">
+                    <a href="{% url 'dashboard:dashboard' %}">
                         <i class="fas fa-home"></i>
                         <p>Dashboard</p>
                     </a>
@@ -56,40 +56,46 @@
                 </li>
 
                 <!-- SECCIÓN: AGENDA -->
-                <li class="nav-item {% if request.resolver_match.url_name == 'agenda' %}active{% endif %}">
+                <li class="nav-item {% if request.resolver_match.app_name == 'agenda' %}active{% endif %}">
                     <a href="{% url 'agenda:agenda' %}">
                         <i class="fas fa-calendar-alt"></i>
                         <p>Agenda</p>
                     </a>
                 </li>
 
-
-
                 <!-- SECCIÓN: PACIENTES -->
-                <li class="nav-item {% if request.resolver_match.url_name == 'pacientes' %}active{% endif %}">
-                    <a href="{% url 'hospital:pacientes' %}">
+                <li class="nav-item {% if request.resolver_match.app_name == 'pacientes' %}active{% endif %}">
+                    <a href="{% url 'pacientes:pacientes' %}">
                         <i class="fas fa-paw"></i>
                         <p>Pacientes</p>
                     </a>
                 </li>
 
                 <!-- SECCIÓN: INVENTARIO -->
-                <li class="nav-item {% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">
-                    <a href="{% url 'hospital:inventario' %}">
+                <li class="nav-item {% if request.resolver_match.app_name == 'inventario' %}active{% endif %}">
+                    <a href="{% url 'inventario:inventario' %}">
                         <i class="bi bi-box-seam"></i>
                         <p>Inventario</p>
                     </a>
                 </li>
+
                 <!-- SECCIÓN: SERVICIOS -->
-                <li class="nav-item {% if request.resolver_match.url_name == 'servicios' %}active{% endif %}">
-                    <a href="{% url 'hospital:servicios' %}">
+                <li class="nav-item {% if request.resolver_match.app_name == 'servicios' %}active{% endif %}">
+                    <a href="{% url 'servicios:servicios' %}">
                         <i class="bi bi-prescription2"></i>
                         <p>Servicios</p>
                     </a>
                 </li>
 
+                <!-- SECCIÓN: HOSPITALIZACIÓN -->
+                <li class="nav-item {% if request.resolver_match.app_name == 'hospital' %}active{% endif %}">
+                    <a href="{% url 'hospital:hospital_view' %}">
+                        <i class="fas fa-hospital"></i>
+                        <p>Hospitalización</p>
+                    </a>
+                </li>
 
-
+            </ul>
         </div>
     </div>
 </div>
