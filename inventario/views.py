@@ -73,29 +73,86 @@ def editar_insumo(request, insumo_id):
             insumo = get_object_or_404(Insumo, idInventario=insumo_id)
             data = json.loads(request.body)
             
-            # Actualizar campos
-            insumo.medicamento = data.get('medicamento', insumo.medicamento)
+            print(f"📝 Datos recibidos para editar insumo {insumo_id}:", data)
+            
+            # Guardar stock anterior para detectar cambios
+            stock_anterior = insumo.stock_actual
+            
+            # ⭐ Actualizar campos - aceptar nombre_comercial o medicamento
+            if 'nombre_comercial' in data:
+                insumo.medicamento = data['nombre_comercial']
+            elif 'medicamento' in data:
+                insumo.medicamento = data['medicamento']
+                
             insumo.sku = data.get('sku', insumo.sku)
             insumo.tipo = data.get('tipo', insumo.tipo)
             insumo.descripcion = data.get('descripcion', insumo.descripcion)
             insumo.especie = data.get('especie', insumo.especie)
-            insumo.precio_venta = Decimal(data.get('precio_venta', insumo.precio_venta))
-            insumo.dosis_ml = Decimal(data.get('dosis_ml')) if data.get('dosis_ml') else None
-            insumo.peso_kg = Decimal(data.get('peso_kg')) if data.get('peso_kg') else None
-            insumo.ml_contenedor = Decimal(data.get('ml_contenedor')) if data.get('ml_contenedor') else None
+            
+            if 'precio_venta' in data and data['precio_venta']:
+                insumo.precio_venta = Decimal(str(data['precio_venta']))
+                
+            # ⭐ DETECTAR CAMBIO EN STOCK
+            if 'stock_actual' in data:
+                stock_nuevo = int(data['stock_actual'])
+                insumo.stock_actual = stock_nuevo
+                
+                # Si aumentó el stock, es una entrada
+                if stock_nuevo > stock_anterior:
+                    insumo.ultimo_ingreso = timezone.now()
+                    insumo.tipo_ultimo_movimiento = 'entrada'
+                    print(f"✅ Stock aumentó de {stock_anterior} a {stock_nuevo} - Registrando entrada")
+                # Si disminuyó, es una salida
+                elif stock_nuevo < stock_anterior:
+                    insumo.tipo_ultimo_movimiento = 'salida'
+                    print(f"📤 Stock disminuyó de {stock_anterior} a {stock_nuevo} - Registrando salida")
+                else:
+                    # Stock no cambió, solo actualización de datos
+                    insumo.tipo_ultimo_movimiento = insumo.tipo_ultimo_movimiento or 'entrada'
+                    print(f"ℹ️ Stock no cambió ({stock_anterior})")
+                
+            if 'dosis_ml' in data:
+                insumo.dosis_ml = Decimal(str(data['dosis_ml'])) if data['dosis_ml'] else None
+            if 'peso_kg' in data:
+                insumo.peso_kg = Decimal(str(data['peso_kg'])) if data['peso_kg'] else None
+            if 'ml_contenedor' in data:
+                insumo.ml_contenedor = Decimal(str(data['ml_contenedor'])) if data['ml_contenedor'] else None
+                
             insumo.precauciones = data.get('precauciones', insumo.precauciones)
             insumo.contraindicaciones = data.get('contraindicaciones', insumo.contraindicaciones)
             insumo.efectos_adversos = data.get('efectos_adversos', insumo.efectos_adversos)
             
+            # ⭐ Actualizar metadata
+            insumo.ultimo_movimiento = timezone.now()
+            insumo.usuario_ultimo_movimiento = request.user
+            
             insumo.save()
+            
+            # Obtener datos actualizados para debug
+            local_tz = pytz.timezone('America/Santiago')
+            ultimo_ingreso = insumo.ultimo_ingreso.astimezone(local_tz) if insumo.ultimo_ingreso else None
+            ultimo_movimiento = insumo.ultimo_movimiento.astimezone(local_tz) if insumo.ultimo_movimiento else None
+            
+            print(f"✅ Insumo {insumo_id} actualizado correctamente")
+            print(f"📊 Último ingreso: {ultimo_ingreso}")
+            print(f"📊 Último movimiento: {ultimo_movimiento}")
+            print(f"📊 Tipo: {insumo.tipo_ultimo_movimiento}")
             
             return JsonResponse({
                 'success': True,
-                'message': 'Insumo actualizado exitosamente'
+                'message': 'Insumo actualizado exitosamente',
+                'debug': {
+                    'ultimo_ingreso': ultimo_ingreso.strftime('%d/%m/%Y %H:%M') if ultimo_ingreso else '-',
+                    'ultimo_movimiento': ultimo_movimiento.strftime('%d/%m/%Y %H:%M') if ultimo_movimiento else '-',
+                    'tipo_movimiento_display': dict(Insumo.TIPO_MOVIMIENTO_CHOICES).get(insumo.tipo_ultimo_movimiento, '-'),
+                    'usuario': insumo.get_usuario_nombre_completo() if insumo.usuario_ultimo_movimiento else '(sin registro)',
+                    'stock_anterior': stock_anterior,
+                    'stock_nuevo': insumo.stock_actual
+                }
             })
             
         except Exception as e:
-            print(f"Error al editar insumo: {str(e)}")
+            print(f"❌ Error al editar insumo: {str(e)}")
             traceback.print_exc()
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
     
@@ -180,37 +237,65 @@ def modificar_stock_insumo(request, insumo_id):
             insumo = get_object_or_404(Insumo, idInventario=insumo_id)
             data = json.loads(request.body)
             
-            tipo_movimiento = data.get('tipo_movimiento')
-            cantidad = int(data.get('cantidad', 0))
-            
-            if cantidad <= 0:
-                return JsonResponse({
-                    'success': False,
-                    'error': 'La cantidad debe ser mayor a 0'
-                }, status=400)
-            
-            stock_anterior = insumo.stock_actual
-            
-            if tipo_movimiento == 'entrada':
-                insumo.stock_actual += cantidad
-                insumo.ultimo_ingreso = timezone.now()
-            elif tipo_movimiento == 'salida':
-                if insumo.stock_actual < cantidad:
+            # ⭐ NUEVO: Aceptar stock_actual directamente (desde modal de stock rápido)
+            if 'stock_actual' in data:
+                stock_nuevo = int(data['stock_actual'])
+                stock_anterior = insumo.stock_actual
+                
+                # Determinar tipo de movimiento
+                if stock_nuevo > stock_anterior:
+                    tipo_movimiento = 'entrada'
+                    cantidad = stock_nuevo - stock_anterior
+                    insumo.ultimo_ingreso = timezone.now()
+                elif stock_nuevo < stock_anterior:
+                    tipo_movimiento = 'salida'
+                    cantidad = stock_anterior - stock_nuevo
+                else:
                     return JsonResponse({
                         'success': False,
-                        'error': f'Stock insuficiente. Stock actual: {insumo.stock_actual}'
+                        'error': 'El stock no ha cambiado'
                     }, status=400)
-                insumo.stock_actual -= cantidad
+                
+                insumo.stock_actual = stock_nuevo
+                
             else:
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Tipo de movimiento no válido'
-                }, status=400)
+                # Método anterior con tipo_movimiento y cantidad
+                tipo_movimiento = data.get('tipo_movimiento')
+                cantidad = int(data.get('cantidad', 0))
+                
+                if cantidad <= 0:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'La cantidad debe ser mayor a 0'
+                    }, status=400)
+                
+                stock_anterior = insumo.stock_actual
+                
+                if tipo_movimiento == 'entrada':
+                    insumo.stock_actual += cantidad
+                    insumo.ultimo_ingreso = timezone.now()
+                elif tipo_movimiento == 'salida':
+                    if insumo.stock_actual < cantidad:
+                        return JsonResponse({
+                            'success': False,
+                            'error': f'Stock insuficiente. Stock actual: {insumo.stock_actual}'
+                        }, status=400)
+                    insumo.stock_actual -= cantidad
+                else:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Tipo de movimiento no válido'
+                    }, status=400)
             
             insumo.ultimo_movimiento = timezone.now()
             insumo.tipo_ultimo_movimiento = tipo_movimiento
             insumo.usuario_ultimo_movimiento = request.user
             insumo.save()
+            
+            # Datos para debug
+            local_tz = pytz.timezone('America/Santiago')
+            ultimo_ingreso = insumo.ultimo_ingreso.astimezone(local_tz) if insumo.ultimo_ingreso else None
+            ultimo_movimiento = insumo.ultimo_movimiento.astimezone(local_tz) if insumo.ultimo_movimiento else None
             
             return JsonResponse({
                 'success': True,
@@ -218,7 +303,13 @@ def modificar_stock_insumo(request, insumo_id):
                 'stock_anterior': stock_anterior,
                 'stock_actual': insumo.stock_actual,
                 'cantidad': cantidad,
-                'tipo_movimiento': tipo_movimiento
+                'tipo_movimiento': tipo_movimiento,
+                'debug': {
+                    'ultimo_ingreso': ultimo_ingreso.strftime('%d/%m/%Y %H:%M') if ultimo_ingreso else '-',
+                    'ultimo_movimiento': ultimo_movimiento.strftime('%d/%m/%Y %H:%M') if ultimo_movimiento else '-',
+                    'tipo_movimiento_display': dict(Insumo.TIPO_MOVIMIENTO_CHOICES).get(tipo_movimiento, '-'),
+                    'usuario': insumo.get_usuario_nombre_completo() if insumo.usuario_ultimo_movimiento else '(sin registro)'
+                }
             })
             
         except Exception as e:
@@ -226,7 +317,7 @@ def modificar_stock_insumo(request, insumo_id):
             traceback.print_exc()
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
     
-    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+    return JsonResponse({'success': False, 'error': 'Método no permitado'}, status=405)
 
 @require_http_methods(["GET"])
 def api_productos(request):
