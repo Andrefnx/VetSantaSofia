@@ -442,6 +442,19 @@
                             <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
                             <p id="fechaConsulta">{% now "d/m/Y" %}</p>
                         </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-list-check"></i> Tipo de Consulta</div>
+                            <select class="form-control" name="tipo_consulta" required>
+                                <option value="">Seleccione tipo</option>
+                                <option value="consulta_general">Consulta general</option>
+                                <option value="urgencia">Urgencia</option>
+                                <option value="vacuna">Vacuna</option>
+                                <option value="desparacitacion">Desparacitación</option>
+                                <option value="control">Control</option>
+                                <option value="cirugia">Cirugía</option>
+                                <option value="otros">Otros</option>
+                            </select>
+                        </div>
                         <hr style="margin: 0.75rem 0; border-top: 1px solid #dee2e6;">
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-thermometer-half"></i> Temperatura</div>

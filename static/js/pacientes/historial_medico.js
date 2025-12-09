@@ -122,6 +122,7 @@ document.getElementById('formNuevaConsulta').onsubmit = async function (e) {
         paciente_id: window.pacienteData.id,
         medico: medico,
         fecha: fecha,
+        tipo_consulta: formData.get('tipo_consulta'),
         temperatura: formData.get('temperatura'),
         peso: formData.get('peso'),
         frecuencia_cardiaca: formData.get('frecuencia_cardiaca'),
@@ -392,6 +393,7 @@ document.getElementById('btnRecuperarDatos')?.addEventListener('click', async fu
         paciente_id: window.pacienteData.id,
         medico: medico,
         fecha: fecha,
+        tipo_consulta: formData.get('tipo_consulta'),  // ⭐ AGREGAR ESTA LÍNEA
         temperatura: formData.get('temperatura'),
         peso: formData.get('peso'),
         frecuencia_cardiaca: formData.get('frecuencia_cardiaca'),
@@ -406,6 +408,7 @@ document.getElementById('btnRecuperarDatos')?.addEventListener('click', async fu
     console.log('🔍 ===== RECUPERACIÓN DE DATOS DEL FORMULARIO =====');
     console.log('medico:', medico);
     console.log('fecha:', fecha);
+    console.log('tipo_consulta:', formData.get('tipo_consulta'));
     console.log('temperatura:', formData.get('temperatura'));
     console.log('peso:', formData.get('peso'));
     console.log('frecuencia_cardiaca:', formData.get('frecuencia_cardiaca'));
@@ -415,6 +418,7 @@ document.getElementById('btnRecuperarDatos')?.addEventListener('click', async fu
     console.log('tratamiento:', formData.get('tratamiento'));
     console.log('notas:', formData.get('notas'));
     console.log('medicamentos_seleccionados:', medicamentosSeleccionados);
+    console.log('📤 Objeto data completo:', data);  // ⭐ Ver el objeto completo
     console.log('🔍 ===== FIN DE RECUPERACIÓN =====');
     
     // ⭐ GUARDAR EN BASE DE DATOS

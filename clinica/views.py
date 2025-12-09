@@ -71,11 +71,13 @@ def crear_consulta(request, paciente_id):
             }, status=400)
         
         # Extraer y validar campos
+        tipo_consulta = data.get('tipo_consulta')
         temperatura = data.get('temperatura')
         peso = data.get('peso')
         fc = data.get('frecuencia_cardiaca')
         fr = data.get('frecuencia_respiratoria')
         
+        print(f'📋 Tipo de consulta: {tipo_consulta}')
         print(f'🌡️  Temperatura: {temperatura}')
         print(f'⚖️  Peso: {peso}')
         print(f'❤️  FC: {fc}')
@@ -86,6 +88,7 @@ def crear_consulta(request, paciente_id):
         consulta = Consulta.objects.create(
             paciente=paciente,
             veterinario=request.user,
+            tipo_consulta=tipo_consulta,  # ⭐ AGREGAR ESTE CAMPO
             temperatura=temperatura if temperatura else None,
             peso=peso if peso else None,
             frecuencia_cardiaca=fc if fc else None,
@@ -96,6 +99,7 @@ def crear_consulta(request, paciente_id):
             notas=data.get('notas', '')
         )
         print(f'✅ Consulta creada con ID: {consulta.id}')
+        print(f'✅ Tipo guardado: {consulta.tipo_consulta}')
         
         # Procesar medicamentos
         medicamentos = data.get('medicamentos', [])
@@ -118,6 +122,7 @@ def crear_consulta(request, paciente_id):
         print('=' * 50)
         print(f'✅ CONSULTA CREADA EXITOSAMENTE')
         print(f'   ID: {consulta.id}')
+        print(f'   Tipo: {consulta.tipo_consulta}')
         print(f'   Paciente: {paciente.nombre}')
         print(f'   Veterinario: {request.user.nombre} {request.user.apellido}')
         print('=' * 50)
@@ -182,3 +187,52 @@ def detalle_consulta(request, paciente_id, consulta_id):
         import traceback
         traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@login_required
+def guardar_consulta(request, paciente_id):
+    if request.method == 'POST':
+        try:
+            import json
+            data = json.loads(request.body)
+            
+            paciente = get_object_or_404(Paciente, id=paciente_id)
+            
+            # Crear la consulta
+            consulta = Consulta.objects.create(
+                paciente=paciente,
+                veterinario=request.user,
+                tipo_consulta=data.get('tipo_consulta', 'consulta_general'),  # ⭐ NUEVO CAMPO
+                temperatura=data.get('temperatura'),
+                peso=data.get('peso'),
+                frecuencia_cardiaca=data.get('frecuencia_cardiaca'),
+                frecuencia_respiratoria=data.get('frecuencia_respiratoria'),
+                otros=data.get('otros', ''),
+                diagnostico=data.get('diagnostico', ''),
+                tratamiento=data.get('tratamiento', ''),
+                notas=data.get('notas', '')
+            )
+            
+            # Guardar medicamentos utilizados
+            medicamentos = data.get('medicamentos', [])
+            for med in medicamentos:
+                MedicamentoUtilizado.objects.create(
+                    consulta=consulta,
+                    inventario_id=med.get('id'),
+                    nombre=med.get('nombre'),
+                    dosis=med.get('dosis'),
+                    peso_paciente=data.get('peso')
+                )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Consulta guardada exitosamente',
+                'consulta_id': consulta.id
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Error al guardar la consulta: {str(e)}'
+            }, status=400)
+    
+    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)

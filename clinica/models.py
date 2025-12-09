@@ -1,24 +1,31 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 from pacientes.models import Paciente
 from inventario.models import Insumo
 
 class Consulta(models.Model):
     """Modelo para consultas veterinarias"""
-    # ⭐ Referencia al modelo Paciente de la app pacientes
-    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name='consultas')
-    veterinario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    fecha = models.DateTimeField(auto_now_add=True)
+    TIPO_CONSULTA_CHOICES = [
+        ('consulta_general', 'Consulta general'),
+        ('urgencia', 'Urgencia'),
+        ('vacuna', 'Vacuna'),
+        ('desparacitacion', 'Desparacitación'),
+        ('control', 'Control'),
+        ('cirugia', 'Cirugía'),
+        ('otros', 'Otros'),
+    ]
     
-    # Datos fisiológicos
+    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name='consultas')
+    fecha = models.DateTimeField(default=timezone.now)
+    veterinario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    tipo_consulta = models.CharField(max_length=30, choices=TIPO_CONSULTA_CHOICES, default='consulta_general')
     temperatura = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
-    peso = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    peso = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     frecuencia_cardiaca = models.IntegerField(null=True, blank=True)
     frecuencia_respiratoria = models.IntegerField(null=True, blank=True)
-    otros = models.TextField(blank=True)
-    
-    # Diagnóstico y tratamiento
-    diagnostico = models.TextField(blank=True)
+    otros = models.TextField(blank=True, null=True)
+    diagnostico = models.TextField()
     tratamiento = models.TextField(blank=True)
     notas = models.TextField(blank=True)
     
@@ -31,7 +38,7 @@ class Consulta(models.Model):
         verbose_name_plural = 'Consultas'
     
     def __str__(self):
-        return f"Consulta {self.id} - {self.paciente.nombre} ({self.fecha.strftime('%d/%m/%Y')})"
+        return f"Consulta de {self.paciente.nombre} - {self.fecha.strftime('%d/%m/%Y')}"
 
 
 class MedicamentoUtilizado(models.Model):
