@@ -1,42 +1,3 @@
-// Datos de ejemplo, agrega los reales desde backend si es necesario
-const consultas = [
-    {
-        titulo: "Depresión",
-        medico: "Kathleen Curie-Galen, MD",
-        fecha: "05/26/2012 – Presente",
-        notas: "Duis sed odio sit amet nibh vulputate cursus a sit amet mauris. Nam nec tellus a odio tincidunt auctor a ornare odio.",
-        diagnostico: "Depresión crónica",
-        tratamiento: "Medicamentos y terapia",
-        examenes: [
-            { nombre: "Hemograma", url: "#" },
-            { nombre: "Perfil Bioquímico", url: "#" }
-        ],
-        recomendaciones: "Control mensual",
-        temp: "38.5°C",
-        peso: "12.3 kg",
-        fc: "90 lpm",
-        fr: "22 rpm",
-        otros: "Sin observaciones"
-    },
-    {
-        titulo: "Fractura de pata",
-        medico: "Dr. Martínez",
-        fecha: "07/08/2011 – 08/30/2011",
-        notas: "Proin gravida nibh vel velit auctor aliquet. Aenean sollicitudin lorem quis bibendum auctor nisi elit consequat.",
-        diagnostico: "Fractura tibia derecha",
-        tratamiento: "Inmovilización, analgésicos",
-        examenes: [
-            { nombre: "Radiografía", url: "#" }
-        ],
-        recomendaciones: "Reposo absoluto",
-        temp: "38.1°C",
-        peso: "11.8 kg",
-        fc: "88 lpm",
-        fr: "20 rpm",
-        otros: "Vendaje controlado"
-    }
-    // ...agrega más si es necesario
-];
 
 // Mostrar modal de detalle
 document.querySelectorAll('.timeline-btn').forEach((btn, idx) => {
@@ -153,32 +114,29 @@ document.getElementById('formNuevaConsulta').onsubmit = async function (e) {
     const form = e.target;
     const formData = new FormData(form);
     
-    // ⭐ Agregar medicamentos seleccionados
-    const medicamentos = medicamentosSeleccionados.map(med => ({
-        inventario_id: med.id,
-        nombre: med.nombre,
-        dosis: med.dosis,
-        peso_paciente: med.peso
-    }));
-    
-    // Convertir FormData a objeto
+    // ⭐ Usar los nombres correctos directamente
     const data = {
         paciente_id: window.pacienteData.id,
-        temperatura: formData.get('temp'),
+        temperatura: formData.get('temperatura'),
         peso: formData.get('peso'),
-        frecuencia_cardiaca: formData.get('fc'),
-        frecuencia_respiratoria: formData.get('fr'),
-        otros: formData.get('otros'),
-        diagnostico: formData.get('diagnostico'),
-        tratamiento: formData.get('tratamiento'),
-        notas: formData.get('notas'),
-        medicamentos: medicamentos
+        frecuencia_cardiaca: formData.get('frecuencia_cardiaca'),
+        frecuencia_respiratoria: formData.get('frecuencia_respiratoria'),
+        otros: formData.get('otros') || '',
+        diagnostico: formData.get('diagnostico') || '',
+        tratamiento: formData.get('tratamiento') || '',
+        notas: formData.get('notas') || '',
+        medicamentos: medicamentosSeleccionados.map(med => ({
+            inventario_id: med.id,
+            nombre: med.nombre,
+            dosis: med.dosis,
+            peso_paciente: med.peso
+        }))
     };
     
     console.log('📤 Enviando consulta:', data);
     
     try {
-        const response = await fetch(`/veterinarios/pacientes/${window.pacienteData.id}/consulta/crear/`, {
+        const response = await fetch(`/clinica/pacientes/${window.pacienteData.id}/consulta/crear/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -191,13 +149,9 @@ document.getElementById('formNuevaConsulta').onsubmit = async function (e) {
         
         if (result.success) {
             console.log('✅ Consulta guardada:', result);
-            
-            // Cerrar modal y limpiar
             closeVetModal('nuevaConsultaModal');
             form.reset();
             medicamentosSeleccionados = [];
-            
-            // Recargar la página para mostrar la nueva consulta
             location.reload();
         } else {
             console.error('❌ Error al guardar:', result.error);
@@ -257,7 +211,7 @@ async function cargarInventario() {
     }
 }
 
-// Función auxiliar para obtener CSRF token
+// Función para obtener el CSRF token
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -271,6 +225,54 @@ function getCookie(name) {
         }
     }
     return cookieValue;
+}
+
+// ⭐ Función para ver el detalle de una consulta
+function verDetalleConsulta(consultaId) {
+    // Buscar la consulta por ID (puedes hacer fetch al backend o usar datos cargados)
+    fetch(`/clinica/pacientes/${window.pacienteData.id}/consulta/${consultaId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const consulta = data.consulta;
+                
+                // Llenar el modal con los datos
+                document.getElementById('detalleTemp').textContent = consulta.temperatura ? consulta.temperatura + '°C' : '-';
+                document.getElementById('detallePeso').textContent = consulta.peso ? consulta.peso + ' kg' : '-';
+                document.getElementById('detalleFC').textContent = consulta.frecuencia_cardiaca ? consulta.frecuencia_cardiaca + ' lpm' : '-';
+                document.getElementById('detalleFR').textContent = consulta.frecuencia_respiratoria ? consulta.frecuencia_respiratoria + ' rpm' : '-';
+                document.getElementById('detalleOtros').textContent = consulta.otros || '-';
+                document.getElementById('detalleTitulo').innerHTML = `<i class="bi bi-clipboard2-pulse"></i> Consulta del ${consulta.fecha}`;
+                document.getElementById('detalleContenido').innerHTML = `
+                    <div class="detail-section">
+                        <div class="detail-section-title"><i class="bi bi-person-badge"></i> Médico Tratante</div>
+                        <p>${consulta.veterinario}</p>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
+                        <p>${consulta.fecha}</p>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title"><i class="bi bi-clipboard2-check"></i> Diagnóstico</div>
+                        <p>${consulta.diagnostico || 'No especificado'}</p>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title"><i class="bi bi-capsule"></i> Tratamiento</div>
+                        <p>${consulta.tratamiento || 'No especificado'}</p>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title"><i class="bi bi-journal-text"></i> Notas</div>
+                        <p>${consulta.notas || 'Sin notas'}</p>
+                    </div>
+                `;
+                
+                openVetModal('detalleConsultaModal');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error al cargar consulta:', error);
+            alert('Error al cargar la consulta');
+        });
 }
 
 // Agregar insumo a la lista de utilizados

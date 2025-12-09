@@ -354,6 +354,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+    overflow: visible; /* No ocultar el scroll */
 }
 
 .tabs-nav {
@@ -393,7 +394,9 @@
 .tabs-content {
     margin-top: 1rem;
     flex: 1;
-    overflow-y: auto;
+    overflow-y: auto; /* Permitir scroll aquí */
+    overflow-x: hidden;
+    max-height: calc(100vh - 300px); /* Altura máxima para forzar scroll */
 }
 
 .tab-content {
@@ -429,6 +432,7 @@
     margin: 30px 0;
     padding-left: 80px;
     border-left: 3px solid #e1e1e1;
+    /* Remover max-height aquí, el scroll es del contenedor padre */
 }
 
 .timeline-item {
@@ -1057,3 +1061,11 @@ td[colspan][style*="text-align: center"] {
         transform: translateX(0);
     }
 }
+
+/* Timeline container - REMOVER O COMENTAR ESTO */
+/* .timeline-container {
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 10px;
+} */
