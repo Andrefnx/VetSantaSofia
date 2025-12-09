@@ -75,68 +75,69 @@ def editar_insumo(request, insumo_id):
             
             print(f"📝 Datos recibidos para editar insumo {insumo_id}:", data)
             
-            # Guardar stock anterior para detectar cambios
             stock_anterior = insumo.stock_actual
             
-            # ⭐ Actualizar campos - aceptar nombre_comercial o medicamento
+            # Actualizar campos básicos
             if 'nombre_comercial' in data:
                 insumo.medicamento = data['nombre_comercial']
             elif 'medicamento' in data:
                 insumo.medicamento = data['medicamento']
-                
+            
+            insumo.marca = data.get('marca', insumo.marca)
             insumo.sku = data.get('sku', insumo.sku)
             insumo.tipo = data.get('tipo', insumo.tipo)
+            insumo.formato = data.get('formato', insumo.formato)
             insumo.descripcion = data.get('descripcion', insumo.descripcion)
             insumo.especie = data.get('especie', insumo.especie)
             
             if 'precio_venta' in data and data['precio_venta']:
                 insumo.precio_venta = Decimal(str(data['precio_venta']))
-                
-            # ⭐ DETECTAR CAMBIO EN STOCK
+            
+            # Stock
             if 'stock_actual' in data:
                 stock_nuevo = int(data['stock_actual'])
                 insumo.stock_actual = stock_nuevo
                 
-                # Si aumentó el stock, es una entrada
                 if stock_nuevo > stock_anterior:
                     insumo.ultimo_ingreso = timezone.now()
                     insumo.tipo_ultimo_movimiento = 'entrada'
-                    print(f"✅ Stock aumentó de {stock_anterior} a {stock_nuevo} - Registrando entrada")
-                # Si disminuyó, es una salida
                 elif stock_nuevo < stock_anterior:
                     insumo.tipo_ultimo_movimiento = 'salida'
-                    print(f"📤 Stock disminuyó de {stock_anterior} a {stock_nuevo} - Registrando salida")
                 else:
-                    # Stock no cambió, solo actualización de datos
                     insumo.tipo_ultimo_movimiento = insumo.tipo_ultimo_movimiento or 'entrada'
-                    print(f"ℹ️ Stock no cambió ({stock_anterior})")
-                
+            
+            # Dosis según formato
             if 'dosis_ml' in data:
                 insumo.dosis_ml = Decimal(str(data['dosis_ml'])) if data['dosis_ml'] else None
-            if 'peso_kg' in data:
-                insumo.peso_kg = Decimal(str(data['peso_kg'])) if data['peso_kg'] else None
             if 'ml_contenedor' in data:
                 insumo.ml_contenedor = Decimal(str(data['ml_contenedor'])) if data['ml_contenedor'] else None
-                
+            if 'cantidad_pastillas' in data:
+                insumo.cantidad_pastillas = int(data['cantidad_pastillas']) if data['cantidad_pastillas'] else None
+            if 'unidades_pipeta' in data:
+                insumo.unidades_pipeta = int(data['unidades_pipeta']) if data['unidades_pipeta'] else None
+            if 'peso_kg' in data:
+                insumo.peso_kg = Decimal(str(data['peso_kg'])) if data['peso_kg'] else None
+            
+            # Rango de peso
+            if 'tiene_rango_peso' in data:
+                insumo.tiene_rango_peso = bool(data['tiene_rango_peso'])
+            if 'peso_min_kg' in data:
+                insumo.peso_min_kg = Decimal(str(data['peso_min_kg'])) if data['peso_min_kg'] else None
+            if 'peso_max_kg' in data:
+                insumo.peso_max_kg = Decimal(str(data['peso_max_kg'])) if data['peso_max_kg'] else None
+            
             insumo.precauciones = data.get('precauciones', insumo.precauciones)
             insumo.contraindicaciones = data.get('contraindicaciones', insumo.contraindicaciones)
             insumo.efectos_adversos = data.get('efectos_adversos', insumo.efectos_adversos)
             
-            # ⭐ Actualizar metadata
             insumo.ultimo_movimiento = timezone.now()
             insumo.usuario_ultimo_movimiento = request.user
             
             insumo.save()
             
-            # Obtener datos actualizados para debug
             local_tz = pytz.timezone('America/Santiago')
             ultimo_ingreso = insumo.ultimo_ingreso.astimezone(local_tz) if insumo.ultimo_ingreso else None
             ultimo_movimiento = insumo.ultimo_movimiento.astimezone(local_tz) if insumo.ultimo_movimiento else None
-            
-            print(f"✅ Insumo {insumo_id} actualizado correctamente")
-            print(f"📊 Último ingreso: {ultimo_ingreso}")
-            print(f"📊 Último movimiento: {ultimo_movimiento}")
-            print(f"📊 Tipo: {insumo.tipo_ultimo_movimiento}")
             
             return JsonResponse({
                 'success': True,
@@ -147,7 +148,8 @@ def editar_insumo(request, insumo_id):
                     'tipo_movimiento_display': dict(Insumo.TIPO_MOVIMIENTO_CHOICES).get(insumo.tipo_ultimo_movimiento, '-'),
                     'usuario': insumo.get_usuario_nombre_completo() if insumo.usuario_ultimo_movimiento else '(sin registro)',
                     'stock_anterior': stock_anterior,
-                    'stock_nuevo': insumo.stock_actual
+                    'stock_nuevo': insumo.stock_actual,
+                    'dosis_display': insumo.get_dosis_display()
                 }
             })
             
@@ -180,15 +182,27 @@ def detalle_insumo(request, insumo_id):
                 'idInventario': insumo.idInventario,
                 'nombre_comercial': insumo.medicamento,
                 'medicamento': insumo.medicamento,
+                'marca': insumo.marca or '',
                 'sku': insumo.sku or '',
                 'tipo': insumo.tipo or '',
+                'formato': insumo.formato or '',
                 'descripcion': insumo.descripcion or '',
                 'especie': insumo.especie or '',
                 'precio_venta': float(insumo.precio_venta) if insumo.precio_venta else 0,
                 'stock_actual': insumo.stock_actual,
+                
+                # Dosis según formato
                 'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml else None,
-                'peso_kg': float(insumo.peso_kg) if insumo.peso_kg else None,
                 'ml_contenedor': float(insumo.ml_contenedor) if insumo.ml_contenedor else None,
+                'cantidad_pastillas': insumo.cantidad_pastillas,
+                'unidades_pipeta': insumo.unidades_pipeta,
+                'peso_kg': float(insumo.peso_kg) if insumo.peso_kg else None,
+                
+                # Rango de peso
+                'tiene_rango_peso': insumo.tiene_rango_peso,
+                'peso_min_kg': float(insumo.peso_min_kg) if insumo.peso_min_kg else None,
+                'peso_max_kg': float(insumo.peso_max_kg) if insumo.peso_max_kg else None,
+                
                 'precauciones': insumo.precauciones or '',
                 'contraindicaciones': insumo.contraindicaciones or '',
                 'efectos_adversos': insumo.efectos_adversos or '',
@@ -197,6 +211,9 @@ def detalle_insumo(request, insumo_id):
                 'ultimo_movimiento_formatted': ultimo_movimiento.strftime('%d/%m/%Y %H:%M') if ultimo_movimiento else '-',
                 'tipo_ultimo_movimiento_display': dict(Insumo.TIPO_MOVIMIENTO_CHOICES).get(insumo.tipo_ultimo_movimiento, '-') if insumo.tipo_ultimo_movimiento else '-',
                 'usuario_ultimo_movimiento': usuario_nombre,
+                
+                # Dosis formateada
+                'dosis_display': insumo.get_dosis_display(),
             }
         })
     except Exception as e:
