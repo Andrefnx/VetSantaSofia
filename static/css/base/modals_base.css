@@ -130,7 +130,6 @@
 .vet-custom-modal button {
     cursor: pointer !important;
     border: none !important;
-    background: var(--grey) !important;
     color: white !important;
     padding: 10px 16px !important;
     border-radius: 6px !important;
@@ -139,7 +138,7 @@
 }
 
 .vet-custom-modal button:hover {
-    background: var(--grey-hover) !important;
+    background: var(--primary-hover) !important;
     transition: 0.3s all ease !important;
 }
 
@@ -156,7 +155,6 @@
 }
 
 .vet-custom-modal button i {
-    margin-right: 6px !important;
     font-size: 1rem !important;
 }
 

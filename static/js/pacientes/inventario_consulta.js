@@ -16,14 +16,12 @@ async function cargarInventarioFiltrado() {
             return;
         }
 
-        // Construir URL con filtros
         const params = new URLSearchParams();
         
         if (window.pacienteData.especie) {
             params.append('especie', window.pacienteData.especie);
         }
         
-        // Obtener peso actual del input o usar el último peso registrado
         const pesoInput = document.getElementById('pesoConsulta');
         const peso = pesoInput && pesoInput.value 
             ? parseFloat(pesoInput.value) 
@@ -43,8 +41,8 @@ async function cargarInventarioFiltrado() {
 
         if (data.success) {
             medicamentosDisponibles = data.productos;
-            console.log(`✅ ${data.total} medicamentos disponibles para ${window.pacienteData.especie} de ${peso} kg`);
-            mostrarInventario(medicamentosDisponibles, peso);
+            console.log(`✅ ${data.total} medicamentos disponibles`);
+            mostrarInventario(medicamentosDisponibles);
         } else {
             console.error('❌ Error al cargar inventario:', data.error);
         }
@@ -55,9 +53,51 @@ async function cargarInventarioFiltrado() {
 }
 
 /**
+ * ⭐ Inicializar peso al abrir el modal
+ */
+function inicializarPesoConsulta() {
+    const pesoInput = document.getElementById('pesoConsulta');
+    if (!pesoInput) return;
+    
+    // Si ya tiene valor, no hacer nada
+    if (pesoInput.value) return;
+    
+    // Buscar el último peso registrado del historial
+    const ultimoPeso = obtenerUltimoPesoRegistrado();
+    
+    if (ultimoPeso && ultimoPeso > 0) {
+        pesoInput.value = ultimoPeso;
+        console.log(`✅ Peso prellenado desde historial: ${ultimoPeso} kg`);
+    } else if (window.pacienteData && window.pacienteData.peso) {
+        pesoInput.value = window.pacienteData.peso;
+        console.log(`✅ Peso prellenado desde paciente: ${window.pacienteData.peso} kg`);
+    }
+}
+
+/**
+ * ⭐ Obtener el último peso registrado del historial médico
+ */
+function obtenerUltimoPesoRegistrado() {
+    // Buscar en el DOM el último peso del historial
+    const consultasItems = document.querySelectorAll('.consulta-item');
+    
+    for (let item of consultasItems) {
+        const pesoElement = item.querySelector('[data-field="peso"]');
+        if (pesoElement && pesoElement.textContent) {
+            const peso = parseFloat(pesoElement.textContent.replace(' kg', '').trim());
+            if (!isNaN(peso) && peso > 0) {
+                return peso;
+            }
+        }
+    }
+    
+    return null;
+}
+
+/**
  * Mostrar inventario en la lista
  */
-function mostrarInventario(productos, peso) {
+function mostrarInventario(productos) {
     const lista = document.getElementById('inventarioList');
     if (!lista) return;
 
@@ -65,55 +105,30 @@ function mostrarInventario(productos, peso) {
         lista.innerHTML = `
             <div class="inventario-empty">
                 <i class="bi bi-inbox"></i>
-                <p>No hay medicamentos disponibles para este paciente</p>
+                <p>No hay medicamentos disponibles</p>
             </div>
         `;
         return;
     }
 
     lista.innerHTML = productos.map(producto => {
-        // Calcular dosis personalizada
-        const dosisInfo = calcularDosisPersonalizada(producto, peso);
+        const estaAgregado = medicamentosSeleccionados.find(m => m.id === producto.id);
         
-        // Verificar si está en el rango de peso
-        let alertaRango = '';
-        if (peso && producto.tiene_rango_peso) {
-            if (producto.peso_min_kg && peso < producto.peso_min_kg) {
-                alertaRango = `<div class="alerta-peso"><i class="bi bi-exclamation-triangle"></i> Peso menor al mínimo (${producto.peso_min_kg} kg)</div>`;
-            } else if (producto.peso_max_kg && peso > producto.peso_max_kg) {
-                alertaRango = `<div class="alerta-peso"><i class="bi bi-exclamation-triangle"></i> Peso mayor al máximo (${producto.peso_max_kg} kg)</div>`;
-            }
-        }
-
         return `
-            <div class="inventario-item" data-id="${producto.id}">
-                <div class="inventario-item-header">
-                    <div class="producto-nombre">
-                        <strong>${producto.nombre}</strong>
-                        ${producto.marca ? `<span class="marca">${producto.marca}</span>` : ''}
+            <div class="inventario-item ${estaAgregado ? 'agregado' : ''}" data-id="${producto.id}">
+                <div class="inventario-item-info">
+                    <div class="producto-nombre-compact">${producto.nombre}</div>
+                    <div class="producto-detalles">
+                        <span class="badge-compact badge-especie">
+                            <i class="bi bi-tag"></i> ${producto.especie}
+                        </span>
+                        <span class="badge-compact badge-stock ${producto.stock < 10 ? 'bajo' : ''}">
+                            <i class="bi bi-box"></i> ${producto.stock}
+                        </span>
                     </div>
-                    <span class="stock-badge ${producto.stock < 10 ? 'stock-bajo' : ''}">${producto.stock} en stock</span>
                 </div>
-                
-                <div class="inventario-item-details">
-                    <span class="badge-info especie-badge">${producto.especie}</span>
-                    ${producto.formato ? `<span class="badge-info formato-badge">${producto.formato}</span>` : ''}
-                    ${producto.tiene_rango_peso ? 
-                        `<span class="badge-info rango-badge">${producto.peso_min_kg}-${producto.peso_max_kg} kg</span>` 
-                        : ''}
-                </div>
-                
-                <div class="inventario-item-dosis">
-                    <div class="dosis-estandar">
-                        <i class="bi bi-info-circle"></i> Dosis estándar: ${producto.dosis_display}
-                    </div>
-                    ${dosisInfo.html}
-                </div>
-                
-                ${alertaRango}
-                
-                <button type="button" class="btn-agregar-medicamento" onclick="agregarMedicamento(${producto.id})" ${alertaRango ? 'data-alerta="true"' : ''}>
-                    <i class="bi bi-plus-circle"></i> Agregar
+                <button type="button" class="btn-agregar-compact" onclick="agregarMedicamento(${producto.id})" title="Agregar">
+                    <i class="bi bi-plus-lg"></i>
                 </button>
             </div>
         `;
@@ -124,91 +139,87 @@ function mostrarInventario(productos, peso) {
  * Calcular dosis personalizada según el peso del paciente
  */
 function calcularDosisPersonalizada(producto, pesoPaciente) {
-    if (!pesoPaciente || !producto.peso_kg) {
-        return { texto: null, html: '' };
+    console.log('🧮 Calculando dosis para:', {
+        nombre: producto.nombre,
+        formato: producto.formato,
+        peso_paciente: pesoPaciente,
+        peso_ref: producto.peso_kg,
+        dosis_ml: producto.dosis_ml,
+        cantidad_pastillas: producto.cantidad_pastillas
+    });
+
+    if (!pesoPaciente || pesoPaciente <= 0) {
+        console.warn('⚠️ Peso del paciente no válido');
+        return null;
+    }
+
+    if (!producto.peso_kg || producto.peso_kg <= 0) {
+        console.warn('⚠️ Producto sin peso de referencia');
+        return null;
     }
 
     const formato = producto.formato ? producto.formato.toLowerCase() : '';
     let dosisTexto = '';
-    let dosisHTML = '';
     
     switch(formato) {
         case 'liquido':
         case 'inyectable':
-            if (producto.dosis_ml) {
+            if (producto.dosis_ml && producto.dosis_ml > 0) {
                 const dosis = (producto.dosis_ml / producto.peso_kg) * pesoPaciente;
                 const dosisRedondeada = Math.round(dosis * 100) / 100;
                 dosisTexto = `${dosisRedondeada} ml`;
-                dosisHTML = `
-                    <div class="dosis-personalizada">
-                        <i class="bi bi-calculator"></i> 
-                        <strong>Para ${pesoPaciente} kg:</strong> 
-                        <span class="dosis-valor">${dosisRedondeada} ml</span>
-                    </div>
-                `;
+                console.log('💧 Dosis líquido calculada:', dosisTexto);
             }
             break;
             
         case 'pastilla':
-            if (producto.cantidad_pastillas) {
+        case 'comprimido':
+        case 'tableta':
+            if (producto.cantidad_pastillas && producto.cantidad_pastillas > 0) {
                 const pastillas = (producto.cantidad_pastillas / producto.peso_kg) * pesoPaciente;
-                let dosisTexto = '';
                 
                 if (pastillas < 1) {
                     const fraccion = obtenerFraccion(pastillas);
-                    dosisTexto = fraccion;
+                    dosisTexto = `${fraccion} past`;
                 } else if (pastillas % 1 !== 0) {
                     const entero = Math.floor(pastillas);
                     const decimal = pastillas - entero;
                     const fraccion = obtenerFraccion(decimal);
-                    dosisTexto = fraccion !== '1' ? `${entero} ${fraccion}` : entero.toString();
+                    dosisTexto = fraccion !== '1' ? `${entero} ${fraccion} past` : `${Math.round(pastillas)} past`;
                 } else {
-                    dosisTexto = pastillas.toString();
+                    dosisTexto = `${Math.round(pastillas)} past`;
                 }
-                
-                const texto = pastillas === 1 ? 'pastilla' : 'pastillas';
-                dosisHTML = `
-                    <div class="dosis-personalizada">
-                        <i class="bi bi-capsule"></i> 
-                        <strong>Para ${pesoPaciente} kg:</strong> 
-                        <span class="dosis-valor">${dosisTexto} ${texto}</span>
-                    </div>
-                `;
+                console.log('💊 Dosis pastilla calculada:', dosisTexto);
             }
             break;
             
         case 'pipeta':
             if (producto.unidades_pipeta) {
-                const texto = producto.unidades_pipeta === 1 ? 'unidad' : 'unidades';
-                dosisTexto = `${producto.unidades_pipeta} ${texto}`;
-                dosisHTML = `
-                    <div class="dosis-personalizada">
-                        <i class="bi bi-droplet"></i> 
-                        <strong>Para ${pesoPaciente} kg:</strong> 
-                        <span class="dosis-valor">${producto.unidades_pipeta} ${texto}</span>
-                    </div>
-                `;
+                dosisTexto = `${producto.unidades_pipeta} pipeta`;
+                console.log('💉 Dosis pipeta:', dosisTexto);
             }
             break;
             
         case 'polvo':
         case 'crema':
-            if (producto.dosis_ml) {
+        case 'gel':
+            if (producto.dosis_ml && producto.dosis_ml > 0) {
                 const dosis = (producto.dosis_ml / producto.peso_kg) * pesoPaciente;
                 const dosisRedondeada = Math.round(dosis * 100) / 100;
                 dosisTexto = `${dosisRedondeada} gr`;
-                dosisHTML = `
-                    <div class="dosis-personalizada">
-                        <i class="bi bi-calculator"></i> 
-                        <strong>Para ${pesoPaciente} kg:</strong> 
-                        <span class="dosis-valor">${dosisRedondeada} gr</span>
-                    </div>
-                `;
+                console.log('🧪 Dosis polvo/crema calculada:', dosisTexto);
             }
             break;
+            
+        default:
+            console.warn('⚠️ Formato no reconocido:', formato);
     }
     
-    return { texto: dosisTexto, html: dosisHTML };
+    if (!dosisTexto) {
+        console.warn('⚠️ No se pudo calcular dosis');
+    }
+    
+    return dosisTexto || null;
 }
 
 /**
@@ -235,7 +246,7 @@ function obtenerFraccion(decimal) {
     }
     
     if (menorDiferencia > 0.1) {
-        return Math.round(decimal * 100) / 100;
+        return (Math.round(decimal * 100) / 100).toString();
     }
     
     return mejorMatch.texto;
@@ -251,10 +262,7 @@ function filtrarInventario(termino) {
         (p.marca && p.marca.toLowerCase().includes(terminoLower))
     );
     
-    const pesoInput = document.getElementById('pesoConsulta');
-    const peso = pesoInput && pesoInput.value ? parseFloat(pesoInput.value) : window.pacienteData.peso;
-    
-    mostrarInventario(productosFiltrados, peso);
+    mostrarInventario(productosFiltrados);
 }
 
 /**
@@ -262,9 +270,11 @@ function filtrarInventario(termino) {
  */
 function agregarMedicamento(productoId) {
     const producto = medicamentosDisponibles.find(p => p.id === productoId);
-    if (!producto) return;
+    if (!producto) {
+        console.error('❌ Producto no encontrado:', productoId);
+        return;
+    }
 
-    // Verificar si ya está agregado
     if (medicamentosSeleccionados.find(m => m.id === productoId)) {
         mostrarAlertaModal('Este medicamento ya está agregado', 'warning');
         return;
@@ -273,21 +283,36 @@ function agregarMedicamento(productoId) {
     const pesoInput = document.getElementById('pesoConsulta');
     const peso = pesoInput && pesoInput.value ? parseFloat(pesoInput.value) : window.pacienteData.peso;
     
-    const dosisInfo = calcularDosisPersonalizada(producto, peso);
+    if (!peso || peso <= 0) {
+        mostrarAlertaModal('Por favor ingrese el peso del paciente', 'warning');
+        return;
+    }
 
-    // Agregar a la lista
+    const dosisCalculada = calcularDosisPersonalizada(producto, peso);
+    
+    console.log('➕ Agregando medicamento:', {
+        id: producto.id,
+        nombre: producto.nombre,
+        peso: peso,
+        dosis: dosisCalculada,
+        formato: producto.formato
+    });
+
     medicamentosSeleccionados.push({
         id: producto.id,
         nombre: producto.nombre,
-        marca: producto.marca,
-        formato: producto.formato,
-        dosis: producto.dosis_display,
-        dosisPersonalizada: dosisInfo.texto,
-        peso: peso
+        peso: peso,
+        dosis: dosisCalculada
     });
 
     actualizarMedicamentosSeleccionados();
-    mostrarAlertaModal('Medicamento agregado correctamente', 'success');
+    
+    const item = document.querySelector(`.inventario-item[data-id="${productoId}"]`);
+    if (item) {
+        item.classList.add('agregado');
+    }
+    
+    mostrarAlertaModal('Medicamento agregado', 'success');
 }
 
 /**
@@ -296,77 +321,82 @@ function agregarMedicamento(productoId) {
 function removerMedicamento(productoId) {
     medicamentosSeleccionados = medicamentosSeleccionados.filter(m => m.id !== productoId);
     actualizarMedicamentosSeleccionados();
+    
+    const item = document.querySelector(`.inventario-item[data-id="${productoId}"]`);
+    if (item) {
+        item.classList.remove('agregado');
+    }
+    
     mostrarAlertaModal('Medicamento removido', 'info');
 }
 
 /**
- * Actualizar vista de medicamentos seleccionados
+ * ⭐ Actualizar vista de medicamentos seleccionados - CON DOSIS CALCULADA
  */
 function actualizarMedicamentosSeleccionados() {
     const container = document.getElementById('insumosSeleccionados');
-    if (!container) return;
-
-    if (medicamentosSeleccionados.length === 0) {
-        container.innerHTML = '<p class="text-muted"><i class="bi bi-info-circle"></i> No hay medicamentos seleccionados</p>';
+    if (!container) {
+        console.error('❌ Contenedor insumosSeleccionados no encontrado');
         return;
     }
 
-    container.innerHTML = medicamentosSeleccionados.map(med => `
-        <div class="medicamento-tag">
-            <div class="medicamento-info">
-                <div class="medicamento-nombre">
-                    <strong>${med.nombre}</strong>
-                    ${med.marca ? `<span class="marca-small">${med.marca}</span>` : ''}
+    if (medicamentosSeleccionados.length === 0) {
+        container.innerHTML = '<p class="text-muted" style="font-size: 0.8rem; margin: 0;"><i class="bi bi-info-circle"></i> No hay medicamentos seleccionados</p>';
+        return;
+    }
+
+    container.innerHTML = medicamentosSeleccionados.map(med => {
+        console.log('📦 Renderizando medicamento:', med);
+        
+        return `
+            <div class="medicamento-tag">
+                <div class="medicamento-info">
+                    <div class="medicamento-nombre">${med.nombre}</div>
+                    ${med.dosis ? `
+                        <div class="medicamento-dosis">
+                            <i class="bi bi-prescription2"></i> 
+                            <span>${med.dosis} por ${med.peso} kg</span>
+                        </div>
+                    ` : `
+                        <div class="medicamento-dosis" style="opacity: 0.7;">
+                            <i class="bi bi-exclamation-circle"></i> 
+                            <span>Dosis no calculada</span>
+                        </div>
+                    `}
                 </div>
-                ${med.dosisPersonalizada ? `
-                    <div class="dosis-info">
-                        <i class="bi bi-calculator"></i> Dosis calculada: <strong>${med.dosisPersonalizada}</strong>
-                        ${med.peso ? `<span class="peso-ref">(${med.peso} kg)</span>` : ''}
-                    </div>
-                ` : `
-                    <div class="dosis-info">
-                        <i class="bi bi-info-circle"></i> ${med.dosis}
-                    </div>
-                `}
+                <button type="button" class="btn-remover vet-btn-grey error" onclick="removerMedicamento(${med.id})" title="Remover">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
-            <button type="button" class="btn-remover" onclick="removerMedicamento(${med.id})" title="Remover">
-                <i class="bi bi-x"></i>
-            </button>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 /**
- * ⭐ CORREGIDA: Mostrar alerta dentro del modal
+ * Mostrar alerta dentro del modal
  */
 function mostrarAlertaModal(mensaje, tipo = 'info') {
-    // Buscar el modal de Nueva Consulta específicamente
     const modal = document.getElementById('nuevaConsultaModal');
     if (!modal || modal.classList.contains('hide')) {
         console.warn('Modal no está visible');
         return;
     }
     
-    // Buscar el contenedor de alertas
     let alertContainer = modal.querySelector('#modalAlertContainer');
     
-    // Si no existe, crearlo
     if (!alertContainer) {
         alertContainer = document.createElement('div');
         alertContainer.id = 'modalAlertContainer';
         alertContainer.className = 'modal-alert-container';
         
-        // Insertar al inicio del modal-body
         const modalBody = modal.querySelector('.vet-modal-body');
         if (modalBody) {
             modalBody.insertBefore(alertContainer, modalBody.firstChild);
         } else {
-            console.error('No se encontró .vet-modal-body');
             return;
         }
     }
     
-    // Iconos según tipo
     const iconos = {
         success: 'bi-check-circle-fill',
         warning: 'bi-exclamation-triangle-fill',
@@ -374,7 +404,6 @@ function mostrarAlertaModal(mensaje, tipo = 'info') {
         info: 'bi-info-circle-fill'
     };
     
-    // Crear alerta
     const alerta = document.createElement('div');
     alerta.className = `modal-alert modal-alert-${tipo}`;
     alerta.innerHTML = `
@@ -385,16 +414,11 @@ function mostrarAlertaModal(mensaje, tipo = 'info') {
         </button>
     `;
     
-    // Limpiar alertas anteriores
     alertContainer.innerHTML = '';
-    
-    // Agregar nueva alerta
     alertContainer.appendChild(alerta);
     
-    // Animar entrada
     setTimeout(() => alerta.classList.add('show'), 10);
     
-    // Auto-remover después de 4 segundos
     setTimeout(() => {
         if (alerta.parentElement) {
             alerta.classList.remove('show');
@@ -405,58 +429,26 @@ function mostrarAlertaModal(mensaje, tipo = 'info') {
             }, 300);
         }
     }, 4000);
-    
-    console.log(`✅ Alerta mostrada: ${tipo} - ${mensaje}`);
 }
 
 /**
- * Obtener medicamentos seleccionados para enviar al backend
- */
-function obtenerMedicamentosParaGuardar() {
-    return medicamentosSeleccionados.map(med => ({
-        producto_id: med.id,
-        nombre: med.nombre,
-        dosis: med.dosisPersonalizada || med.dosis,
-        peso_aplicado: med.peso
-    }));
-}
-
-/**
- * Preparar datos de la consulta antes de enviar
- */
-function prepararDatosConsulta(formData) {
-    // Agregar medicamentos seleccionados como JSON
-    const medicamentos = obtenerMedicamentosParaGuardar();
-    formData.append('medicamentos_json', JSON.stringify(medicamentos));
-    
-    console.log('📦 Medicamentos a guardar:', medicamentos);
-    
-    return formData;
-}
-
-/**
- * Limpiar selección al cerrar/cancelar el modal
- */
-function limpiarSeleccionMedicamentos() {
-    medicamentosSeleccionados = [];
-    actualizarMedicamentosSeleccionados();
-}
-
-/**
- * Inicializar cuando se abre el modal de nueva consulta
+ * Inicializar eventos
  */
 document.addEventListener('DOMContentLoaded', function() {
-    // Evento cuando se abre el modal
     const btnNuevaConsulta = document.getElementById('btnNuevaConsulta');
     if (btnNuevaConsulta) {
         btnNuevaConsulta.addEventListener('click', function() {
             setTimeout(() => {
-                cargarInventarioFiltrado();
+                // ⭐ Primero inicializar el peso
+                inicializarPesoConsulta();
+                // Luego cargar el inventario con el peso correcto
+                setTimeout(() => {
+                    cargarInventarioFiltrado();
+                }, 150);
             }, 100);
         });
     }
 
-    // Buscador de medicamentos
     const searchInput = document.getElementById('searchInventario');
     if (searchInput) {
         searchInput.addEventListener('input', function(e) {
@@ -464,93 +456,39 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Actualizar inventario cuando cambia el peso en la consulta
     const pesoInput = document.getElementById('pesoConsulta');
     if (pesoInput) {
-        pesoInput.addEventListener('change', function() {
-            console.log('🔄 Peso actualizado, recargando inventario...');
-            cargarInventarioFiltrado();
-        });
-        
-        // También actualizar al escribir (con debounce)
         let timeoutId;
+        
+        // ⭐ Usar 'input' en lugar de 'change' para detectar cambios inmediatos
         pesoInput.addEventListener('input', function() {
             clearTimeout(timeoutId);
+            
+            const nuevoPeso = parseFloat(this.value);
+            
+            if (!nuevoPeso || nuevoPeso <= 0) return;
+            
+            console.log('🔄 Peso actualizado a:', nuevoPeso);
+            
+            // ⭐ Debounce para no hacer muchas peticiones
             timeoutId = setTimeout(() => {
-                if (this.value) {
-                    console.log('🔄 Peso actualizado, recargando inventario...');
-                    cargarInventarioFiltrado();
-                }
-            }, 500);
-        });
-    }
-
-    // Interceptar el envío del formulario de nueva consulta
-    const formNuevaConsulta = document.querySelector('#nuevaConsultaModal form');
-    if (formNuevaConsulta) {
-        formNuevaConsulta.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            
-            // Agregar medicamentos seleccionados
-            prepararDatosConsulta(formData);
-            
-            // Enviar con fetch
-            fetch(this.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    console.log('✅ Consulta guardada correctamente');
-                    mostrarAlertaModal('Consulta registrada correctamente', 'success');
-                    
-                    // Limpiar selección
-                    limpiarSeleccionMedicamentos();
-                    
-                    // Cerrar modal y recargar
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    console.error('❌ Error al guardar:', data.error);
-                    mostrarAlertaModal(data.error || 'Error al guardar la consulta', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('❌ Error:', error);
-                mostrarAlertaModal('Error de conexión al guardar la consulta', 'error');
-            });
-        });
-    }
-
-    // Limpiar al cerrar el modal
-    const modalOverlay = document.getElementById('nuevaConsultaModal');
-    if (modalOverlay) {
-        modalOverlay.addEventListener('click', function(e) {
-            if (e.target === this) {
-                limpiarSeleccionMedicamentos();
-            }
-        });
-    }
-
-    // Botón de cancelar
-    const btnCancelar = document.querySelector('#nuevaConsultaModal .vet-btn-secondary');
-    if (btnCancelar) {
-        btnCancelar.addEventListener('click', function() {
-            limpiarSeleccionMedicamentos();
+                // Recalcular dosis de medicamentos ya seleccionados
+                medicamentosSeleccionados = medicamentosSeleccionados.map(med => {
+                    const producto = medicamentosDisponibles.find(p => p.id === med.id);
+                    if (producto) {
+                        const nuevaDosis = calcularDosisPersonalizada(producto, nuevoPeso);
+                        return {
+                            ...med,
+                            peso: nuevoPeso,
+                            dosis: nuevaDosis
+                        };
+                    }
+                    return med;
+                });
+                
+                actualizarMedicamentosSeleccionados();
+                cargarInventarioFiltrado();
+            }, 500); // Esperar 500ms después de que el usuario deje de escribir
         });
     }
 });
-
-// Exportar funciones para uso externo
-window.inventarioConsulta = {
-    obtenerMedicamentosSeleccionados: obtenerMedicamentosParaGuardar,
-    limpiarSeleccion: limpiarSeleccionMedicamentos,
-    prepararDatos: prepararDatosConsulta
-};

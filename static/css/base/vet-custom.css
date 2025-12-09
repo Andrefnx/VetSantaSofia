@@ -97,7 +97,7 @@ h4 {
 }
 
 .vet-btn-primary:hover {
-    background: var(--primary-hover) !important;
+    background: var(--primary-hover);
 }
 
 /* =============================
