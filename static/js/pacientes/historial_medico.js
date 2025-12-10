@@ -350,70 +350,229 @@ document.getElementById('btnRecuperarDatos')?.addEventListener('click', async fu
 
 // ⭐ FILTRO DE BÚSQUEDA EN HISTORIAL
 const searchHistorial = document.getElementById('searchHistorial');
-if (searchHistorial) {
-    searchHistorial.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase().trim();
-        const timelineItems = document.querySelectorAll('.timeline-item:not(.empty-state):not(.no-results-message)');
-        
-        let visibleCount = 0;
-        
-        timelineItems.forEach(item => {
-            const diagnostico = item.dataset.diagnostico || '';
-            const tratamiento = item.dataset.tratamiento || '';
-            const veterinario = item.dataset.veterinario || '';
-            const tipo = item.dataset.tipo || '';
-            
-            const matches = 
-                diagnostico.includes(searchTerm) ||
-                tratamiento.includes(searchTerm) ||
-                veterinario.includes(searchTerm) ||
-                tipo.includes(searchTerm);
-            
-            if (matches || searchTerm === '') {
-                item.style.display = 'grid';
-                visibleCount++;
-            } else {
-                item.style.display = 'none';
-            }
-        });
-        
-        // Manejar mensaje de no resultados
-        const timeline = document.getElementById('timeline');
-        const emptyState = timeline.querySelector('.empty-state');
-        let noResultsMsg = timeline.querySelector('.no-results-message');
-        
-        // Si hay término de búsqueda y no hay resultados visibles
-        if (searchTerm !== '' && visibleCount === 0 && timelineItems.length > 0) {
-            // Ocultar empty-state si existe
-            if (emptyState) {
-                emptyState.style.display = 'none';
-            }
-            
-            // Crear mensaje si no existe
-            if (!noResultsMsg) {
-                noResultsMsg = document.createElement('div');
-                noResultsMsg.className = 'no-results-message timeline-item';
-                noResultsMsg.innerHTML = `
-                    <div class="timeline-content" style="text-align: center; padding: 2rem; color: #999;">
-                        <i class="bi bi-search" style="font-size: 3rem;"></i>
-                        <p style="margin-top: 1rem;">No se encontraron coincidencias con "${searchTerm}"</p>
-                    </div>
-                `;
-                timeline.appendChild(noResultsMsg);
-            } else {
-                noResultsMsg.style.display = 'grid';
-                noResultsMsg.querySelector('p').textContent = `No se encontraron coincidencias con "${searchTerm}"`;
-            }
-        } else {
-            // Remover mensaje de no resultados
-            if (noResultsMsg) {
-                noResultsMsg.style.display = 'none';
-            }
-            
-            // Mostrar empty-state si existe y no hay búsqueda
-            if (emptyState && searchTerm === '') {
-                emptyState.style.display = 'grid';
+const btnCalendarToggle = document.getElementById('btnCalendarToggle');
+const calendarDropdown = document.getElementById('calendarDropdown');
+const selectMonth = document.getElementById('selectMonth');
+const selectYear = document.getElementById('selectYear');
+const btnPrevMonth = document.getElementById('btnPrevMonth');
+const btnNextMonth = document.getElementById('btnNextMonth');
+const btnCalendarClear = document.getElementById('btnCalendarClear');
+const btnCalendarApply = document.getElementById('btnCalendarApply');
+const selectedDateText = document.getElementById('selectedDateText');
+
+let currentFilterMonth = '';
+let currentFilterYear = '';
+// Inicializar años disponibles dinámicamente
+function initializeYears() {
+    const currentYear = new Date().getFullYear();
+    
+    // Obtener el año más antiguo del historial
+    const timelineItems = document.querySelectorAll('.timeline-item:not(.empty-state)');
+    let oldestYear = currentYear;
+    
+    timelineItems.forEach(item => {
+        const fechaCompleta = item.querySelector('.timeline-item-date')?.textContent.trim();
+        if (fechaCompleta) {
+            const [fecha] = fechaCompleta.split(' ');
+            const [dia, mes, año] = fecha.split('/');
+            const itemYear = parseInt(año);
+            if (itemYear < oldestYear) {
+                oldestYear = itemYear;
             }
         }
     });
+    
+    // Crear opciones desde el año actual hasta el más antiguo
+    for (let year = currentYear; year >= oldestYear; year--) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        selectYear.appendChild(option);
+    }
 }
+
+// Toggle calendario
+if (btnCalendarToggle) {
+    btnCalendarToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        calendarDropdown.classList.toggle('show');
+        this.classList.toggle('active');
+    });
+}
+
+// Cerrar calendario al hacer click fuera
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.historial-date-filter')) {
+        calendarDropdown?.classList.remove('show');
+        btnCalendarToggle?.classList.remove('active');
+    }
+});
+
+// Navegación mes anterior
+if (btnPrevMonth) {
+    btnPrevMonth.addEventListener('click', function() {
+        let month = selectMonth.value ? parseInt(selectMonth.value) : new Date().getMonth();
+        let year = selectYear.value ? parseInt(selectYear.value) : new Date().getFullYear();
+        
+        month--;
+        if (month < 0) {
+            month = 11;
+            year--;
+        }
+        
+        selectMonth.value = month;
+        selectYear.value = year;
+    });
+}
+
+// Navegación mes siguiente
+if (btnNextMonth) {
+    btnNextMonth.addEventListener('click', function() {
+        let month = selectMonth.value ? parseInt(selectMonth.value) : new Date().getMonth();
+        let year = selectYear.value ? parseInt(selectYear.value) : new Date().getFullYear();
+        
+        month++;
+        if (month > 11) {
+            month = 0;
+            year++;
+        }
+        
+        selectMonth.value = month;
+        selectYear.value = year;
+    });
+}
+
+// Limpiar filtro
+if (btnCalendarClear) {
+    btnCalendarClear.addEventListener('click', function() {
+        selectMonth.value = '';
+        selectYear.value = '';
+        currentFilterMonth = '';
+        currentFilterYear = '';
+        selectedDateText.textContent = 'Filtrar por fecha';
+        btnCalendarToggle.classList.remove('active');
+        calendarDropdown.classList.remove('show');
+        filtrarHistorial();
+    });
+}
+
+// Aplicar filtro
+if (btnCalendarApply) {
+    btnCalendarApply.addEventListener('click', function() {
+        currentFilterMonth = selectMonth.value;
+        currentFilterYear = selectYear.value;
+        
+        // Actualizar texto del botón
+        let text = 'Filtrar por fecha';
+        if (currentFilterMonth !== '' || currentFilterYear !== '') {
+            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                              'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            
+            if (currentFilterMonth !== '' && currentFilterYear !== '') {
+                text = `${monthNames[parseInt(currentFilterMonth)]} ${currentFilterYear}`;
+            } else if (currentFilterMonth !== '') {
+                text = monthNames[parseInt(currentFilterMonth)];
+            } else if (currentFilterYear !== '') {
+                text = currentFilterYear;
+            }
+        }
+        
+        selectedDateText.textContent = text;
+        calendarDropdown.classList.remove('show');
+        btnCalendarToggle.classList.remove('active');
+        filtrarHistorial();
+    });
+}
+
+function filtrarHistorial() {
+    const searchTerm = searchHistorial?.value.toLowerCase().trim() || '';
+    const timelineItems = document.querySelectorAll('.timeline-item:not(.empty-state):not(.no-results-message)');
+    
+    let visibleCount = 0;
+    
+    timelineItems.forEach(item => {
+        const diagnostico = item.dataset.diagnostico || '';
+        const tratamiento = item.dataset.tratamiento || '';
+        const veterinario = item.dataset.veterinario || '';
+        const tipo = item.dataset.tipo || '';
+        
+        // Filtro de búsqueda de texto
+        const matchesSearch = 
+            searchTerm === '' ||
+            diagnostico.includes(searchTerm) ||
+            tratamiento.includes(searchTerm) ||
+            veterinario.includes(searchTerm) ||
+            tipo.includes(searchTerm);
+        
+        // Filtro de fecha
+        let matchesDate = true;
+        if (currentFilterMonth !== '' || currentFilterYear !== '') {
+            const fechaCompleta = item.querySelector('.timeline-item-date')?.textContent.trim();
+            if (fechaCompleta) {
+                // Formato: "dd/mm/yyyy HH:MM"
+                const [fecha] = fechaCompleta.split(' ');
+                const [dia, mes, año] = fecha.split('/');
+                
+                const itemMonth = parseInt(mes) - 1; // 0-indexed
+                const itemYear = año;
+                
+                matchesDate = true;
+                if (currentFilterMonth !== '') {
+                    matchesDate = matchesDate && (itemMonth === parseInt(currentFilterMonth));
+                }
+                if (currentFilterYear !== '') {
+                    matchesDate = matchesDate && (itemYear === currentFilterYear);
+                }
+            } else {
+                matchesDate = false;
+            }
+        }
+        
+        if (matchesSearch && matchesDate) {
+            item.style.display = 'grid';
+            visibleCount++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    // Manejar mensaje de no resultados
+    const timeline = document.getElementById('timeline');
+    const emptyState = timeline.querySelector('.empty-state');
+    let noResultsMsg = timeline.querySelector('.no-results-message');
+    
+    if (visibleCount === 0 && (searchTerm !== '' || currentFilterMonth !== '' || currentFilterYear !== '') && timelineItems.length > 0) {
+        if (emptyState) {
+            emptyState.style.display = 'none';
+        }
+        
+        if (!noResultsMsg) {
+            noResultsMsg = document.createElement('div');
+            noResultsMsg.className = 'no-results-message timeline-item';
+            noResultsMsg.innerHTML = `
+                <div class="timeline-content" style="text-align: center; padding: 2rem; color: #999;">
+                    <i class="bi bi-search" style="font-size: 3rem;"></i>
+                    <p style="margin-top: 1rem;">No se encontraron coincidencias</p>
+                </div>
+            `;
+            timeline.appendChild(noResultsMsg);
+        } else {
+            noResultsMsg.style.display = 'grid';
+        }
+    } else {
+        if (noResultsMsg) {
+            noResultsMsg.style.display = 'none';
+        }
+        
+        if (emptyState && searchTerm === '' && currentFilterMonth === '' && currentFilterYear === '') {
+            emptyState.style.display = 'grid';
+        }
+    }
+}
+
+if (searchHistorial) {
+    searchHistorial.addEventListener('input', filtrarHistorial);
+}
+
+// Inicializar
+initializeYears();
