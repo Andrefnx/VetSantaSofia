@@ -517,7 +517,7 @@ function filtrarHistorial() {
         }
         
         if (matchesSearch && matchesDate) {
-            item.style.display = 'grid';
+            item.style.display = 'flex'; // <-- Cambiado a flex para mantener el layout compacto
             visibleCount++;
         } else {
             item.style.display = 'none';
@@ -548,7 +548,7 @@ function filtrarHistorial() {
             `;
             timeline.appendChild(noResultsMsg);
         } else {
-            noResultsMsg.style.display = 'grid';
+            noResultsMsg.style.display = 'flex';
         }
     } else {
         if (noResultsMsg) {
@@ -556,7 +556,7 @@ function filtrarHistorial() {
         }
         
         if (emptyState && searchTerm === '' && currentFilterMonth === '' && currentFilterYear === '') {
-            emptyState.style.display = 'grid';
+            emptyState.style.display = 'flex';
         }
     }
 }
@@ -610,6 +610,9 @@ document.addEventListener('DOMContentLoaded', function() {
     marcarPrimerosDelMes();
     
     // ...existing code (tabs)...
+
+    // Agrega esta línea para inicializar los años del filtro:
+    initializeYears();
 });
 
 // Actualizar después de filtrar
@@ -657,7 +660,7 @@ function filtrarHistorial() {
         }
         
         if (matchesSearch && matchesDate) {
-            item.style.display = 'block';
+            item.style.display = 'flex'; // <-- Cambiado a flex para mantener el layout compacto
             visibleCount++;
         } else {
             item.style.display = 'none';
@@ -688,7 +691,7 @@ function filtrarHistorial() {
             `;
             timeline.appendChild(noResultsMsg);
         } else {
-            noResultsMsg.style.display = 'block';
+            noResultsMsg.style.display = 'flex';
         }
     } else {
         if (noResultsMsg) {
@@ -696,9 +699,7 @@ function filtrarHistorial() {
         }
         
         if (emptyState && searchTerm === '' && currentFilterMonth === '' && currentFilterYear === '') {
-            emptyState.style.display = 'block';
+            emptyState.style.display = 'flex';
         }
     }
 }
-
-// ...existing code...
