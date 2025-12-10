@@ -14,4 +14,7 @@ urlpatterns = [
     path('veterinarios/pacientes/<int:paciente_id>/', views.ficha_paciente, name='ficha_paciente'),
     path('pacientes/<int:paciente_id>/consulta/crear/', views.crear_consulta, name='crear_consulta'),
     path('pacientes/<int:paciente_id>/consulta/<int:consulta_id>/detalle/', views.detalle_consulta, name='detalle_consulta'),
+    path('pacientes/<int:pk>/', views.ficha_mascota, name='ficha_mascota'),  # ← Verifica este
+    # O si usas ficha_paciente:
+    # path('pacientes/<int:paciente_id>/', views.ficha_paciente, name='ficha_paciente'),
 ]

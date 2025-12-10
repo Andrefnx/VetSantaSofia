@@ -5,9 +5,9 @@ from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from .models import Consulta
 from pacientes.models import Paciente
-from inventario.models import Insumo
 from cuentas.models import CustomUser
 import json
+import sys
 
 @login_required
 def consulta_view(request):
@@ -40,8 +40,8 @@ def ficha_paciente(request, paciente_id):
     # Obtener nombre completo del veterinario logueado
     nombre_veterinario = f"{request.user.nombre} {request.user.apellido}".strip()
     
-    # Obtener solo usuarios con rol veterinario
-    veterinarios = CustomUser.objects.filter(role='veterinario').order_by('nombre')
+    # ✅ CAMBIAR 'role' POR 'rol'
+    veterinarios = CustomUser.objects.filter(rol='veterinario').order_by('nombre', 'apellido')
     
     context = {
         'paciente': paciente,
@@ -249,17 +249,31 @@ def guardar_consulta(request, paciente_id):
             }, status=400)
     
     return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+import sys
 
+@login_required
 def ficha_mascota(request, pk):
+    sys.stderr.write("\n" + "="*60 + "\n")
+    sys.stderr.write(f"🔴 FICHA MASCOTA LLAMADA - PK: {pk}\n")
+    sys.stderr.write("="*60 + "\n\n")
+    
     paciente = get_object_or_404(Paciente, pk=pk)
     consultas = Consulta.objects.filter(paciente=paciente).order_by('-fecha')
     
-    # Obtener veterinarios con rol 'veterinario'
-    veterinarios = CustomUser.objects.filter(role='veterinario').order_by('nombre', 'apellido')
+    sys.stderr.write(f"📦 Paciente: {paciente.nombre}\n")
+    sys.stderr.write(f"📋 Consultas encontradas: {consultas.count()}\n")
+    
+    veterinarios = CustomUser.objects.filter(rol='veterinario').order_by('nombre', 'apellido')
+    
+    sys.stderr.write(f"👥 Total de usuarios: {CustomUser.objects.count()}\n")
+    sys.stderr.write(f"👨‍⚕️ Total de veterinarios: {veterinarios.count()}\n")
+    sys.stderr.write(f"📝 Veterinarios: {list(veterinarios.values('nombre', 'apellido', 'rol'))}\n")
+    sys.stderr.write("="*60 + "\n\n")
     
     context = {
         'paciente': paciente,
         'consultas': consultas,
-        'veterinarios': veterinarios,  # ← AGREGAR ESTA LÍNEA
+        'nombre_veterinario': nombre_veterinario,
+        'veterinarios': veterinarios,  # Asegúrate de que esta línea esté presente
     }
     return render(request, 'consulta/ficha_mascota.html', context)
