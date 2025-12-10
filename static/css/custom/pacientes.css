@@ -438,6 +438,38 @@
 .timeline-item {
     position: relative;
     margin-bottom: 50px;
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    gap: 0;
+}
+
+.timeline-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.timeline-item-info {
+    flex: 1;
+}
+
+.timeline-item-title {
+    margin-bottom: 0.25rem;
+}
+
+.timeline-item-date {
+    font-size: 0.85rem;
+    color: #999;
+    font-weight: normal;
+    margin-left: 0.5rem;
+}
+
+.timeline-item-subtitle {
+    margin-bottom: 0;
+}
+
+.timeline-item-btn {
+    margin-left: 1rem;
 }
 
 .timeline-date {
@@ -1010,3 +1042,217 @@ td[colspan][style*="text-align: center"] {
     overflow-x: hidden;
     padding-right: 10px;
 } */
+
+/* ===========================
+   HISTORIAL CLÍNICO - HEADER
+=========================== */
+
+.historial-clinico {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+    flex-wrap: nowrap;
+}
+
+.historial-clinico h3 {
+    margin: 0;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.historial-search-container {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+    min-width: 200px;
+}
+
+.historial-search-container .bi-search {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Selector específico para el input de búsqueda */
+#searchHistorial.form-control {
+    padding-left: 2.75rem !important;
+    padding-right: 1rem !important;
+    border-radius: 20px !important;
+    border: 1px solid #dee2e6 !important;
+    font-size: 0.9rem !important;
+    width: 100% !important;
+    height: 38px !important;
+}
+
+.historial-actions {
+    display: flex;
+    gap: 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.historial-actions .vet-btn {
+    white-space: nowrap;
+}
+
+/* ELIMINAR O COMENTAR ESTE SELECTOR CONFLICTIVO */
+/* .historial-search-container.form-control.form-control-sm {
+    padding-left: 20px;
+} */
+
+/* Responsive: en pantallas muy pequeñas permitir wrap */
+@media (max-width: 768px) {
+    .historial-clinico {
+        flex-wrap: wrap;
+    }
+    
+    .historial-search-container {
+        order: 3;
+        width: 100%;
+        max-width: 100%;
+        margin-top: 0.5rem;
+    }
+}
+
+/* ===========================
+   TIMELINE - ITEMS
+=========================== */
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 50px;
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    gap: 0;
+}
+
+.timeline-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.timeline-item-info {
+    flex: 1;
+}
+
+.timeline-item-title {
+    margin-bottom: 0.25rem;
+}
+
+.timeline-item-date {
+    font-size: 0.85rem;
+    color: #999;
+    font-weight: normal;
+    margin-left: 0.5rem;
+}
+
+.timeline-item-subtitle {
+    margin-bottom: 0;
+}
+
+.timeline-item-btn {
+    margin-left: 1rem;
+}
+
+/* ===========================
+   MODAL DETALLE - LAYOUT
+=========================== */
+
+.detalle-modal-grid {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 1.5rem;
+}
+
+.detalle-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.detalle-veterinario {
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.detalle-veterinario-label {
+    font-size: 0.75rem;
+    color: #999;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.detalle-veterinario-label i {
+    margin-right: 0.25rem;
+}
+
+.detalle-veterinario-nombre {
+    font-weight: 600;
+    color: #2e7d32;
+    font-size: 0.95rem;
+}
+
+.detalle-datos-vitales-label {
+    font-size: 0.75rem;
+    color: #999;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.detalle-datos-vitales-label i {
+    margin-right: 0.25rem;
+}
+
+.detalle-datos-vitales-content {
+    font-size: 0.85rem;
+    color: #333;
+}
+
+.detalle-dato-item {
+    margin-bottom: 0.5rem;
+}
+
+.detalle-dato-item i {
+    margin-right: 0.25rem;
+}
+
+.detalle-dato-otros {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #dee2e6;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.detalle-medicamentos {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #eee;
+}
+
+.detalle-medicamentos-title {
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    color: #999;
+}
+
+.detalle-medicamentos-title i {
+    margin-right: 0.25rem;
+}
+
+.detalle-medicamentos-list {
+    margin: 0;
+    padding-left: 1.5rem;
+    font-size: 0.85rem;
+    color: #666;
+}

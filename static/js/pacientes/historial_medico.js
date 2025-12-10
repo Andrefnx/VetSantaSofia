@@ -179,16 +179,16 @@ function verDetalleConsulta(consultaId) {
                     `<i class="bi bi-clipboard2-pulse"></i> ${c.tipo_consulta} - ${c.fecha}`;
                 
                 let datosVitales = [];
-                if (c.temperatura !== '-') datosVitales.push(`<div style="margin-bottom: 0.5rem;"><i class="bi bi-thermometer-half"></i> Temp: <strong>${c.temperatura}°C</strong></div>`);
-                if (c.peso !== '-') datosVitales.push(`<div style="margin-bottom: 0.5rem;"><i class="bi bi-heart-pulse"></i> Peso: <strong>${c.peso} kg</strong></div>`);
-                if (c.frecuencia_cardiaca !== '-') datosVitales.push(`<div style="margin-bottom: 0.5rem;"><i class="bi bi-heart"></i> FC: <strong>${c.frecuencia_cardiaca} lpm</strong></div>`);
-                if (c.frecuencia_respiratoria !== '-') datosVitales.push(`<div style="margin-bottom: 0.5rem;"><i class="bi bi-lungs"></i> FR: <strong>${c.frecuencia_respiratoria} rpm</strong></div>`);
+                if (c.temperatura !== '-') datosVitales.push(`<div class="detalle-dato-item"><i class="bi bi-thermometer-half"></i> Temp: <strong>${c.temperatura}°C</strong></div>`);
+                if (c.peso !== '-') datosVitales.push(`<div class="detalle-dato-item"><i class="bi bi-heart-pulse"></i> Peso: <strong>${c.peso} kg</strong></div>`);
+                if (c.frecuencia_cardiaca !== '-') datosVitales.push(`<div class="detalle-dato-item"><i class="bi bi-heart"></i> FC: <strong>${c.frecuencia_cardiaca} lpm</strong></div>`);
+                if (c.frecuencia_respiratoria !== '-') datosVitales.push(`<div class="detalle-dato-item"><i class="bi bi-lungs"></i> FR: <strong>${c.frecuencia_respiratoria} rpm</strong></div>`);
                 
                 let medicamentosHTML = '';
                 if (c.medicamentos && c.medicamentos.length > 0) {
-                    medicamentosHTML = '<div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #eee;">';
-                    medicamentosHTML += '<p style="margin-bottom: 0.5rem; font-size: 0.85rem; color: #999;"><i class="bi bi-capsule"></i> <strong>Medicamentos utilizados:</strong></p>';
-                    medicamentosHTML += '<ul style="margin: 0; padding-left: 1.5rem; font-size: 0.85rem; color: #666;">';
+                    medicamentosHTML = `<div class="detalle-medicamentos">
+                        <p class="detalle-medicamentos-title"><i class="bi bi-capsule"></i> <strong>Medicamentos utilizados:</strong></p>
+                        <ul class="detalle-medicamentos-list">`;
                     medicamentosHTML += c.medicamentos.map(med => {
                         let texto = med.nombre;
                         if (med.dosis) {
@@ -200,28 +200,26 @@ function verDetalleConsulta(consultaId) {
                 }
                 
                 document.getElementById('detalleContenido').innerHTML = `
-                    <div style="display: grid; grid-template-columns: 200px 1fr; gap: 1.5rem;">
-                        <div>
-                            <!-- Veterinario -->
-                            <div style="padding-bottom: 1rem; margin-bottom: 1rem; border-bottom: 1px solid #dee2e6;">
-                                <div style="font-size: 0.75rem; color: #999; margin-bottom: 0.5rem; text-transform: uppercase; font-weight: 600;">
+                    <div class="detalle-modal-grid">
+                        <div class="detalle-sidebar">
+                            <div class="detalle-veterinario">
+                                <div class="detalle-veterinario-label">
                                     <i class="bi bi-person-badge"></i> Veterinario
                                 </div>
-                                <div style="font-weight: 600; color: #2e7d32; font-size: 0.95rem;">
+                                <div class="detalle-veterinario-nombre">
                                     ${c.veterinario}
                                 </div>
                             </div>
                             
-                            <!-- Datos Vitales -->
                             ${datosVitales.length > 0 ? `
                                 <div>
-                                    <div style="font-size: 0.75rem; color: #999; margin-bottom: 0.5rem; text-transform: uppercase; font-weight: 600;">
+                                    <div class="detalle-datos-vitales-label">
                                         <i class="bi bi-clipboard2-pulse"></i> Datos Vitales
                                     </div>
-                                    <div style="font-size: 0.85rem; color: #333;">
+                                    <div class="detalle-datos-vitales-content">
                                         ${datosVitales.join('')}
                                     </div>
-                                    ${c.otros !== '-' ? `<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #dee2e6; font-size: 0.8rem; color: #666;"><strong>Otros:</strong> ${c.otros}</div>` : ''}
+                                    ${c.otros !== '-' ? `<div class="detalle-dato-otros"><strong>Otros:</strong> ${c.otros}</div>` : ''}
                                 </div>
                             ` : ''}
                         </div>
@@ -349,3 +347,73 @@ document.getElementById('btnRecuperarDatos')?.addEventListener('click', async fu
         alert('❌ Error de red al guardar');
     }
 });
+
+// ⭐ FILTRO DE BÚSQUEDA EN HISTORIAL
+const searchHistorial = document.getElementById('searchHistorial');
+if (searchHistorial) {
+    searchHistorial.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase().trim();
+        const timelineItems = document.querySelectorAll('.timeline-item:not(.empty-state):not(.no-results-message)');
+        
+        let visibleCount = 0;
+        
+        timelineItems.forEach(item => {
+            const diagnostico = item.dataset.diagnostico || '';
+            const tratamiento = item.dataset.tratamiento || '';
+            const veterinario = item.dataset.veterinario || '';
+            const tipo = item.dataset.tipo || '';
+            
+            const matches = 
+                diagnostico.includes(searchTerm) ||
+                tratamiento.includes(searchTerm) ||
+                veterinario.includes(searchTerm) ||
+                tipo.includes(searchTerm);
+            
+            if (matches || searchTerm === '') {
+                item.style.display = 'grid';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // Manejar mensaje de no resultados
+        const timeline = document.getElementById('timeline');
+        const emptyState = timeline.querySelector('.empty-state');
+        let noResultsMsg = timeline.querySelector('.no-results-message');
+        
+        // Si hay término de búsqueda y no hay resultados visibles
+        if (searchTerm !== '' && visibleCount === 0 && timelineItems.length > 0) {
+            // Ocultar empty-state si existe
+            if (emptyState) {
+                emptyState.style.display = 'none';
+            }
+            
+            // Crear mensaje si no existe
+            if (!noResultsMsg) {
+                noResultsMsg = document.createElement('div');
+                noResultsMsg.className = 'no-results-message timeline-item';
+                noResultsMsg.innerHTML = `
+                    <div class="timeline-content" style="text-align: center; padding: 2rem; color: #999;">
+                        <i class="bi bi-search" style="font-size: 3rem;"></i>
+                        <p style="margin-top: 1rem;">No se encontraron coincidencias con "${searchTerm}"</p>
+                    </div>
+                `;
+                timeline.appendChild(noResultsMsg);
+            } else {
+                noResultsMsg.style.display = 'grid';
+                noResultsMsg.querySelector('p').textContent = `No se encontraron coincidencias con "${searchTerm}"`;
+            }
+        } else {
+            // Remover mensaje de no resultados
+            if (noResultsMsg) {
+                noResultsMsg.style.display = 'none';
+            }
+            
+            // Mostrar empty-state si existe y no hay búsqueda
+            if (emptyState && searchTerm === '') {
+                emptyState.style.display = 'grid';
+            }
+        }
+    });
+}

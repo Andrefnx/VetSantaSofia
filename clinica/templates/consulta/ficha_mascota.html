@@ -188,13 +188,22 @@
         </div>
         <div class="tabs-content">
             <div class="tab-content active" id="historial">
-                <div class="historial-clinico" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                    <h3 style="margin: 0;">Historial Clínico</h3>
-                    <div>
+                <div class="historial-clinico">
+                    <h3>Historial Clínico</h3>
+                    
+                    <div class="historial-search-container">
+                        <i class="bi bi-search"></i>
+                        <input type="text" 
+                               id="searchHistorial" 
+                               class="form-control form-control-sm" 
+                               placeholder="Buscar...">
+                    </div>
+                    
+                    <div class="historial-actions">
                         <button class="vet-btn vet-btn-primary" id="btnNuevaConsulta">
                             <i class="bi bi-plus-lg"></i> Nueva Consulta
                         </button>
-                        <button class="vet-btn vet-btn-grey" id="btnAgendarCitaModal" style="margin-left:10px;">
+                        <button class="vet-btn vet-btn-grey" id="btnAgendarCitaModal">
                             <i class="bi bi-calendar-plus"></i> Agendar Cita
                         </button>
                     </div>
@@ -202,33 +211,37 @@
 
                 <div class="timeline" id="timeline">
                     {% for consulta in consultas %}
-                    <div class="timeline-item">
+                    <div class="timeline-item" 
+                         data-diagnostico="{{ consulta.diagnostico|lower|default:'' }}"
+                         data-tratamiento="{{ consulta.tratamiento|lower|default:'' }}"
+                         data-veterinario="{{ consulta.veterinario.nombre|lower }} {{ consulta.veterinario.apellido|lower }}"
+                         data-tipo="{{ consulta.get_tipo_consulta_display|lower }}">
                         <div class="timeline-date">
                             <span class="month">{{ consulta.fecha|date:"d" }}</span>
                             <span class="day">{{ consulta.fecha|date:"M" }}</span>
                         </div>
                         <div class="timeline-marker"></div>
                         <div class="timeline-content">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                <div style="flex: 1;">
-                                    <h3 class="event-title" style="margin-bottom: 0.25rem;">
+                            <div class="timeline-item-header">
+                                <div class="timeline-item-info">
+                                    <h3 class="event-title timeline-item-title">
                                         {{ consulta.get_tipo_consulta_display|default:"Consulta general" }}
-                                        <span style="font-size: 0.85rem; color: #999; font-weight: normal; margin-left: 0.5rem;">
+                                        <span class="timeline-item-date">
                                             {{ consulta.fecha|date:"d/m/Y H:i" }}
                                         </span>
                                     </h3>
-                                    <p class="event-subtitle" style="margin-bottom: 0;">
+                                    <p class="event-subtitle timeline-item-subtitle">
                                         <i class="bi bi-person"></i> {{ consulta.veterinario.nombre }} {{ consulta.veterinario.apellido }}
                                     </p>
                                 </div>
-                                <button class="timeline-btn" onclick="verDetalleConsulta({{ consulta.id }})" style="margin-left: 1rem;">
+                                <button class="timeline-btn timeline-item-btn" onclick="verDetalleConsulta({{ consulta.id }})">
                                     Ver detalle
                                 </button>
                             </div>
                         </div>
                     </div>
                     {% empty %}
-                    <div class="timeline-item">
+                    <div class="timeline-item empty-state">
                         <div class="timeline-content" style="text-align: center; padding: 2rem; color: #999;">
                             <i class="bi bi-clipboard2-pulse" style="font-size: 3rem;"></i>
                             <p style="margin-top: 1rem;">No hay consultas registradas</p>
