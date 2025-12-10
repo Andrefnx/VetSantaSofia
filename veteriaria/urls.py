@@ -20,8 +20,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('login.urls')),  
+    path('admin/', admin.site.urls),  # ← PRIMERO
     path('dashboard/', include('dashboard.urls')),
     path('pacientes/', include('pacientes.urls')),
     path('inventario/', include('inventario.urls')),
@@ -31,6 +30,7 @@ urlpatterns = [
     path('agenda/', include('agenda.urls')),
     path('caja/', include('caja.urls')),
     path('gestion/', include('gestion.urls')),
+    path('', include('login.urls')),  # ← ÚLTIMO (porque tiene catch-all)
 ]
 
 if settings.DEBUG:

@@ -6,6 +6,7 @@ from django.utils import timezone
 from .models import Consulta
 from pacientes.models import Paciente
 from inventario.models import Insumo
+from cuentas.models import CustomUser
 import json
 
 @login_required
@@ -39,10 +40,14 @@ def ficha_paciente(request, paciente_id):
     # Obtener nombre completo del veterinario logueado
     nombre_veterinario = f"{request.user.nombre} {request.user.apellido}".strip()
     
+    # Obtener solo usuarios con rol veterinario
+    veterinarios = CustomUser.objects.filter(role='veterinario').order_by('nombre')
+    
     context = {
         'paciente': paciente,
         'consultas': consultas,
-        'nombre_veterinario': nombre_veterinario
+        'nombre_veterinario': nombre_veterinario,
+        'veterinarios': veterinarios,
     }
     
     return render(request, 'consulta/ficha_mascota.html', context)
@@ -244,3 +249,17 @@ def guardar_consulta(request, paciente_id):
             }, status=400)
     
     return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+
+def ficha_mascota(request, pk):
+    paciente = get_object_or_404(Paciente, pk=pk)
+    consultas = Consulta.objects.filter(paciente=paciente).order_by('-fecha')
+    
+    # Obtener veterinarios con rol 'veterinario'
+    veterinarios = CustomUser.objects.filter(role='veterinario').order_by('nombre', 'apellido')
+    
+    context = {
+        'paciente': paciente,
+        'consultas': consultas,
+        'veterinarios': veterinarios,  # ← AGREGAR ESTA LÍNEA
+    }
+    return render(request, 'consulta/ficha_mascota.html', context)
