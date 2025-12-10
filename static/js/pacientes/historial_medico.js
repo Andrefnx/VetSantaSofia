@@ -348,23 +348,21 @@ document.getElementById('btnRecuperarDatos')?.addEventListener('click', async fu
     }
 });
 
-// ⭐ FILTRO DE BÚSQUEDA EN HISTORIAL
+// ⭐ FILTRO DE BÚSQUEDA EN HISTORIAL CON CALENDARIO INLINE
 const searchHistorial = document.getElementById('searchHistorial');
-const btnCalendarToggle = document.getElementById('btnCalendarToggle');
-const calendarDropdown = document.getElementById('calendarDropdown');
 const selectMonth = document.getElementById('selectMonth');
 const selectYear = document.getElementById('selectYear');
 const btnPrevMonth = document.getElementById('btnPrevMonth');
 const btnNextMonth = document.getElementById('btnNextMonth');
-const btnCalendarClear = document.getElementById('btnCalendarClear');
-const btnCalendarApply = document.getElementById('btnCalendarApply');
-const selectedDateText = document.getElementById('selectedDateText');
+const btnClearFilters = document.getElementById('btnClearFilters');
 
 let currentFilterMonth = '';
 let currentFilterYear = '';
+
 // Inicializar años disponibles dinámicamente
 function initializeYears() {
     const currentYear = new Date().getFullYear();
+    const nextYear = currentYear + 1;
     
     // Obtener el año más antiguo del historial
     const timelineItems = document.querySelectorAll('.timeline-item:not(.empty-state)');
@@ -382,8 +380,8 @@ function initializeYears() {
         }
     });
     
-    // Crear opciones desde el año actual hasta el más antiguo
-    for (let year = currentYear; year >= oldestYear; year--) {
+    // Crear opciones desde el próximo año hasta el más antiguo
+    for (let year = nextYear; year >= oldestYear; year--) {
         const option = document.createElement('option');
         option.value = year;
         option.textContent = year;
@@ -391,22 +389,22 @@ function initializeYears() {
     }
 }
 
-// Toggle calendario
-if (btnCalendarToggle) {
-    btnCalendarToggle.addEventListener('click', function(e) {
-        e.stopPropagation();
-        calendarDropdown.classList.toggle('show');
-        this.classList.toggle('active');
+// Actualizar filtro cuando cambian los selectores
+if (selectMonth) {
+    selectMonth.addEventListener('change', function() {
+        currentFilterMonth = this.value;
+        updateClearButton();
+        filtrarHistorial();
     });
 }
 
-// Cerrar calendario al hacer click fuera
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('.historial-date-filter')) {
-        calendarDropdown?.classList.remove('show');
-        btnCalendarToggle?.classList.remove('active');
-    }
-});
+if (selectYear) {
+    selectYear.addEventListener('change', function() {
+        currentFilterYear = this.value;
+        updateClearButton();
+        filtrarHistorial();
+    });
+}
 
 // Navegación mes anterior
 if (btnPrevMonth) {
@@ -422,6 +420,10 @@ if (btnPrevMonth) {
         
         selectMonth.value = month;
         selectYear.value = year;
+        currentFilterMonth = month.toString();
+        currentFilterYear = year.toString();
+        updateClearButton();
+        filtrarHistorial();
     });
 }
 
@@ -439,49 +441,36 @@ if (btnNextMonth) {
         
         selectMonth.value = month;
         selectYear.value = year;
+        currentFilterMonth = month.toString();
+        currentFilterYear = year.toString();
+        updateClearButton();
+        filtrarHistorial();
     });
 }
 
-// Limpiar filtro
-if (btnCalendarClear) {
-    btnCalendarClear.addEventListener('click', function() {
+// Limpiar todos los filtros
+if (btnClearFilters) {
+    btnClearFilters.addEventListener('click', function() {
         selectMonth.value = '';
         selectYear.value = '';
+        searchHistorial.value = '';
         currentFilterMonth = '';
         currentFilterYear = '';
-        selectedDateText.textContent = 'Filtrar por fecha';
-        btnCalendarToggle.classList.remove('active');
-        calendarDropdown.classList.remove('show');
+        updateClearButton();
         filtrarHistorial();
     });
 }
 
-// Aplicar filtro
-if (btnCalendarApply) {
-    btnCalendarApply.addEventListener('click', function() {
-        currentFilterMonth = selectMonth.value;
-        currentFilterYear = selectYear.value;
-        
-        // Actualizar texto del botón
-        let text = 'Filtrar por fecha';
-        if (currentFilterMonth !== '' || currentFilterYear !== '') {
-            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                              'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-            
-            if (currentFilterMonth !== '' && currentFilterYear !== '') {
-                text = `${monthNames[parseInt(currentFilterMonth)]} ${currentFilterYear}`;
-            } else if (currentFilterMonth !== '') {
-                text = monthNames[parseInt(currentFilterMonth)];
-            } else if (currentFilterYear !== '') {
-                text = currentFilterYear;
-            }
+// Actualizar visibilidad del botón limpiar
+function updateClearButton() {
+    const hasFilters = searchHistorial?.value || currentFilterMonth !== '' || currentFilterYear !== '';
+    if (btnClearFilters) {
+        if (hasFilters) {
+            btnClearFilters.classList.add('show');
+        } else {
+            btnClearFilters.classList.remove('show');
         }
-        
-        selectedDateText.textContent = text;
-        calendarDropdown.classList.remove('show');
-        btnCalendarToggle.classList.remove('active');
-        filtrarHistorial();
-    });
+    }
 }
 
 function filtrarHistorial() {
@@ -509,11 +498,10 @@ function filtrarHistorial() {
         if (currentFilterMonth !== '' || currentFilterYear !== '') {
             const fechaCompleta = item.querySelector('.timeline-item-date')?.textContent.trim();
             if (fechaCompleta) {
-                // Formato: "dd/mm/yyyy HH:MM"
                 const [fecha] = fechaCompleta.split(' ');
                 const [dia, mes, año] = fecha.split('/');
                 
-                const itemMonth = parseInt(mes) - 1; // 0-indexed
+                const itemMonth = parseInt(mes) - 1;
                 const itemYear = año;
                 
                 matchesDate = true;
@@ -535,6 +523,9 @@ function filtrarHistorial() {
             item.style.display = 'none';
         }
     });
+    
+    // ⭐ ACTUALIZAR MARCADORES DE PRIMER MES DESPUÉS DE FILTRAR
+    marcarPrimerosDelMes();
     
     // Manejar mensaje de no resultados
     const timeline = document.getElementById('timeline');
@@ -570,9 +561,144 @@ function filtrarHistorial() {
     }
 }
 
-if (searchHistorial) {
-    searchHistorial.addEventListener('input', filtrarHistorial);
+// ⭐ MARCAR PRIMER ITEM DE CADA MES Y ACTUALIZAR FORMATO
+function marcarPrimerosDelMes() {
+    const timelineItems = document.querySelectorAll('.timeline-item:not(.empty-state):not(.no-results-message)');
+    const monthsShown = new Set();
+    
+    timelineItems.forEach(item => {
+        // Solo procesar items visibles
+        if (item.style.display === 'none') {
+            item.classList.remove('first-of-month');
+            return;
+        }
+        
+        const fechaCompleta = item.querySelector('.timeline-item-date')?.textContent.trim();
+        if (!fechaCompleta) return;
+        
+        const [fecha] = fechaCompleta.split(' ');
+        const [dia, mes, año] = fecha.split('/');
+        const monthYear = `${mes}-${año}`; // Formato: "12-2025"
+        
+        // Actualizar el contenido del timeline-date
+        const timelineDate = item.querySelector('.timeline-date');
+        if (timelineDate) {
+            const monthElement = timelineDate.querySelector('.month');
+            const dayElement = timelineDate.querySelector('.day');
+            
+            if (monthElement && dayElement) {
+                const monthNames = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 
+                                  'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+                
+                monthElement.textContent = monthNames[parseInt(mes) - 1]; // Mes abreviado en mayúsculas
+                dayElement.textContent = año; // Año
+            }
+        }
+        
+        // Marcar como primero del mes si no se ha mostrado este mes/año
+        if (!monthsShown.has(monthYear)) {
+            item.classList.add('first-of-month');
+            monthsShown.add(monthYear);
+        } else {
+            item.classList.remove('first-of-month');
+        }
+    });
 }
 
-// Inicializar
-initializeYears();
+// Ejecutar al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    marcarPrimerosDelMes();
+    
+    // ...existing code (tabs)...
+});
+
+// Actualizar después de filtrar
+function filtrarHistorial() {
+    const searchTerm = searchHistorial?.value.toLowerCase().trim() || '';
+    const timelineItems = document.querySelectorAll('.timeline-item:not(.empty-state):not(.no-results-message)');
+    
+    let visibleCount = 0;
+    
+    timelineItems.forEach(item => {
+        const diagnostico = item.dataset.diagnostico || '';
+        const tratamiento = item.dataset.tratamiento || '';
+        const veterinario = item.dataset.veterinario || '';
+        const tipo = item.dataset.tipo || '';
+        
+        // Filtro de búsqueda de texto
+        const matchesSearch = 
+            searchTerm === '' ||
+            diagnostico.includes(searchTerm) ||
+            tratamiento.includes(searchTerm) ||
+            veterinario.includes(searchTerm) ||
+            tipo.includes(searchTerm);
+        
+        // Filtro de fecha
+        let matchesDate = true;
+        if (currentFilterMonth !== '' || currentFilterYear !== '') {
+            const fechaCompleta = item.querySelector('.timeline-item-date')?.textContent.trim();
+            if (fechaCompleta) {
+                const [fecha] = fechaCompleta.split(' ');
+                const [dia, mes, año] = fecha.split('/');
+                
+                const itemMonth = parseInt(mes) - 1;
+                const itemYear = año;
+                
+                matchesDate = true;
+                if (currentFilterMonth !== '') {
+                    matchesDate = matchesDate && (itemMonth === parseInt(currentFilterMonth));
+                }
+                if (currentFilterYear !== '') {
+                    matchesDate = matchesDate && (itemYear === currentFilterYear);
+                }
+            } else {
+                matchesDate = false;
+            }
+        }
+        
+        if (matchesSearch && matchesDate) {
+            item.style.display = 'block';
+            visibleCount++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    // ⭐ ACTUALIZAR MARCADORES DE PRIMER MES DESPUÉS DE FILTRAR
+    marcarPrimerosDelMes();
+    
+    // Manejar mensaje de no resultados
+    const timeline = document.getElementById('timeline');
+    const emptyState = timeline.querySelector('.empty-state');
+    let noResultsMsg = timeline.querySelector('.no-results-message');
+    
+    if (visibleCount === 0 && (searchTerm !== '' || currentFilterMonth !== '' || currentFilterYear !== '') && timelineItems.length > 0) {
+        if (emptyState) {
+            emptyState.style.display = 'none';
+        }
+        
+        if (!noResultsMsg) {
+            noResultsMsg = document.createElement('div');
+            noResultsMsg.className = 'no-results-message timeline-item';
+            noResultsMsg.innerHTML = `
+                <div class="timeline-content" style="text-align: center; padding: 2rem; color: #999;">
+                    <i class="bi bi-search" style="font-size: 3rem;"></i>
+                    <p style="margin-top: 1rem;">No se encontraron coincidencias</p>
+                </div>
+            `;
+            timeline.appendChild(noResultsMsg);
+        } else {
+            noResultsMsg.style.display = 'block';
+        }
+    } else {
+        if (noResultsMsg) {
+            noResultsMsg.style.display = 'none';
+        }
+        
+        if (emptyState && searchTerm === '' && currentFilterMonth === '' && currentFilterYear === '') {
+            emptyState.style.display = 'block';
+        }
+    }
+}
+
+// ...existing code...
