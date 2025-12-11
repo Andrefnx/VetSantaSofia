@@ -248,7 +248,7 @@
                                                     <i class="bi bi-person"></i> {{ consulta.veterinario.nombre }} {{ consulta.veterinario.apellido }}
                                                 </p>
                                             </div>
-                                            <button class="timeline-btn timeline-item-btn" onclick="verDetalleConsulta({{ consulta.id }})">
+                                            <button class="timeline-btn timeline-item-btn" onclick="verDetalleConsulta('{{ consulta.id }}')">
                                                 Ver detalle
                                             </button>
                                         </div>
@@ -657,19 +657,30 @@
     </div>
 </div>
 
-<script>
-    window.pacienteData = {
-        id: {{ paciente.id }},
-        nombre: "{{ paciente.nombre|escapejs }}",
-        especie: "{{ paciente.especie }}",
-        peso: {{ paciente.ultimo_peso|default:"null" }},
-        edad: "{{ paciente.edad_formateada|escapejs }}",
-        propietario: "{{ paciente.propietario.nombre_completo|escapejs }}"
-    };
-</script>
 {% endblock %}
 
 {% block extra_js %}
+<script>
+    // Obtener datos del paciente desde la API
+    const pacienteId = {{ paciente.id }};
+    
+    fetch(`/clinica/pacientes/${pacienteId}/data/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.pacienteData = data.paciente;
+                console.log('✅ [API] window.pacienteData cargado:', window.pacienteData);
+            } else {
+                console.error('❌ Error en API:', data.error);
+                window.pacienteData = { id: pacienteId };
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error al cargar datos del paciente:', error);
+            // Fallback: usar al menos el ID
+            window.pacienteData = { id: pacienteId };
+        });
+</script>
 <script src="{% static 'js/base/modals_base.js' %}"></script>
 <script src="{% static 'js/pacientes/editar_ficha.js' %}"></script>
 <script src="{% static 'js/pacientes/historial_medico.js' %}"></script>

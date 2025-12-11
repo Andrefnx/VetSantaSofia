@@ -426,22 +426,36 @@ function getCookie(name) {
 
 // Ver detalle de consulta
 function verDetalleConsulta(consultaId) {
-    const pacienteId = window.pacienteData.id;
+    if (!consultaId || consultaId === 'undefined' || consultaId === '') {
+        console.error('Error: consultaId no es válido', consultaId);
+        alert('Error: No se puede obtener el ID de la consulta');
+        return;
+    }
     
-    fetch(`/clinica/pacientes/${pacienteId}/consulta/${consultaId}/detalle/`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const c = data.consulta;
-                
-                document.getElementById('detalleTitulo').innerHTML = 
-                    `<i class="bi bi-clipboard2-pulse"></i> ${c.tipo_consulta} - ${c.fecha}`;
-                
-                let datosVitales = [];
-                if (c.temperatura !== '-') datosVitales.push(`<div class="detalle-dato-item"><i class="bi bi-thermometer-half"></i> Temp: <strong>${c.temperatura}°C</strong></div>`);
-                if (c.peso !== '-') datosVitales.push(`<div class="detalle-dato-item"><i class="bi bi-heart-pulse"></i> Peso: <strong>${c.peso} kg</strong></div>`);
-                if (c.frecuencia_cardiaca !== '-') datosVitales.push(`<div class="detalle-dato-item"><i class="bi bi-heart"></i> FC: <strong>${c.frecuencia_cardiaca} lpm</strong></div>`);
-                if (c.frecuencia_respiratoria !== '-') datosVitales.push(`<div class="detalle-dato-item"><i class="bi bi-lungs"></i> FR: <strong>${c.frecuencia_respiratoria} rpm</strong></div>`);
+    // Esperar a que window.pacienteData esté disponible
+    function procederConDetalle() {
+        if (!window.pacienteData || !window.pacienteData.id) {
+            console.error('Error: window.pacienteData no está disponible', window.pacienteData);
+            alert('Error: No se puede obtener los datos del paciente. Por favor, recarga la página.');
+            return;
+        }
+        
+        const pacienteId = window.pacienteData.id;
+        
+        fetch(`/clinica/pacientes/${pacienteId}/consulta/${consultaId}/detalle/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const c = data.consulta;
+                    
+                    document.getElementById('detalleTitulo').innerHTML = 
+                        `<i class="bi bi-clipboard2-pulse"></i> ${c.tipo_consulta} - ${c.fecha}`;
+                    
+                    let datosVitales = [];
+                    if (c.temperatura !== '-') datosVitales.push(`<div class="detalle-dato-item"><i class="bi bi-thermometer-half"></i> Temp: <strong>${c.temperatura}°C</strong></div>`);
+                    if (c.peso !== '-') datosVitales.push(`<div class="detalle-dato-item"><i class="bi bi-heart-pulse"></i> Peso: <strong>${c.peso} kg</strong></div>`);
+                    if (c.frecuencia_cardiaca !== '-') datosVitales.push(`<div class="detalle-dato-item"><i class="bi bi-heart"></i> FC: <strong>${c.frecuencia_cardiaca} lpm</strong></div>`);
+                    if (c.frecuencia_respiratoria !== '-') datosVitales.push(`<div class="detalle-dato-item"><i class="bi bi-lungs"></i> FR: <strong>${c.frecuencia_respiratoria} rpm</strong></div>`);
                 
                 let medicamentosHTML = '';
                 if (c.medicamentos && c.medicamentos.length > 0) {
@@ -505,6 +519,26 @@ function verDetalleConsulta(consultaId) {
             }
         })
         .catch(error => console.error('Error:', error));
+    }
+    
+    // Si window.pacienteData ya está disponible, proceder inmediatamente
+    if (window.pacienteData && window.pacienteData.id) {
+        procederConDetalle();
+    } else {
+        // Si no, esperar a que se cargue
+        let intentos = 0;
+        const intervalo = setInterval(() => {
+            intentos++;
+            if (window.pacienteData && window.pacienteData.id) {
+                clearInterval(intervalo);
+                procederConDetalle();
+            } else if (intentos > 50) { // Máximo 5 segundos
+                clearInterval(intervalo);
+                console.error('Error: window.pacienteData no se cargó');
+                alert('Error: No se pueden cargar los datos del paciente');
+            }
+        }, 100);
+    }
 }
 
 // Filtrar inventario

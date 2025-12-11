@@ -53,6 +53,23 @@ def ficha_paciente(request, paciente_id):
     return render(request, 'consulta/ficha_mascota.html', context)
 
 @login_required
+def get_paciente_data(request, paciente_id):
+    """Retorna los datos del paciente en JSON"""
+    paciente = get_object_or_404(Paciente, id=paciente_id)
+    
+    return JsonResponse({
+        'success': True,
+        'paciente': {
+            'id': paciente.id,
+            'nombre': paciente.nombre,
+            'especie': paciente.especie,
+            'peso': paciente.ultimo_peso or None,
+            'edad': paciente.edad_formateada,
+            'propietario': paciente.propietario.nombre_completo if paciente.propietario else '',
+        }
+    })
+
+@login_required
 @require_http_methods(["POST"])
 def crear_consulta(request, paciente_id):
     try:
