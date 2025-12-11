@@ -98,13 +98,16 @@ function abrirModalNuevoPaciente() {
     // Resetear la variable de propietario original
     propietarioOriginal = null;
     
-    // Ocultar botón "Editar actual" (no aplica para nuevo paciente)
-    document.getElementById('modoPropietarioEditar').parentElement.style.display = 'none';
-    
     // Resetear formulario
     document.getElementById('addPacienteForm').reset();
     document.getElementById('pacienteIdEdit').value = '';
     limpiarPropietario();
+    
+    // Ocultar el botón "Editar actual" en modo nuevo
+    const wrapperEditar = document.getElementById('wrapperEditarActual');
+    if (wrapperEditar) {
+        wrapperEditar.style.display = 'none';
+    }
     
     // Modo propietario: crear nuevo
     const radioNuevo = document.getElementById('modoPropietarioNuevo');
@@ -210,12 +213,15 @@ function abrirModalPaciente(button, mode, pacienteId) {
                     nombre_completo: propietario.nombre_completo
                 };
                 
-                // Mostrar botón "Editar actual"
-                document.getElementById('modoPropietarioEditar').parentElement.style.display = 'block';
-                
                 // Mostrar badge de propietario seleccionado
                 document.getElementById('propietarioNombreDisplay').textContent = propietario.nombre_completo;
                 document.getElementById('propietarioSeleccionadoBadge').style.display = 'block';
+                
+                // Mostrar el botón "Editar actual" en modo edición
+                const wrapperEditar = document.getElementById('wrapperEditarActual');
+                if (wrapperEditar) {
+                    wrapperEditar.style.display = '';
+                }
                 
                 // Establecer modo a "editar" y mostrar los datos actuales del propietario
                 document.getElementById('modoPropietarioEditar').checked = true;

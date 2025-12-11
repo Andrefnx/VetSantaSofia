@@ -249,18 +249,24 @@
 
                             <!-- Modo -->
                             <div class="owner-mode-group mb-2">
-                                <input type="radio" class="btn-check" name="modoPropietario" id="modoPropietarioEditar"
-                                    value="editar">
-                                <label class="btn btn-outline-success" for="modoPropietarioEditar">Editar actual</label>
+                                <div id="wrapperEditarActual">
+                                    <input type="radio" class="btn-check" name="modoPropietario" id="modoPropietarioEditar"
+                                        value="editar">
+                                    <label class="btn btn-outline-success" for="modoPropietarioEditar">Editar actual</label>
+                                </div>
 
-                                <input type="radio" class="btn-check" name="modoPropietario" id="modoPropietarioNuevo"
-                                    value="nuevo">
-                                <label class="btn btn-outline-success" for="modoPropietarioNuevo">Crear nuevo</label>
+                                <div>
+                                    <input type="radio" class="btn-check" name="modoPropietario" id="modoPropietarioNuevo"
+                                        value="nuevo">
+                                    <label class="btn btn-outline-success" for="modoPropietarioNuevo">Crear nuevo</label>
+                                </div>
 
-                                <input type="radio" class="btn-check" name="modoPropietario"
-                                    id="modoPropietarioExistente" value="existente">
-                                <label class="btn btn-outline-success" for="modoPropietarioExistente">Seleccionar
-                                    existente</label>
+                                <div>
+                                    <input type="radio" class="btn-check" name="modoPropietario"
+                                        id="modoPropietarioExistente" value="existente">
+                                    <label class="btn btn-outline-success" for="modoPropietarioExistente">Seleccionar
+                                        existente</label>
+                                </div>
                             </div>
                             <input type="hidden" id="propietarioModo" value="nuevo">
 
