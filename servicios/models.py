@@ -63,7 +63,6 @@ class ServicioInsumo(models.Model):
 
     class Meta:
         db_table = 'servicio_insumo'
-        managed = False
 
     def __str__(self):
         return f"{self.servicio.nombre} → {self.cantidad} x {self.insumo.medicamento}"

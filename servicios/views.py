@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.db import connection
 import json
 import traceback
 from .models import Servicio, ServicioInsumo
@@ -97,7 +98,10 @@ def eliminar_servicio(request, servicio_id):
     if request.method == 'POST':
         try:
             servicio = get_object_or_404(Servicio, idServicio=servicio_id)
-            servicio.delete()
+            
+            # Eliminar directamente usando SQL raw para evitar verificación de relaciones
+            with connection.cursor() as cursor:
+                cursor.execute("DELETE FROM Servicio WHERE idServicio = %s", [servicio_id])
             
             return JsonResponse({
                 'success': True,

@@ -25,7 +25,7 @@ function abrirModalServicio(btn, mode) {
         nombre: tr.cells[0].textContent.trim(),
         categoria: tr.cells[1].textContent.trim(),
         precio: tr.cells[2].textContent.replace(/[^0-9.,]/g, '').trim(),
-        duracion: tr.cells[3].textContent.trim()
+        duracion: tr.cells[3].textContent.replace(/[^0-9]/g, '').trim()
     };
 
     if (tr.hasAttribute('data-id')) {
@@ -275,9 +275,17 @@ document.addEventListener("DOMContentLoaded", function () {
 function eliminarServicioConfirmado() {
     if (!servicioAEliminarId) return;
 
-    fetch(`/hospital/servicios/eliminar/${servicioAEliminarId}/`, {
+    // Get CSRF token
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                      document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='))?.split('=')[1];
+
+    fetch(`/servicios/eliminar/${servicioAEliminarId}/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken
+        },
+        body: JSON.stringify({})
     })
         .then(r => r.json())
         .then(resp => {
