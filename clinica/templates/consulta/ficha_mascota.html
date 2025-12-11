@@ -257,7 +257,6 @@
             <div class="tabs-nav">
                 <button class="tab-btn active" data-tab="historial">Historial Clínico</button>
                 <button class="tab-btn" data-tab="hosp">Hospitalizaciones</button>
-                <button class="tab-btn" data-tab="examenes">Exámenes</button>
                 <button class="tab-btn" data-tab="docs">Documentos</button>
             </div>
             <div class="tabs-content">
@@ -435,55 +434,6 @@
                                 <tr>
                                     <td colspan="6" style="text-align: center; padding: 2rem; color: #999;">
                                         No hay hospitalizaciones registradas
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="tab-content" id="examenes">
-                    <div class="examenes">
-                        <h3>Exámenes</h3>
-                        <div style="margin-bottom: 1rem;">
-                            <label class="vet-btn vet-btn-primary" style="cursor:pointer;">
-                                <i class="bi bi-paperclip"></i> Adjuntar Examen
-                                <input type="file" name="adjuntar_examen" style="display:none;"
-                                    onchange="subirExamen(this, {{ paciente.id }})">
-                            </label>
-                        </div>
-                        <table class="table table-bordered table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Tipo</th>
-                                    <th>Veterinario</th>
-                                    <th>Resultado</th>
-                                    <th>Documento</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for examen in examenes %}
-                                <tr>
-                                    <td>{{ examen.fecha|date:"d/m/Y" }}</td>
-                                    <td>{{ examen.tipo }}</td>
-                                    <td>{{ examen.veterinario.get_full_name|default:"-" }}</td>
-                                    <td>{{ examen.resultado|truncatewords:10 }}</td>
-                                    <td>
-                                        {% if examen.archivo %}
-                                        <a href="{{ examen.archivo.url }}" target="_blank" class="vet-link-exam">
-                                            <i class="bi bi-file-earmark-text"></i> Ver archivo
-                                        </a>
-                                        {% else %}
-                                        -
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="5" style="text-align: center; padding: 2rem; color: #999;">
-                                        No hay exámenes registrados
                                     </td>
                                 </tr>
                                 {% endfor %}
