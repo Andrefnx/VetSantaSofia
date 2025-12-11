@@ -6,6 +6,7 @@ from django.utils import timezone
 from .models import Consulta
 from pacientes.models import Paciente
 from cuentas.models import CustomUser
+from servicios.models import Servicio
 import json
 import sys
 
@@ -378,3 +379,19 @@ def ficha_mascota(request, pk):
         'documentos': paciente.documentos.all(),
     }
     return render(request, 'consulta/ficha_mascota.html', context)
+
+@login_required
+@require_http_methods(["GET"])
+def obtener_servicios(request):
+    """Retorna lista de servicios en formato JSON para cargar dinámicamente en consultas"""
+    try:
+        servicios = Servicio.objects.all().values('idServicio', 'nombre', 'categoria').order_by('nombre')
+        return JsonResponse({
+            'success': True,
+            'servicios': list(servicios)
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)

@@ -518,15 +518,8 @@
                         </div>
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-list-check"></i> Tipo de Consulta</div>
-                            <select class="form-control" name="tipo_consulta" required>
-                                <option value="">Seleccione tipo</option>
-                                <option value="consulta_general">Consulta general</option>
-                                <option value="urgencia">Urgencia</option>
-                                <option value="vacuna">Vacuna</option>
-                                <option value="desparacitacion">Desparacitación</option>
-                                <option value="control">Control</option>
-                                <option value="cirugia">Cirugía</option>
-                                <option value="otros">Otros</option>
+                            <select class="form-control" id="tipoConsultaSelect" name="tipo_consulta" required>
+                                <option value="">Seleccione servicio</option>
                             </select>
                         </div>
                         <hr style="margin: 0.75rem 0; border-top: 1px solid #dee2e6;">
@@ -716,4 +709,47 @@
 <script src="{% static 'js/pacientes/antecedentes_medicos.js' %}"></script>
 <script src="{% static 'js/pacientes/historial_medico.js' %}"></script>
 <script src="{% static 'js/pacientes/inventario_consulta.js' %}"></script>
+<script>
+// ⭐ CARGAR SERVICIOS DINÁMICAMENTE
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoConsultaSelect = document.getElementById('tipoConsultaSelect');
+    
+    if (tipoConsultaSelect) {
+        fetch('/clinica/api/servicios/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.servicios) {
+                    // Limpiar opciones anteriores excepto la primera
+                    while (tipoConsultaSelect.options.length > 1) {
+                        tipoConsultaSelect.remove(1);
+                    }
+                    
+                    // Agregar servicios dinámicamente
+                    data.servicios.forEach(servicio => {
+                        const option = document.createElement('option');
+                        option.value = servicio.nombre;  // Usar nombre como valor
+                        option.textContent = `${servicio.nombre} (${servicio.categoria})`;
+                        tipoConsultaSelect.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error cargando servicios:', error);
+                // Fallback a opciones estáticas si hay error
+                const opciones_fallback = [
+                    { value: 'Consulta General', text: 'Consulta General' },
+                    { value: 'Urgencia', text: 'Urgencia' },
+                    { value: 'Vacuna', text: 'Vacuna' },
+                    { value: 'Control', text: 'Control' },
+                ];
+                opciones_fallback.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt.value;
+                    option.textContent = opt.text;
+                    tipoConsultaSelect.appendChild(option);
+                });
+            });
+    }
+});
+</script>
 {% endblock %}

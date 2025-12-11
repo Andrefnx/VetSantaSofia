@@ -123,12 +123,19 @@ function guardarServicioEditado() {
 
     // URL
     const url = updated.idServicio
-        ? `/hospital/servicios/editar/${updated.idServicio}/`
-        : `/hospital/servicios/crear/`;
+        ? `/servicios/editar/${updated.idServicio}/`
+        : `/servicios/crear/`;
+
+    // Get CSRF token
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                      document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='))?.split('=')[1];
 
     fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken
+        },
         body: JSON.stringify(updated)
     })
         .then(r => r.json())

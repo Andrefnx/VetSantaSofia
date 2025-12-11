@@ -129,7 +129,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
 }
 .table-action-buttons button:hover i {
-    color: #afe1af !important;
+    color: #666666 !important;
 }
 .table-action-buttons button:active {
     transform: scale(0.98) !important;
@@ -140,6 +140,49 @@
     box-shadow: 0 0 0 3px rgba(175, 225, 175, 0.25) !important;
 }
 .table-action-buttons button:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+/* ====== BOTÓN PRIMARIO CON ICONO ====== */
+.btn-primary-action {
+    all: unset !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 10px 18px !important;
+    font-weight: 500 !important;
+    font-size: 0.9rem !important;
+    border-radius: 8px !important;
+    transition: all 0.25s ease !important;
+    background: white !important;
+    border: 1.5px solid #999999 !important;
+    color: #374151 !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+}
+
+.btn-primary-action i {
+    font-size: 15px !important;
+    color: #666666 !important;
+    transition: none !important;
+}
+
+.btn-primary-action:active {
+    transform: scale(0.98) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important;
+}
+
+.btn-primary-action:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(175, 225, 175, 0.25) !important;
+}
+
+.btn-primary-action:disabled {
     opacity: 0.5 !important;
     cursor: not-allowed !important;
     pointer-events: none !important;
