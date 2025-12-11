@@ -14,6 +14,23 @@ function getCookie(name) {
     return cookieValue;
 }
 
+// Normalizar teléfono chileno a formato +569XXXXXXXX
+function normalizeChilePhone(phone) {
+    if (!phone) return phone;
+    // Eliminar caracteres no numéricos excepto +
+    let normalized = phone.replace(/[^\d+]/g, '');
+    // Si empieza con +56, mantener
+    if (normalized.startsWith('+56')) {
+        normalized = '+56' + normalized.substring(3).replace(/\D/g, '');
+    } else if (normalized.startsWith('56')) {
+        normalized = '+56' + normalized.substring(2);
+    } else {
+        // Sin prefijo de país, agregar +56
+        normalized = '+56' + normalized;
+    }
+    return normalized;
+}
+
 // Abrir modal en modo nuevo
 function abrirModalNuevoPaciente() {
     console.log('Abriendo modal nuevo paciente');
@@ -22,6 +39,7 @@ function abrirModalNuevoPaciente() {
     document.getElementById('addPacienteForm').reset();
     document.getElementById('pacienteIdEdit').value = '';
     limpiarPropietario();
+    
     // Modo propietario: crear nuevo
     const radioNuevo = document.getElementById('modoPropietarioNuevo');
     if (radioNuevo) {
@@ -29,13 +47,11 @@ function abrirModalNuevoPaciente() {
     }
     setModoPropietario('nuevo');
     
-    // Cambiar título y botones
+    // Cambiar título
     document.getElementById('tituloModalPaciente').textContent = 'Nuevo Paciente';
-    document.getElementById('textoBotonGuardar').textContent = 'Guardar Paciente';
     
-    // Mostrar sección de búsqueda
+    // Mostrar sección de búsqueda (oculta)
     document.getElementById('seccionBusquedaPropietario').style.display = 'none';
-    document.getElementById('separadorPropietario').style.display = 'none';
     
     // Abrir modal
     const modal = document.getElementById('modalNuevoPaciente');
@@ -61,16 +77,13 @@ function abrirModalPaciente(button, mode, pacienteId) {
                 
                 console.log('Datos cargados:', paciente, propietario);
                 
-                // Llenar datos del paciente
+                // Llenar datos del paciente (solo campos que existen en la template)
                 document.getElementById('pacienteIdEdit').value = paciente.id;
                 document.getElementById('pacienteNombre').value = paciente.nombre;
                 document.getElementById('pacienteEspecie').value = paciente.especie;
                 document.getElementById('pacienteRaza').value = paciente.raza || '';
                 document.getElementById('pacienteSexo').value = paciente.sexo;
-                document.getElementById('pacienteColor').value = paciente.color || '';
-                document.getElementById('pacienteMicrochip').value = paciente.microchip || '';
-                document.getElementById('pacientePeso').value = paciente.ultimo_peso || '';
-                document.getElementById('pacienteObservaciones').value = paciente.observaciones || '';
+                document.getElementById('pacienteEdad').value = paciente.edad || '';
                 
                 // Llenar datos del propietario
                 document.getElementById('propietarioId').value = propietario.id;
@@ -80,22 +93,12 @@ function abrirModalPaciente(button, mode, pacienteId) {
                 document.getElementById('propietarioEmail').value = propietario.email || '';
                 document.getElementById('propietarioDireccion').value = propietario.direccion || '';
                 
-                // Bloquear inicialmente pero permitir editar / cambiar
-                bloquearCamposPropietario();
-                mostrarBotonesEdicion();
+                // Mostrar badge de propietario seleccionado
                 document.getElementById('propietarioNombreDisplay').textContent = propietario.nombre_completo;
                 document.getElementById('propietarioSeleccionadoBadge').style.display = 'block';
                 
-                // Seleccionar modo "propietario actual"
-                const radioActual = document.getElementById('modoPropietarioActual');
-                if (radioActual) {
-                    radioActual.checked = true;
-                }
-                setModoPropietario('actual');
-                
-                // Cambiar título y botones
+                // Cambiar título
                 document.getElementById('tituloModalPaciente').textContent = 'Editar Paciente';
-                document.getElementById('textoBotonGuardar').textContent = 'Actualizar Paciente';
                 
                 // Abrir modal
                 const modal = document.getElementById('modalNuevoPaciente');
@@ -182,10 +185,6 @@ function seleccionarPropietario(propietarioId) {
                 document.getElementById('propietarioEmail').value = prop.email || '';
                 document.getElementById('propietarioDireccion').value = prop.direccion || '';
                 
-                // Bloquear campos
-                bloquearCamposPropietario();
-                mostrarBotonesEdicion();
-                
                 // Mostrar badge de selección
                 document.getElementById('propietarioNombreDisplay').textContent = prop.nombre_completo;
                 document.getElementById('propietarioSeleccionadoBadge').style.display = 'block';
@@ -198,81 +197,6 @@ function seleccionarPropietario(propietarioId) {
         });
 }
 
-// Bloquear campos de propietario
-function bloquearCamposPropietario() {
-    document.getElementById('propietarioNombre').disabled = true;
-    document.getElementById('propietarioApellido').disabled = true;
-    document.getElementById('propietarioTelefono').disabled = true;
-    document.getElementById('propietarioEmail').disabled = true;
-    document.getElementById('propietarioDireccion').disabled = true;
-}
-
-// Desbloquear campos de propietario
-function desbloquearCamposPropietario() {
-    document.getElementById('propietarioNombre').disabled = false;
-    document.getElementById('propietarioApellido').disabled = false;
-    document.getElementById('propietarioTelefono').disabled = false;
-    document.getElementById('propietarioEmail').disabled = false;
-    document.getElementById('propietarioDireccion').disabled = false;
-}
-
-// Mostrar botones de edición individual
-function mostrarBotonesEdicion() {
-    document.getElementById('btnEditarNombre').classList.remove('d-none');
-    document.getElementById('btnEditarApellido').classList.remove('d-none');
-    document.getElementById('btnEditarTelefono').classList.remove('d-none');
-    document.getElementById('btnEditarEmail').classList.remove('d-none');
-    document.getElementById('btnEditarDireccion').classList.remove('d-none');
-}
-
-// Ocultar botones de edición individual
-function ocultarBotonesEdicion() {
-    document.getElementById('btnEditarNombre').classList.add('d-none');
-    document.getElementById('btnEditarApellido').classList.add('d-none');
-    document.getElementById('btnEditarTelefono').classList.add('d-none');
-    document.getElementById('btnEditarEmail').classList.add('d-none');
-    document.getElementById('btnEditarDireccion').classList.add('d-none');
-}
-
-// Habilitar edición de todos los campos del propietario
-function habilitarEdicionPropietario() {
-    desbloquearCamposPropietario();
-    document.getElementById('advertenciaEdicion').style.display = 'block';
-    
-    // Cambiar el texto del botón
-    const badge = document.getElementById('propietarioSeleccionadoBadge');
-    const btnEditar = badge.querySelector('.btn-warning');
-    btnEditar.innerHTML = '<i class="bi bi-lock"></i> Bloquear campos';
-    btnEditar.onclick = function() {
-        bloquearCamposPropietario();
-        document.getElementById('advertenciaEdicion').style.display = 'none';
-        btnEditar.innerHTML = '<i class="bi bi-pencil"></i> Editar datos';
-        btnEditar.onclick = habilitarEdicionPropietario;
-    };
-}
-
-// Habilitar edición de un campo individual
-function habilitarCampoPropietario(campoId, btnId) {
-    const campo = document.getElementById(campoId);
-    const btn = document.getElementById(btnId);
-    
-    if (campo.disabled) {
-        campo.disabled = false;
-        campo.focus();
-        btn.classList.remove('btn-outline-secondary');
-        btn.classList.add('btn-success');
-        btn.innerHTML = '<i class="bi bi-check"></i>';
-        btn.title = 'Campo habilitado';
-        document.getElementById('advertenciaEdicion').style.display = 'block';
-    } else {
-        campo.disabled = true;
-        btn.classList.remove('btn-success');
-        btn.classList.add('btn-outline-secondary');
-        btn.innerHTML = '<i class="bi bi-pencil"></i>';
-        btn.title = 'Editar ' + campo.name.replace('propietario_', '');
-    }
-}
-
 // Limpiar selección de propietario
 function limpiarPropietario() {
     document.getElementById('propietarioId').value = '';
@@ -283,26 +207,20 @@ function limpiarPropietario() {
     document.getElementById('propietarioDireccion').value = '';
     document.getElementById('propietarioModo').value = 'nuevo';
     
-    desbloquearCamposPropietario();
-    ocultarBotonesEdicion();
-    
     document.getElementById('propietarioSeleccionadoBadge').style.display = 'none';
-    document.getElementById('advertenciaEdicion').style.display = 'none';
     document.getElementById('selectPropietario').value = '';
     document.getElementById('resultadosPropietarios').style.display = 'none';
 }
 
-// Cambiar modo de propietario (actual, existente, nuevo)
+// Cambiar modo de propietario (nuevo o existente)
 function setModoPropietario(modo) {
     const seccionBusqueda = document.getElementById('seccionBusquedaPropietario');
-    const separador = document.getElementById('separadorPropietario');
     document.getElementById('propietarioModo').value = modo;
 
     if (modo === 'existente') {
+        // Mostrar búsqueda, limpiar formulario
         seccionBusqueda.style.display = 'block';
-        separador.style.display = 'block';
         document.getElementById('propietarioSeleccionadoBadge').style.display = 'none';
-        document.getElementById('advertenciaEdicion').style.display = 'none';
         document.getElementById('propietarioId').value = '';
         document.getElementById('propietarioNombre').value = '';
         document.getElementById('propietarioApellido').value = '';
@@ -311,21 +229,10 @@ function setModoPropietario(modo) {
         document.getElementById('propietarioDireccion').value = '';
         document.getElementById('selectPropietario').value = '';
         document.getElementById('resultadosPropietarios').style.display = 'none';
-        bloquearCamposPropietario();
-        mostrarBotonesEdicion();
-    } else {
+    } else if (modo === 'nuevo') {
+        // Ocultar búsqueda, limpiar todo
         seccionBusqueda.style.display = 'none';
-        separador.style.display = 'none';
-    }
-
-    if (modo === 'nuevo') {
         limpiarPropietario();
-        desbloquearCamposPropietario();
-    }
-
-    if (modo === 'actual') {
-        desbloquearCamposPropietario();
-        mostrarBotonesEdicion();
     }
 }
 
@@ -336,30 +243,49 @@ function saveNewPaciente() {
     const pacienteId = document.getElementById('pacienteIdEdit').value;
     const esEdicion = pacienteId !== '';
     
-    // Obtener valores
+    // Obtener modo propietario
+    const radioModo = document.querySelector('input[name="modoPropietario"]:checked');
+    const modoPropietario = radioModo ? radioModo.value : document.getElementById('propietarioModo').value;
+    
+    // Obtener valores del propietario
     const propietarioId = document.getElementById('propietarioId').value;
-    const modoPropietario = document.querySelector('input[name="modoPropietario"]:checked')
-        ? document.querySelector('input[name="modoPropietario"]:checked').value
-        : document.getElementById('propietarioModo').value;
     const propietarioNombre = document.getElementById('propietarioNombre').value.trim();
     const propietarioApellido = document.getElementById('propietarioApellido').value.trim();
-    const propietarioTelefono = document.getElementById('propietarioTelefono').value.trim();
+    let propietarioTelefono = document.getElementById('propietarioTelefono').value.trim();
     const propietarioEmail = document.getElementById('propietarioEmail').value.trim();
     const propietarioDireccion = document.getElementById('propietarioDireccion').value.trim();
     
+    // Obtener valores del paciente
     const nombrePaciente = document.getElementById('pacienteNombre').value.trim();
     const especiePaciente = document.getElementById('pacienteEspecie').value;
     const sexoPaciente = document.getElementById('pacienteSexo').value;
+    const razaPaciente = document.getElementById('pacienteRaza').value.trim();
+    const edadPaciente = document.getElementById('pacienteEdad').value.trim();
     
     console.log('Es edición:', esEdicion);
-    console.log('Paciente ID:', pacienteId);
-    console.log('Propietario ID:', propietarioId);
+    console.log('Modo propietario:', modoPropietario);
     
     // Validar propietario
     if (!propietarioNombre || !propietarioApellido || !propietarioTelefono) {
         alert('Error: Debes completar Nombre, Apellido y Teléfono del propietario');
         return;
     }
+    
+    // Validar teléfono
+    const phoneValid = /^(?:\+?56)?\s*9\s*\d{8}$/.test(propietarioTelefono);
+    if (!phoneValid) {
+        alert('Error: Teléfono chileno inválido. Formato esperado: +56912345678 o 912345678');
+        return;
+    }
+    
+    // Validar email si está presente
+    if (propietarioEmail && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(propietarioEmail)) {
+        alert('Error: Correo electrónico inválido');
+        return;
+    }
+    
+    // Normalizar teléfono
+    propietarioTelefono = normalizeChilePhone(propietarioTelefono);
     
     // Validar paciente
     if (!nombrePaciente) {
@@ -391,12 +317,9 @@ function saveNewPaciente() {
         paciente: {
             nombre: nombrePaciente,
             especie: especiePaciente,
-            raza: document.getElementById('pacienteRaza').value || '',
+            raza: razaPaciente,
             sexo: sexoPaciente,
-            color: document.getElementById('pacienteColor').value || '',
-            microchip: document.getElementById('pacienteMicrochip').value.trim() || '',
-            ultimo_peso: document.getElementById('pacientePeso').value || null,
-            observaciones: document.getElementById('pacienteObservaciones').value || '',
+            edad: edadPaciente,
         }
     };
     
@@ -427,11 +350,7 @@ function saveNewPaciente() {
             alert(mensaje);
             closeVetModal('modalNuevoPaciente');
             setTimeout(() => {
-                if (esEdicion) {
-                    window.location.reload();
-                } else {
-                    window.location.href = `/pacientes/${data.paciente_id}/`;
-                }
+                window.location.reload();
             }, 400);
         } else {
             alert('Error: ' + (data.error || 'Error desconocido'));
@@ -441,6 +360,24 @@ function saveNewPaciente() {
         console.error('Error completo:', error);
         alert('Error de conexión: ' + error.message);
     });
+}
+
+// Modal eliminar
+function abrirModalEliminarPaciente(button, pacienteId) {
+    const modal = document.getElementById('modalEliminarPaciente');
+    modal.classList.remove('hide');
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
+    document.getElementById('btnConfirmarEliminarPaciente').setAttribute('data-paciente-id', pacienteId);
+}
+
+function closeEliminarPacienteModal() {
+    const modal = document.getElementById('modalEliminarPaciente');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.classList.add('hide');
+    }, 350);
 }
 
 // Toggle wheel
@@ -463,98 +400,9 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// Modal eliminar
-function abrirModalEliminarPaciente(button, pacienteId) {
-    const modal = document.getElementById('modalEliminarPaciente');
-    modal.classList.remove('hide');
-    setTimeout(() => {
-        modal.classList.add('show');
-    }, 10);
-    document.getElementById('btnConfirmarEliminarPaciente').setAttribute('data-paciente-id', pacienteId);
-}
-
-function closeEliminarPacienteModal() {
-    const modal = document.getElementById('modalEliminarPaciente');
-    modal.classList.remove('show');
-    setTimeout(() => {
-        modal.classList.add('hide');
-    }, 350);
-}
-
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM Content Loaded - Inicializando validaciones');
-    
-    // ===== VALIDACIÓN DE MICROCHIP (SOLO NÚMEROS) =====
-    const microchipInput = document.getElementById('pacienteMicrochip');
-    if (microchipInput) {
-        console.log('Microchip input encontrado, agregando validaciones');
-        
-        // Validar mientras escribe
-        microchipInput.addEventListener('input', function(e) {
-            const cursorPosition = this.selectionStart;
-            const valorAnterior = this.value;
-            const valorLimpio = this.value.replace(/[^0-9]/g, '');
-            
-            if (valorAnterior !== valorLimpio) {
-                this.value = valorLimpio;
-                this.setSelectionRange(cursorPosition - 1, cursorPosition - 1);
-                console.log('Caracteres no numéricos removidos');
-            }
-        });
-        
-        // Validar al pegar
-        microchipInput.addEventListener('paste', function(e) {
-            e.preventDefault();
-            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-            const numericOnly = pastedText.replace(/[^0-9]/g, '');
-            
-            // Insertar solo números
-            const start = this.selectionStart;
-            const end = this.selectionEnd;
-            const currentValue = this.value;
-            this.value = currentValue.substring(0, start) + numericOnly + currentValue.substring(end);
-            
-            // Posicionar cursor
-            const newPosition = start + numericOnly.length;
-            this.setSelectionRange(newPosition, newPosition);
-            
-            console.log('Texto pegado filtrado:', numericOnly);
-        });
-        
-        // Prevenir arrastrar y soltar texto
-        microchipInput.addEventListener('drop', function(e) {
-            e.preventDefault();
-            const droppedText = e.dataTransfer.getData('text');
-            const numericOnly = droppedText.replace(/[^0-9]/g, '');
-            this.value = numericOnly;
-            console.log('Texto arrastrado filtrado:', numericOnly);
-        });
-        
-        // Prevenir teclas no numéricas
-        microchipInput.addEventListener('keypress', function(e) {
-            // Permitir teclas especiales (backspace, delete, flechas, etc.)
-            if (e.ctrlKey || e.metaKey || e.altKey) {
-                return;
-            }
-            
-            // Permitir teclas de navegación
-            const specialKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
-            if (specialKeys.includes(e.key)) {
-                return;
-            }
-            
-            // Solo permitir números 0-9
-            if (!/[0-9]/.test(e.key)) {
-                e.preventDefault();
-                console.log('Tecla no numérica bloqueada:', e.key);
-            }
-        });
-        
-        console.log('Validaciones de microchip configuradas correctamente');
-    } else {
-        console.warn('Input de microchip no encontrado');
-    }
+    console.log('DOM Content Loaded - Inicializando modales pacientes');
     
     // ===== MODAL ELIMINAR PACIENTE =====
     const btnConfirmar = document.getElementById('btnConfirmarEliminarPaciente');
@@ -593,11 +441,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ===== MODO PROPIETARIO (actual / existente / nuevo) =====
+    // ===== MODO PROPIETARIO (nuevo / existente) =====
     const modoPropietarioRadios = document.querySelectorAll('input[name="modoPropietario"]');
     modoPropietarioRadios.forEach(radio => {
         radio.addEventListener('change', function() {
             setModoPropietario(this.value);
         });
     });
+    
+    console.log('Inicialización completada');
 });

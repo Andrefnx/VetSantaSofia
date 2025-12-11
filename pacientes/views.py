@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 import json
 from datetime import date, datetime
 from .models import Paciente, Propietario
+import re
 
 # Importar desde las apps correctas
 from inventario.models import Insumo
@@ -19,6 +20,23 @@ try:
     MODELOS_EXTENDIDOS = True
 except ImportError:
     MODELOS_EXTENDIDOS = False
+
+# Función auxiliar para normalizar teléfonos chilenos
+def normalize_chile_phone(phone):
+    """Normaliza números de teléfono chilenos al formato +569XXXXXXXX"""
+    if not phone:
+        return phone
+    # Eliminar caracteres no numéricos excepto +
+    normalized = re.sub(r'[^\d+]', '', phone)
+    # Si empieza con +56, mantener
+    if normalized.startswith('+56'):
+        normalized = '+56' + re.sub(r'\D', '', normalized[3:])
+    elif normalized.startswith('56'):
+        normalized = '+56' + re.sub(r'\D', '', normalized[2:])
+    else:
+        # Sin prefijo de país, agregar +56
+        normalized = '+56' + re.sub(r'\D', '', normalized)
+    return normalized
 
 @login_required
 def pacientes_view(request):

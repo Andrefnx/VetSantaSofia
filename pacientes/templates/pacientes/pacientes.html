@@ -5,39 +5,261 @@
 
 {% block styles %}
 <link rel="stylesheet" href="{% static 'css/base/tables_base.css' %}?v=4" type="text/css" media="all">
+<style>
+    /* Mejor contraste en botones verdes claros */
+    .vet-btn-primary,
+    .btn.btn-success,
+    .btn.btn-outline-success {
+        color: #0b4d2d !important;
+    }
+
+    /* Layout 70/30 para modal */
+    .modal-grid {
+        display: grid;
+        grid-template-columns: 70% 30%;
+        gap: 1rem;
+    }
+
+    @media (max-width: 992px) {
+        .modal-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Estilo verde selector propietario */
+    .owner-mode-group .btn {
+        border-color: #69c087;
+        color: #0b4d2d;
+    }
+
+    .owner-mode-group .btn-check:checked+.btn {
+        background-color: #69c087;
+        color: #0b4d2d;
+    }
+
+    .owner-form-row {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.75rem;
+    }
+
+    .owner-form-row textarea {
+        grid-column: span 5;
+    }
+
+    @media (max-width: 1200px) {
+        .owner-form-row {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .owner-form-row textarea {
+            grid-column: span 3;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .owner-form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .owner-form-row textarea {
+            grid-column: span 1;
+        }
+    }
+
+    .detail-section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+</style>
 {% endblock %}
 
-{% block table_title %}
-<i class="fas fa-paw"></i> Pacientes
-{% endblock %}
+{% block modals %}
+<!-- Modal: Nuevo/Editar Paciente -->
+<div class="vet-modal-overlay hide" id="modalNuevoPaciente">
+    <div class="vet-custom-modal" style="max-width: 900px;">
+        <div class="vet-modal-content">
 
-{% block table_filters %}
-<div class="filter-group">
-    <div class="vet-custom-select-wrapper">
-        <span class="tag_select">Especie</span>
-        <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todas</span>
-            <div class="vet-arrow"></div>
+            <!-- Título -->
+            <div class="vet-custom-modal-title">
+                <h3><i class="fas fa-paw"></i> <span id="tituloModalPaciente">Nuevo Paciente</span></h3>
+                <i class="bi bi-x" onclick="closeVetModal('modalNuevoPaciente')"
+                    style="cursor:pointer;margin-left:auto;"></i>
+            </div>
+
+            <!-- Cuerpo -->
+            <div class="vet-modal-body">
+                <form id="addPacienteForm" onsubmit="event.preventDefault();">
+                    <input type="hidden" id="pacienteIdEdit">
+
+                    <div class="modal-grid">
+                        <!-- IZQUIERDA: Datos del paciente -->
+                        <div>
+                            <h6 class="detail-section-title"><i class="fas fa-paw"></i> Datos del Paciente</h6>
+
+                            <!-- Nombre -->
+                            <div class="mb-3">
+                                <label>Nombre</label>
+                                <input type="text" id="pacienteNombre" class="form-control">
+                            </div>
+
+                            <!-- Especie -->
+                            <div class="mb-3">
+                                <label>Especie</label>
+                                <select id="pacienteEspecie" class="form-control">
+                                    <option value="">Selecciona...</option>
+                                    <option value="perro">Perro</option>
+                                    <option value="gato">Gato</option>
+                                </select>
+                            </div>
+
+                            <!-- Raza -->
+                            <div class="mb-3">
+                                <label>Raza</label>
+                                <input type="text" id="pacienteRaza" class="form-control">
+                            </div>
+
+                            <!-- Sexo -->
+                            <div class="mb-3">
+                                <label>Sexo</label>
+                                <select id="pacienteSexo" class="form-control">
+                                    <option value="">Selecciona...</option>
+                                    <option value="macho">Macho</option>
+                                    <option value="hembra">Hembra</option>
+                                </select>
+                            </div>
+
+                            <!-- Edad -->
+                            <div class="mb-3">
+                                <label>Edad (formato libre)</label>
+                                <input type="text" id="pacienteEdad" class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- DERECHA: Propietario -->
+                        <div>
+                            <h6 class="detail-section-title"><i class="bi bi-person-badge"></i> Propietario</h6>
+
+                            <!-- Modo -->
+                            <div class="owner-mode-group mb-2">
+                                <input type="radio" class="btn-check" name="modoPropietario" id="modoPropietarioNuevo"
+                                    value="nuevo" checked>
+                                <label class="btn btn-outline-success" for="modoPropietarioNuevo">Crear nuevo</label>
+
+                                <input type="radio" class="btn-check" name="modoPropietario"
+                                    id="modoPropietarioExistente" value="existente">
+                                <label class="btn btn-outline-success" for="modoPropietarioExistente">Seleccionar
+                                    existente</label>
+                            </div>
+                            <input type="hidden" id="propietarioModo" value="nuevo">
+
+                            <small class="text-muted d-block mb-2">
+                                Puedes editar al dueño actual, asignar uno ya registrado o crear un nuevo registro.
+                            </small>
+
+                            <!-- BUSCAR EXISTENTE -->
+                            <div id="seccionBusquedaPropietario" class="mb-3" style="display:none;">
+                                <label>Buscar Propietario Existente</label>
+                                <div class="input-group">
+                                    <input type="text" id="buscarPropietario" class="form-control"
+                                        placeholder="Buscar por nombre, teléfono o email...">
+                                    <button type="button" class="btn btn-secondary" onclick="buscarPropietarios()">
+                                        <i class="bi bi-search"></i> Buscar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- RESULTADOS -->
+                            <div id="resultadosPropietarios" class="mb-3" style="display:none;">
+                                <label>Resultados:</label>
+                                <select id="selectPropietario" class="form-control"
+                                    onchange="seleccionarPropietario(this.value)">
+                                    <option value="">Selecciona...</option>
+                                </select>
+                            </div>
+
+                            <!-- FORM NUEVO PROPIETARIO -->
+                            <div id="formNuevoPropietario">
+                                <input type="hidden" id="propietarioId" value="">
+                                <div class="owner-form-row">
+                                    <div>
+                                        <label>Nombre *</label>
+                                        <input type="text" id="propietarioNombre" class="form-control">
+                                    </div>
+
+                                    <div>
+                                        <label>Apellido *</label>
+                                        <input type="text" id="propietarioApellido" class="form-control">
+                                    </div>
+
+                                    <div>
+                                        <label>Teléfono *</label>
+                                        <input type="tel" id="propietarioTelefono" placeholder="+56912345678"
+                                            class="form-control">
+                                    </div>
+
+                                    <div>
+                                        <label>Email</label>
+                                        <input type="email" id="propietarioEmail" placeholder="correo@dominio.cl"
+                                            class="form-control">
+                                    </div>
+
+                                    <div>
+                                        <label>Dirección</label>
+                                        <textarea id="propietarioDireccion" rows="2" class="form-control"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Badge de propietario seleccionado -->
+                            <div id="propietarioSeleccionadoBadge" class="alert alert-info" style="display:none; margin-top:1rem;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-check-circle"></i>
+                                        Propietario: <strong id="propietarioNombreDisplay"></strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div> <!-- FIN DERECHA -->
+                    </div> <!-- FIN GRID -->
+
+                </form>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="vet-modal-footer">
+                <button type="button" class="vet-btn vet-btn-grey" onclick="closeVetModal('modalNuevoPaciente')">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="button" class="vet-btn vet-btn-primary" onclick="saveNewPaciente()"
+                    id="btnGuardarModalPaciente">
+                    <i class="bi bi-floppy-fill"></i> Guardar Paciente
+                </button>
+            </div>
+
         </div>
-        <ul class="vet-custom-select-dropdown">
-            <li data-value="">Todas</li>
-            <li data-value="canino">Canino</li>
-            <li data-value="felino">Felino</li>
-        </ul>
-        <input type="hidden" id="filterEspecie" value="">
     </div>
-    <div class="vet-custom-select-wrapper">
-        <span class="tag_select">Sexo</span>
-        <div class="vet-custom-select">
-            <span class="vet-selected-value placeholder">Todos</span>
-            <div class="vet-arrow"></div>
+</div>
+
+<!-- Modal: Eliminar Paciente -->
+<div class="vet-modal-overlay hide" id="modalEliminarPaciente">
+    <div class="vet-custom-modal">
+        <div class="vet-modal-content">
+            <div class="vet-custom-modal-title" style="background:#b71c1c;">
+                <h3><i class="bi bi-trash3-fill"></i> Eliminar Paciente</h3>
+                <i class="bi bi-x" onclick="closeEliminarPacienteModal()" style="cursor:pointer;"></i>
+            </div>
+            <div class="vet-modal-body">
+                <p id="eliminarPacienteMensaje">¿Estás seguro que deseas eliminar este paciente?</p>
+            </div>
+            <div class="vet-modal-body" style="text-align:right;">
+                <button type="button" class="vet-btn-grey error" id="btnConfirmarEliminarPaciente">
+                    <i class="bi bi-trash3-fill"></i> Eliminar
+                </button>
+            </div>
         </div>
-        <ul class="vet-custom-select-dropdown">
-            <li data-value="">Todos</li>
-            <li data-value="macho">Macho</li>
-            <li data-value="hembra">Hembra</li>
-        </ul>
-        <input type="hidden" id="filterSexo" value="">
     </div>
 </div>
 {% endblock %}
@@ -72,7 +294,7 @@
             <button type="button" onclick="toggleWheel(this)">
                 <i class="fas fa-cog"></i>
             </button>
-            <div class="manage-options" style="display: none;">
+            <div class="manage-options" style="display:none;">
                 <button type="button" onclick="window.location.href='{% url 'pacientes:ficha_mascota' paciente.id %}'">
                     <i class="bi bi-eye"></i> Ver
                 </button>
@@ -86,321 +308,16 @@
         </div>
     </td>
 </tr>
-{% empty %}
-<tr>
-    <td colspan="7" style="text-align: center; padding: 2rem;">
-        <p style="margin-top: 1rem; color: #666;">No hay pacientes registrados</p>
-    </td>
-</tr>
 {% endfor %}
 {% endblock %}
 
-{% block modals %}
-
-<!-- Modal: Nuevo/Editar Paciente -->
-<div class="vet-modal-overlay hide" id="modalNuevoPaciente">
-    <div class="vet-custom-modal" style="max-width: 700px;">
-        <div class="vet-modal-content">
-            <div class="vet-custom-modal-title">
-                <h3>
-                    <i class="fas fa-paw"></i> 
-                    <span id="tituloModalPaciente">Nuevo Paciente</span>
-                </h3>
-                <i class="bi bi-x" style="margin-left:auto;cursor:pointer;"
-                    onclick="closeVetModal('modalNuevoPaciente')"></i>
-            </div>
-            <div class="vet-modal-body">
-                <form id="addPacienteForm" onsubmit="event.preventDefault();">
-                    <input type="hidden" id="pacienteIdEdit" value="">
-                    
-                    <!-- SECCIÓN PROPIETARIO -->
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-user"></i> Propietario
-                        </h6>
-
-                        <input type="hidden" id="propietarioModo" value="nuevo">
-
-                        <div class="mb-3">
-                            <label class="form-label">Cómo quieres gestionar el dueño</label>
-                            <div class="btn-group" role="group" aria-label="Modo propietario">
-                                <input type="radio" class="btn-check" name="modoPropietario" id="modoPropietarioActual" value="actual" autocomplete="off">
-                                <label class="btn btn-outline-primary" for="modoPropietarioActual">Dueño actual</label>
-
-                                <input type="radio" class="btn-check" name="modoPropietario" id="modoPropietarioExistente" value="existente" autocomplete="off">
-                                <label class="btn btn-outline-primary" for="modoPropietarioExistente">Cambiar a existente</label>
-
-                                <input type="radio" class="btn-check" name="modoPropietario" id="modoPropietarioNuevo" value="nuevo" autocomplete="off" checked>
-                                <label class="btn btn-outline-primary" for="modoPropietarioNuevo">Crear nuevo</label>
-                            </div>
-                            <small class="text-muted d-block mt-1">Puedes editar al dueño actual, asignar uno ya registrado o crear un nuevo registro.</small>
-                        </div>
-
-                        <!-- Búsqueda de propietario existente -->
-                        <div class="mb-3" id="seccionBusquedaPropietario">
-                            <label>Buscar Propietario Existente</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="buscarPropietario"
-                                    placeholder="Buscar por nombre, teléfono o email...">
-                                <button type="button" class="btn btn-secondary" onclick="buscarPropietarios()">
-                                    <i class="bi bi-search"></i> Buscar
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Resultados de búsqueda -->
-                        <div id="resultadosPropietarios" class="mb-3" style="display:none;">
-                            <label>Resultados:</label>
-                            <select class="form-control" id="selectPropietario"
-                                onchange="seleccionarPropietario(this.value)">
-                                <option value="">Selecciona un propietario...</option>
-                            </select>
-                        </div>
-
-                        <div class="text-center mb-3" id="separadorPropietario">
-                            <span class="text-muted">- O -</span>
-                        </div>
-
-                        <!-- Formulario de propietario -->
-                        <div id="formNuevoPropietario">
-                            <input type="hidden" id="propietarioId" name="propietario_id" value="">
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label>Nombre <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="propietarioNombre"
-                                            name="propietario_nombre">
-                                        <button type="button" class="btn btn-outline-secondary d-none" id="btnEditarNombre" 
-                                                onclick="habilitarCampoPropietario('propietarioNombre', 'btnEditarNombre')" 
-                                                title="Editar nombre">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label>Apellido <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="propietarioApellido"
-                                            name="propietario_apellido">
-                                        <button type="button" class="btn btn-outline-secondary d-none" id="btnEditarApellido" 
-                                                onclick="habilitarCampoPropietario('propietarioApellido', 'btnEditarApellido')" 
-                                                title="Editar apellido">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label>Teléfono <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <input type="tel" class="form-control" id="propietarioTelefono"
-                                            name="propietario_telefono">
-                                        <button type="button" class="btn btn-outline-secondary d-none" id="btnEditarTelefono" 
-                                                onclick="habilitarCampoPropietario('propietarioTelefono', 'btnEditarTelefono')" 
-                                                title="Editar teléfono">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label>Email</label>
-                                    <div class="input-group">
-                                        <input type="email" class="form-control" id="propietarioEmail"
-                                            name="propietario_email">
-                                        <button type="button" class="btn btn-outline-secondary d-none" id="btnEditarEmail" 
-                                                onclick="habilitarCampoPropietario('propietarioEmail', 'btnEditarEmail')" 
-                                                title="Editar email">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label>Dirección</label>
-                                <div class="input-group">
-                                    <textarea class="form-control" id="propietarioDireccion" name="propietario_direccion"
-                                        rows="2"></textarea>
-                                    <button type="button" class="btn btn-outline-secondary d-none" id="btnEditarDireccion" 
-                                            onclick="habilitarCampoPropietario('propietarioDireccion', 'btnEditarDireccion')" 
-                                            title="Editar dirección" style="align-self: flex-start;">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div id="propietarioSeleccionadoBadge" class="alert alert-info" style="display:none;">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <i class="bi bi-check-circle"></i>
-                                        Propietario: <strong id="propietarioNombreDisplay"></strong>
-                                    </div>
-                                    <div>
-                                        <button type="button" class="btn btn-sm btn-warning me-2" onclick="habilitarEdicionPropietario()">
-                                            <i class="bi bi-pencil"></i> Editar datos
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-secondary" onclick="limpiarPropietario()" id="btnCambiarPropietario">
-                                            <i class="bi bi-arrow-counterclockwise"></i> Cambiar
-                                        </button>
-                                    </div>
-                                </div>
-                                <div id="advertenciaEdicion" class="alert alert-warning mt-2" style="display:none;">
-                                    <small>
-                                        <i class="bi bi-exclamation-triangle"></i>
-                                        Los cambios se aplicarán a este propietario y afectarán a todas sus mascotas.
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SECCIÓN PACIENTE -->
-                    <div class="detail-section mb-4">
-                        <h6 class="detail-section-title">
-                            <i class="fas fa-paw"></i> Datos del Paciente
-                        </h6>
-
-                        <div class="mb-3">
-                            <label>Nombre de la Mascota <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="nombre" id="pacienteNombre">
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label>Especie <span class="text-danger">*</span></label>
-                                <select class="form-control" name="especie" id="pacienteEspecie">
-                                    <option value="">Selecciona...</option>
-                                    <option value="canino">Canino</option>
-                                    <option value="felino">Felino</option>
-                                    <option value="ave">Ave</option>
-                                    <option value="roedor">Roedor</option>
-                                    <option value="reptil">Reptil</option>
-                                    <option value="otro">Otro</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label>Raza</label>
-                                <input type="text" class="form-control" name="raza" id="pacienteRaza">
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label>Edad</label>
-                                <input type="text" class="form-control" name="edad" id="pacienteEdad" placeholder="Ej: 3 años">
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label>Sexo <span class="text-danger">*</span></label>
-                                <select class="form-control" name="sexo" id="pacienteSexo">
-                                    <option value="">Selecciona...</option>
-                                    <option value="macho">Macho</option>
-                                    <option value="hembra">Hembra</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label>Color</label>
-                                <input type="text" class="form-control" name="color" id="pacienteColor">
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label>Microchip</label>
-                                <input type="text" 
-                                       class="form-control" 
-                                       name="microchip" 
-                                       id="pacienteMicrochip"
-                                       pattern="[0-9]*"
-                                       inputmode="numeric"
-                                        placeholder="123456789012345">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label>Peso (kg)</label>
-                                <input type="number" 
-                                       step="0.01" 
-                                       min="0"
-                                       class="form-control" 
-                                       name="peso" 
-                                       id="pacientePeso"
-                                       placeholder="0.00">
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label>Observaciones</label>
-                            <textarea class="form-control" name="observaciones" id="pacienteObservaciones" rows="3"></textarea>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="vet-modal-footer">
-                <button type="button" class="vet-btn vet-btn-grey" onclick="closeVetModal('modalNuevoPaciente')">
-                    <i class="bi bi-x-circle"></i> Cancelar
-                </button>
-                <button type="button" class="vet-btn vet-btn-primary" onclick="saveNewPaciente()" id="btnGuardarModalPaciente">
-                    <i class="bi bi-floppy-fill"></i> <span id="textoBotonGuardar">Guardar Paciente</span>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal: Eliminar Paciente -->
-<div class="vet-modal-overlay hide" id="modalEliminarPaciente">
-    <div class="vet-custom-modal">
-        <div class="vet-modal-content">
-            <div class="vet-custom-modal-title" style="background: #b71c1c;">
-                <h3><i class="bi bi-trash3-fill"></i> Eliminar Paciente</h3>
-                <i class="bi bi-x" style="margin-left:auto;cursor:pointer;" onclick="closeEliminarPacienteModal()"></i>
-            </div>
-            <div class="vet-modal-body">
-                <p id="eliminarPacienteMensaje">¿Estás seguro que deseas eliminar este paciente?</p>
-            </div>
-            <div class="vet-modal-body" style="text-align:right;">
-                <button type="button" class="vet-btn-grey error" id="btnConfirmarEliminarPaciente">
-                    <i class="bi bi-trash3-fill"></i> Eliminar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
 {% block extra_js %}
+<script src="{% static 'js/utils/validators.js' %}?v=1"></script>
+<script src="{% static 'js/pacientes/new_paciente.js' %}?v=6"></script>
+
 <script>
-    // Script para filtrado en tiempo real
-    document.addEventListener('DOMContentLoaded', function () {
-        const filterEspecie = document.getElementById('filterEspecie');
-        const filterSexo = document.getElementById('filterSexo');
-
-        function aplicarFiltros() {
-            const especieValue = filterEspecie.value.toLowerCase();
-            const sexoValue = filterSexo.value.toLowerCase();
-
-            const filas = document.querySelectorAll('tbody tr[data-especie]');
-
-            filas.forEach(fila => {
-                const especie = fila.getAttribute('data-especie');
-                const sexo = fila.getAttribute('data-sexo');
-
-                const cumpleEspecie = !especieValue || especie === especieValue;
-                const cumpleSexo = !sexoValue || sexo === sexoValue;
-
-                if (cumpleEspecie && cumpleSexo) {
-                    fila.style.display = '';
-                } else {
-                    fila.style.display = 'none';
-                }
-            });
-        }
-
-        filterEspecie.addEventListener('change', aplicarFiltros);
-        filterSexo.addEventListener('change', aplicarFiltros);
+    document.addEventListener('DOMContentLoaded', () => {
+        attachEmailPhoneValidation('#propietarioEmail', '#propietarioTelefono');
     });
 </script>
-
-<script src="{% static 'js/pacientes/new_paciente.js' %}?v=5"></script>
 {% endblock %}
