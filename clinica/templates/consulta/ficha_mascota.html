@@ -131,20 +131,33 @@
                             <p><strong>Dueño:</strong>
                                 <span class="view-mode">{{ paciente.propietario.nombre_completo }}</span>
                             </p>
-                            <div class="edit-mode" id="propietarioSelector" style="display:none;">
-                                <input type="text" class="form-control edit-mode" id="buscarPropietario"
-                                    placeholder="Buscar propietario..." autocomplete="off">
-                                <div id="resultadosBusqueda" class="search-results" style="display:none;"></div>
-                                <button type="button" class="vet-btn vet-btn-secondary" id="btnNuevoPropietario" style="margin-top: 8px;">
-                                    <i class="bi bi-plus-circle"></i> Crear nuevo responsable
-                                </button>
-                            </div>
-                            <div id="camposNombrePropietario" class="edit-mode" style="display:none;">
+                            <!-- En modo edición: mostrar nombre y apellido como inputs -->
+                            <div id="camposNombreEditable" style="display:none;" class="edit-mode-container">
                                 <input type="text" class="form-control edit-mode" name="propietario_nombre_edit"
                                     placeholder="Nombre" value="{{ paciente.propietario.nombre }}" style="margin-bottom: 8px;">
                                 <input type="text" class="form-control edit-mode" name="propietario_apellido_edit"
-                                    placeholder="Apellido" value="{{ paciente.propietario.apellido }}">
-                                <input type="hidden" name="propietario_id" value="{{ paciente.propietario.id }}">
+                                    placeholder="Apellido" value="{{ paciente.propietario.apellido }}" style="margin-bottom: 8px;">
+                            </div>
+                            <!-- SELECT OCULTO INICIALMENTE - se muestra al hacer clic en "Cambiar de responsable" -->
+                            <div class="edit-mode" id="propietarioSelector" style="display:none;">
+                                <!-- Buscador de responsables -->
+                                <input type="text" class="form-control" id="buscarPropietario"
+                                    placeholder="Buscar responsable..." autocomplete="off" style="margin-bottom: 10px;">
+                                <div id="resultadosBusqueda" class="search-results" style="display:none; max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;"></div>
+                                <small style="display: block; margin-top: 5px;">
+                                    <a href="#" id="enlaceNuevoPropietario" style="font-size: 0.85rem;">+ Crear nuevo responsable</a>
+                                </small>
+                            </div>
+                            <!-- CAMPOS PARA CREAR NUEVO PROPIETARIO -->
+                            <div id="camposNombrePropietario" class="edit-mode" style="display:none;">
+                                <input type="text" class="form-control edit-mode" name="propietario_nombre_new"
+                                    placeholder="Nombre" style="margin-bottom: 8px;">
+                                <input type="text" class="form-control edit-mode" name="propietario_apellido_new"
+                                    placeholder="Apellido" style="margin-bottom: 8px;">
+                                <input type="hidden" name="propietario_id" value="">
+                                <small style="display: block; margin-top: 5px;">
+                                    <a href="#" id="enlaceVoltearAlSelect" style="font-size: 0.85rem;">← Volver al listado</a>
+                                </small>
                             </div>
                         </div>
                         <p><strong>Teléfono:</strong>
@@ -162,6 +175,14 @@
                         <span class="view-mode">{{ paciente.propietario.direccion|default:"No registrada" }}</span>
                         <textarea class="form-control edit-mode" name="propietario_direccion" style="display:none;">{{ paciente.propietario.direccion }}</textarea>
                     </p>
+                    
+                    <!-- LÍNEA SEPARADORA Y ENLACE "CAMBIAR DE RESPONSABLE" -->
+                    <hr style="display:none;" class="edit-mode" id="separadorCambiarResponsable">
+                    <div style="display:none; text-align: center; margin-top: 15px;" class="edit-mode" id="enlaceCambiarResponsable">
+                        <small>
+                            <a href="#" id="btnCambiarResponsable" style="font-size: 0.85rem; text-decoration: underline;">Cambiar de responsable</a>
+                        </small>
+                    </div>
                 </div>
             </div>
 

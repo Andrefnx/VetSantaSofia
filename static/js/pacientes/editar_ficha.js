@@ -312,13 +312,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnGuardarResponsable = document.getElementById('btnGuardarResponsable');
     const btnEditResponsableActions = document.getElementById('btnEditResponsableActions');
     const infoResponsable = document.getElementById('infoResponsable');
+    const buscarPropietario = document.getElementById('buscarPropietario');
+    const resultadosBusqueda = document.getElementById('resultadosBusqueda');
+    const enlaceNuevoPropietario = document.getElementById('enlaceNuevoPropietario');
+    const enlaceVoltearAlSelect = document.getElementById('enlaceVoltearAlSelect');
+    const btnCambiarResponsable = document.getElementById('btnCambiarResponsable');
+    const propietarioSelector = document.getElementById('propietarioSelector');
+    const camposNombrePropietario = document.getElementById('camposNombrePropietario');
+    const camposNombreEditable = document.getElementById('camposNombreEditable');
+    const separadorCambiarResponsable = document.getElementById('separadorCambiarResponsable');
+    const enlaceCambiarResponsable = document.getElementById('enlaceCambiarResponsable');
+
+    let propietarioSeleccionado = null; // Para guardar el propietario seleccionado en la búsqueda
+    let datosOriginalesPropietario = null; // Para guardar los datos originales del propietario
 
     console.log('Responsable Edit Elements:', {
         btnEditarResponsable,
-        btnCancelarResponsable,
-        btnGuardarResponsable,
-        btnEditResponsableActions,
-        infoResponsable
+        buscarPropietario,
+        btnCambiarResponsable
     });
 
     if (btnEditarResponsable) {
@@ -329,35 +340,244 @@ document.addEventListener('DOMContentLoaded', function() {
             btnEditarResponsable.style.display = 'none';
             btnEditResponsableActions.style.display = 'flex';
             
-            // Ocultar todos los span.view-mode y mostrar todos los inputs.edit-mode
+            // Ocultar todos los span.view-mode
             infoResponsable.querySelectorAll('.view-mode').forEach(el => {
                 el.style.display = 'none';
             });
             
-            infoResponsable.querySelectorAll('input.edit-mode').forEach(el => {
-                el.style.display = 'block';
+            // Mostrar el div con los inputs de nombre y apellido
+            if (camposNombreEditable) {
+                console.log('Mostrando camposNombreEditable');
+                camposNombreEditable.style.setProperty('display', 'block', 'important');
+                camposNombreEditable.classList.add('show-edit-mode');
+                // Asegurarse de que los inputs dentro se muestren también
+                camposNombreEditable.querySelectorAll('.edit-mode').forEach(el => {
+                    el.style.setProperty('display', 'block', 'important');
+                });
+            } else {
+                console.error('camposNombreEditable no encontrado');
+            }
+            
+            // Mostrar solo los inputs de contacto (teléfono, email, dirección)
+            infoResponsable.querySelectorAll('input[name="propietario_telefono"], input[name="propietario_email"], textarea[name="propietario_direccion"]').forEach(el => {
+                el.style.setProperty('display', 'block', 'important');
             });
             
-            infoResponsable.querySelectorAll('textarea.edit-mode').forEach(el => {
-                el.style.display = 'block';
-            });
+            // Mostrar la línea separadora y el enlace "Cambiar de responsable"
+            if (separadorCambiarResponsable) separadorCambiarResponsable.style.display = 'block';
+            if (enlaceCambiarResponsable) enlaceCambiarResponsable.style.display = 'block';
             
-            // Ocultar divs con clase edit-mode (propietarioSelector, etc)
-            infoResponsable.querySelectorAll('div.edit-mode').forEach(el => {
-                el.style.display = 'none';
-            });
+            // El selector no se muestra inicialmente
+            propietarioSelector.style.display = 'none';
+            camposNombrePropietario.style.display = 'none';
+            resultadosBusqueda.style.display = 'none';
             
             // Guardar datos originales para cancelación
             originalData = {};
-            infoResponsable.querySelectorAll('input.edit-mode, textarea.edit-mode').forEach(el => {
+            datosOriginalesPropietario = {};
+            infoResponsable.querySelectorAll('input.edit-mode, textarea.edit-mode, select.edit-mode').forEach(el => {
                 if (el.name) {
                     originalData[el.name] = el.value;
+                    datosOriginalesPropietario[el.name] = el.value;
                     console.log('Guardando dato original:', el.name, '=', el.value);
                 }
             });
+            
+            propietarioSeleccionado = null;
         });
     } else {
         console.error('btnEditarResponsable no encontrado');
+    }
+
+    // Manejar enlace "Cambiar de responsable"
+    if (btnCambiarResponsable) {
+        btnCambiarResponsable.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Enlace cambiar responsable clickeado');
+            
+            // Ocultar TODOS los campos de edición excepto el selector
+            if (camposNombreEditable) {
+                camposNombreEditable.style.display = 'none';
+                camposNombreEditable.classList.remove('show-edit-mode');
+            }
+            
+            // Ocultar campos de contacto
+            infoResponsable.querySelectorAll('input[name="propietario_telefono"], input[name="propietario_email"], textarea[name="propietario_direccion"]').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Ocultar línea separadora y enlace
+            if (separadorCambiarResponsable) separadorCambiarResponsable.style.display = 'none';
+            if (enlaceCambiarResponsable) enlaceCambiarResponsable.style.display = 'none';
+            
+            // Mostrar el selector con el buscador
+            propietarioSelector.style.display = 'block';
+            camposNombrePropietario.style.display = 'none';
+            resultadosBusqueda.style.display = 'none';
+            buscarPropietario.value = '';
+            buscarPropietario.focus();
+            
+            propietarioSeleccionado = null;
+        });
+    }
+
+    // Manejar búsqueda de propietarios
+    if (buscarPropietario) {
+        buscarPropietario.addEventListener('input', function(e) {
+            const query = e.target.value.trim();
+            console.log('Buscando:', query);
+            
+            if (query.length < 2) {
+                resultadosBusqueda.style.display = 'none';
+                return;
+            }
+            
+            fetch(`/pacientes/buscar_propietarios/?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Resultados de búsqueda:', data);
+                    if (data.success && data.propietarios.length > 0) {
+                        resultadosBusqueda.innerHTML = data.propietarios.map(prop => `
+                            <div style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;" 
+                                 onmouseover="this.style.backgroundColor='#f5f5f5'" 
+                                 onmouseout="this.style.backgroundColor='transparent'"
+                                 onclick="seleccionarPropietarioDelBuscador(${prop.id}, '${prop.nombre}', '${prop.apellido}', '${prop.telefono}', '${prop.email}', '${prop.direccion}')">
+                                <strong>${prop.nombre} ${prop.apellido}</strong><br>
+                                <small>${prop.telefono || 'Sin teléfono'}</small>
+                            </div>
+                        `).join('');
+                        resultadosBusqueda.style.display = 'block';
+                    } else {
+                        // Si no hay resultados, mostrar opción de crear nuevo
+                        resultadosBusqueda.innerHTML = `
+                            <div style="padding: 10px; text-align: center;">
+                                <em>No se encontraron resultados</em><br>
+                                <small style="display: block; margin-top: 5px;">
+                                    <a href="#" id="enlaceNuevoPropietarioSinResultados" style="font-size: 0.85rem;">+ Crear nuevo responsable</a>
+                                </small>
+                            </div>
+                        `;
+                        resultadosBusqueda.style.display = 'block';
+                        
+                        // Agregar evento al enlace dinámico
+                        const enlazeSinResultados = document.getElementById('enlaceNuevoPropietarioSinResultados');
+                        if (enlazeSinResultados) {
+                            enlazeSinResultados.addEventListener('click', function(evt) {
+                                evt.preventDefault();
+                                mostrarCamposNuevoPropietario();
+                            });
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al buscar propietarios:', error);
+                    resultadosBusqueda.innerHTML = '<div style="padding: 10px; color: red;"><em>Error en la búsqueda</em></div>';
+                    resultadosBusqueda.style.display = 'block';
+                });
+        });
+    }
+
+    // Función para seleccionar un propietario del buscador
+    window.seleccionarPropietarioDelBuscador = function(id, nombre, apellido, telefono, email, direccion) {
+        console.log('Propietario seleccionado:', {id, nombre, apellido});
+        
+        propietarioSeleccionado = {
+            id: id,
+            nombre: nombre,
+            apellido: apellido,
+            telefono: telefono || '',
+            email: email || '',
+            direccion: direccion || ''
+        };
+        
+        // Ocultar el buscador y resultados
+        resultadosBusqueda.style.display = 'none';
+        buscarPropietario.value = nombre + ' ' + apellido;
+        propietarioSelector.style.display = 'none';
+        
+        // Cargar los datos en los inputs de contacto
+        const inputTelefono = infoResponsable.querySelector('input[name="propietario_telefono"]');
+        const inputEmail = infoResponsable.querySelector('input[name="propietario_email"]');
+        const textareaDireccion = infoResponsable.querySelector('textarea[name="propietario_direccion"]');
+        
+        if (inputTelefono) {
+            inputTelefono.value = telefono || '';
+            inputTelefono.style.display = 'block';
+        }
+        if (inputEmail) {
+            inputEmail.value = email || '';
+            inputEmail.style.display = 'block';
+        }
+        if (textareaDireccion) {
+            textareaDireccion.value = direccion || '';
+            textareaDireccion.style.display = 'block';
+        }
+        
+        // Mostrar separador y enlace para cambiar de responsable
+        if (separadorCambiarResponsable) separadorCambiarResponsable.style.display = 'block';
+        if (enlaceCambiarResponsable) enlaceCambiarResponsable.style.display = 'block';
+    }
+
+    // Función para mostrar campos de nuevo propietario
+    function mostrarCamposNuevoPropietario() {
+        propietarioSelector.style.display = 'none';
+        camposNombrePropietario.style.display = 'block';
+        
+        // Vaciar los campos de nombre y apellido para nuevo propietario
+        document.querySelector('input[name="propietario_nombre_new"]').value = '';
+        document.querySelector('input[name="propietario_apellido_new"]').value = '';
+        
+        // Vaciar también los campos de contacto
+        const inputTelefono = infoResponsable.querySelector('input[name="propietario_telefono"]');
+        const inputEmail = infoResponsable.querySelector('input[name="propietario_email"]');
+        const textareaDireccion = infoResponsable.querySelector('textarea[name="propietario_direccion"]');
+        
+        if (inputTelefono) {
+            inputTelefono.value = '';
+            inputTelefono.style.display = 'block';
+        }
+        if (inputEmail) {
+            inputEmail.value = '';
+            inputEmail.style.display = 'block';
+        }
+        if (textareaDireccion) {
+            textareaDireccion.value = '';
+            textareaDireccion.style.display = 'block';
+        }
+        
+        propietarioSeleccionado = null;
+    }
+
+    // Manejar enlace "¿No está en la lista?" (dentro del selector)
+    if (enlaceNuevoPropietario) {
+        enlaceNuevoPropietario.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Enlace nuevo propietario clickeado');
+            mostrarCamposNuevoPropietario();
+        });
+    }
+
+    // Manejar enlace "Volver al listado"
+    if (enlaceVoltearAlSelect) {
+        enlaceVoltearAlSelect.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Enlace volver al buscar clickeado');
+            
+            // Volver a mostrar el selector y ocultar los campos de nombre/apellido
+            propietarioSelector.style.display = 'block';
+            camposNombrePropietario.style.display = 'none';
+            
+            // Limpiar los campos de nuevo propietario
+            document.querySelector('input[name="propietario_nombre_new"]').value = '';
+            document.querySelector('input[name="propietario_apellido_new"]').value = '';
+            
+            // Limpiar los resultados de búsqueda
+            resultadosBusqueda.style.display = 'none';
+            buscarPropietario.value = '';
+            buscarPropietario.focus();
+            
+            propietarioSeleccionado = null;
+        });
     }
 
     if (btnCancelarResponsable) {
@@ -365,33 +585,40 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Botón cancelar responsable clickeado');
             
             // Restaurar datos originales
-            infoResponsable.querySelectorAll('input.edit-mode, textarea.edit-mode').forEach(el => {
-                if (el.name && originalData[el.name] !== undefined) {
-                    el.value = originalData[el.name];
-                    console.log('Restaurando:', el.name, '=', originalData[el.name]);
-                }
-            });
+            if (datosOriginalesPropietario) {
+                infoResponsable.querySelectorAll('input.edit-mode, textarea.edit-mode, select.edit-mode').forEach(el => {
+                    if (el.name && datosOriginalesPropietario[el.name] !== undefined) {
+                        el.value = datosOriginalesPropietario[el.name];
+                        console.log('Restaurando:', el.name, '=', datosOriginalesPropietario[el.name]);
+                    }
+                });
+            }
             
             // Volver a modo vista: mostrar spans y ocultar inputs
             infoResponsable.querySelectorAll('.view-mode').forEach(el => {
                 el.style.display = 'inline';
             });
             
-            infoResponsable.querySelectorAll('input.edit-mode').forEach(el => {
+            if (camposNombreEditable) {
+                camposNombreEditable.style.display = 'none';
+                camposNombreEditable.classList.remove('show-edit-mode');
+            }
+            
+            infoResponsable.querySelectorAll('input[name="propietario_telefono"], input[name="propietario_email"], textarea[name="propietario_direccion"]').forEach(el => {
                 el.style.display = 'none';
             });
             
-            infoResponsable.querySelectorAll('textarea.edit-mode').forEach(el => {
-                el.style.display = 'none';
-            });
-            
-            infoResponsable.querySelectorAll('div.edit-mode').forEach(el => {
-                el.style.display = 'none';
-            });
+            propietarioSelector.style.display = 'none';
+            camposNombrePropietario.style.display = 'none';
+            resultadosBusqueda.style.display = 'none';
+            if (separadorCambiarResponsable) separadorCambiarResponsable.style.display = 'none';
+            if (enlaceCambiarResponsable) enlaceCambiarResponsable.style.display = 'none';
             
             // Ocultar botones de guardar/cancelar y mostrar botón de editar
             btnEditarResponsable.style.display = 'inline-block';
             btnEditResponsableActions.style.display = 'none';
+            
+            propietarioSeleccionado = null;
         });
     } else {
         console.error('btnCancelarResponsable no encontrado');
@@ -403,22 +630,46 @@ document.addEventListener('DOMContentLoaded', function() {
             const pacienteId = window.location.pathname.split('/').filter(Boolean).pop();
             const formData = new FormData();
             
-            // Recopilar datos de la sección Responsable
-            const responsableFields = [
-                'propietario_nombre_edit',
-                'propietario_apellido_edit',
-                'propietario_id',
-                'propietario_telefono',
-                'propietario_email',
-                'propietario_direccion'
-            ];
+            // Determinar si es un propietario existente o nuevo
+            const nombreEdit = document.querySelector('input[name="propietario_nombre_edit"]');
+            const apellidoEdit = document.querySelector('input[name="propietario_apellido_edit"]');
+            const nombreNew = document.querySelector('input[name="propietario_nombre_new"]');
+            const apellidoNew = document.querySelector('input[name="propietario_apellido_new"]');
             
-            responsableFields.forEach(fieldName => {
-                const element = infoResponsable.querySelector(`input[name="${fieldName}"], textarea[name="${fieldName}"]`);
-                if (element) {
-                    formData.append(fieldName, element.value || '');
+            // Caso 1: Se seleccionó un propietario del buscador
+            if (propietarioSeleccionado && propietarioSeleccionado.id) {
+                console.log('Usando propietario del buscador:', propietarioSeleccionado.id);
+                formData.append('propietario_id', propietarioSeleccionado.id);
+            } 
+            // Caso 2: Se está creando un nuevo propietario
+            else if (nombreNew && apellidoNew && nombreNew.value && apellidoNew.value) {
+                console.log('Creando nuevo propietario');
+                formData.append('propietario_nombre_edit', nombreNew.value);
+                formData.append('propietario_apellido_edit', apellidoNew.value);
+            }
+            // Caso 3: Solo se editaron los datos de contacto del propietario actual
+            else if (nombreEdit && apellidoEdit && nombreEdit.value && apellidoEdit.value) {
+                console.log('Editando propietario actual');
+                formData.append('propietario_nombre_edit', nombreEdit.value);
+                formData.append('propietario_apellido_edit', apellidoEdit.value);
+                // Obtener el ID del propietario actual
+                const propietarioIdHidden = infoResponsable.querySelector('input[name="propietario_id"]');
+                if (propietarioIdHidden && propietarioIdHidden.value) {
+                    formData.append('propietario_id', propietarioIdHidden.value);
                 }
-            });
+            } else {
+                alert('Por favor completa los datos del responsable');
+                return;
+            }
+            
+            // Agregar datos de contacto
+            const inputTelefono = infoResponsable.querySelector('input[name="propietario_telefono"]');
+            const inputEmail = infoResponsable.querySelector('input[name="propietario_email"]');
+            const textareaDireccion = infoResponsable.querySelector('textarea[name="propietario_direccion"]');
+            
+            if (inputTelefono) formData.append('propietario_telefono', inputTelefono.value || '');
+            if (inputEmail) formData.append('propietario_email', inputEmail.value || '');
+            if (textareaDireccion) formData.append('propietario_direccion', textareaDireccion.value || '');
             
             const url = `/pacientes/editar/${pacienteId}/`;
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;

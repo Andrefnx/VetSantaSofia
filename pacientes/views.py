@@ -55,6 +55,9 @@ def ficha_mascota_view(request, paciente_id):
     if veterinarios.count() == 0:
         veterinarios = CustomUser.objects.all().order_by('nombre', 'apellido')
     
+    # ⭐ OBTENER PROPIETARIOS
+    propietarios = Propietario.objects.all().order_by('nombre', 'apellido')
+    
     # Serializar datos del paciente para JavaScript
     paciente_data = {
         'id': paciente.id,
@@ -73,6 +76,7 @@ def ficha_mascota_view(request, paciente_id):
         'examenes': examenes,
         'documentos': documentos,
         'veterinarios': veterinarios,  # ⭐ AGREGAR VETERINARIOS
+        'propietarios': propietarios,  # ⭐ AGREGAR PROPIETARIOS
     }
     
     return render(request, 'consulta/ficha_mascota.html', context)

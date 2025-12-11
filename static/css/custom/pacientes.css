@@ -226,6 +226,20 @@
     margin-bottom: 0;
 }
 
+/* Mostrar elementos edit-mode cuando están dentro de divs visibles */
+#camposNombreEditable.show-edit-mode {
+    display: block !important;
+}
+
+#camposNombreEditable.show-edit-mode .edit-mode {
+    display: block !important;
+}
+
+#propietarioSelector .edit-mode,
+#camposNombrePropietario .edit-mode {
+    display: block !important;
+}
+
 .edit-mode input,
 .edit-mode select,
 .edit-mode textarea,
