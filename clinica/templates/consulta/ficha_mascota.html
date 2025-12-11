@@ -782,11 +782,6 @@
                         </div>
 
                         <div class="detail-section">
-                            <div class="detail-section-title">Tipo de Anestesia</div>
-                            <input type="text" class="form-control" name="tipo_anestesia" placeholder="Ej: Anestesal, Propofol">
-                        </div>
-
-                        <div class="detail-section">
                             <div class="detail-section-title">Complicaciones (si las hubo)</div>
                             <textarea class="form-control" name="complicaciones" rows="2" placeholder="Dejar en blanco si no hubo complicaciones"></textarea>
                         </div>
@@ -801,6 +796,7 @@
                                 <option value="">Cargando insumos...</option>
                             </select>
                             <small style="color:#6c757d; display:block; margin-top:6px;">Nota: los insumos seleccionados se descuentan del stock.</small>
+                            <div id="insumosSeleccionadosCirugia" style="margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
                         </div>
                     </div>
                 </div>

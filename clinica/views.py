@@ -414,12 +414,17 @@ def obtener_insumos(request):
             data.append({
             'id': getattr(ins, 'idInventario', ins.pk),
                 'nombre': ins.medicamento,
+                'tipo': getattr(ins, 'tipo', None),
                 'formato': getattr(ins, 'formato', None),
                 'dosis_ml': getattr(ins, 'dosis_ml', None),
                 'peso_kg': getattr(ins, 'peso_kg', None),
+                'tiene_rango_peso': getattr(ins, 'tiene_rango_peso', False),
+                'peso_min_kg': getattr(ins, 'peso_min_kg', None),
+                'peso_max_kg': getattr(ins, 'peso_max_kg', None),
                 'cantidad_pastillas': getattr(ins, 'cantidad_pastillas', None),
                 'unidades_pipeta': getattr(ins, 'unidades_pipeta', None),
                 'sku': getattr(ins, 'sku', None),
+                'especie': getattr(ins, 'especie', None),
             })
         return JsonResponse({
             'success': True,

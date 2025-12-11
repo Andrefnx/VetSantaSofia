@@ -82,6 +82,9 @@ const hospitalizacionesManager = {
                     const buscador = document.getElementById('buscarInsumosCirugia');
                     this.renderInsumosSelect(buscador ? buscador.value : '');
                 });
+                insumosSelect.addEventListener('change', () => {
+                    this.renderInsumosSeleccionados();
+                });
             }
 
             // Buscador de insumos
@@ -169,6 +172,7 @@ const hospitalizacionesManager = {
                 this.insumosCatalogo = data.insumos || [];
                 const buscador = document.getElementById('buscarInsumosCirugia');
                 this.renderInsumosSelect(buscador ? buscador.value : '');
+                this.renderInsumosSeleccionados();
             } else {
                 console.error('API insumos error:', data.error);
             }
@@ -177,15 +181,48 @@ const hospitalizacionesManager = {
         }
     },
 
+    getPacientePeso() {
+        return (window.pacienteData && window.pacienteData.peso) ? parseFloat(window.pacienteData.peso) : null;
+    },
+
+    getPacienteEspecie() {
+        return (window.pacienteData && window.pacienteData.especie) ? String(window.pacienteData.especie).toLowerCase() : '';
+    },
+
+    insumoCompatible(insumo) {
+        const especiePac = this.getPacienteEspecie();
+        const pesoPac = this.getPacientePeso();
+
+        if (insumo.especie && especiePac && String(insumo.especie).toLowerCase() !== especiePac) {
+            return false;
+        }
+
+        if (!pesoPac) return true; // sin peso, mostrar todos
+
+        const min = insumo.peso_min_kg ? parseFloat(insumo.peso_min_kg) : null;
+        const max = insumo.peso_max_kg ? parseFloat(insumo.peso_max_kg) : null;
+        if (insumo.tiene_rango_peso && min !== null && max !== null) {
+            return pesoPac >= min && pesoPac <= max;
+        }
+
+        const ref = insumo.peso_kg ? parseFloat(insumo.peso_kg) : null;
+        if (ref && ref > 0) {
+            const lower = ref * 0.5;
+            const upper = ref * 1.5;
+            return pesoPac >= lower && pesoPac <= upper;
+        }
+
+        return true;
+    },
+
     renderInsumosSelect(filtro = '') {
         const insumosSelect = document.getElementById('insumosCirugia');
         if (!insumosSelect) return;
 
         const seleccionados = Array.from(insumosSelect.selectedOptions).map(opt => opt.value);
         const termino = (filtro || '').trim().toLowerCase();
-        const catalogoFiltrado = !termino
-            ? this.insumosCatalogo
-            : this.insumosCatalogo.filter(i => `${i.nombre} ${i.sku || ''}`.toLowerCase().includes(termino));
+        const catalogoFiltrado = (!termino ? this.insumosCatalogo : this.insumosCatalogo.filter(i => `${i.nombre} ${i.sku || ''}`.toLowerCase().includes(termino)))
+            .filter(i => this.insumoCompatible(i));
 
         if (!catalogoFiltrado.length) {
             insumosSelect.innerHTML = '<option value="">No se encontraron insumos</option>';
@@ -195,6 +232,72 @@ const hospitalizacionesManager = {
         insumosSelect.innerHTML = catalogoFiltrado
             .map(i => `<option value="${i.id}" data-formato="${i.formato || ''}" data-dosis="${i.dosis_ml || ''}" data-peso="${i.peso_kg || ''}"${seleccionados.includes(String(i.id)) ? ' selected' : ''}>${i.nombre}${i.sku ? ' (' + i.sku + ')' : ''}</option>`)
             .join('');
+
+        this.renderInsumosSeleccionados();
+    },
+
+    calcularDosis(insumo) {
+        const pesoPac = this.getPacientePeso();
+        if (!pesoPac) return '';
+
+        const ref = insumo.peso_kg ? parseFloat(insumo.peso_kg) : null;
+        if (!ref || ref === 0) return '';
+        const factor = pesoPac / ref;
+
+        if (insumo.dosis_ml) {
+            const ml = (parseFloat(insumo.dosis_ml) * factor).toFixed(2);
+            return `${ml} ml`;
+        }
+        if (insumo.cantidad_pastillas) {
+            const tabs = (parseFloat(insumo.cantidad_pastillas) * factor).toFixed(2);
+            return `${tabs} pastillas`;
+        }
+        if (insumo.unidades_pipeta) {
+            const pip = (parseFloat(insumo.unidades_pipeta) * factor).toFixed(2);
+            return `${pip} pipetas`;
+        }
+        return '';
+    },
+
+    renderInsumosSeleccionados() {
+        const container = document.getElementById('insumosSeleccionadosCirugia');
+        const select = document.getElementById('insumosCirugia');
+        if (!container || !select) return;
+
+        const ids = Array.from(select.selectedOptions).map(opt => opt.value);
+        if (!ids.length) {
+            container.innerHTML = '<small style="color:#6b7280;">Sin insumos seleccionados.</small>';
+            return;
+        }
+
+        const chips = ids.map(id => {
+            const ins = this.insumosCatalogo.find(i => String(i.id) === String(id));
+            if (!ins) return '';
+            const dosis = this.calcularDosis(ins);
+            const tipo = ins.tipo || 'N/A';
+            const dosisTxt = dosis ? ` | ${dosis}` : '';
+            return `<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 8px; border:1px solid #e5e7eb; border-radius:6px; background:#fff; font-size:13px;">
+                <span>${ins.nombre} | ${tipo}${dosisTxt}</span>
+                <button type="button" onclick="hospitalizacionesManager.removerInsumo('${id}')" style="background:#9ca3af; border:none; color:#fff; cursor:pointer; font-size:10px; padding:0; line-height:1; width:16px; height:16px; display:flex; align-items:center; justify-content:center; border-radius:50%;" title="Eliminar">
+                    ×
+                </button>
+            </div>`;
+        }).filter(Boolean);
+
+        container.innerHTML = chips.join('');
+    },
+
+    removerInsumo(insumoId) {
+        const select = document.getElementById('insumosCirugia');
+        if (!select) return;
+
+        Array.from(select.options).forEach(opt => {
+            if (opt.value === String(insumoId)) {
+                opt.selected = false;
+            }
+        });
+
+        this.renderInsumosSeleccionados();
     },
 
     actualizarEstadoBtnNuevaHosp() {
