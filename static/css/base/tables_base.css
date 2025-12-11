@@ -110,7 +110,7 @@
     border-radius: 8px !important;
     transition: all 0.25s ease !important;
     background: white !important;
-    border: 1.5px solid #e0e0e0 !important;
+    border: 1.5px solid #999999 !important;
     color: #374151 !important;
     cursor: pointer !important;
     user-select: none !important;
@@ -119,17 +119,17 @@
 }
 .table-action-buttons button i {
     font-size: 15px !important;
-    color: #6c757d !important;
+    color: #666666 !important;
     transition: color 0.25s ease !important;
 }
 .table-action-buttons button:hover {
-    background: #f8f9fa !important;
-    border-color: #afe1af !important;
+    background: #f0f0f0 !important;
+    border-color: #666666 !important;
     color: #103012 !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
 }
 .table-action-buttons button:hover i {
-    color: #89c57c !important;
+    color: #afe1af !important;
 }
 .table-action-buttons button:active {
     transform: scale(0.98) !important;

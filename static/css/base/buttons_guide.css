@@ -1,0 +1,168 @@
+/* =============================
+   GUÍA DE ESTILO - BOTONES
+   
+   Sistema de color consistente:
+   - VERDE: #afe1af (primario) / #89c57c (hover)
+   - GRIS: #999999 (botones secundarios) / #808080 (hover)
+   - BLANCO: Fondo para botones neutros
+   - ROJO: #dc3545 (peligro) / #c82333 (hover)
+============================= */
+
+/* BOTONES PRIMARIOS - Verde */
+.btn-primary,
+.vet-btn-primary,
+.btn-success-custom {
+    background: #afe1af !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-primary:hover,
+.vet-btn-primary:hover,
+.btn-success-custom:hover {
+    background: #89c57c !important;
+    color: white !important;
+}
+
+/* BOTONES SECUNDARIOS - Gris */
+.btn-secondary,
+.vet-btn-grey,
+.btn-grey-custom {
+    background: #999999 !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-secondary:hover,
+.vet-btn-grey:hover,
+.btn-grey-custom:hover {
+    background: #808080 !important;
+    color: white !important;
+}
+
+/* BOTONES NEUTROS - Blanco con borde gris */
+.btn-neutral,
+.vet-btn,
+.btn-white-custom {
+    background: white !important;
+    color: #374151 !important;
+    border: 1.5px solid #999999 !important;
+}
+
+.btn-neutral:hover,
+.vet-btn:hover,
+.btn-white-custom:hover {
+    background: #f0f0f0 !important;
+    border-color: #666666 !important;
+}
+
+/* BOTONES DE PELIGRO - Rojo */
+.btn-danger,
+.vet-btn-danger,
+.btn-danger-custom {
+    background: #dc3545 !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-danger:hover,
+.vet-btn-danger:hover,
+.btn-danger-custom:hover {
+    background: #c82333 !important;
+    color: white !important;
+}
+
+/* BOTONES DE ÉXITO - Verde más oscuro */
+.btn-success,
+.vet-btn-success {
+    background: #5cb85c !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-success:hover,
+.vet-btn-success:hover {
+    background: #4cae4c !important;
+    color: white !important;
+}
+
+/* BOTONES PEQUENOS CON ICONOS */
+.btn-sm-icon,
+.btn-icon-small {
+    background: white;
+    border: 1px solid #cccccc;
+    color: #666666;
+    border-radius: 4px;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-sm-icon:hover,
+.btn-icon-small:hover {
+    background: #afe1af;
+    border-color: #afe1af;
+    color: white;
+}
+
+/* EDICIÓN DE BOTONES */
+.btn-edit-icon {
+    background: none;
+    border: none;
+    color: #666666;
+    cursor: pointer;
+    padding: 0.4rem;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-edit-icon:hover {
+    background: rgba(175, 225, 175, 0.2);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* GUARDAR */
+.btn-edit-icon.btn-save {
+    color: #2d7a2d;
+}
+
+.btn-edit-icon.btn-save:hover {
+    color: white;
+    background: rgba(93, 184, 92, 0.9);
+    box-shadow: 0 2px 6px rgba(93, 184, 92, 0.35);
+}
+
+/* CANCELAR */
+.btn-edit-icon.btn-cancel {
+    color: #c02424;
+}
+
+.btn-edit-icon.btn-cancel:hover {
+    color: white;
+    background: rgba(220, 53, 69, 0.9);
+    box-shadow: 0 2px 6px rgba(220, 53, 69, 0.35);
+}
+
+/* =============================
+   ESTILOS GENERALES DE ICONOS
+============================= */
+
+button i {
+    transition: color 0.25s ease !important;
+}
+
+/* Contraste de colores en botones */
+button:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+}
+
+/* Animaciones de botones */
+button:active {
+    transform: scale(0.98) !important;
+}

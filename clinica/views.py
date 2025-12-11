@@ -71,6 +71,38 @@ def get_paciente_data(request, paciente_id):
 
 @login_required
 @require_http_methods(["POST"])
+def actualizar_antecedentes(request, paciente_id):
+    """Actualiza los antecedentes médicos críticos del paciente"""
+    try:
+        paciente = get_object_or_404(Paciente, id=paciente_id)
+        data = json.loads(request.body)
+        
+        # Actualizar campos de antecedentes
+        paciente.alergias = data.get('alergias', paciente.alergias)
+        paciente.enfermedades_cronicas = data.get('enfermedades_cronicas', paciente.enfermedades_cronicas)
+        paciente.medicamentos_actuales = data.get('medicamentos_actuales', paciente.medicamentos_actuales)
+        paciente.cirugia_previa = data.get('cirugia_previa', paciente.cirugia_previa)
+        
+        paciente.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Antecedentes actualizados correctamente',
+            'paciente': {
+                'alergias': paciente.alergias,
+                'enfermedades_cronicas': paciente.enfermedades_cronicas,
+                'medicamentos_actuales': paciente.medicamentos_actuales,
+                'cirugia_previa': paciente.cirugia_previa,
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+@login_required
+@require_http_methods(["POST"])
 def crear_consulta(request, paciente_id):
     try:
         print('=' * 50)

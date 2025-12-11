@@ -190,6 +190,52 @@
             </div>
 
             <div class="section resumen-clinico">
+                <div class="section-header-with-edit">
+                    <h2>Antecedentes Médicos Críticos</h2>
+                    <button class="btn-edit-icon" id="btnEditarAntecedentes" title="Editar antecedentes">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <!-- Botones Guardar / Cancelar (ocultos inicialmente) -->
+                    <div id="btnEditAntecedentesActions" style="display:none;">
+                        <button class="btn-edit-icon btn-cancel" id="btnCancelarAntecedentes" title="Cancelar">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                        <button class="btn-edit-icon btn-save" id="btnGuardarAntecedentes" title="Guardar">
+                            <i class="bi bi-check-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="info" id="infoAntecedentes">
+                    <div class="info-row">
+                        <div style="width: 100%; margin-bottom: 1rem;">
+                            <p><strong><i class="bi bi-exclamation-triangle" style="color: #dc3545;"></i> Alergias:</strong> 
+                                <span class="view-mode">{{ paciente.alergias|default:"No registradas" }}</span>
+                                <textarea class="form-control edit-mode" name="alergias" style="display:none;">{{ paciente.alergias }}</textarea>
+                            </p>
+                        </div>
+                        <div style="width: 100%; margin-bottom: 1rem;">
+                            <p><strong><i class="bi bi-heart-pulse" style="color: #e74c3c;"></i> Enfermedades Crónicas:</strong> 
+                                <span class="view-mode">{{ paciente.enfermedades_cronicas|default:"No registradas" }}</span>
+                                <textarea class="form-control edit-mode" name="enfermedades_cronicas" style="display:none;">{{ paciente.enfermedades_cronicas }}</textarea>
+                            </p>
+                        </div>
+                        <div style="width: 100%; margin-bottom: 1rem;">
+                            <p><strong><i class="bi bi-capsule" style="color: #3498db;"></i> Medicamentos Actuales:</strong> 
+                                <span class="view-mode">{{ paciente.medicamentos_actuales|default:"Ninguno" }}</span>
+                                <textarea class="form-control edit-mode" name="medicamentos_actuales" style="display:none;">{{ paciente.medicamentos_actuales }}</textarea>
+                            </p>
+                        </div>
+                        <div style="width: 100%;">
+                            <p><strong><i class="bi bi-hospital" style="color: #9b59b6;"></i> Cirugías Previas:</strong> 
+                                <span class="view-mode">{{ paciente.cirugia_previa|default:"Ninguna registrada" }}</span>
+                                <textarea class="form-control edit-mode" name="cirugia_previa" style="display:none;">{{ paciente.cirugia_previa }}</textarea>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section resumen-clinico">
                 <h2>Resumen Clínico</h2>
                 <div class="info">
                     <div class="info-row">
@@ -554,6 +600,51 @@
                             <div class="detail-section-title"><i class="bi bi-droplet-half"></i> Otros</div>
                             <input type="text" class="form-control" name="otros">
                         </div>
+
+                        <!-- ⭐ ANTECEDENTES MÉDICOS CRÍTICOS -->
+                        <div class="detail-section" style="border-top: 2px solid #ffc107; padding-top: 1rem; margin-top: 1rem; position: relative;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <div class="detail-section-title" style="margin: 0; color: #dc3545;">
+                                    <i class="bi bi-exclamation-triangle"></i> Antecedentes Médicos
+                                </div>
+                                <i class="bi bi-pencil" id="btnEditarAntecedentesModal" style="cursor: pointer; font-size: 1.1rem; color: #495057; padding: 0.25rem 0.5rem; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#e9ecef'; this.style.color='#212529';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#495057';" role="button" tabindex="0"></i>
+                            </div>
+                            
+                            <!-- Vista de antecedentes -->
+                            <div id="antecedentesVista">
+                                <div id="antecedentesContenido" style="font-size: 0.9rem; line-height: 1.6;">
+                                    <!-- Se llena dinámicamente -->
+                                </div>
+                            </div>
+
+                            <!-- Formulario de edición -->
+                            <div id="antecedentesEdicionModal" style="display:none; margin-top: 0.75rem; padding: 0.75rem; background: #f8f9fa; border-radius: 4px;">
+                                <div class="mb-2">
+                                    <label class="form-label form-label-sm"><strong>Alergias</strong></label>
+                                    <textarea class="form-control form-control-sm" id="antecedentesAlergias" placeholder="Ej: alergia al pollo" rows="2"></textarea>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label form-label-sm"><strong>Enfermedades Crónicas</strong></label>
+                                    <textarea class="form-control form-control-sm" id="antecedentesEnfermedades" placeholder="Ej: diabetes, artritis" rows="2"></textarea>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label form-label-sm"><strong>Medicamentos Actuales</strong></label>
+                                    <textarea class="form-control form-control-sm" id="antecedenteMedicamentos" placeholder="Medicamentos actuales" rows="2"></textarea>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label form-label-sm"><strong>Cirugías Previas</strong></label>
+                                    <textarea class="form-control form-control-sm" id="antecedenteCirugias" placeholder="Cirugías previas" rows="2"></textarea>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                                    <button type="button" class="btn btn-edit-icon btn-cancel" id="btnCancelarAntecedentesModal" title="Cancelar">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-edit-icon btn-save" id="btnGuardarAntecedentesModal" title="Guardar">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-md-9">
                         <div class="detail-section">
@@ -675,6 +766,7 @@
 </script>
 <script src="{% static 'js/base/modals_base.js' %}"></script>
 <script src="{% static 'js/pacientes/editar_ficha.js' %}"></script>
+<script src="{% static 'js/pacientes/antecedentes_medicos.js' %}"></script>
 <script src="{% static 'js/pacientes/historial_medico.js' %}"></script>
 <script src="{% static 'js/pacientes/inventario_consulta.js' %}"></script>
 {% endblock %}

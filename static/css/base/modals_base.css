@@ -135,21 +135,37 @@
     border-radius: 6px !important;
     font-size: 0.9rem !important;
     transition: 0.3s all ease !important;
+    background: #afe1af !important;
 }
 
 .vet-custom-modal button:hover {
-    background: var(--primary-hover) !important;
+    background: #89c57c !important;
     transition: 0.3s all ease !important;
 }
 
+.vet-btn-grey {
+    background: #999999 !important;
+    color: white !important;
+}
+
+.vet-btn-grey.error {
+    background: #dc3545 !important;
+    color: white !important;
+}
+
 .vet-btn-grey.error:hover {
-    background: rgb(192, 19, 19) !important;
+    background: #c82333 !important;
     color: #fff !important;
     transition: 0.3s all ease !important;
 }
 
+.vet-btn-grey.success {
+    background: #5cb85c !important;
+    color: white !important;
+}
+
 .vet-btn-grey.success:hover {
-    background: rgb(93, 201, 116) !important;
+    background: #4cae4c !important;
     color: #fff !important;
     transition: 0.3s all ease !important;
 }

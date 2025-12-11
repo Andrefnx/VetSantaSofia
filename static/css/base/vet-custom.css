@@ -55,7 +55,7 @@ h4 {
     border-radius: 8px !important;
     font-size: 0.9rem !important;
     font-weight: 500 !important;
-    border: 1.5px solid var(--border-color) !important;
+    border: 1.5px solid #999999 !important;
     background: white !important;
     color: #374151 !important;
     cursor: pointer !important;
@@ -66,19 +66,19 @@ h4 {
 
 .vet-btn i {
     font-size: 15px !important;
-    color: white !important;
+    color: #666666 !important;
     transition: color 0.25s ease !important;
 }
 
 .vet-btn:hover {
-    background: #f8f9fa !important;
-    border-color: var(--primary-color) !important;
+    background: #f0f0f0 !important;
+    border-color: #666666 !important;
     color: var(--text-dark) !important;
     box-shadow: var(--shadow-sm) !important;
 }
 
 .vet-btn:hover i {
-    color: var(--text-dark) !important;
+    color: var(--primary-color) !important;
 }
 
 .vet-btn:active {
@@ -90,6 +90,7 @@ h4 {
     pointer-events: none !important;
 }
 
+/* Botón primario - Verde */
 .vet-btn-primary {
     background: var(--primary-color) !important;
     color: white !important;
@@ -97,7 +98,64 @@ h4 {
 }
 
 .vet-btn-primary:hover {
-    background: var(--primary-hover);
+    background: var(--primary-hover) !important;
+}
+
+.vet-btn-primary i {
+    color: white !important;
+}
+
+.vet-btn-primary:hover i {
+    color: white !important;
+}
+
+/* Botón gris */
+.vet-btn-grey {
+    background: #999999 !important;
+    color: white !important;
+    border: none !important;
+}
+
+.vet-btn-grey:hover {
+    background: #808080 !important;
+}
+
+.vet-btn-grey i {
+    color: white !important;
+}
+
+.vet-btn-grey:hover i {
+    color: white !important;
+}
+
+/* Botón de éxito - Verde más claro */
+.vet-btn-success {
+    background: #5cb85c !important;
+    color: white !important;
+    border: none !important;
+}
+
+.vet-btn-success:hover {
+    background: #4cae4c !important;
+}
+
+.vet-btn-success i {
+    color: white !important;
+}
+
+/* Botón de error/peligro - Rojo */
+.vet-btn-danger {
+    background: #dc3545 !important;
+    color: white !important;
+    border: none !important;
+}
+
+.vet-btn-danger:hover {
+    background: #c82333 !important;
+}
+
+.vet-btn-danger i {
+    color: white !important;
 }
 
 /* =============================

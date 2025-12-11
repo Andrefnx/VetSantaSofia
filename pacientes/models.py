@@ -56,6 +56,12 @@ class Paciente(models.Model):
     ultimo_peso = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
     observaciones = models.TextField(blank=True, null=True)
     
+    # ⭐ ANTECEDENTES MÉDICOS CRÍTICOS
+    alergias = models.TextField(blank=True, null=True, help_text="Ej: alergia al pollo, penicilina")
+    enfermedades_cronicas = models.TextField(blank=True, null=True, help_text="Ej: diabetes, artritis")
+    medicamentos_actuales = models.TextField(blank=True, null=True, help_text="Medicamentos que está tomando actualmente")
+    cirugia_previa = models.TextField(blank=True, null=True, help_text="Cirugías previas realizadas")
+    
     propietario = models.ForeignKey(Propietario, on_delete=models.CASCADE, related_name='mascotas')
     activo = models.BooleanField(default=True)
     fecha_registro = models.DateTimeField(auto_now_add=True)

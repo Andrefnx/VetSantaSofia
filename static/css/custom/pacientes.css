@@ -26,7 +26,7 @@
     gap: 0.8rem;
     overflow-y: auto;
     height: auto; /* ← CAMBIAR de 100% a auto */
-    min-width: 200px;
+    min-width: 300px;
 }
 
 .header {
@@ -1616,38 +1616,41 @@ td[colspan][style*="text-align: center"] {
 .btn-edit-icon {
     background: none;
     border: none;
-    color: #666;
+    color: #666666;
     cursor: pointer;
     padding: 0.4rem;
     border-radius: 6px;
-    transition: all 0.2s;
+    transition: box-shadow 0.2s;
     font-size: 1.1rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: none;
 }
 
 .btn-edit-icon:hover {
-    background: #f0f0f0;
-    color: var(--primary-color);
+    background: rgba(175, 225, 175, 0.2);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .btn-edit-icon.btn-save {
-    color: var(--primary-color);
+    color: #2d7a2d;
 }
 
 .btn-edit-icon.btn-save:hover {
-    background: var(--primary-color);
-    color: white;
+    color: #2d7a2d;
+    background: rgba(93, 184, 92, 0.15);
+    box-shadow: 0 2px 6px rgba(93, 184, 92, 0.35);
 }
 
 .btn-edit-icon.btn-cancel {
-    color: #999;
+    color: #c02424;
 }
 
 .btn-edit-icon.btn-cancel:hover {
-    background: #f8d7da;
-    color: #dc3545;
+    color: #c02424;
+    background: rgba(220, 53, 69, 0.15);
+    box-shadow: 0 2px 6px rgba(220, 53, 69, 0.35);
 }
 
 #btnEditActions {

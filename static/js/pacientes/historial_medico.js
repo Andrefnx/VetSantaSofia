@@ -288,6 +288,10 @@ if (btnNuevaConsulta) {
     btnNuevaConsulta.onclick = async function () {
         openVetModal('nuevaConsultaModal');
         await cargarInventario();
+        // Cargar antecedentes médicos en el modal
+        if (typeof cargarAntecedentesEnModal === 'function') {
+            cargarAntecedentesEnModal();
+        }
     };
 }
 
