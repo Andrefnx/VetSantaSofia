@@ -127,7 +127,7 @@
     max-height: 70vh !important;
 }
 
-.vet-custom-modal button {
+.vet-custom-modal button:not(.btn-thin) {
     cursor: pointer !important;
     border: none !important;
     color: white !important;
@@ -138,7 +138,7 @@
     background: #afe1af !important;
 }
 
-.vet-custom-modal button:hover {
+.vet-custom-modal button:not(.btn-thin):hover {
     background: #89c57c !important;
     transition: 0.3s all ease !important;
 }

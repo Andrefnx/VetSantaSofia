@@ -99,9 +99,14 @@ h4 {
 
 .vet-btn-primary:hover {
     background: var(--primary-hover) !important;
+    color: white !important;
 }
 
 .vet-btn-primary i {
+    color: white !important;
+}
+
+.vet-btn-primary:hover i {
     color: white !important;
 }
 
@@ -128,15 +133,24 @@ h4 {
     color: white !important;
 }
 
-/* Botón de éxito - Verde más claro */
+/* Botón de éxito - Verde musgo */
 .vet-btn-success {
-    background: #5cb85c !important;
+    background: #6b8e6b !important;
     color: white !important;
     border: none !important;
 }
 
 .vet-btn-success:hover {
-    background: #4cae4c !important;
+    background: #5a7d5a !important;
+    color: white !important;
+}
+
+.vet-btn-success i {
+    color: white !important;
+}
+
+.vet-btn-success:hover i {
+    color: white !important;
 }
 
 .vet-btn-success i {

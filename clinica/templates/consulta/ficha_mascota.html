@@ -196,12 +196,12 @@
                         <i class="bi bi-pencil"></i>
                     </button>
                     <!-- Botones Guardar / Cancelar (ocultos inicialmente) -->
-                    <div id="btnEditAntecedentesActions" style="display:none;">
-                        <button class="btn-edit-icon btn-cancel" id="btnCancelarAntecedentes" title="Cancelar">
-                            <i class="bi bi-x-lg"></i>
+                    <div id="btnEditAntecedentesActions" style="display:none; gap: 0.5rem;">
+                        <button class="btn-thin btn-thin-cancel" id="btnCancelarAntecedentes" title="Cancelar">
+                            <i class="bi bi-x-lg"></i> Cancelar
                         </button>
-                        <button class="btn-edit-icon btn-save" id="btnGuardarAntecedentes" title="Guardar">
-                            <i class="bi bi-check-lg"></i>
+                        <button class="btn-thin btn-thin-save" id="btnGuardarAntecedentes" title="Guardar">
+                            <i class="bi bi-check-lg"></i> Guardar
                         </button>
                     </div>
                 </div>
@@ -636,11 +636,11 @@
                                     <textarea class="form-control form-control-sm" id="antecedenteCirugias" placeholder="Cirugías previas" rows="2"></textarea>
                                 </div>
                                 <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                                    <button type="button" class="btn btn-edit-icon btn-cancel" id="btnCancelarAntecedentesModal" title="Cancelar">
-                                        <i class="bi bi-x-lg"></i>
+                                    <button type="button" class="btn-thin btn-thin-cancel" id="btnCancelarAntecedentesModal" title="Cancelar">
+                                        <i class="bi bi-x-lg"></i> Cancelar
                                     </button>
-                                    <button type="button" class="btn btn-edit-icon btn-save" id="btnGuardarAntecedentesModal" title="Guardar">
-                                        <i class="bi bi-check-lg"></i>
+                                    <button type="button" class="btn-thin btn-thin-save" id="btnGuardarAntecedentesModal" title="Guardar">
+                                        <i class="bi bi-check-lg"></i> Guardar
                                     </button>
                                 </div>
                             </div>
@@ -680,12 +680,9 @@
                     </div>
                 </div>
             </div>
-            <div class="vet-modal-footer d-flex justify-content-between align-items-center">
-                <button type="button" class="vet-btn vet-btn-grey" id="btnRecuperarDatos">
-                    <i class="bi bi-bug"></i> Recuperar Datos (DEBUG)
-                </button>
+            <div class="vet-modal-footer d-flex justify-content-end align-items-center">
                 <button type="submit" class="vet-btn vet-btn-primary" id="btnAgendarNuevaCita">
-                    <i class="bi bi-calendar-plus"></i> Agendar y guardar en historial
+                    <i class="bi bi-check-lg"></i> Guardar
                 </button>
             </div>
         </form>

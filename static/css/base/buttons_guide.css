@@ -24,6 +24,18 @@
     color: white !important;
 }
 
+.btn-primary i,
+.vet-btn-primary i,
+.btn-success-custom i {
+    color: white !important;
+}
+
+.btn-primary:hover i,
+.vet-btn-primary:hover i,
+.btn-success-custom:hover i {
+    color: white !important;
+}
+
 /* BOTONES SECUNDARIOS - Gris */
 .btn-secondary,
 .vet-btn-grey,
@@ -72,17 +84,27 @@
     color: white !important;
 }
 
-/* BOTONES DE ÉXITO - Verde más oscuro */
+/* BOTONES DE ÉXITO - Verde musgo */
 .btn-success,
 .vet-btn-success {
-    background: #5cb85c !important;
+    background: #6b8e6b !important;
     color: white !important;
     border: none !important;
 }
 
 .btn-success:hover,
 .vet-btn-success:hover {
-    background: #4cae4c !important;
+    background: #5a7d5a !important;
+    color: white !important;
+}
+
+.btn-success i,
+.vet-btn-success i {
+    color: white !important;
+}
+
+.btn-success:hover i,
+.vet-btn-success:hover i {
     color: white !important;
 }
 
@@ -165,4 +187,54 @@ button:disabled {
 /* Animaciones de botones */
 button:active {
     transform: scale(0.98) !important;
+}
+
+/* =============================
+   BOTONES DELGADOS - FINITOS
+============================= */
+
+.btn-thin {
+    display: inline-block !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    padding: 3px 6px !important;
+    border-radius: 4px !important;
+    font-size: 0.65rem !important;
+    font-weight: 500 !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    user-select: none !important;
+    white-space: nowrap !important;
+}
+
+.btn-thin-cancel {
+    background: #dc3545 !important;
+    color: white !important;
+}
+
+.btn-thin-cancel:hover {
+    background: #c82333 !important;
+    color: white !important;
+}
+
+.btn-thin-cancel i {
+    font-size: 0.65rem !important;
+    color: white !important;
+}
+
+.btn-thin-save {
+    background: #6b8e6b !important;
+    color: white !important;
+}
+
+.btn-thin-save:hover {
+    background: #5a7d5a !important;
+    color: white !important;
+}
+
+.btn-thin-save i {
+    font-size: 0.65rem !important;
+    color: white !important;
 }
