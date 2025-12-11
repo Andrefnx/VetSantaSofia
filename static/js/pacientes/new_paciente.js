@@ -14,6 +14,66 @@ function getCookie(name) {
     return cookieValue;
 }
 
+// Variable global para guardar los datos originales del propietario en modo edición
+let propietarioOriginal = null;
+
+// Calcular edad a partir de fecha de nacimiento
+function calcularEdad(fechaNacimiento) {
+    const hoy = new Date();
+    const nacimiento = new Date(fechaNacimiento);
+    
+    let anos = hoy.getFullYear() - nacimiento.getFullYear();
+    let meses = hoy.getMonth() - nacimiento.getMonth();
+    let dias = hoy.getDate() - nacimiento.getDate();
+    
+    // Ajustar si los días son negativos
+    if (dias < 0) {
+        meses--;
+        const mesAnterior = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+        dias += mesAnterior.getDate();
+    }
+    
+    // Ajustar si los meses son negativos
+    if (meses < 0) {
+        anos--;
+        meses += 12;
+    }
+    
+    return { anos, meses, dias };
+}
+
+// Mostrar edad calculada cuando cambia fecha
+function mostrarEdadCalculada() {
+    const fechaInput = document.getElementById('pacienteFechaNacimiento');
+    const edadDisplay = document.getElementById('edadCalculada');
+    
+    if (fechaInput.value) {
+        // Validar que la fecha sea válida
+        const fechaObj = new Date(fechaInput.value);
+        if (isNaN(fechaObj.getTime())) {
+            edadDisplay.style.display = 'none';
+            return;
+        }
+        
+        const { anos, meses, dias } = calcularEdad(fechaInput.value);
+        
+        let edadTexto = '';
+        
+        // Si tiene menos de un mes, mostrar en días
+        if (anos === 0 && meses === 0) {
+            edadTexto = `📅 Edad: ${dias} día${dias !== 1 ? 's' : ''}`;
+        } else {
+            // Si tiene un mes o más, mostrar en años y meses
+            edadTexto = `📅 Edad: ${anos} año${anos !== 1 ? 's' : ''} y ${meses} mes${meses !== 1 ? 'es' : ''}`;
+        }
+        
+        edadDisplay.textContent = edadTexto;
+        edadDisplay.style.display = 'block';
+    } else {
+        edadDisplay.style.display = 'none';
+    }
+}
+
 // Normalizar teléfono chileno a formato +569XXXXXXXX
 function normalizeChilePhone(phone) {
     if (!phone) return phone;
@@ -35,6 +95,12 @@ function normalizeChilePhone(phone) {
 function abrirModalNuevoPaciente() {
     console.log('Abriendo modal nuevo paciente');
     
+    // Resetear la variable de propietario original
+    propietarioOriginal = null;
+    
+    // Ocultar botón "Editar actual" (no aplica para nuevo paciente)
+    document.getElementById('modoPropietarioEditar').parentElement.style.display = 'none';
+    
     // Resetear formulario
     document.getElementById('addPacienteForm').reset();
     document.getElementById('pacienteIdEdit').value = '';
@@ -53,12 +119,32 @@ function abrirModalNuevoPaciente() {
     // Mostrar sección de búsqueda (oculta)
     document.getElementById('seccionBusquedaPropietario').style.display = 'none';
     
+    // Resetear tipo de edad a fecha de nacimiento
+    document.getElementById('tipoEdadFecha').checked = true;
+    mostrarCampoEdad('fecha');
+    
     // Abrir modal
     const modal = document.getElementById('modalNuevoPaciente');
     modal.classList.remove('hide');
     setTimeout(() => {
         modal.classList.add('show');
     }, 10);
+}
+
+// Mostrar/ocultar campos de edad según tipo
+function mostrarCampoEdad(tipo) {
+    const fieldFecha = document.getElementById('fieldFechaNacimiento');
+    const fieldEstimada = document.getElementById('fieldEdadAproximada');
+    
+    if (tipo === 'fecha') {
+        fieldFecha.style.display = 'block';
+        fieldEstimada.style.display = 'none';
+        document.getElementById('pacienteFechaNacimiento').focus();
+    } else {
+        fieldFecha.style.display = 'none';
+        fieldEstimada.style.display = 'block';
+        document.getElementById('pacienteEdadAnos').focus();
+    }
 }
 
 // Abrir modal en modo edición
@@ -82,8 +168,28 @@ function abrirModalPaciente(button, mode, pacienteId) {
                 document.getElementById('pacienteNombre').value = paciente.nombre;
                 document.getElementById('pacienteEspecie').value = paciente.especie;
                 document.getElementById('pacienteRaza').value = paciente.raza || '';
-                document.getElementById('pacienteSexo').value = paciente.sexo;
-                document.getElementById('pacienteEdad').value = paciente.edad || '';
+                
+                // Llenar sexo explícitamente
+                const sexoSelect = document.getElementById('pacienteSexo');
+                sexoSelect.value = paciente.sexo || '';
+                console.log('Sexo cargado:', paciente.sexo, 'Valor en select:', sexoSelect.value);
+                
+                // Llenar edad: si tiene fecha_nacimiento, mostrar esa; si no, mostrar años/meses
+                if (paciente.fecha_nacimiento) {
+                    document.getElementById('tipoEdadFecha').checked = true;
+                    mostrarCampoEdad('fecha');
+                    document.getElementById('pacienteFechaNacimiento').value = paciente.fecha_nacimiento;
+                    document.getElementById('pacienteEdadAnos').value = '';
+                    document.getElementById('pacienteEdadMeses').value = '';
+                    // Mostrar la edad calculada
+                    setTimeout(mostrarEdadCalculada, 100);
+                } else {
+                    document.getElementById('tipoEdadEstimada').checked = true;
+                    mostrarCampoEdad('estimada');
+                    document.getElementById('pacienteFechaNacimiento').value = '';
+                    document.getElementById('pacienteEdadAnos').value = paciente.edad_anos || '';
+                    document.getElementById('pacienteEdadMeses').value = paciente.edad_meses || '';
+                }
                 
                 // Llenar datos del propietario
                 document.getElementById('propietarioId').value = propietario.id;
@@ -93,9 +199,27 @@ function abrirModalPaciente(button, mode, pacienteId) {
                 document.getElementById('propietarioEmail').value = propietario.email || '';
                 document.getElementById('propietarioDireccion').value = propietario.direccion || '';
                 
+                // GUARDAR datos originales del propietario para poder restaurarlos después
+                propietarioOriginal = {
+                    id: propietario.id,
+                    nombre: propietario.nombre,
+                    apellido: propietario.apellido,
+                    telefono: propietario.telefono || '',
+                    email: propietario.email || '',
+                    direccion: propietario.direccion || '',
+                    nombre_completo: propietario.nombre_completo
+                };
+                
+                // Mostrar botón "Editar actual"
+                document.getElementById('modoPropietarioEditar').parentElement.style.display = 'block';
+                
                 // Mostrar badge de propietario seleccionado
                 document.getElementById('propietarioNombreDisplay').textContent = propietario.nombre_completo;
                 document.getElementById('propietarioSeleccionadoBadge').style.display = 'block';
+                
+                // Establecer modo a "editar" y mostrar los datos actuales del propietario
+                document.getElementById('modoPropietarioEditar').checked = true;
+                setModoPropietario('editar');
                 
                 // Cambiar título
                 document.getElementById('tituloModalPaciente').textContent = 'Editar Paciente';
@@ -233,6 +357,23 @@ function setModoPropietario(modo) {
         // Ocultar búsqueda, limpiar todo
         seccionBusqueda.style.display = 'none';
         limpiarPropietario();
+    } else if (modo === 'editar') {
+        // Ocultar búsqueda, restaurar datos originales del propietario
+        seccionBusqueda.style.display = 'none';
+        
+        // Restaurar datos originales si existen
+        if (propietarioOriginal) {
+            document.getElementById('propietarioId').value = propietarioOriginal.id;
+            document.getElementById('propietarioNombre').value = propietarioOriginal.nombre;
+            document.getElementById('propietarioApellido').value = propietarioOriginal.apellido;
+            document.getElementById('propietarioTelefono').value = propietarioOriginal.telefono;
+            document.getElementById('propietarioEmail').value = propietarioOriginal.email;
+            document.getElementById('propietarioDireccion').value = propietarioOriginal.direccion;
+            document.getElementById('propietarioNombreDisplay').textContent = propietarioOriginal.nombre_completo;
+        }
+        
+        document.getElementById('propietarioSeleccionadoBadge').style.display = 'block';
+        document.getElementById('resultadosPropietarios').style.display = 'none';
     }
 }
 
@@ -260,10 +401,31 @@ function saveNewPaciente() {
     const especiePaciente = document.getElementById('pacienteEspecie').value;
     const sexoPaciente = document.getElementById('pacienteSexo').value;
     const razaPaciente = document.getElementById('pacienteRaza').value.trim();
-    const edadPaciente = document.getElementById('pacienteEdad').value.trim();
+    
+    // Obtener tipo de edad
+    const tipoEdad = document.querySelector('input[name="tipoEdad"]:checked').value;
+    let fechaNacimiento = '';
+    let edadAnos = '';
+    let edadMeses = '';
+    
+    if (tipoEdad === 'fecha') {
+        fechaNacimiento = document.getElementById('pacienteFechaNacimiento').value;
+        if (!fechaNacimiento) {
+            alert('Error: Debes seleccionar una fecha de nacimiento');
+            return;
+        }
+    } else {
+        edadAnos = document.getElementById('pacienteEdadAnos').value || '';
+        edadMeses = document.getElementById('pacienteEdadMeses').value || '';
+        if (!edadAnos && !edadMeses) {
+            alert('Error: Debes ingresar al menos una edad (años o meses)');
+            return;
+        }
+    }
     
     console.log('Es edición:', esEdicion);
     console.log('Modo propietario:', modoPropietario);
+    console.log('Tipo edad:', tipoEdad);
     
     // Validar propietario
     if (!propietarioNombre || !propietarioApellido || !propietarioTelefono) {
@@ -307,6 +469,10 @@ function saveNewPaciente() {
     const data = {
         propietario_id: modoPropietario === 'nuevo' ? null : (propietarioId || null),
         actualizar_propietario: modoPropietario !== 'nuevo',
+        tipo_edad: tipoEdad,
+        fecha_nacimiento: fechaNacimiento,
+        edad_anos: edadAnos !== '' ? parseInt(edadAnos) : null,
+        edad_meses: edadMeses !== '' ? parseInt(edadMeses) : null,
         propietario: {
             nombre: propietarioNombre,
             apellido: propietarioApellido,
@@ -319,7 +485,6 @@ function saveNewPaciente() {
             especie: especiePaciente,
             raza: razaPaciente,
             sexo: sexoPaciente,
-            edad: edadPaciente,
         }
     };
     
@@ -403,6 +568,21 @@ document.addEventListener('click', function(event) {
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM Content Loaded - Inicializando modales pacientes');
+    
+    // ===== TOGGLE TIPO DE EDAD =====
+    const tipoEdadRadios = document.querySelectorAll('input[name="tipoEdad"]');
+    tipoEdadRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            mostrarCampoEdad(this.value);
+        });
+    });
+    
+    // ===== CÁLCULO DE EDAD POR FECHA =====
+    const fechaInput = document.getElementById('pacienteFechaNacimiento');
+    if (fechaInput) {
+        fechaInput.addEventListener('change', mostrarEdadCalculada);
+        fechaInput.addEventListener('input', mostrarEdadCalculada);
+    }
     
     // ===== MODAL ELIMINAR PACIENTE =====
     const btnConfirmar = document.getElementById('btnConfirmarEliminarPaciente');

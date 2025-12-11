@@ -54,7 +54,6 @@ class Paciente(models.Model):
     
     microchip = models.CharField(max_length=50, blank=True, null=True, unique=True)
     ultimo_peso = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
-    observaciones = models.TextField(blank=True, null=True)
     
     # ⭐ ANTECEDENTES MÉDICOS CRÍTICOS
     alergias = models.TextField(blank=True, null=True, help_text="Ej: alergia al pollo, penicilina")

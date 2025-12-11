@@ -13,11 +13,11 @@
         color: #0b4d2d !important;
     }
 
-    /* Layout 70/30 para modal */
+    /* Layout 50/50 para modal */
     .modal-grid {
         display: grid;
-        grid-template-columns: 70% 30%;
-        gap: 1rem;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
     }
 
     @media (max-width: 992px) {
@@ -27,14 +27,92 @@
     }
 
     /* Estilo verde selector propietario */
+    .owner-mode-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
     .owner-mode-group .btn {
         border-color: #69c087;
         color: #0b4d2d;
+        font-size: 0.9rem;
+        flex: 1;
+        min-width: 120px;
     }
 
     .owner-mode-group .btn-check:checked+.btn {
         background-color: #69c087;
         color: #0b4d2d;
+    }
+
+    /* Estilo para selector de edad */
+    .edad-selector-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    .edad-selector-group .btn {
+        border-color: #69c087;
+        color: #0b4d2d;
+        font-size: 0.9rem;
+    }
+
+    .edad-selector-group .btn-check:checked+.btn {
+        background-color: #69c087;
+        color: #0b4d2d;
+    }
+
+    /* Campos de edad aproximada en grid 2 columnas */
+    #fieldEdadAproximada > div {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    #fieldEdadAproximada label {
+        font-size: 0.9rem;
+    }
+
+    #fieldEdadAproximada input {
+        font-size: 0.95rem;
+    }
+
+    /* Compactar espaciado del modal */
+    .vet-modal-body {
+        padding: 1.25rem !important;
+    }
+
+    .vet-modal-body .mb-3 {
+        margin-bottom: 0.75rem !important;
+    }
+
+    .vet-modal-body .mb-2 {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .vet-modal-body label {
+        font-size: 0.9rem;
+        margin-bottom: 0.35rem;
+    }
+
+    .vet-modal-body .form-control,
+    .vet-modal-body .form-select {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.75rem;
+    }
+
+    .vet-modal-body textarea {
+        max-height: 60px;
+        resize: vertical;
+    }
+
+    /* Grid para nombre y apellido propietario */
+    .propietario-nombre-grupo {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
     }
 
     .owner-form-row {
@@ -125,15 +203,43 @@
                                 <label>Sexo</label>
                                 <select id="pacienteSexo" class="form-control">
                                     <option value="">Selecciona...</option>
-                                    <option value="macho">Macho</option>
-                                    <option value="hembra">Hembra</option>
+                                    <option value="M">Macho</option>
+                                    <option value="H">Hembra</option>
                                 </select>
                             </div>
 
-                            <!-- Edad -->
+                            <!-- Edad: Selector de tipo -->
                             <div class="mb-3">
-                                <label>Edad (formato libre)</label>
-                                <input type="text" id="pacienteEdad" class="form-control">
+                                <label style="display: block; margin-bottom: 0.75rem; font-weight: 500;">Edad</label>
+                                <div class="edad-selector-group">
+                                    <input type="radio" class="btn-check" name="tipoEdad" id="tipoEdadFecha" value="fecha" checked>
+                                    <label class="btn btn-outline-secondary" for="tipoEdadFecha"><i class="bi bi-calendar-event"></i> Fecha nacimiento</label>
+
+                                    <input type="radio" class="btn-check" name="tipoEdad" id="tipoEdadEstimada" value="estimada">
+                                    <label class="btn btn-outline-secondary" for="tipoEdadEstimada"><i class="bi bi-calculator"></i> Edad aproximada</label>
+                                </div>
+                            </div>
+
+                            <!-- Fecha de nacimiento -->
+                            <div class="mb-3" id="fieldFechaNacimiento">
+                                <label>Fecha de Nacimiento</label>
+                                <input type="date" id="pacienteFechaNacimiento" class="form-control">
+                                <!-- Edad calculada -->
+                                <small id="edadCalculada" class="text-muted d-block mt-2" style="display: none;"></small>
+                            </div>
+
+                            <!-- Edad aproximada (años y meses) -->
+                            <div class="mb-3" id="fieldEdadAproximada" style="display: none;">
+                                <div>
+                                    <div>
+                                        <label>Años</label>
+                                        <input type="number" id="pacienteEdadAnos" class="form-control" min="0" max="50" placeholder="0">
+                                    </div>
+                                    <div>
+                                        <label>Meses</label>
+                                        <input type="number" id="pacienteEdadMeses" class="form-control" min="0" max="11" placeholder="0">
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -143,8 +249,12 @@
 
                             <!-- Modo -->
                             <div class="owner-mode-group mb-2">
+                                <input type="radio" class="btn-check" name="modoPropietario" id="modoPropietarioEditar"
+                                    value="editar">
+                                <label class="btn btn-outline-success" for="modoPropietarioEditar">Editar actual</label>
+
                                 <input type="radio" class="btn-check" name="modoPropietario" id="modoPropietarioNuevo"
-                                    value="nuevo" checked>
+                                    value="nuevo">
                                 <label class="btn btn-outline-success" for="modoPropietarioNuevo">Crear nuevo</label>
 
                                 <input type="radio" class="btn-check" name="modoPropietario"
@@ -182,38 +292,38 @@
                             <!-- FORM NUEVO PROPIETARIO -->
                             <div id="formNuevoPropietario">
                                 <input type="hidden" id="propietarioId" value="">
-                                <div class="owner-form-row">
-                                    <div>
+                                <div class="propietario-nombre-grupo">
+                                    <div class="mb-2">
                                         <label>Nombre *</label>
                                         <input type="text" id="propietarioNombre" class="form-control">
                                     </div>
 
-                                    <div>
+                                    <div class="mb-2">
                                         <label>Apellido *</label>
                                         <input type="text" id="propietarioApellido" class="form-control">
                                     </div>
+                                </div>
 
-                                    <div>
-                                        <label>Teléfono *</label>
-                                        <input type="tel" id="propietarioTelefono" placeholder="+56912345678"
-                                            class="form-control">
-                                    </div>
+                                <div class="mb-2">
+                                    <label>Teléfono *</label>
+                                    <input type="tel" id="propietarioTelefono" placeholder="+56912345678"
+                                        class="form-control">
+                                </div>
 
-                                    <div>
-                                        <label>Email</label>
-                                        <input type="email" id="propietarioEmail" placeholder="correo@dominio.cl"
-                                            class="form-control">
-                                    </div>
+                                <div class="mb-2">
+                                    <label>Email</label>
+                                    <input type="email" id="propietarioEmail" placeholder="correo@dominio.cl"
+                                        class="form-control">
+                                </div>
 
-                                    <div>
-                                        <label>Dirección</label>
-                                        <textarea id="propietarioDireccion" rows="2" class="form-control"></textarea>
-                                    </div>
+                                <div class="mb-2">
+                                    <label>Dirección</label>
+                                    <textarea id="propietarioDireccion" class="form-control"></textarea>
                                 </div>
                             </div>
                             
                             <!-- Badge de propietario seleccionado -->
-                            <div id="propietarioSeleccionadoBadge" class="alert alert-info" style="display:none; margin-top:1rem;">
+                            <div id="propietarioSeleccionadoBadge" class="alert alert-info" style="display:none; margin-top:0.75rem; padding: 0.6rem; font-size: 0.9rem;">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <i class="bi bi-check-circle"></i>

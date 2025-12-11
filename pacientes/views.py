@@ -99,6 +99,7 @@ def ficha_mascota_view(request, paciente_id):
     
     return render(request, 'consulta/ficha_mascota.html', context)
 
+@csrf_exempt
 @login_required
 def detalle_paciente(request, paciente_id):
     """Vista para obtener detalles completos de un paciente (JSON)"""
@@ -115,7 +116,9 @@ def detalle_paciente(request, paciente_id):
             'color': paciente.color or '',
             'microchip': paciente.microchip or '',
             'ultimo_peso': float(paciente.ultimo_peso) if paciente.ultimo_peso else None,
-            'observaciones': paciente.observaciones or '',
+            'fecha_nacimiento': str(paciente.fecha_nacimiento) if paciente.fecha_nacimiento else None,
+            'edad_anos': paciente.edad_anos,
+            'edad_meses': paciente.edad_meses,
         },
         'propietario': {
             'id': paciente.propietario.id,
@@ -160,17 +163,64 @@ def crear_paciente(request):
                 )
             
             paciente_data = data.get('paciente', {})
+            tipo_edad = data.get('tipo_edad', 'fecha')
+            
+            # Inicializar campos de edad
+            fecha_nacimiento = None
+            edad_anos = None
+            edad_meses = None
+            
+            if tipo_edad == 'fecha':
+                fecha_nac = data.get('fecha_nacimiento')
+                if fecha_nac:
+                    fecha_nacimiento = datetime.strptime(fecha_nac, '%Y-%m-%d').date()
+                    if fecha_nacimiento > date.today():
+                        return JsonResponse({
+                            'success': False,
+                            'error': 'La fecha de nacimiento no puede ser futura'
+                        }, status=400)
+            elif tipo_edad == 'estimada':
+                edad_anos = data.get('edad_anos')
+                edad_meses = data.get('edad_meses')
+                edad_anos = int(edad_anos) if edad_anos else 0
+                edad_meses = int(edad_meses) if edad_meses else 0
+                
+                # Calcular fecha de nacimiento aproximada
+                hoy = date.today()
+                # Restar años y meses
+                mes = hoy.month - edad_meses
+                ano = hoy.year - edad_anos
+                
+                # Ajustar si el mes es negativo
+                if mes <= 0:
+                    mes += 12
+                    ano -= 1
+                
+                # Manejar el día (usar el día actual o el último día del mes si no existe)
+                try:
+                    fecha_nacimiento = date(ano, mes, hoy.day)
+                except ValueError:
+                    # Si el día no existe en ese mes (ej: 31 de febrero), usar el último día del mes
+                    if mes == 2:
+                        fecha_nacimiento = date(ano, mes, 28)
+                    else:
+                        fecha_nacimiento = date(ano, mes, 30)
+            
+            # Manejar microchip: convertir cadena vacía a None
+            microchip = paciente_data.get('microchip', '').strip()
+            microchip = microchip if microchip else None
+            
             paciente = Paciente.objects.create(
                 nombre=paciente_data.get('nombre'),
                 especie=paciente_data.get('especie'),
                 raza=paciente_data.get('raza', ''),
-                edad_anos=paciente_data.get('edad_anos'),
-                edad_meses=paciente_data.get('edad_meses'),
+                fecha_nacimiento=fecha_nacimiento,
+                edad_anos=edad_anos,
+                edad_meses=edad_meses,
                 sexo=paciente_data.get('sexo'),
                 color=paciente_data.get('color', ''),
-                microchip=paciente_data.get('microchip', ''),
+                microchip=microchip,
                 ultimo_peso=paciente_data.get('ultimo_peso'),
-                observaciones=paciente_data.get('observaciones', ''),
                 propietario=propietario
             )
             
@@ -206,11 +256,13 @@ def editar_paciente(request, paciente_id):
         if isinstance(actualizar_propietario, str):
             actualizar_propietario = actualizar_propietario.lower() in ['true', '1', 'on']
 
-        campos_basicos = ['nombre', 'especie', 'raza', 'sexo', 'color', 'microchip', 'observaciones']
+        campos_basicos = ['nombre', 'especie', 'raza', 'sexo', 'color', 'microchip']
         for campo in campos_basicos:
             if paciente_data.get(campo) is not None:
-                setattr(paciente, campo, paciente_data.get(campo) or '')
-        
+                setattr(paciente, campo, paciente_data.get(campo) or '')        
+        # Manejar microchip especialmente: convertir cadena vacía a None
+        microchip_value = paciente_data.get('microchip', '').strip() if isinstance(paciente_data.get('microchip'), str) else ''
+        paciente.microchip = microchip_value if microchip_value else None        
         tipo_edad = payload.get('tipo_edad')
         
         if tipo_edad == 'fecha':
@@ -228,11 +280,34 @@ def editar_paciente(request, paciente_id):
                 paciente.edad_anos = None
                 paciente.edad_meses = None
         elif tipo_edad == 'estimada':
-            paciente.fecha_nacimiento = None
             edad_anos = payload.get('edad_anos')
             edad_meses = payload.get('edad_meses')
-            paciente.edad_anos = int(edad_anos) if edad_anos and str(edad_anos).strip() else None
-            paciente.edad_meses = int(edad_meses) if edad_meses and str(edad_meses).strip() else None
+            edad_anos = int(edad_anos) if edad_anos and str(edad_anos).strip() else 0
+            edad_meses = int(edad_meses) if edad_meses and str(edad_meses).strip() else 0
+            
+            paciente.edad_anos = edad_anos
+            paciente.edad_meses = edad_meses
+            
+            # Calcular fecha de nacimiento aproximada
+            hoy = date.today()
+            # Restar años y meses
+            mes = hoy.month - edad_meses
+            ano = hoy.year - edad_anos
+            
+            # Ajustar si el mes es negativo
+            if mes <= 0:
+                mes += 12
+                ano -= 1
+            
+            # Manejar el día (usar el día actual o el último día del mes si no existe)
+            try:
+                paciente.fecha_nacimiento = date(ano, mes, hoy.day)
+            except ValueError:
+                # Si el día no existe en ese mes (ej: 31 de febrero), usar el último día del mes
+                if mes == 2:
+                    paciente.fecha_nacimiento = date(ano, mes, 28)
+                else:
+                    paciente.fecha_nacimiento = date(ano, mes, 30)
         
         if propietario_id:
             propietario = get_object_or_404(Propietario, id=propietario_id)
