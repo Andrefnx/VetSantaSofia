@@ -506,46 +506,28 @@
         </div>
         <form id="formNuevaConsulta">
             <div class="vet-modal-body">
+                <!-- Fila compacta con Médico Tratante, Fecha y Tipo de Consulta -->
+                <div class="header-info-compact">
+                    <div class="info-item">
+                        <span class="info-label">Médico:</span>
+                        <span class="info-value" id="medicoTratante">{{ user.nombre }} {{ user.apellido }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Fecha:</span>
+                        <span class="info-value" id="fechaConsulta">{% now "d/m/Y" %}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Tipo:</span>
+                        <select class="form-control-compact" id="tipoConsultaSelect" name="tipo_consulta" required>
+                            <option value="">Seleccionar</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-person-badge"></i> Médico Tratante</div>
-                            <p id="medicoTratante">{{ user.nombre }} {{ user.apellido }}</p>
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
-                            <p id="fechaConsulta">{% now "d/m/Y" %}</p>
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-list-check"></i> Tipo de Consulta</div>
-                            <select class="form-control" id="tipoConsultaSelect" name="tipo_consulta" required>
-                                <option value="">Seleccione servicio</option>
-                            </select>
-                        </div>
-                        <hr style="margin: 0.75rem 0; border-top: 1px solid #dee2e6;">
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-thermometer-half"></i> Temperatura</div>
-                            <input type="text" class="form-control" name="temperatura" required>
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-speedometer2"></i> Peso</div>
-                            <input type="text" class="form-control" name="peso" id="pesoConsulta" required>
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-heart-pulse"></i> Frec. Cardíaca</div>
-                            <input type="text" class="form-control" name="frecuencia_cardiaca">
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-wind"></i> Frec. Respiratoria</div>
-                            <input type="text" class="form-control" name="frecuencia_respiratoria">
-                        </div>
-                        <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-droplet-half"></i> Otros</div>
-                            <input type="text" class="form-control" name="otros">
-                        </div>
-
-                        <!-- ⭐ ANTECEDENTES MÉDICOS CRÍTICOS -->
-                        <div class="detail-section" style="border-top: 2px solid #ffc107; padding-top: 1rem; margin-top: 1rem; position: relative;">
+                        <!-- ⭐ ANTECEDENTES MÉDICOS CRÍTICOS - PRIMERO -->
+                        <div class="detail-section" style="border-top: 2px solid #ffc107; padding-top: 1rem; margin-top: 0; position: relative;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                                 <div class="detail-section-title" style="margin: 0; color: #dc3545;">
                                     <i class="bi bi-exclamation-triangle"></i> Antecedentes Médicos
@@ -587,6 +569,29 @@
                                     </button>
                                 </div>
                             </div>
+                        </div>
+
+                        <hr style="margin: 0.75rem 0; border-top: 1px solid #dee2e6;">
+
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-thermometer-half"></i> Temperatura</div>
+                            <input type="text" class="form-control" name="temperatura" required>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-speedometer2"></i> Peso</div>
+                            <input type="text" class="form-control" name="peso" id="pesoConsulta" required>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-heart-pulse"></i> Frec. Cardíaca</div>
+                            <input type="text" class="form-control" name="frecuencia_cardiaca">
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-wind"></i> Frec. Respiratoria</div>
+                            <input type="text" class="form-control" name="frecuencia_respiratoria">
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-droplet-half"></i> Otros</div>
+                            <input type="text" class="form-control" name="otros">
                         </div>
                     </div>
                     <div class="col-md-9">
