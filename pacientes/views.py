@@ -30,6 +30,8 @@ def pacientes_view(request):
 @login_required
 def ficha_mascota_view(request, paciente_id):
     """Vista de la ficha de la mascota"""
+    from cuentas.models import CustomUser
+    
     paciente = get_object_or_404(Paciente, id=paciente_id)
     
     # Obtener consultas con medicamentos (ahora funcionará)
@@ -39,6 +41,19 @@ def ficha_mascota_view(request, paciente_id):
     hospitalizaciones = paciente.hospitalizaciones.all() if hasattr(paciente, 'hospitalizaciones') else []
     examenes = paciente.examenes.all() if hasattr(paciente, 'examenes') else []
     documentos = paciente.documentos.all() if hasattr(paciente, 'documentos') else []
+    
+    # ⭐ OBTENER VETERINARIOS CON FALLBACK
+    veterinarios = CustomUser.objects.filter(rol='veterinario').order_by('nombre', 'apellido')
+    
+    # Si no hay con rol='veterinario', excluir administración y recepción
+    if veterinarios.count() == 0:
+        veterinarios = CustomUser.objects.exclude(
+            rol__in=['administracion', 'recepcion']
+        ).order_by('nombre', 'apellido')
+    
+    # Si aún no hay, usar todos los usuarios
+    if veterinarios.count() == 0:
+        veterinarios = CustomUser.objects.all().order_by('nombre', 'apellido')
     
     # Serializar datos del paciente para JavaScript
     paciente_data = {
@@ -57,6 +72,7 @@ def ficha_mascota_view(request, paciente_id):
         'hospitalizaciones': hospitalizaciones,
         'examenes': examenes,
         'documentos': documentos,
+        'veterinarios': veterinarios,  # ⭐ AGREGAR VETERINARIOS
     }
     
     return render(request, 'consulta/ficha_mascota.html', context)

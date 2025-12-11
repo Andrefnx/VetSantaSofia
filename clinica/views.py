@@ -253,27 +253,59 @@ import sys
 
 @login_required
 def ficha_mascota(request, pk):
+    import sys
     sys.stderr.write("\n" + "="*60 + "\n")
     sys.stderr.write(f"🔴 FICHA MASCOTA LLAMADA - PK: {pk}\n")
     sys.stderr.write("="*60 + "\n\n")
     
     paciente = get_object_or_404(Paciente, pk=pk)
-    consultas = Consulta.objects.filter(paciente=paciente).order_by('-fecha')
+    consultas = Consulta.objects.filter(paciente=paciente).select_related('veterinario').order_by('-fecha')
     
     sys.stderr.write(f"📦 Paciente: {paciente.nombre}\n")
     sys.stderr.write(f"📋 Consultas encontradas: {consultas.count()}\n")
     
-    veterinarios = CustomUser.objects.filter(rol='veterinario').order_by('nombre', 'apellido')
+    # ⭐ DEBUG COMPLETO DE VETERINARIOS
+    todos_usuarios = CustomUser.objects.all()
+    sys.stderr.write(f"\n👥 TOTAL DE USUARIOS EN LA BD: {todos_usuarios.count()}\n")
+    for user in todos_usuarios:
+        sys.stderr.write(f"  - {user.nombre} {user.apellido} | rol='{user.rol}' | is_staff={user.is_staff}\n")
     
-    sys.stderr.write(f"👥 Total de usuarios: {CustomUser.objects.count()}\n")
-    sys.stderr.write(f"👨‍⚕️ Total de veterinarios: {veterinarios.count()}\n")
-    sys.stderr.write(f"📝 Veterinarios: {list(veterinarios.values('nombre', 'apellido', 'rol'))}\n")
+    # ⭐ BUSCAR VETERINARIOS (ESTRATEGIA DE FALLBACK ROBUSTA)
+    sys.stderr.write(f"\n🔍 BUSCANDO veterinarios...\n")
+    
+    # Opción 1: Usuarios con rol='veterinario'
+    veterinarios = CustomUser.objects.filter(rol='veterinario').order_by('nombre', 'apellido')
+    sys.stderr.write(f"  Opción 1 (rol='veterinario'): {veterinarios.count()}\n")
+    
+    # Opción 2: Si no hay con ese rol, excluir administración y recepción
+    if veterinarios.count() == 0:
+        veterinarios = CustomUser.objects.exclude(
+            rol__in=['administracion', 'recepcion']
+        ).order_by('nombre', 'apellido')
+        sys.stderr.write(f"  Opción 2 (exclusión admin/recepción): {veterinarios.count()}\n")
+    
+    # Opción 3: Si aún no hay, usar todos los usuarios
+    if veterinarios.count() == 0:
+        veterinarios = CustomUser.objects.all().order_by('nombre', 'apellido')
+        sys.stderr.write(f"  Opción 3 (todos los usuarios): {veterinarios.count()}\n")
+    
+    sys.stderr.write(f"👨‍⚕️ Veterinarios totales a mostrar: {veterinarios.count()}\n")
+    for vet in veterinarios:
+        sys.stderr.write(f"  ✅ {vet.id} - {vet.nombre} {vet.apellido} (rol='{vet.rol}')\n")
+    
+    # ⭐ GENERAR NOMBRE COMPLETO DEL VETERINARIO LOGUEADO
+    nombre_veterinario = f"{request.user.nombre} {request.user.apellido}".strip()
+    sys.stderr.write(f"\n👤 Veterinario logueado: {nombre_veterinario} (rol='{request.user.rol}')\n")
+    sys.stderr.write(f"📝 Total de veterinarios a mostrar: {veterinarios.count()}\n")
     sys.stderr.write("="*60 + "\n\n")
     
     context = {
         'paciente': paciente,
         'consultas': consultas,
         'nombre_veterinario': nombre_veterinario,
-        'veterinarios': veterinarios,  # Asegúrate de que esta línea esté presente
+        'veterinarios': veterinarios,
+        'hospitalizaciones': paciente.hospitalizaciones.all(),
+        'examenes': paciente.examenes.all(),
+        'documentos': paciente.documentos.all(),
     }
     return render(request, 'consulta/ficha_mascota.html', context)

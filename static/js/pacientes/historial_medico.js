@@ -1,28 +1,287 @@
-// ⭐ SISTEMA DE TABS
+// ⭐ SISTEMA UNIFICADO - TODO EN UN SOLO DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ DOMContentLoaded - Inicializando aplicación');
+
+    // ===== SISTEMA DE TABS =====
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
     tabButtons.forEach(button => {
         button.addEventListener('click', function() {
             const targetTab = this.getAttribute('data-tab');
-            
-            // Remover clase active de todos los botones y contenidos
             tabButtons.forEach(btn => btn.classList.remove('active'));
             tabContents.forEach(content => content.classList.remove('active'));
-            
-            // Agregar clase active al botón clickeado
             this.classList.add('active');
-            
-            // Mostrar el contenido correspondiente
             const targetContent = document.getElementById(targetTab);
             if (targetContent) {
                 targetContent.classList.add('active');
             }
         });
     });
+
+    // ===== ELEMENTOS DEL FILTRO =====
+    const selectMonth = document.getElementById('selectMonth');
+    const selectYear = document.getElementById('selectYear');
+    const btnPrevMonth = document.getElementById('btnPrevMonth');
+    const btnNextMonth = document.getElementById('btnNextMonth');
+    const btnClearFilters = document.getElementById('btnClearFilters');
+    const searchHistorial = document.getElementById('searchHistorial');
+    const filterVeterinario = document.getElementById('filterVeterinario');
+
+    console.log('🔍 Elementos encontrados:');
+    console.log('  selectMonth:', !!selectMonth);
+    console.log('  selectYear:', !!selectYear);
+    console.log('  searchHistorial:', !!searchHistorial);
+    console.log('  filterVeterinario:', !!filterVeterinario);
+    
+    // ⭐ DEBUG: Verificar opciones del select
+    if (filterVeterinario) {
+        console.log('📋 Opciones en filterVeterinario:');
+        for (let i = 0; i < filterVeterinario.options.length; i++) {
+            console.log(`  [${i}] value="${filterVeterinario.options[i].value}" text="${filterVeterinario.options[i].text}"`);
+        }
+    }
+
+    let currentFilterMonth = '';
+    let currentFilterYear = '';
+    let currentFilterVeterinario = '';
+
+    // ===== INICIALIZAR AÑOS =====
+    function initializeYears() {
+        if (!selectYear) return;
+        const currentYear = new Date().getFullYear();
+        const nextYear = currentYear + 1;
+        const timelineItems = document.querySelectorAll('.timeline-item:not(.empty-state)');
+        let oldestYear = currentYear;
+
+        timelineItems.forEach(item => {
+            const fechaCompleta = item.querySelector('.timeline-item-date')?.textContent.trim();
+            if (fechaCompleta) {
+                const [fecha] = fechaCompleta.split(' ');
+                const [dia, mes, año] = fecha.split('/');
+                const itemYear = parseInt(año);
+                if (itemYear < oldestYear) {
+                    oldestYear = itemYear;
+                }
+            }
+        });
+
+        for (let year = nextYear; year >= oldestYear; year--) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            selectYear.appendChild(option);
+        }
+    }
+
+    // ===== FUNCIONES DE FILTRADO =====
+    function updateClearButton() {
+        const hasFilters = (searchHistorial?.value || currentFilterMonth !== '' || currentFilterYear !== '' || currentFilterVeterinario !== '');
+        if (btnClearFilters) {
+            btnClearFilters.classList.toggle('show', hasFilters);
+        }
+    }
+
+    function marcarPrimerosDelMes() {
+        const timelineItems = document.querySelectorAll('.timeline-item:not(.empty-state):not(.no-results-message)');
+        const monthsShown = new Set();
+
+        timelineItems.forEach(item => {
+            if (item.style.display === 'none') {
+                item.classList.remove('first-of-month');
+                return;
+            }
+
+            const fechaCompleta = item.querySelector('.timeline-item-date')?.textContent.trim();
+            if (!fechaCompleta) return;
+
+            const [fecha] = fechaCompleta.split(' ');
+            const [dia, mes, año] = fecha.split('/');
+            const monthYear = `${mes}-${año}`;
+
+            const timelineDate = item.querySelector('.timeline-date');
+            if (timelineDate) {
+                const monthElement = timelineDate.querySelector('.month');
+                const dayElement = timelineDate.querySelector('.day');
+
+                if (monthElement && dayElement) {
+                    const monthNames = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+                    monthElement.textContent = monthNames[parseInt(mes) - 1];
+                    dayElement.textContent = año;
+                }
+            }
+
+            if (!monthsShown.has(monthYear)) {
+                item.classList.add('first-of-month');
+                monthsShown.add(monthYear);
+            } else {
+                item.classList.remove('first-of-month');
+            }
+        });
+    }
+
+    function filtrarHistorial() {
+        const searchTerm = searchHistorial?.value.toLowerCase().trim() || '';
+        const timelineItems = document.querySelectorAll('.timeline-item:not(.empty-state):not(.no-results-message)');
+        let visibleCount = 0;
+
+        timelineItems.forEach(item => {
+            const diagnostico = item.dataset.diagnostico || '';
+            const tratamiento = item.dataset.tratamiento || '';
+            const veterinario = item.dataset.veterinario || '';
+            const veterinarioId = String(item.dataset.veterinarioId || '');
+            const tipo = item.dataset.tipo || '';
+
+            const matchesSearch = 
+                searchTerm === '' ||
+                diagnostico.includes(searchTerm) ||
+                tratamiento.includes(searchTerm) ||
+                veterinario.includes(searchTerm) ||
+                tipo.includes(searchTerm);
+
+            const matchesVeterinario = 
+                currentFilterVeterinario === '' || 
+                veterinarioId === String(currentFilterVeterinario);
+
+            let matchesDate = true;
+            if (currentFilterMonth !== '' || currentFilterYear !== '') {
+                const fechaCompleta = item.querySelector('.timeline-item-date')?.textContent.trim();
+                if (fechaCompleta) {
+                    const [fecha] = fechaCompleta.split(' ');
+                    const [dia, mes, año] = fecha.split('/');
+                    const itemMonth = parseInt(mes) - 1;
+                    const itemYear = año;
+
+                    if (currentFilterMonth !== '') {
+                        matchesDate = matchesDate && (itemMonth === parseInt(currentFilterMonth));
+                    }
+                    if (currentFilterYear !== '') {
+                        matchesDate = matchesDate && (itemYear === currentFilterYear);
+                    }
+                } else {
+                    matchesDate = false;
+                }
+            }
+
+            if (matchesSearch && matchesDate && matchesVeterinario) {
+                item.style.display = 'flex';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        marcarPrimerosDelMes();
+
+        const timeline = document.getElementById('timeline');
+        if (!timeline) return;
+        
+        const emptyState = timeline.querySelector('.empty-state');
+        let noResultsMsg = timeline.querySelector('.no-results-message');
+
+        if (visibleCount === 0 && (searchTerm !== '' || currentFilterMonth !== '' || currentFilterYear !== '' || currentFilterVeterinario !== '') && timelineItems.length > 0) {
+            if (emptyState) emptyState.style.display = 'none';
+            if (!noResultsMsg) {
+                noResultsMsg = document.createElement('div');
+                noResultsMsg.className = 'no-results-message timeline-item';
+                noResultsMsg.innerHTML = `<div class="timeline-content" style="text-align: center; padding: 2rem; color: #999;"><i class="bi bi-search" style="font-size: 3rem;"></i><p style="margin-top: 1rem;">No se encontraron coincidencias</p></div>`;
+                timeline.appendChild(noResultsMsg);
+            } else {
+                noResultsMsg.style.display = 'flex';
+            }
+        } else {
+            if (noResultsMsg) noResultsMsg.style.display = 'none';
+            if (emptyState && searchTerm === '' && currentFilterMonth === '' && currentFilterYear === '' && currentFilterVeterinario === '') {
+                emptyState.style.display = 'flex';
+            }
+        }
+    }
+
+    // ===== EVENT LISTENERS =====
+    if (searchHistorial) {
+        searchHistorial.addEventListener('input', filtrarHistorial);
+    }
+
+    if (filterVeterinario) {
+        filterVeterinario.addEventListener('change', function() {
+            currentFilterVeterinario = this.value;
+            console.log('📋 Veterinario filtrado:', currentFilterVeterinario);
+            console.log('📋 Nombre seleccionado:', this.options[this.selectedIndex].text);
+            filtrarHistorial();
+        });
+    }
+
+    if (selectMonth) {
+        selectMonth.addEventListener('change', function() {
+            currentFilterMonth = this.value;
+            updateClearButton();
+            filtrarHistorial();
+        });
+    }
+
+    if (selectYear) {
+        selectYear.addEventListener('change', function() {
+            currentFilterYear = this.value;
+            updateClearButton();
+            filtrarHistorial();
+        });
+    }
+
+    if (btnPrevMonth) {
+        btnPrevMonth.addEventListener('click', function() {
+            let month = selectMonth.value ? parseInt(selectMonth.value) : new Date().getMonth();
+            let year = selectYear.value ? parseInt(selectYear.value) : new Date().getFullYear();
+            month--;
+            if (month < 0) {
+                month = 11;
+                year--;
+            }
+            selectMonth.value = month;
+            selectYear.value = year;
+            currentFilterMonth = month.toString();
+            currentFilterYear = year.toString();
+            updateClearButton();
+            filtrarHistorial();
+        });
+    }
+
+    if (btnNextMonth) {
+        btnNextMonth.addEventListener('click', function() {
+            let month = selectMonth.value ? parseInt(selectMonth.value) : new Date().getMonth();
+            let year = selectYear.value ? parseInt(selectYear.value) : new Date().getFullYear();
+            month++;
+            if (month > 11) {
+                month = 0;
+                year++;
+            }
+            selectMonth.value = month;
+            selectYear.value = year;
+            currentFilterMonth = month.toString();
+            currentFilterYear = year.toString();
+            updateClearButton();
+            filtrarHistorial();
+        });
+    }
+
+    if (btnClearFilters) {
+        btnClearFilters.addEventListener('click', function() {
+            selectMonth.value = '';
+            selectYear.value = '';
+            searchHistorial.value = '';
+            currentFilterMonth = '';
+            currentFilterYear = '';
+            currentFilterVeterinario = '';
+            updateClearButton();
+            filtrarHistorial();
+        });
+    }
+
+    // Inicializar
+    initializeYears();
+    marcarPrimerosDelMes();
 });
 
+// ===== MODAL NUEVA CONSULTA (fuera del DOMContentLoaded) =====
 // Modal Nueva Consulta
 document.getElementById('btnNuevaConsulta').onclick = async function () {
     openVetModal('nuevaConsultaModal');
@@ -346,287 +605,4 @@ document.getElementById('btnRecuperarDatos')?.addEventListener('click', async fu
         console.error('❌ Error de red:', error);
         alert('❌ Error de red al guardar');
     }
-});
-
-// ⭐ FILTRO DE BÚSQUEDA EN HISTORIAL CON CALENDARIO INLINE
-const selectMonth = document.getElementById('selectMonth');
-const selectYear = document.getElementById('selectYear');
-const btnPrevMonth = document.getElementById('btnPrevMonth');
-const btnNextMonth = document.getElementById('btnNextMonth');
-const btnClearFilters = document.getElementById('btnClearFilters');
-
-let currentFilterMonth = '';
-let currentFilterYear = '';
-let currentFilterVeterinario = ''; // ← AGREGAR ESTA LÍNEA
-
-const searchHistorial = document.getElementById('searchHistorial');
-const filterVeterinario = document.getElementById('filterVeterinario'); // ← AGREGAR
-
-// Event listeners
-searchHistorial?.addEventListener('input', filtrarHistorial);
-filterVeterinario?.addEventListener('change', function() {
-    currentFilterVeterinario = this.value;
-    filtrarHistorial();
-});
-
-// Inicializar años disponibles dinámicamente
-function initializeYears() {
-    const currentYear = new Date().getFullYear();
-    const nextYear = currentYear + 1;
-    
-    // Obtener el año más antiguo del historial
-    const timelineItems = document.querySelectorAll('.timeline-item:not(.empty-state)');
-    let oldestYear = currentYear;
-    
-    timelineItems.forEach(item => {
-        const fechaCompleta = item.querySelector('.timeline-item-date')?.textContent.trim();
-        if (fechaCompleta) {
-            const [fecha] = fechaCompleta.split(' ');
-            const [dia, mes, año] = fecha.split('/');
-            const itemYear = parseInt(año);
-            if (itemYear < oldestYear) {
-                oldestYear = itemYear;
-            }
-        }
-    });
-    
-    // Crear opciones desde el próximo año hasta el más antiguo
-    for (let year = nextYear; year >= oldestYear; year--) {
-        const option = document.createElement('option');
-        option.value = year;
-        option.textContent = year;
-        selectYear.appendChild(option);
-    }
-}
-
-// Actualizar filtro cuando cambian los selectores
-if (selectMonth) {
-    selectMonth.addEventListener('change', function() {
-        currentFilterMonth = this.value;
-        updateClearButton();
-        filtrarHistorial();
-    });
-}
-
-if (selectYear) {
-    selectYear.addEventListener('change', function() {
-        currentFilterYear = this.value;
-        updateClearButton();
-        filtrarHistorial();
-    });
-}
-
-// Navegación mes anterior
-if (btnPrevMonth) {
-    btnPrevMonth.addEventListener('click', function() {
-        let month = selectMonth.value ? parseInt(selectMonth.value) : new Date().getMonth();
-        let year = selectYear.value ? parseInt(selectYear.value) : new Date().getFullYear();
-        
-        month--;
-        if (month < 0) {
-            month = 11;
-            year--;
-        }
-        
-        selectMonth.value = month;
-        selectYear.value = year;
-        currentFilterMonth = month.toString();
-        currentFilterYear = year.toString();
-        updateClearButton();
-        filtrarHistorial();
-    });
-}
-
-// Navegación mes siguiente
-if (btnNextMonth) {
-    btnNextMonth.addEventListener('click', function() {
-        let month = selectMonth.value ? parseInt(selectMonth.value) : new Date().getMonth();
-        let year = selectYear.value ? parseInt(selectYear.value) : new Date().getFullYear();
-        
-        month++;
-        if (month > 11) {
-            month = 0;
-            year++;
-        }
-        
-        selectMonth.value = month;
-        selectYear.value = year;
-        currentFilterMonth = month.toString();
-        currentFilterYear = year.toString();
-        updateClearButton();
-        filtrarHistorial();
-    });
-}
-
-// Limpiar todos los filtros
-if (btnClearFilters) {
-    btnClearFilters.addEventListener('click', function() {
-        selectMonth.value = '';
-        selectYear.value = '';
-        searchHistorial.value = '';
-        currentFilterMonth = '';
-        currentFilterYear = '';
-        updateClearButton();
-        filtrarHistorial();
-    });
-}
-
-// Actualizar visibilidad del botón limpiar
-function updateClearButton() {
-    const hasFilters = searchHistorial?.value || currentFilterMonth !== '' || currentFilterYear !== '';
-    if (btnClearFilters) {
-        if (hasFilters) {
-            btnClearFilters.classList.add('show');
-        } else {
-            btnClearFilters.classList.remove('show');
-        }
-    }
-}
-
-function filtrarHistorial() {
-    const searchTerm = searchHistorial?.value.toLowerCase().trim() || '';
-    const timelineItems = document.querySelectorAll('.timeline-item:not(.empty-state):not(.no-results-message)');
-    
-    let visibleCount = 0;
-    
-    timelineItems.forEach(item => {
-        const diagnostico = item.dataset.diagnostico || '';
-        const tratamiento = item.dataset.tratamiento || '';
-        const veterinario = item.dataset.veterinario || '';
-        const veterinarioId = item.dataset.veterinarioId || '';
-        const tipo = item.dataset.tipo || '';
-        
-        // Filtro de búsqueda de texto
-        const matchesSearch = 
-            searchTerm === '' ||
-            diagnostico.includes(searchTerm) ||
-            tratamiento.includes(searchTerm) ||
-            veterinario.includes(searchTerm) ||
-            tipo.includes(searchTerm);
-        
-        // Filtro de veterinario
-        const matchesVeterinario = 
-            currentFilterVeterinario === '' || 
-            veterinarioId === currentFilterVeterinario;
-        
-        // Filtro de fecha
-        let matchesDate = true;
-        if (currentFilterMonth !== '' || currentFilterYear !== '') {
-            const fechaCompleta = item.querySelector('.timeline-item-date')?.textContent.trim();
-            if (fechaCompleta) {
-                const [fecha] = fechaCompleta.split(' ');
-                const [dia, mes, año] = fecha.split('/');
-                
-                const itemMonth = parseInt(mes) - 1;
-                const itemYear = año;
-                
-                matchesDate = true;
-                if (currentFilterMonth !== '') {
-                    matchesDate = matchesDate && (itemMonth === parseInt(currentFilterMonth));
-                }
-                if (currentFilterYear !== '') {
-                    matchesDate = matchesDate && (itemYear === currentFilterYear);
-                }
-            } else {
-                matchesDate = false;
-            }
-        }
-        
-        if (matchesSearch && matchesDate && matchesVeterinario) {
-            item.style.display = 'flex';
-            visibleCount++;
-        } else {
-            item.style.display = 'none';
-        }
-    });
-    
-    // ⭐ ACTUALIZAR MARCADORES DE PRIMER MES DESPUÉS DE FILTRAR
-    marcarPrimerosDelMes();
-    
-    // Manejar mensaje de no resultados
-    const timeline = document.getElementById('timeline');
-    const emptyState = timeline.querySelector('.empty-state');
-    let noResultsMsg = timeline.querySelector('.no-results-message');
-    
-    if (visibleCount === 0 && (searchTerm !== '' || currentFilterMonth !== '' || currentFilterYear !== '' || currentFilterVeterinario !== '') && timelineItems.length > 0) {
-        if (emptyState) {
-            emptyState.style.display = 'none';
-        }
-        
-        if (!noResultsMsg) {
-            noResultsMsg = document.createElement('div');
-            noResultsMsg.className = 'no-results-message timeline-item';
-            noResultsMsg.innerHTML = `
-                <div class="timeline-content" style="text-align: center; padding: 2rem; color: #999;">
-                    <i class="bi bi-search" style="font-size: 3rem;"></i>
-                    <p style="margin-top: 1rem;">No se encontraron coincidencias</p>
-                </div>
-            `;
-            timeline.appendChild(noResultsMsg);
-        } else {
-            noResultsMsg.style.display = 'flex';
-        }
-    } else {
-        if (noResultsMsg) {
-            noResultsMsg.style.display = 'none';
-        }
-        
-        if (emptyState && searchTerm === '' && currentFilterMonth === '' && currentFilterYear === '' && currentFilterVeterinario === '') {
-            emptyState.style.display = 'flex';
-        }
-    }
-}
-
-// ⭐ MARCAR PRIMER ITEM DE CADA MES Y ACTUALIZAR FORMATO
-function marcarPrimerosDelMes() {
-    const timelineItems = document.querySelectorAll('.timeline-item:not(.empty-state):not(.no-results-message)');
-    const monthsShown = new Set();
-    
-    timelineItems.forEach(item => {
-        // Solo procesar items visibles
-        if (item.style.display === 'none') {
-            item.classList.remove('first-of-month');
-            return;
-        }
-        
-        const fechaCompleta = item.querySelector('.timeline-item-date')?.textContent.trim();
-        if (!fechaCompleta) return;
-        
-        const [fecha] = fechaCompleta.split(' ');
-        const [dia, mes, año] = fecha.split('/');
-        const monthYear = `${mes}-${año}`; // Formato: "12-2025"
-        
-        // Actualizar el contenido del timeline-date
-        const timelineDate = item.querySelector('.timeline-date');
-        if (timelineDate) {
-            const monthElement = timelineDate.querySelector('.month');
-            const dayElement = timelineDate.querySelector('.day');
-            
-            if (monthElement && dayElement) {
-                const monthNames = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 
-                                  'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
-                
-                monthElement.textContent = monthNames[parseInt(mes) - 1]; // Mes abreviado en mayúsculas
-                dayElement.textContent = año; // Año
-            }
-        }
-        
-        // Marcar como primero del mes si no se ha mostrado este mes/año
-        if (!monthsShown.has(monthYear)) {
-            item.classList.add('first-of-month');
-            monthsShown.add(monthYear);
-        } else {
-            item.classList.remove('first-of-month');
-        }
-    });
-}
-
-// Ejecutar al cargar la página
-document.addEventListener('DOMContentLoaded', function() {
-    marcarPrimerosDelMes();
-    
-    // ...existing code (tabs)...
-
-    // Agrega esta línea para inicializar los años del filtro:
-    initializeYears();
 });
