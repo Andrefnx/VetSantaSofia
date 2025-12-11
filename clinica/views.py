@@ -404,6 +404,30 @@ def obtener_servicios(request):
 
 @login_required
 @require_http_methods(["GET"])
+def obtener_veterinarios(request):
+    """Retorna lista de veterinarios para selección en cirugías"""
+    try:
+        veterinarios = CustomUser.objects.filter(rol='veterinario').order_by('nombre', 'apellido')
+        data = []
+        for vet in veterinarios:
+            data.append({
+                'id': vet.id,
+                'nombre': f"{vet.nombre} {vet.apellido}".strip(),
+                'especialidad': getattr(vet, 'especialidad', None),
+            })
+        return JsonResponse({
+            'success': True,
+            'veterinarios': data
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+@login_required
+@require_http_methods(["GET"])
 def obtener_insumos(request):
     """Retorna insumos de inventario para selección en cirugía/registro"""
     try:

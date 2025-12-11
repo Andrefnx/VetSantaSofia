@@ -7,12 +7,14 @@ const hospitalizacionesManager = {
     hospitalizaciones: [],
     serviciosCirugia: [],
     insumosCatalogo: [],
+    veterinariosCatalogo: [],
 
     init(pacienteId) {
         this.pacienteId = pacienteId;
         this.cargarHospitalizaciones();
         this.cargarServiciosCirugia();
         this.cargarInsumos();
+        this.cargarVeterinarios();
         this.setupEventListeners();
     },
 
@@ -64,34 +66,37 @@ const hospitalizacionesManager = {
             // Hook change for servicio select to autocompletar duración
             const selectServicio = document.getElementById('servicioCirugia');
             const duracionInput = document.getElementById('duracionCirugia');
+            const descripcionInput = document.querySelector('textarea[name="descripcion"]');
             if (selectServicio && duracionInput) {
                 selectServicio.addEventListener('change', () => {
                     const servicioId = selectServicio.value;
                     const servicio = this.serviciosCirugia.find(s => String(s.idServicio) === String(servicioId));
                     if (servicio) {
                         duracionInput.value = servicio.duracion || '';
+                        if (descripcionInput) {
+                            descripcionInput.value = servicio.nombre || '';
+                        }
                     } else {
                         duracionInput.value = '';
+                        if (descripcionInput) {
+                            descripcionInput.value = '';
+                        }
                     }
                 });
             }
-            // Render insumos al abrir
-            const insumosSelect = document.getElementById('insumosCirugia');
-            if (insumosSelect) {
-                insumosSelect.addEventListener('focus', () => {
-                    const buscador = document.getElementById('buscarInsumosCirugia');
-                    this.renderInsumosSelect(buscador ? buscador.value : '');
-                });
-                insumosSelect.addEventListener('change', () => {
-                    this.renderInsumosSeleccionados();
-                });
-            }
-
             // Buscador de insumos
             const buscadorInsumos = document.getElementById('buscarInsumosCirugia');
             if (buscadorInsumos) {
                 buscadorInsumos.addEventListener('input', (e) => {
                     this.renderInsumosSelect(e.target.value);
+                });
+            }
+
+            // Buscador de equipo
+            const buscadorEquipo = document.getElementById('buscarEquipoCirugia');
+            if (buscadorEquipo) {
+                buscadorEquipo.addEventListener('input', (e) => {
+                    this.renderEquipoSelect(e.target.value);
                 });
             }
 
@@ -181,6 +186,23 @@ const hospitalizacionesManager = {
         }
     },
 
+    async cargarVeterinarios() {
+        try {
+            const response = await fetch('/clinica/api/veterinarios/');
+            const data = await response.json();
+            if (data.success) {
+                this.veterinariosCatalogo = data.veterinarios || [];
+                const buscador = document.getElementById('buscarEquipoCirugia');
+                this.renderEquipoSelect(buscador ? buscador.value : '');
+                this.renderEquipoSeleccionado();
+            } else {
+                console.error('API veterinarios error:', data.error);
+            }
+        } catch (err) {
+            console.error('Error cargando veterinarios', err);
+        }
+    },
+
     getPacientePeso() {
         return (window.pacienteData && window.pacienteData.peso) ? parseFloat(window.pacienteData.peso) : null;
     },
@@ -216,22 +238,31 @@ const hospitalizacionesManager = {
     },
 
     renderInsumosSelect(filtro = '') {
-        const insumosSelect = document.getElementById('insumosCirugia');
-        if (!insumosSelect) return;
+        const insumosContainer = document.getElementById('insumosCirugia');
+        if (!insumosContainer) return;
 
-        const seleccionados = Array.from(insumosSelect.selectedOptions).map(opt => opt.value);
+        const hidden = document.getElementById('insumosCirugiaHidden');
+        const seleccionados = hidden ? hidden.value.split(',').filter(Boolean) : [];
         const termino = (filtro || '').trim().toLowerCase();
         const catalogoFiltrado = (!termino ? this.insumosCatalogo : this.insumosCatalogo.filter(i => `${i.nombre} ${i.sku || ''}`.toLowerCase().includes(termino)))
             .filter(i => this.insumoCompatible(i));
 
         if (!catalogoFiltrado.length) {
-            insumosSelect.innerHTML = '<option value="">No se encontraron insumos</option>';
+            insumosContainer.innerHTML = '<div style="padding:8px; text-align:center; color:#6b7280;">No se encontraron insumos</div>';
             return;
         }
 
-        insumosSelect.innerHTML = catalogoFiltrado
-            .map(i => `<option value="${i.id}" data-formato="${i.formato || ''}" data-dosis="${i.dosis_ml || ''}" data-peso="${i.peso_kg || ''}"${seleccionados.includes(String(i.id)) ? ' selected' : ''}>${i.nombre}${i.sku ? ' (' + i.sku + ')' : ''}</option>`)
-            .join('');
+        insumosContainer.innerHTML = catalogoFiltrado
+            .map(i => {
+                const isSelected = seleccionados.includes(String(i.id));
+                const tipo = i.tipo || 'N/A';
+                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid #e5e7eb; gap:8px; background:${isSelected ? '#f3f4f6' : '#fff'};">
+                    <span style="font-size:13px; color:#2d2f33;">${i.nombre} <span style="color:#6b7280;">(${tipo})</span></span>
+                    <button type="button" onclick="hospitalizacionesManager.${isSelected ? 'removerInsumo' : 'agregarInsumo'}('${i.id}')" style="background:${isSelected ? '#dc3545' : '#10b981'}; border:none; color:#fff; cursor:pointer; font-size:14px; padding:2px 8px; border-radius:4px; line-height:1;" title="${isSelected ? 'Eliminar' : 'Agregar'}">
+                        ${isSelected ? '−' : '+'}
+                    </button>
+                </div>`;
+            }).join('');
 
         this.renderInsumosSeleccionados();
     },
@@ -261,10 +292,10 @@ const hospitalizacionesManager = {
 
     renderInsumosSeleccionados() {
         const container = document.getElementById('insumosSeleccionadosCirugia');
-        const select = document.getElementById('insumosCirugia');
-        if (!container || !select) return;
+        const hidden = document.getElementById('insumosCirugiaHidden');
+        if (!container || !hidden) return;
 
-        const ids = Array.from(select.selectedOptions).map(opt => opt.value);
+        const ids = hidden.value.split(',').filter(Boolean);
         if (!ids.length) {
             container.innerHTML = '<small style="color:#6b7280;">Sin insumos seleccionados.</small>';
             return;
@@ -287,17 +318,109 @@ const hospitalizacionesManager = {
         container.innerHTML = chips.join('');
     },
 
+    agregarInsumo(insumoId) {
+        const hidden = document.getElementById('insumosCirugiaHidden');
+        if (!hidden) return;
+
+        const ids = hidden.value.split(',').filter(Boolean);
+        if (!ids.includes(String(insumoId))) {
+            ids.push(String(insumoId));
+            hidden.value = ids.join(',');
+        }
+
+        const buscador = document.getElementById('buscarInsumosCirugia');
+        this.renderInsumosSelect(buscador ? buscador.value : '');
+    },
+
     removerInsumo(insumoId) {
-        const select = document.getElementById('insumosCirugia');
-        if (!select) return;
+        const hidden = document.getElementById('insumosCirugiaHidden');
+        if (!hidden) return;
 
-        Array.from(select.options).forEach(opt => {
-            if (opt.value === String(insumoId)) {
-                opt.selected = false;
-            }
-        });
+        const ids = hidden.value.split(',').filter(Boolean);
+        hidden.value = ids.filter(id => id !== String(insumoId)).join(',');
 
-        this.renderInsumosSeleccionados();
+        const buscador = document.getElementById('buscarInsumosCirugia');
+        this.renderInsumosSelect(buscador ? buscador.value : '');
+    },
+
+    renderEquipoSelect(filtro = '') {
+        const equipoContainer = document.getElementById('equipoCirugia');
+        if (!equipoContainer) return;
+
+        const hidden = document.getElementById('equipoCirugiaHidden');
+        const seleccionados = hidden ? hidden.value.split(',').filter(Boolean) : [];
+        const termino = (filtro || '').trim().toLowerCase();
+        const catalogoFiltrado = !termino
+            ? this.veterinariosCatalogo
+            : this.veterinariosCatalogo.filter(v => v.nombre.toLowerCase().includes(termino));
+
+        if (!catalogoFiltrado.length) {
+            equipoContainer.innerHTML = '<div style="padding:8px; text-align:center; color:#6b7280;">No se encontraron veterinarios</div>';
+            return;
+        }
+
+        equipoContainer.innerHTML = catalogoFiltrado
+            .map(v => {
+                const isSelected = seleccionados.includes(String(v.id));
+                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid #e5e7eb; gap:8px; background:${isSelected ? '#f3f4f6' : '#fff'};">
+                    <span style="font-size:13px; color:#2d2f33;">${v.nombre}${v.especialidad ? ' <span style="color:#6b7280;">(' + v.especialidad + ')</span>' : ''}</span>
+                    <button type="button" onclick="hospitalizacionesManager.${isSelected ? 'removerVeterinario' : 'agregarVeterinario'}('${v.id}')" style="background:${isSelected ? '#dc3545' : '#10b981'}; border:none; color:#fff; cursor:pointer; font-size:14px; padding:2px 8px; border-radius:4px; line-height:1;" title="${isSelected ? 'Eliminar' : 'Agregar'}">
+                        ${isSelected ? '−' : '+'}
+                    </button>
+                </div>`;
+            }).join('');
+
+        this.renderEquipoSeleccionado();
+    },
+
+    renderEquipoSeleccionado() {
+        const container = document.getElementById('equipoSeleccionadoCirugia');
+        const hidden = document.getElementById('equipoCirugiaHidden');
+        if (!container || !hidden) return;
+
+        const ids = hidden.value.split(',').filter(Boolean);
+        if (!ids.length) {
+            container.innerHTML = '<small style="color:#6b7280;">Sin veterinarios seleccionados.</small>';
+            return;
+        }
+
+        const chips = ids.map(id => {
+            const vet = this.veterinariosCatalogo.find(v => String(v.id) === String(id));
+            if (!vet) return '';
+            return `<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 8px; border:1px solid #e5e7eb; border-radius:6px; background:#fff; font-size:13px;">
+                <span>${vet.nombre}</span>
+                <button type="button" onclick="hospitalizacionesManager.removerVeterinario('${id}')" style="background:#9ca3af; border:none; color:#fff; cursor:pointer; font-size:10px; padding:0; line-height:1; width:16px; height:16px; display:flex; align-items:center; justify-content:center; border-radius:50%;" title="Eliminar">
+                    ×
+                </button>
+            </div>`;
+        }).filter(Boolean);
+
+        container.innerHTML = chips.join('');
+    },
+
+    agregarVeterinario(vetId) {
+        const hidden = document.getElementById('equipoCirugiaHidden');
+        if (!hidden) return;
+
+        const ids = hidden.value.split(',').filter(Boolean);
+        if (!ids.includes(String(vetId))) {
+            ids.push(String(vetId));
+            hidden.value = ids.join(',');
+        }
+
+        const buscador = document.getElementById('buscarEquipoCirugia');
+        this.renderEquipoSelect(buscador ? buscador.value : '');
+    },
+
+    removerVeterinario(vetId) {
+        const hidden = document.getElementById('equipoCirugiaHidden');
+        if (!hidden) return;
+
+        const ids = hidden.value.split(',').filter(Boolean);
+        hidden.value = ids.filter(id => id !== String(vetId)).join(',');
+
+        const buscador = document.getElementById('buscarEquipoCirugia');
+        this.renderEquipoSelect(buscador ? buscador.value : '');
     },
 
     actualizarEstadoBtnNuevaHosp() {
