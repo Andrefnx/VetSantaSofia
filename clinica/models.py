@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 from pacientes.models import Paciente
 from inventario.models import Insumo
 
@@ -79,6 +80,26 @@ class Hospitalizacion(models.Model):
         ordering = ['-fecha_ingreso']
         verbose_name = 'Hospitalización'
         verbose_name_plural = 'Hospitalizaciones'
+    
+    def clean(self):
+        """Valida que no haya otra hospitalización activa para el mismo paciente"""
+        if self.estado == 'activa':
+            # Buscar otras hospitalizaciones activas para el mismo paciente
+            hosp_activas = Hospitalizacion.objects.filter(
+                paciente=self.paciente,
+                estado='activa'
+            ).exclude(pk=self.pk)  # Excluir la actual si es una edición
+            
+            if hosp_activas.exists():
+                raise ValidationError(
+                    f"El paciente {self.paciente.nombre} ya tiene una hospitalización activa. "
+                    f"No es posible crear una nueva hospitalización mientras haya una activa."
+                )
+    
+    def save(self, *args, **kwargs):
+        """Llama al método clean antes de guardar"""
+        self.clean()
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return f"Hospitalización de {self.paciente.nombre} - {self.fecha_ingreso.strftime('%d/%m/%Y')}"

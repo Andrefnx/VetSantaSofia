@@ -20,6 +20,16 @@ const hospitalizacionesManager = {
             btnNuevaHosp.addEventListener('click', (e) => {
                 console.log('🔵 Click en hospitalización');
                 e.preventDefault();
+                
+                // Si el botón está deshabilitado, mostrar alerta
+                if (btnNuevaHosp.disabled) {
+                    const hospActiva = this.hospitalizaciones.find(h => h.estado.toLowerCase() === 'activa');
+                    if (hospActiva) {
+                        alert(`⚠️ No se puede crear una nueva hospitalización.\n\nEl paciente ya tiene una hospitalización activa desde ${hospActiva.fecha_ingreso}.\n\nMotivo: ${hospActiva.motivo}`);
+                    }
+                    return;
+                }
+                
                 this.abrirModalNuevaHosp();
             });
         } else {
@@ -93,9 +103,29 @@ const hospitalizacionesManager = {
                 this.hospitalizaciones = data.hospitalizaciones;
                 this.renderizarHospitalizaciones();
                 this.actualizarIndicadorHospitalizacion();
+                this.actualizarEstadoBtnNuevaHosp();
             }
         } catch (error) {
             console.error('Error cargando hospitalizaciones:', error);
+        }
+    },
+
+    actualizarEstadoBtnNuevaHosp() {
+        const btnNuevaHosp = document.getElementById('btnNuevaHospitalizacion');
+        if (!btnNuevaHosp) return;
+
+        const hospActiva = this.hospitalizaciones.find(h => h.estado.toLowerCase() === 'activa');
+        
+        if (hospActiva) {
+            btnNuevaHosp.disabled = true;
+            btnNuevaHosp.title = `⚠️ No se puede crear una nueva hospitalización. Ya hay una activa desde ${hospActiva.fecha_ingreso}`;
+            btnNuevaHosp.style.opacity = '0.5';
+            btnNuevaHosp.style.cursor = 'not-allowed';
+        } else {
+            btnNuevaHosp.disabled = false;
+            btnNuevaHosp.title = 'Crear nueva hospitalización';
+            btnNuevaHosp.style.opacity = '1';
+            btnNuevaHosp.style.cursor = 'pointer';
         }
     },
 
@@ -204,34 +234,40 @@ const hospitalizacionesManager = {
                 // COLUMNA IZQUIERDA: Información General
                 const detallesIzquierda = document.getElementById('detallesIzquierda');
                 let htmlIzquierda = `
-                    <div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                        <h5 style="margin-top: 0; color: #333;"><i class="bi bi-info-circle"></i> Información de Hospitalización</h5>
-                        <p><strong>Fecha Ingreso:</strong> ${hosp.fecha_ingreso}</p>
-                        <p><strong>Motivo:</strong> ${hosp.motivo}</p>
-                        <p><strong>Estado:</strong> <span style="background-color: ${hosp.estado.toLowerCase() === 'activa' ? '#90EE90' : '#FFB6C6'}; padding: 4px 8px; border-radius: 4px;">${hosp.estado}</span></p>
+                    <div style="background-color: #f8f9fb; padding: 12px; border-radius: 6px; margin-bottom: 12px; border: 1px solid #e5e7eb;">
+                        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h5 style="margin: 0; font-size: 16px; color: #2d2f33;"><i class="bi bi-info-circle"></i> Información</h5>
+                            <span style="background-color: ${hosp.estado.toLowerCase() === 'activa' ? '#e5f4ed' : '#f4e8e8'}; color: ${hosp.estado.toLowerCase() === 'activa' ? '#1b7f4f' : '#8a4b4b'}; padding: 4px 10px; border-radius: 999px; font-size: 12px;">${hosp.estado}</span>
+                        </div>
+                        <p style="margin: 0 0 4px 0; color: #444;"><strong>Fecha ingreso:</strong> ${hosp.fecha_ingreso}</p>
+                        <p style="margin: 0 0 4px 0; color: #444;"><strong>Motivo:</strong> ${hosp.motivo}</p>
                     </div>
                     
-                    <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                        <h5 style="margin-top: 0; color: #333;"><i class="bi bi-file-text"></i> Diagnóstico y Observaciones</h5>
-                        <p><strong>Diagnóstico:</strong></p>
-                        <p style="background-color: white; padding: 10px; border-radius: 4px; border-left: 3px solid #4CAF50;">${hosp.diagnostico}</p>
-                        <p><strong>Observaciones:</strong></p>
-                        <p style="background-color: white; padding: 10px; border-radius: 4px; border-left: 3px solid #2196F3;">${hosp.observaciones || '<em>Sin observaciones</em>'}</p>
-                        <p><strong>Veterinario a cargo:</strong> ${hosp.veterinario}</p>
+                    <div style="background-color: #f8f9fb; padding: 12px; border-radius: 6px; margin-bottom: 12px; border: 1px solid #e5e7eb;">
+                        <h5 style="margin: 0 0 8px 0; font-size: 16px; color: #2d2f33;"><i class="bi bi-journal-text"></i> Diagnóstico y observaciones</h5>
+                        <div style="background-color: white; padding: 10px; border-radius: 4px; border: 1px solid #e5e7eb; margin-bottom: 8px;">
+                            <small style="display:block; color: #666; margin-bottom: 4px;">Diagnóstico</small>
+                            <div style="color: #2d2f33; line-height: 1.4;">${hosp.diagnostico || '<em>Sin diagnóstico</em>'}</div>
+                        </div>
+                        <div style="background-color: white; padding: 10px; border-radius: 4px; border: 1px solid #e5e7eb; margin-bottom: 8px;">
+                            <small style="display:block; color: #666; margin-bottom: 4px;">Observaciones</small>
+                            <div style="color: #2d2f33; line-height: 1.4;">${hosp.observaciones || '<em>Sin observaciones</em>'}</div>
+                        </div>
+                        <p style="margin: 0; color: #555;"><strong>Veterinario a cargo:</strong> ${hosp.veterinario}</p>
                     </div>
                 `;
                 
                 // Cirugía si existe
                 if (hosp.cirugia) {
                     htmlIzquierda += `
-                        <div style="background-color: #fff8dc; padding: 15px; border-radius: 8px; border-left: 4px solid #ffa500;">
-                            <h5 style="margin-top: 0; color: #333;"><i class="bi bi-tools"></i> Cirugía Realizada</h5>
-                            <p><strong>Tipo:</strong> ${hosp.cirugia.tipo}</p>
-                            <p><strong>Fecha:</strong> ${hosp.cirugia.fecha}</p>
-                            <p><strong>Cirujano:</strong> ${hosp.cirugia.veterinario}</p>
-                            <p><strong>Resultado:</strong> <span style="color: #4CAF50; font-weight: bold;">${hosp.cirugia.resultado}</span></p>
-                            <p><strong>Descripción:</strong> ${hosp.cirugia.descripcion}</p>
-                            ${hosp.cirugia.complicaciones ? `<p><strong style="color: #ff6b6b;">Complicaciones:</strong> ${hosp.cirugia.complicaciones}</p>` : ''}
+                        <div style="background-color: #fdfaf3; padding: 12px; border-radius: 6px; border: 1px solid #f0e6ce; margin-bottom: 12px;">
+                            <h5 style="margin: 0 0 6px 0; font-size: 15px; color: #2d2f33;"><i class="bi bi-tools"></i> Cirugía</h5>
+                            <p style="margin: 0 0 4px 0; color: #444;"><strong>Tipo:</strong> ${hosp.cirugia.tipo}</p>
+                            <p style="margin: 0 0 4px 0; color: #444;"><strong>Fecha:</strong> ${hosp.cirugia.fecha}</p>
+                            <p style="margin: 0 0 4px 0; color: #444;"><strong>Cirujano:</strong> ${hosp.cirugia.veterinario}</p>
+                            <p style="margin: 0 0 4px 0; color: #444;"><strong>Resultado:</strong> ${hosp.cirugia.resultado}</p>
+                            <p style="margin: 0; color: #444;"><strong>Descripción:</strong> ${hosp.cirugia.descripcion}</p>
+                            ${hosp.cirugia.complicaciones ? `<p style="margin: 6px 0 0 0; color: #8a4b4b;"><strong>Complicaciones:</strong> ${hosp.cirugia.complicaciones}</p>` : ''}
                         </div>
                     `;
                 }
@@ -239,13 +275,13 @@ const hospitalizacionesManager = {
                 // Alta médica si existe
                 if (hosp.alta) {
                     htmlIzquierda += `
-                        <div style="background-color: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 4px solid #4CAF50;">
-                            <h5 style="margin-top: 0; color: #2e7d32;"><i class="bi bi-check-circle"></i> Alta Médica</h5>
-                            <p><strong>Fecha:</strong> ${hosp.alta.fecha}</p>
-                            <p><strong>Diagnóstico Final:</strong> ${hosp.alta.diagnostico_final}</p>
-                            <p><strong>Tratamiento Post-Alta:</strong> ${hosp.alta.tratamiento_post}</p>
-                            <p><strong>Recomendaciones:</strong> ${hosp.alta.recomendaciones}</p>
-                            ${hosp.alta.proxima_revision ? `<p><strong>Próxima Revisión:</strong> ${hosp.alta.proxima_revision}</p>` : ''}
+                        <div style="background-color: #f6fbf6; padding: 12px; border-radius: 6px; border: 1px solid #dce9dc;">
+                            <h5 style="margin: 0 0 6px 0; font-size: 15px; color: #2d2f33;"><i class="bi bi-check-circle"></i> Alta médica</h5>
+                            <p style="margin: 0 0 4px 0; color: #444;"><strong>Fecha:</strong> ${hosp.alta.fecha}</p>
+                            <p style="margin: 0 0 4px 0; color: #444;"><strong>Diagnóstico final:</strong> ${hosp.alta.diagnostico_final}</p>
+                            <p style="margin: 0 0 4px 0; color: #444;"><strong>Tratamiento post-alta:</strong> ${hosp.alta.tratamiento_post}</p>
+                            <p style="margin: 0; color: #444;"><strong>Recomendaciones:</strong> ${hosp.alta.recomendaciones}</p>
+                            ${hosp.alta.proxima_revision ? `<p style="margin: 6px 0 0 0; color: #444;"><strong>Próxima revisión:</strong> ${hosp.alta.proxima_revision}</p>` : ''}
                         </div>
                     `;
                 }
@@ -256,32 +292,20 @@ const hospitalizacionesManager = {
                 const registrosDiariosContainer = document.getElementById('registrosDiariosContainer');
                 if (hosp.registros_diarios && hosp.registros_diarios.length > 0) {
                     const htmlRegistros = hosp.registros_diarios.map(reg => `
-                        <div style="background-color: #f5f5f5; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #2196F3;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <strong style="color: #1976d2;">${reg.fecha}</strong>
-                                <span style="font-size: 12px; color: #666; background-color: #e3f2fd; padding: 4px 8px; border-radius: 4px;">
+                        <div style="padding: 10px 12px; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                                <strong style="color: #2d2f33; font-size: 13px;">${reg.fecha}</strong>
+                                <span style="font-size: 12px; color: #4b5563; background-color: #f3f4f6; padding: 4px 8px; border-radius: 999px;">
                                     Dr. ${reg.veterinario || 'N/A'}
                                 </span>
                             </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
-                                <div style="background-color: white; padding: 8px; border-radius: 4px;">
-                                    <small style="color: #666;">Temperatura</small>
-                                    <p style="margin: 4px 0; font-weight: bold; color: #d32f2f;">${reg.temperatura}°C</p>
-                                </div>
-                                <div style="background-color: white; padding: 8px; border-radius: 4px;">
-                                    <small style="color: #666;">Peso</small>
-                                    <p style="margin: 4px 0; font-weight: bold; color: #1976d2;">${reg.peso} kg</p>
-                                </div>
-                                <div style="background-color: white; padding: 8px; border-radius: 4px;">
-                                    <small style="color: #666;">FC</small>
-                                    <p style="margin: 4px 0; font-weight: bold;">${reg.frecuencia_cardiaca || 'N/A'} lpm</p>
-                                </div>
-                                <div style="background-color: white; padding: 8px; border-radius: 4px;">
-                                    <small style="color: #666;">FR</small>
-                                    <p style="margin: 4px 0; font-weight: bold;">${reg.frecuencia_respiratoria || 'N/A'} rpm</p>
-                                </div>
+                            <div style="display:flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; color: #2d2f33; font-size: 13px;">
+                                <span><strong>Temperatura:</strong> ${reg.temperatura}°C</span>
+                                <span><strong>Peso:</strong> ${reg.peso} kg</span>
+                                <span><strong>FC:</strong> ${reg.frecuencia_cardiaca || 'N/A'} lpm</span>
+                                <span><strong>FR:</strong> ${reg.frecuencia_respiratoria || 'N/A'} rpm</span>
                             </div>
-                            ${reg.observaciones ? `<p style="margin: 8px 0; padding: 8px; background-color: white; border-radius: 4px; font-size: 13px; color: #555;"><strong>Obs:</strong> ${reg.observaciones}</p>` : ''}
+                            ${reg.observaciones ? `<div style=\"margin-top:6px; color:#4b5563; font-size:12.5px;\"><strong style=\"color:#2d2f33;\">Obs:</strong> ${reg.observaciones}</div>` : ''}
                         </div>
                     `).join('');
                     
@@ -342,15 +366,16 @@ const hospitalizacionesManager = {
             const data = await response.json();
 
             if (data.success) {
-                alert('Hospitalización creada exitosamente');
+                alert('✅ Hospitalización creada exitosamente');
                 this.cerrarModalNuevaHosp();
                 this.cargarHospitalizaciones();
             } else {
-                alert('Error: ' + data.error);
+                // Mostrar error específico
+                alert('❌ Error al crear hospitalización:\n\n' + data.error);
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al crear hospitalización');
+            alert('❌ Error al crear hospitalización. Por favor intenta de nuevo.');
         }
     },
 

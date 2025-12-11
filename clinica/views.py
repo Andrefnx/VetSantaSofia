@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 from .models import Consulta, Hospitalizacion, Cirugia, RegistroDiario, Alta
 from pacientes.models import Paciente
 from cuentas.models import CustomUser
@@ -609,7 +610,11 @@ def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
             'diagnostico': hospitalizacion.diagnostico_hosp,
             'estado': hospitalizacion.get_estado_display(),
             'observaciones': hospitalizacion.observaciones,
-            'veterinario': f"{hospitalizacion.veterinario.nombre} {hospitalizacion.veterinario.apellido}",
+            # Veterinario puede ser nulo; manejarlo con gracia
+            'veterinario': (
+                f"{hospitalizacion.veterinario.nombre} {hospitalizacion.veterinario.apellido}"
+                if hospitalizacion.veterinario else 'Sin asignar'
+            ),
         }
         
         if hospitalizacion.fecha_alta:
@@ -621,7 +626,10 @@ def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
             data['cirugia'] = {
                 'tipo': cirugia.tipo_cirugia,
                 'fecha': cirugia.fecha_cirugia.strftime('%d/%m/%Y %H:%M'),
-                'veterinario': f"{cirugia.veterinario_cirujano.nombre} {cirugia.veterinario_cirujano.apellido}",
+                'veterinario': (
+                    f"{cirugia.veterinario_cirujano.nombre} {cirugia.veterinario_cirujano.apellido}"
+                    if cirugia.veterinario_cirujano else 'Sin asignar'
+                ),
                 'descripcion': cirugia.descripcion,
                 'duracion': cirugia.duracion_minutos,
                 'anestesia': cirugia.tipo_anestesia,
@@ -639,7 +647,11 @@ def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
                 'frecuencia_cardiaca': registro.frecuencia_cardiaca,
                 'frecuencia_respiratoria': registro.frecuencia_respiratoria,
                 'observaciones': registro.observaciones,
-                'veterinario': f"{registro.veterinario.nombre} {registro.veterinario.apellido}" if registro.veterinario else 'Sin asignar',
+                # RegistroDiario no tiene veterinario; usar el de la hospitalización o indicar sin asignar
+                'veterinario': (
+                    f"{hospitalizacion.veterinario.nombre} {hospitalizacion.veterinario.apellido}"
+                    if hospitalizacion.veterinario else 'Sin asignar'
+                ),
             })
         
         # Alta médica si existe
