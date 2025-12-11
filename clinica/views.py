@@ -605,7 +605,7 @@ def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
         # Datos básicos
         data = {
             'id': hospitalizacion.id,
-            'fecha_ingreso': hospitalizacion.fecha_ingreso.strftime('%d/%m/%Y %H:%M'),
+            'fecha_ingreso': timezone.localtime(hospitalizacion.fecha_ingreso).strftime('%d/%m/%Y %H:%M'),
             'motivo': hospitalizacion.motivo,
             'diagnostico': hospitalizacion.diagnostico_hosp,
             'estado': hospitalizacion.get_estado_display(),
@@ -618,14 +618,14 @@ def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
         }
         
         if hospitalizacion.fecha_alta:
-            data['fecha_alta'] = hospitalizacion.fecha_alta.strftime('%d/%m/%Y %H:%M')
+            data['fecha_alta'] = timezone.localtime(hospitalizacion.fecha_alta).strftime('%d/%m/%Y %H:%M')
         
         # Cirugía si existe
         if hasattr(hospitalizacion, 'cirugia') and hospitalizacion.cirugia:
             cirugia = hospitalizacion.cirugia
             data['cirugia'] = {
                 'tipo': cirugia.tipo_cirugia,
-                'fecha': cirugia.fecha_cirugia.strftime('%d/%m/%Y %H:%M'),
+                'fecha': timezone.localtime(cirugia.fecha_cirugia).strftime('%d/%m/%Y %H:%M'),
                 'veterinario': (
                     f"{cirugia.veterinario_cirujano.nombre} {cirugia.veterinario_cirujano.apellido}"
                     if cirugia.veterinario_cirujano else 'Sin asignar'
@@ -641,7 +641,7 @@ def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
         data['registros_diarios'] = []
         for registro in hospitalizacion.registros_diarios.all():
             data['registros_diarios'].append({
-                'fecha': registro.fecha_registro.strftime('%d/%m/%Y %H:%M'),
+            'fecha': timezone.localtime(registro.fecha_registro).strftime('%d/%m/%Y %H:%M'),
                 'temperatura': str(registro.temperatura) if registro.temperatura else '-',
                 'peso': str(registro.peso) if registro.peso else '-',
                 'frecuencia_cardiaca': registro.frecuencia_cardiaca,
