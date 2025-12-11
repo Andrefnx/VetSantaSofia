@@ -213,10 +213,6 @@ function abrirModalPaciente(button, mode, pacienteId) {
                     nombre_completo: propietario.nombre_completo
                 };
                 
-                // Mostrar badge de propietario seleccionado
-                document.getElementById('propietarioNombreDisplay').textContent = propietario.nombre_completo;
-                document.getElementById('propietarioSeleccionadoBadge').style.display = 'block';
-                
                 // Mostrar el botón "Editar actual" en modo edición
                 const wrapperEditar = document.getElementById('wrapperEditarActual');
                 if (wrapperEditar) {
@@ -315,9 +311,6 @@ function seleccionarPropietario(propietarioId) {
                 document.getElementById('propietarioEmail').value = prop.email || '';
                 document.getElementById('propietarioDireccion').value = prop.direccion || '';
                 
-                // Mostrar badge de selección
-                document.getElementById('propietarioNombreDisplay').textContent = prop.nombre_completo;
-                document.getElementById('propietarioSeleccionadoBadge').style.display = 'block';
                 document.getElementById('propietarioModo').value = 'existente';
             }
         })
@@ -337,7 +330,6 @@ function limpiarPropietario() {
     document.getElementById('propietarioDireccion').value = '';
     document.getElementById('propietarioModo').value = 'nuevo';
     
-    document.getElementById('propietarioSeleccionadoBadge').style.display = 'none';
     document.getElementById('selectPropietario').value = '';
     document.getElementById('resultadosPropietarios').style.display = 'none';
 }
@@ -350,7 +342,6 @@ function setModoPropietario(modo) {
     if (modo === 'existente') {
         // Mostrar búsqueda, limpiar formulario
         seccionBusqueda.style.display = 'block';
-        document.getElementById('propietarioSeleccionadoBadge').style.display = 'none';
         document.getElementById('propietarioId').value = '';
         document.getElementById('propietarioNombre').value = '';
         document.getElementById('propietarioApellido').value = '';
@@ -375,10 +366,8 @@ function setModoPropietario(modo) {
             document.getElementById('propietarioTelefono').value = propietarioOriginal.telefono;
             document.getElementById('propietarioEmail').value = propietarioOriginal.email;
             document.getElementById('propietarioDireccion').value = propietarioOriginal.direccion;
-            document.getElementById('propietarioNombreDisplay').textContent = propietarioOriginal.nombre_completo;
         }
         
-        document.getElementById('propietarioSeleccionadoBadge').style.display = 'block';
         document.getElementById('resultadosPropietarios').style.display = 'none';
     }
 }
