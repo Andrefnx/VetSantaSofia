@@ -258,58 +258,59 @@
                                     </button>
                                 </div>
 
-                                <!-- Filtro de Fecha Incrustado -->
-                                <div class="sidebar-filter-item">
-                                    <span class="filter-label">
-                                        <i class="bi bi-calendar3"></i> Fecha
-                                    </span>
-
-                                    <!-- Calendario siempre visible -->
-                                    <div class="calendar-inline">
-                                        <div class="calendar-header">
-                                            <button class="calendar-nav" id="btnPrevMonth">
-                                                <i class="bi bi-chevron-left"></i>
-                                            </button>
-                                            <div class="calendar-title">
-                                                <select id="selectMonth" name="selectMonth" class="calendar-select">
-                                                    <option value="">Mes</option>
-                                                    <option value="0">Ene</option>
-                                                    <option value="1">Feb</option>
-                                                    <option value="2">Mar</option>
-                                                    <option value="3">Abr</option>
-                                                    <option value="4">May</option>
-                                                    <option value="5">Jun</option>
-                                                    <option value="6">Jul</option>
-                                                    <option value="7">Ago</option>
-                                                    <option value="8">Sep</option>
-                                                    <option value="9">Oct</option>
-                                                    <option value="10">Nov</option>
-                                                    <option value="11">Dic</option>
-                                                </select>
-                                                <select id="selectYear" name="selectYear" class="calendar-select">
-                                                    <option value="">Año</option>
-                                                </select>
+                                <!-- Contenedor Grid para Filtros -->
+                                <div class="filters-grid">
+                                    <!-- Filtro de Fecha -->
+                                    <div class="filter-block">
+                                        <span class="filter-label">
+                                            <i class="bi bi-calendar3"></i> Fecha
+                                        </span>
+                                        <div class="calendar-inline compact">
+                                            <div class="calendar-header">
+                                                <button class="calendar-nav" id="btnPrevMonth">
+                                                    <i class="bi bi-chevron-left"></i>
+                                                </button>
+                                                <div class="calendar-title">
+                                                    <select id="selectMonth" name="selectMonth" class="calendar-select">
+                                                        <option value="">Mes</option>
+                                                        <option value="0">Ene</option>
+                                                        <option value="1">Feb</option>
+                                                        <option value="2">Mar</option>
+                                                        <option value="3">Abr</option>
+                                                        <option value="4">May</option>
+                                                        <option value="5">Jun</option>
+                                                        <option value="6">Jul</option>
+                                                        <option value="7">Ago</option>
+                                                        <option value="8">Sep</option>
+                                                        <option value="9">Oct</option>
+                                                        <option value="10">Nov</option>
+                                                        <option value="11">Dic</option>
+                                                    </select>
+                                                    <select id="selectYear" name="selectYear" class="calendar-select">
+                                                        <option value="">Año</option>
+                                                    </select>
+                                                </div>
+                                                <button class="calendar-nav" id="btnNextMonth">
+                                                    <i class="bi bi-chevron-right"></i>
+                                                </button>
                                             </div>
-                                            <button class="calendar-nav" id="btnNextMonth">
-                                                <i class="bi bi-chevron-right"></i>
-                                            </button>
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- Filtro de Veterinario -->
-                                <div class="sidebar-filter-item veterinario-filter">
-                                    <label class="filter-label" for="filterVeterinario">
-                                        <i class="bi bi-person-check"></i> Veterinario
-                                    </label>
-                                    <select id="filterVeterinario" name="filterVeterinario" class="form-control">
-                                        <option value="">-- Todos los veterinarios --</option>
-                                        {% for vet in veterinarios %}
-                                            <option value="{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</option>
-                                        {% empty %}
-                                            <option disabled>No hay veterinarios disponibles</option>
-                                        {% endfor %}
-                                    </select>
+                                    <!-- Filtro de Veterinario -->
+                                    <div class="filter-block">
+                                        <span class="filter-label">
+                                            <i class="bi bi-person-check"></i> Veterinario
+                                        </span>
+                                        <select id="filterVeterinario" name="filterVeterinario" class="calendar-select">
+                                            <option value="">-- Todos --</option>
+                                            {% for vet in veterinarios %}
+                                                <option value="{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</option>
+                                            {% empty %}
+                                                <option disabled>No disponible</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
