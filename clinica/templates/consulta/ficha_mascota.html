@@ -133,6 +133,7 @@
                             </p>
                             <!-- En modo edición: mostrar nombre y apellido como inputs -->
                             <div id="camposNombreEditable" style="display:none;" class="edit-mode-container">
+                                <input type="hidden" name="propietario_id" value="{{ paciente.propietario.id }}">
                                 <input type="text" class="form-control edit-mode" name="propietario_nombre_edit"
                                     placeholder="Nombre" value="{{ paciente.propietario.nombre }}" style="margin-bottom: 8px;">
                                 <input type="text" class="form-control edit-mode" name="propietario_apellido_edit"
@@ -162,14 +163,16 @@
                         </div>
                         <p><strong>Teléfono:</strong>
                             <span class="view-mode">{{ paciente.propietario.telefono|default:"No registrado" }}</span>
-                            <input type="text" class="form-control edit-mode" name="propietario_telefono"
-                                value="{{ paciente.propietario.telefono }}" style="display:none;">
+                            <input type="tel" class="form-control edit-mode" name="propietario_telefono"
+                                value="{{ paciente.propietario.telefono }}" placeholder="+569876543210" style="display:none;">
+                            <small class="text-danger" id="errorTelefono" style="display:none;">El teléfono debe tener 9 dígitos (ej: +569876543210 o 987654321)</small>
                         </p>
                     </div>
                     <p><strong>Correo Electrónico:</strong>
                         <span class="view-mode">{{ paciente.propietario.email|default:"No registrado" }}</span>
                         <input type="email" class="form-control edit-mode" name="propietario_email"
-                            value="{{ paciente.propietario.email }}" style="display:none;">
+                            value="{{ paciente.propietario.email }}" placeholder="ejemplo@correo.com" style="display:none;">
+                        <small class="text-danger" id="errorEmail" style="display:none;">El correo debe tener un formato válido (ej: ejemplo@correo.com)</small>
                     </p>
                     <p><strong>Dirección:</strong>
                         <span class="view-mode">{{ paciente.propietario.direccion|default:"No registrada" }}</span>

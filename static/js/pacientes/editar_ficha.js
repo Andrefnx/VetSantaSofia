@@ -389,6 +389,64 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('btnEditarResponsable no encontrado');
     }
 
+    // Agregar validación en tiempo real a teléfono y email - una sola vez al cargar
+    const inputTelefono = infoResponsable.querySelector('input[name="propietario_telefono"]');
+    const inputEmail = infoResponsable.querySelector('input[name="propietario_email"]');
+    const errorTelefono = document.getElementById('errorTelefono');
+    const errorEmail = document.getElementById('errorEmail');
+    
+    if (inputTelefono) {
+        // Prevenir espacios mientras escribe
+        inputTelefono.addEventListener('keypress', function(e) {
+            if (e.key === ' ') {
+                e.preventDefault();
+            }
+        });
+        
+        // Eliminar espacios si se pegan
+        inputTelefono.addEventListener('paste', function(e) {
+            setTimeout(() => {
+                this.value = this.value.replace(/\s/g, '');
+            }, 0);
+        });
+        
+        inputTelefono.addEventListener('input', function() {
+            if (this.value && !validarTelefono(this.value)) {
+                errorTelefono.style.display = 'block';
+                this.classList.add('is-invalid');
+            } else {
+                errorTelefono.style.display = 'none';
+                this.classList.remove('is-invalid');
+            }
+        });
+    }
+    
+    if (inputEmail) {
+        // Prevenir espacios mientras escribe
+        inputEmail.addEventListener('keypress', function(e) {
+            if (e.key === ' ') {
+                e.preventDefault();
+            }
+        });
+        
+        // Eliminar espacios si se pegan
+        inputEmail.addEventListener('paste', function(e) {
+            setTimeout(() => {
+                this.value = this.value.replace(/\s/g, '');
+            }, 0);
+        });
+        
+        inputEmail.addEventListener('input', function() {
+            if (this.value && !validarEmail(this.value)) {
+                errorEmail.style.display = 'block';
+                this.classList.add('is-invalid');
+            } else {
+                errorEmail.style.display = 'none';
+                this.classList.remove('is-invalid');
+            }
+        });
+    }
+
     // Manejar enlace "Cambiar de responsable"
     if (btnCambiarResponsable) {
         btnCambiarResponsable.addEventListener('click', function(e) {
@@ -624,9 +682,91 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('btnCancelarResponsable no encontrado');
     }
 
+    // Funciones de validación para teléfono y correo
+    function validarTelefono(telefono) {
+        if (!telefono || telefono.trim() === '') {
+            return true; // Opcional
+        }
+        // No permitir espacios
+        if (/\s/.test(telefono)) {
+            return false;
+        }
+        // Eliminar puntos, guiones, paréntesis
+        const telefonoLimpio = telefono.replace(/[\s.\-()]/g, '');
+        
+        // Debe ser un número válido:
+        // 1. Con +56 seguido de exactamente 9 dígitos (número chileno con prefijo)
+        // 2. O solo 9 dígitos (número chileno sin prefijo)
+        const regexConPrefijo = /^\+56\d{9}$/;
+        const regexSinPrefijo = /^\d{9}$/;
+        
+        return regexConPrefijo.test(telefonoLimpio) || regexSinPrefijo.test(telefonoLimpio);
+    }
+
+    function validarEmail(email) {
+        // Si está vacío, es opcional
+        if (!email || email.trim() === '') {
+            return true;
+        }
+        // No permitir espacios
+        if (/\s/.test(email)) {
+            return false;
+        }
+        const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regexEmail.test(email);
+    }
+
+    function mostrarErrores() {
+        const inputTelefono = infoResponsable.querySelector('input[name="propietario_telefono"]');
+        const inputEmail = infoResponsable.querySelector('input[name="propietario_email"]');
+        const errorTelefono = document.getElementById('errorTelefono');
+        const errorEmail = document.getElementById('errorEmail');
+        
+        let hasErrors = false;
+
+        // Validar teléfono
+        if (inputTelefono && inputTelefono.value) {
+            if (!validarTelefono(inputTelefono.value)) {
+                errorTelefono.style.display = 'block';
+                inputTelefono.classList.add('is-invalid');
+                hasErrors = true;
+            } else {
+                errorTelefono.style.display = 'none';
+                inputTelefono.classList.remove('is-invalid');
+            }
+        } else {
+            errorTelefono.style.display = 'none';
+            inputTelefono.classList.remove('is-invalid');
+        }
+
+        // Validar email
+        if (inputEmail && inputEmail.value) {
+            if (!validarEmail(inputEmail.value)) {
+                errorEmail.style.display = 'block';
+                inputEmail.classList.add('is-invalid');
+                hasErrors = true;
+            } else {
+                errorEmail.style.display = 'none';
+                inputEmail.classList.remove('is-invalid');
+            }
+        } else {
+            errorEmail.style.display = 'none';
+            inputEmail.classList.remove('is-invalid');
+        }
+
+        return hasErrors;
+    }
+
     if (btnGuardarResponsable) {
         btnGuardarResponsable.addEventListener('click', function() {
             console.log('Botón guardar responsable clickeado');
+            
+            // Validar teléfono y correo antes de guardar
+            if (mostrarErrores()) {
+                alert('Por favor, verifica el formato de los campos resaltados');
+                return;
+            }
+
             const pacienteId = window.location.pathname.split('/').filter(Boolean).pop();
             const formData = new FormData();
             
@@ -635,6 +775,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const apellidoEdit = document.querySelector('input[name="propietario_apellido_edit"]');
             const nombreNew = document.querySelector('input[name="propietario_nombre_new"]');
             const apellidoNew = document.querySelector('input[name="propietario_apellido_new"]');
+            const propietarioIdInput = document.querySelector('input[name="propietario_id"]');
             
             // Caso 1: Se seleccionó un propietario del buscador
             if (propietarioSeleccionado && propietarioSeleccionado.id) {
@@ -650,13 +791,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // Caso 3: Solo se editaron los datos de contacto del propietario actual
             else if (nombreEdit && apellidoEdit && nombreEdit.value && apellidoEdit.value) {
                 console.log('Editando propietario actual');
+                // SIEMPRE pasar el ID del propietario actual si existe
+                if (propietarioIdInput && propietarioIdInput.value) {
+                    formData.append('propietario_id', propietarioIdInput.value);
+                    console.log('Usando propietario_id:', propietarioIdInput.value);
+                }
                 formData.append('propietario_nombre_edit', nombreEdit.value);
                 formData.append('propietario_apellido_edit', apellidoEdit.value);
-                // Obtener el ID del propietario actual
-                const propietarioIdHidden = infoResponsable.querySelector('input[name="propietario_id"]');
-                if (propietarioIdHidden && propietarioIdHidden.value) {
-                    formData.append('propietario_id', propietarioIdHidden.value);
-                }
             } else {
                 alert('Por favor completa los datos del responsable');
                 return;
