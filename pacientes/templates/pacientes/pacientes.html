@@ -119,6 +119,23 @@
                             <i class="fas fa-user"></i> Propietario
                         </h6>
 
+                        <input type="hidden" id="propietarioModo" value="nuevo">
+
+                        <div class="mb-3">
+                            <label class="form-label">Cómo quieres gestionar el dueño</label>
+                            <div class="btn-group" role="group" aria-label="Modo propietario">
+                                <input type="radio" class="btn-check" name="modoPropietario" id="modoPropietarioActual" value="actual" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="modoPropietarioActual">Dueño actual</label>
+
+                                <input type="radio" class="btn-check" name="modoPropietario" id="modoPropietarioExistente" value="existente" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="modoPropietarioExistente">Cambiar a existente</label>
+
+                                <input type="radio" class="btn-check" name="modoPropietario" id="modoPropietarioNuevo" value="nuevo" autocomplete="off" checked>
+                                <label class="btn btn-outline-primary" for="modoPropietarioNuevo">Crear nuevo</label>
+                            </div>
+                            <small class="text-muted d-block mt-1">Puedes editar al dueño actual, asignar uno ya registrado o crear un nuevo registro.</small>
+                        </div>
+
                         <!-- Búsqueda de propietario existente -->
                         <div class="mb-3" id="seccionBusquedaPropietario">
                             <label>Buscar Propietario Existente</label>
@@ -298,9 +315,7 @@
                                        id="pacienteMicrochip"
                                        pattern="[0-9]*"
                                        inputmode="numeric"
-                                       placeholder="123456789012345"
-                                        
-                            
+                                        placeholder="123456789012345">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label>Peso (kg)</label>
@@ -387,5 +402,5 @@
     });
 </script>
 
-<script src="{% static 'js/pacientes/new_paciente.js' %}?v=4"></script>
+<script src="{% static 'js/pacientes/new_paciente.js' %}?v=5"></script>
 {% endblock %}

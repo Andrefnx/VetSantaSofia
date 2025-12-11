@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        fetch(`/hospital/propietarios/buscar/?q=${encodeURIComponent(query)}`)
+        fetch(`/pacientes/buscar_propietarios/?q=${encodeURIComponent(query)}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.propietarios.length > 0) {

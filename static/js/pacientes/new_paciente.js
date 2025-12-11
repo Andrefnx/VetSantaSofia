@@ -22,16 +22,20 @@ function abrirModalNuevoPaciente() {
     document.getElementById('addPacienteForm').reset();
     document.getElementById('pacienteIdEdit').value = '';
     limpiarPropietario();
+    // Modo propietario: crear nuevo
+    const radioNuevo = document.getElementById('modoPropietarioNuevo');
+    if (radioNuevo) {
+        radioNuevo.checked = true;
+    }
+    setModoPropietario('nuevo');
     
     // Cambiar título y botones
     document.getElementById('tituloModalPaciente').textContent = 'Nuevo Paciente';
     document.getElementById('textoBotonGuardar').textContent = 'Guardar Paciente';
     
     // Mostrar sección de búsqueda
-    document.getElementById('seccionBusquedaPropietario').style.display = 'block';
-    document.getElementById('separadorPropietario').style.display = 'block';
-    const btnCambiar = document.getElementById('btnCambiarPropietario');
-    if (btnCambiar) btnCambiar.style.display = '';
+    document.getElementById('seccionBusquedaPropietario').style.display = 'none';
+    document.getElementById('separadorPropietario').style.display = 'none';
     
     // Abrir modal
     const modal = document.getElementById('modalNuevoPaciente');
@@ -48,7 +52,7 @@ function abrirModalPaciente(button, mode, pacienteId) {
     console.log('Abriendo modal editar paciente:', pacienteId);
     
     // Cargar datos del paciente
-    fetch(`/hospital/pacientes/${pacienteId}/detalle/`)
+    fetch(`/pacientes/detalle/${pacienteId}/`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -62,7 +66,6 @@ function abrirModalPaciente(button, mode, pacienteId) {
                 document.getElementById('pacienteNombre').value = paciente.nombre;
                 document.getElementById('pacienteEspecie').value = paciente.especie;
                 document.getElementById('pacienteRaza').value = paciente.raza || '';
-                document.getElementById('pacienteEdad').value = paciente.edad || '';
                 document.getElementById('pacienteSexo').value = paciente.sexo;
                 document.getElementById('pacienteColor').value = paciente.color || '';
                 document.getElementById('pacienteMicrochip').value = paciente.microchip || '';
@@ -77,19 +80,18 @@ function abrirModalPaciente(button, mode, pacienteId) {
                 document.getElementById('propietarioEmail').value = propietario.email || '';
                 document.getElementById('propietarioDireccion').value = propietario.direccion || '';
                 
-                // Bloquear campos de propietario
+                // Bloquear inicialmente pero permitir editar / cambiar
                 bloquearCamposPropietario();
                 mostrarBotonesEdicion();
-                
-                // Mostrar badge
                 document.getElementById('propietarioNombreDisplay').textContent = propietario.nombre_completo;
                 document.getElementById('propietarioSeleccionadoBadge').style.display = 'block';
                 
-                // Ocultar búsqueda de propietario en modo edición
-                document.getElementById('seccionBusquedaPropietario').style.display = 'none';
-                document.getElementById('separadorPropietario').style.display = 'none';
-                const btnCambiar = document.getElementById('btnCambiarPropietario');
-                if (btnCambiar) btnCambiar.style.display = 'none';
+                // Seleccionar modo "propietario actual"
+                const radioActual = document.getElementById('modoPropietarioActual');
+                if (radioActual) {
+                    radioActual.checked = true;
+                }
+                setModoPropietario('actual');
                 
                 // Cambiar título y botones
                 document.getElementById('tituloModalPaciente').textContent = 'Editar Paciente';
@@ -133,7 +135,7 @@ function buscarPropietarios() {
         return;
     }
     
-    fetch(`/hospital/propietarios/buscar/?q=${encodeURIComponent(busqueda)}`)
+    fetch(`/pacientes/buscar_propietarios/?q=${encodeURIComponent(busqueda)}`)
         .then(response => response.json())
         .then(data => {
             if (data.success && data.propietarios.length > 0) {
@@ -166,7 +168,7 @@ function seleccionarPropietario(propietarioId) {
         return;
     }
     
-    fetch(`/hospital/propietarios/${propietarioId}/`)
+    fetch(`/pacientes/propietarios/${propietarioId}/`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -187,6 +189,7 @@ function seleccionarPropietario(propietarioId) {
                 // Mostrar badge de selección
                 document.getElementById('propietarioNombreDisplay').textContent = prop.nombre_completo;
                 document.getElementById('propietarioSeleccionadoBadge').style.display = 'block';
+                document.getElementById('propietarioModo').value = 'existente';
             }
         })
         .catch(error => {
@@ -278,6 +281,7 @@ function limpiarPropietario() {
     document.getElementById('propietarioTelefono').value = '';
     document.getElementById('propietarioEmail').value = '';
     document.getElementById('propietarioDireccion').value = '';
+    document.getElementById('propietarioModo').value = 'nuevo';
     
     desbloquearCamposPropietario();
     ocultarBotonesEdicion();
@@ -286,6 +290,43 @@ function limpiarPropietario() {
     document.getElementById('advertenciaEdicion').style.display = 'none';
     document.getElementById('selectPropietario').value = '';
     document.getElementById('resultadosPropietarios').style.display = 'none';
+}
+
+// Cambiar modo de propietario (actual, existente, nuevo)
+function setModoPropietario(modo) {
+    const seccionBusqueda = document.getElementById('seccionBusquedaPropietario');
+    const separador = document.getElementById('separadorPropietario');
+    document.getElementById('propietarioModo').value = modo;
+
+    if (modo === 'existente') {
+        seccionBusqueda.style.display = 'block';
+        separador.style.display = 'block';
+        document.getElementById('propietarioSeleccionadoBadge').style.display = 'none';
+        document.getElementById('advertenciaEdicion').style.display = 'none';
+        document.getElementById('propietarioId').value = '';
+        document.getElementById('propietarioNombre').value = '';
+        document.getElementById('propietarioApellido').value = '';
+        document.getElementById('propietarioTelefono').value = '';
+        document.getElementById('propietarioEmail').value = '';
+        document.getElementById('propietarioDireccion').value = '';
+        document.getElementById('selectPropietario').value = '';
+        document.getElementById('resultadosPropietarios').style.display = 'none';
+        bloquearCamposPropietario();
+        mostrarBotonesEdicion();
+    } else {
+        seccionBusqueda.style.display = 'none';
+        separador.style.display = 'none';
+    }
+
+    if (modo === 'nuevo') {
+        limpiarPropietario();
+        desbloquearCamposPropietario();
+    }
+
+    if (modo === 'actual') {
+        desbloquearCamposPropietario();
+        mostrarBotonesEdicion();
+    }
 }
 
 // Guardar paciente (crear o editar)
@@ -297,6 +338,9 @@ function saveNewPaciente() {
     
     // Obtener valores
     const propietarioId = document.getElementById('propietarioId').value;
+    const modoPropietario = document.querySelector('input[name="modoPropietario"]:checked')
+        ? document.querySelector('input[name="modoPropietario"]:checked').value
+        : document.getElementById('propietarioModo').value;
     const propietarioNombre = document.getElementById('propietarioNombre').value.trim();
     const propietarioApellido = document.getElementById('propietarioApellido').value.trim();
     const propietarioTelefono = document.getElementById('propietarioTelefono').value.trim();
@@ -335,8 +379,8 @@ function saveNewPaciente() {
     
     // Construir datos
     const data = {
-        propietario_id: propietarioId || null,
-        actualizar_propietario: propietarioId ? true : false,
+        propietario_id: modoPropietario === 'nuevo' ? null : (propietarioId || null),
+        actualizar_propietario: modoPropietario !== 'nuevo',
         propietario: {
             nombre: propietarioNombre,
             apellido: propietarioApellido,
@@ -348,7 +392,6 @@ function saveNewPaciente() {
             nombre: nombrePaciente,
             especie: especiePaciente,
             raza: document.getElementById('pacienteRaza').value || '',
-            edad: document.getElementById('pacienteEdad').value || '',
             sexo: sexoPaciente,
             color: document.getElementById('pacienteColor').value || '',
             microchip: document.getElementById('pacienteMicrochip').value.trim() || '',
@@ -361,8 +404,8 @@ function saveNewPaciente() {
     
     // Determinar URL
     const url = esEdicion 
-        ? `/hospital/pacientes/${pacienteId}/editar/` 
-        : '/hospital/pacientes/crear/';
+        ? `/pacientes/editar/${pacienteId}/` 
+        : '/pacientes/crear/';
     
     // Enviar datos
     fetch(url, {
@@ -387,7 +430,7 @@ function saveNewPaciente() {
                 if (esEdicion) {
                     window.location.reload();
                 } else {
-                    window.location.href = `/hospital/pacientes/${data.paciente_id}/`;
+                    window.location.href = `/pacientes/${data.paciente_id}/`;
                 }
             }, 400);
         } else {
@@ -524,7 +567,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            fetch(`/hospital/pacientes/${pacienteId}/eliminar/`, {
+            fetch(`/pacientes/eliminar/${pacienteId}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -549,4 +592,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // ===== MODO PROPIETARIO (actual / existente / nuevo) =====
+    const modoPropietarioRadios = document.querySelectorAll('input[name="modoPropietario"]');
+    modoPropietarioRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            setModoPropietario(this.value);
+        });
+    });
 });

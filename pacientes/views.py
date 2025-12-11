@@ -175,19 +175,28 @@ def editar_paciente(request, paciente_id):
     try:
         paciente = get_object_or_404(Paciente, id=paciente_id)
         
-        data = {}
-        for key in request.POST:
-            data[key] = request.POST[key]
+        # Permitir cuerpo JSON o formulario clásico
+        if request.content_type and 'application/json' in request.content_type:
+            payload = json.loads(request.body.decode('utf-8') or '{}')
+        else:
+            payload = request.POST.dict()
         
+        paciente_data = payload.get('paciente', payload)
+        propietario_data = payload.get('propietario', payload)
+        propietario_id = payload.get('propietario_id')
+        actualizar_propietario = payload.get('actualizar_propietario', False)
+        if isinstance(actualizar_propietario, str):
+            actualizar_propietario = actualizar_propietario.lower() in ['true', '1', 'on']
+
         campos_basicos = ['nombre', 'especie', 'raza', 'sexo', 'color', 'microchip', 'observaciones']
         for campo in campos_basicos:
-            if campo in data:
-                setattr(paciente, campo, data[campo] or '')
+            if paciente_data.get(campo) is not None:
+                setattr(paciente, campo, paciente_data.get(campo) or '')
         
-        tipo_edad = data.get('tipo_edad')
+        tipo_edad = payload.get('tipo_edad')
         
         if tipo_edad == 'fecha':
-            fecha_nac = data.get('fecha_nacimiento')
+            fecha_nac = payload.get('fecha_nacimiento')
             if fecha_nac:
                 fecha_obj = datetime.strptime(fecha_nac, '%Y-%m-%d').date()
                 
@@ -202,34 +211,29 @@ def editar_paciente(request, paciente_id):
                 paciente.edad_meses = None
         elif tipo_edad == 'estimada':
             paciente.fecha_nacimiento = None
-            edad_anos = data.get('edad_anos')
-            edad_meses = data.get('edad_meses')
-            paciente.edad_anos = int(edad_anos) if edad_anos and edad_anos.strip() else None
-            paciente.edad_meses = int(edad_meses) if edad_meses and edad_meses.strip() else None
+            edad_anos = payload.get('edad_anos')
+            edad_meses = payload.get('edad_meses')
+            paciente.edad_anos = int(edad_anos) if edad_anos and str(edad_anos).strip() else None
+            paciente.edad_meses = int(edad_meses) if edad_meses and str(edad_meses).strip() else None
         
-        if 'propietario_id' in data and data['propietario_id']:
-            propietario = get_object_or_404(Propietario, id=data['propietario_id'])
+        if propietario_id:
+            propietario = get_object_or_404(Propietario, id=propietario_id)
             paciente.propietario = propietario
             
-            if 'propietario_nombre_edit' in data:
-                propietario.nombre = data['propietario_nombre_edit']
-            if 'propietario_apellido_edit' in data:
-                propietario.apellido = data['propietario_apellido_edit']
-            if 'propietario_telefono' in data:
-                propietario.telefono = data['propietario_telefono']
-            if 'propietario_email' in data:
-                propietario.email = data['propietario_email']
-            if 'propietario_direccion' in data:
-                propietario.direccion = data['propietario_direccion']
-            
-            propietario.save()
-        elif 'propietario_nombre_edit' in data and data['propietario_nombre_edit']:
+            if actualizar_propietario:
+                propietario.nombre = propietario_data.get('nombre') or propietario_data.get('propietario_nombre_edit', propietario.nombre)
+                propietario.apellido = propietario_data.get('apellido') or propietario_data.get('propietario_apellido_edit', propietario.apellido)
+                propietario.telefono = propietario_data.get('telefono') or propietario_data.get('propietario_telefono', propietario.telefono)
+                propietario.email = propietario_data.get('email') or propietario_data.get('propietario_email', propietario.email)
+                propietario.direccion = propietario_data.get('direccion') or propietario_data.get('propietario_direccion', propietario.direccion)
+                propietario.save()
+        elif propietario_data.get('nombre') or propietario_data.get('propietario_nombre_edit'):
             nuevo_propietario = Propietario.objects.create(
-                nombre=data.get('propietario_nombre_edit', ''),
-                apellido=data.get('propietario_apellido_edit', ''),
-                telefono=data.get('propietario_telefono', ''),
-                email=data.get('propietario_email', ''),
-                direccion=data.get('propietario_direccion', '')
+                nombre=propietario_data.get('nombre') or propietario_data.get('propietario_nombre_edit', ''),
+                apellido=propietario_data.get('apellido') or propietario_data.get('propietario_apellido_edit', ''),
+                telefono=propietario_data.get('telefono') or propietario_data.get('propietario_telefono', ''),
+                email=propietario_data.get('email') or propietario_data.get('propietario_email', ''),
+                direccion=propietario_data.get('direccion') or propietario_data.get('propietario_direccion', '')
             )
             paciente.propietario = nuevo_propietario
         
