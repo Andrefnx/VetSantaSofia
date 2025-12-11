@@ -3,14 +3,6 @@ from django.contrib.auth.decorators import login_required
 from .models import Hospitalizacion
 
 @login_required
-def hospital_view(request):
-    """Vista para el módulo de hospitalización"""
-    hospitalizaciones = Hospitalizacion.objects.select_related('idMascota', 'idMascota__propietario').all().order_by('-fecha_ingreso')
-    return render(request, 'hospital/hospitalizacion.html', {
-        'hospitalizaciones': hospitalizaciones
-    })
-
-@login_required
 def dashboard_pacientes(request):
     """Vista del dashboard de pacientes"""
     from pacientes.models import Paciente
