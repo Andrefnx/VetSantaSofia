@@ -145,7 +145,7 @@ def crear_paciente(request):
                     propietario_data = data.get('propietario', {})
                     propietario.nombre = propietario_data.get('nombre', propietario.nombre)
                     propietario.apellido = propietario_data.get('apellido', propietario.apellido)
-                    propietario.telefono = propietario_data.get('telefono', propietario.telefono)
+                    propietario.telefono = normalize_chile_phone(propietario_data.get('telefono', propietario.telefono))
                     propietario.email = propietario_data.get('email', propietario.email)
                     propietario.direccion = propietario_data.get('direccion', propietario.direccion)
                     propietario.save()
@@ -154,7 +154,7 @@ def crear_paciente(request):
                 propietario = Propietario.objects.create(
                     nombre=propietario_data.get('nombre'),
                     apellido=propietario_data.get('apellido'),
-                    telefono=propietario_data.get('telefono', ''),
+                    telefono=normalize_chile_phone(propietario_data.get('telefono', '')),
                     email=propietario_data.get('email', ''),
                     direccion=propietario_data.get('direccion', '')
                 )
@@ -241,7 +241,7 @@ def editar_paciente(request, paciente_id):
             if actualizar_propietario:
                 propietario.nombre = propietario_data.get('nombre') or propietario_data.get('propietario_nombre_edit', propietario.nombre)
                 propietario.apellido = propietario_data.get('apellido') or propietario_data.get('propietario_apellido_edit', propietario.apellido)
-                propietario.telefono = propietario_data.get('telefono') or propietario_data.get('propietario_telefono', propietario.telefono)
+                propietario.telefono = normalize_chile_phone(propietario_data.get('telefono') or propietario_data.get('propietario_telefono', propietario.telefono))
                 propietario.email = propietario_data.get('email') or propietario_data.get('propietario_email', propietario.email)
                 propietario.direccion = propietario_data.get('direccion') or propietario_data.get('propietario_direccion', propietario.direccion)
                 propietario.save()
@@ -249,7 +249,7 @@ def editar_paciente(request, paciente_id):
             nuevo_propietario = Propietario.objects.create(
                 nombre=propietario_data.get('nombre') or propietario_data.get('propietario_nombre_edit', ''),
                 apellido=propietario_data.get('apellido') or propietario_data.get('propietario_apellido_edit', ''),
-                telefono=propietario_data.get('telefono') or propietario_data.get('propietario_telefono', ''),
+                telefono=normalize_chile_phone(propietario_data.get('telefono') or propietario_data.get('propietario_telefono', '')),
                 email=propietario_data.get('email') or propietario_data.get('propietario_email', ''),
                 direccion=propietario_data.get('direccion') or propietario_data.get('propietario_direccion', '')
             )
