@@ -5,6 +5,8 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/custom/pacientes.css' %}">
 <link rel="stylesheet" href="{% static 'css/custom/consulta_inventario.css' %}">
+<!-- Meta data para hospitalizaciones -->
+<meta data-paciente-id="{{ paciente.id }}">
 {% endblock %}
 
 {% block content %}
@@ -33,6 +35,17 @@
                         <p><strong>Nombre:</strong> <span class="view-mode paciente-nombre-display">{{ paciente.nombre }}</span>
                             <input type="text" class="form-control edit-mode" name="nombre" value="{{ paciente.nombre }}" style="display:none;">
                         </p>
+                    </div>
+
+                    <!-- Indicador de Hospitalización Activa -->
+                    <div id="indicadorHospitalizacion" style="display: none; margin-bottom: 15px;">
+                        <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; border-radius: 4px; display: flex; align-items: center; gap: 10px;">
+                            <i class="bi bi-hospital" style="font-size: 20px; color: #ffc107;"></i>
+                            <div>
+                                <strong style="color: #856404;">🏥 Paciente Hospitalizado</strong>
+                                <div style="font-size: 13px; color: #856404;" id="detallesHospitalizacion"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="info-row">
@@ -317,6 +330,9 @@
                                 <button class="vet-btn vet-btn-primary" id="btnNuevaConsulta" style="width: 100%; margin-bottom: 8px;">
                                     <i class="bi bi-clipboard2-plus"></i> Nueva Consulta
                                 </button>
+                                <button class="vet-btn vet-btn-warning" id="btnNuevaHospitalizacion" style="width: 100%; margin-bottom: 8px;">
+                                    <i class="bi bi-hospital"></i> Hospitalización
+                                </button>
                                 <button class="vet-btn vet-btn-success" id="btnAgendarCitaModal" style="width: 100%;">
                                     <i class="bi bi-calendar-plus"></i> Agendar Cita
                                 </button>
@@ -401,44 +417,16 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="tab-content" id="hosp">
-                    <div class="hospitalizaciones">
-                        <h3>Hospitalizaciones</h3>
-                        <table class="table table-bordered table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Fecha ingreso</th>
-                                    <th>Fecha alta</th>
-                                    <th>Motivo</th>
-                                    <th>Veterinario</th>
-                                    <th>Estado</th>
-                                    <th>Notas</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for hosp in hospitalizaciones %}
-                                <tr>
-                                    <td>{{ hosp.fecha_ingreso|date:"d/m/Y H:i" }}</td>
-                                    <td>{{ hosp.fecha_alta|date:"d/m/Y H:i"|default:"-" }}</td>
-                                    <td>{{ hosp.motivo }}</td>
-                                    <td>{{ hosp.veterinario.get_full_name|default:"-" }}</td>
-                                    <td>
-                                        <span class="badge bg-{% if hosp.estado == 'activa' %}warning{% elif hosp.estado == 'alta' %}success{% else %}danger{% endif %}">
-                                            {{ hosp.get_estado_display }}
-                                        </span>
-                                    </td>
-                                    <td>{{ hosp.notas|default:"-" }}</td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="6" style="text-align: center; padding: 2rem; color: #999;">
-                                        No hay hospitalizaciones registradas
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div class="hospitalizaciones-section">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 style="margin: 0;">Registro de Hospitalizaciones</h3>
+                        </div>
+                        
+                        <!-- Contenedor dinámico para hospitalizaciones -->
+                        <div id="hospitalizacionesContainer">
+                            <!-- Se carga dinámicamente via JavaScript -->
+                        </div>
                     </div>
                 </div>
 
@@ -685,30 +673,231 @@
     </div>
 </div>
 
+<!-- ============================================
+     MODALES DE HOSPITALIZACIONES
+     ============================================ -->
+
+<!-- Modal Detalles Hospitalización (DOS COLUMNAS) -->
+<div id="detallesHospitalizacionModal" class="vet-modal-overlay hide">
+    <div class="vet-custom-modal" style="max-width: 900px; height: 80vh;">
+        <div class="vet-custom-modal-title">
+            <h3 style="margin:0;"><i class="bi bi-hospital"></i> Detalles de Hospitalización</h3>
+            <i class="bi bi-x" onclick="document.getElementById('detallesHospitalizacionModal').classList.remove('show'); document.getElementById('detallesHospitalizacionModal').classList.add('hide');" tabindex="0" role="button" aria-label="Cerrar"></i>
+        </div>
+        <div class="vet-modal-body" style="display: flex; gap: 20px; height: 100%; padding: 0;">
+            <!-- COLUMNA IZQUIERDA: Información General -->
+            <div style="flex: 1; padding: 20px; border-right: 1px solid #e0e0e0; overflow-y: auto;">
+                <div id="detallesIzquierda">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
+            
+            <!-- COLUMNA DERECHA: Registros Diarios Scrolleables -->
+            <div style="flex: 1; padding: 20px; overflow-y: auto;">
+                <h5 style="margin-top: 0;"><i class="bi bi-calendar-day"></i> Registros Diarios</h5>
+                <div id="registrosDiariosContainer">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nueva Hospitalización -->
+<div id="nuevaHospitalizacionModal" class="vet-modal-overlay hide">
+    <div class="vet-custom-modal">
+        <div class="vet-custom-modal-title">
+            <h3 style="margin:0;"><i class="bi bi-hospital"></i> Nueva Hospitalización</h3>
+            <i class="bi bi-x" id="closeHospitalizacionModal" tabindex="0" role="button" aria-label="Cerrar"></i>
+        </div>
+        <form id="formNuevaHospitalizacion">
+            <div class="vet-modal-body">
+                <div class="detail-section">
+                    <div class="detail-section-title"><i class="bi bi-exclamation-circle"></i> Motivo del Ingreso</div>
+                    <textarea class="form-control" name="motivo" required rows="3" placeholder="Ej: Piómetra, Obstrucción urinaria..."></textarea>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-section-title"><i class="bi bi-stethoscope"></i> Diagnóstico</div>
+                    <textarea class="form-control" name="diagnostico" rows="3" placeholder="Diagnóstico preliminar..."></textarea>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-section-title"><i class="bi bi-journal-text"></i> Observaciones</div>
+                    <textarea class="form-control" name="observaciones" rows="3" placeholder="Observaciones iniciales..."></textarea>
+                </div>
+            </div>
+            <div class="vet-modal-footer d-flex justify-content-end align-items-center">
+                <button type="submit" class="vet-btn vet-btn-primary">
+                    <i class="bi bi-check-lg"></i> Crear Hospitalización
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Cirugía -->
+<div id="cirugiaModal" class="vet-modal-overlay hide">
+    <div class="vet-custom-modal">
+        <div class="vet-custom-modal-title">
+            <h3 style="margin:0;"><i class="bi bi-tools"></i> Registrar Cirugía</h3>
+            <i class="bi bi-x" onclick="document.getElementById('cirugiaModal').classList.remove('show'); document.getElementById('cirugiaModal').classList.add('hide');" tabindex="0" role="button" aria-label="Cerrar"></i>
+        </div>
+        <form id="formCirugia">
+            <div class="vet-modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="detail-section">
+                            <div class="detail-section-title">Tipo de Cirugía</div>
+                            <input type="text" class="form-control" name="tipo_cirugia" required placeholder="Ej: Ovariohisterectomía">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-section">
+                            <div class="detail-section-title">Resultado</div>
+                            <select class="form-control" name="resultado">
+                                <option value="exitosa">Exitosa</option>
+                                <option value="parcial">Parcial</option>
+                                <option value="problemas">Con problemas</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-section-title">Descripción de la Cirugía</div>
+                    <textarea class="form-control" name="descripcion" required rows="3"></textarea>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="detail-section">
+                            <div class="detail-section-title">Anestesiólogo</div>
+                            <input type="text" class="form-control" name="anestesiologo" placeholder="Nombre">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-section">
+                            <div class="detail-section-title">Tipo de Anestesia</div>
+                            <input type="text" class="form-control" name="tipo_anestesia" placeholder="Ej: Anestesal, Propofol">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-section-title">Duración (minutos)</div>
+                    <input type="number" class="form-control" name="duracion_minutos">
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-section-title">Complicaciones (si las hubo)</div>
+                    <textarea class="form-control" name="complicaciones" rows="2" placeholder="Dejar en blanco si no hubo complicaciones"></textarea>
+                </div>
+            </div>
+            <div class="vet-modal-footer d-flex justify-content-end">
+                <button type="submit" class="vet-btn vet-btn-primary">
+                    <i class="bi bi-save"></i> Guardar Cirugía
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Registro Diario -->
+<div id="registroDiarioModal" class="vet-modal-overlay hide">
+    <div class="vet-custom-modal">
+        <div class="vet-custom-modal-title">
+            <h3 style="margin:0;"><i class="bi bi-calendar-day"></i> Registro Diario</h3>
+            <i class="bi bi-x" onclick="document.getElementById('registroDiarioModal').classList.remove('show'); document.getElementById('registroDiarioModal').classList.add('hide');" tabindex="0" role="button" aria-label="Cerrar"></i>
+        </div>
+        <form id="formRegistroDiario">
+            <div class="vet-modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-thermometer-half"></i> Temperatura</div>
+                            <input type="number" class="form-control" name="temperatura" step="0.1" placeholder="°C">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-speedometer2"></i> Peso</div>
+                            <input type="number" class="form-control" name="peso" step="0.01" placeholder="kg">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-heart-pulse"></i> Frec. Cardíaca</div>
+                            <input type="number" class="form-control" name="frecuencia_cardiaca" placeholder="lpm">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-section">
+                            <div class="detail-section-title"><i class="bi bi-wind"></i> Frec. Respiratoria</div>
+                            <input type="number" class="form-control" name="frecuencia_respiratoria" placeholder="rpm">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-section-title"><i class="bi bi-journal-text"></i> Observaciones</div>
+                    <textarea class="form-control" name="observaciones" rows="3" placeholder="Estado general, comportamiento, etc..."></textarea>
+                </div>
+            </div>
+            <div class="vet-modal-footer d-flex justify-content-end">
+                <button type="submit" class="vet-btn vet-btn-primary">
+                    <i class="bi bi-plus-circle"></i> Guardar Registro
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Alta Médica -->
+<div id="altaMedicaModal" class="vet-modal-overlay hide">
+    <div class="vet-custom-modal">
+        <div class="vet-custom-modal-title">
+            <h3 style="margin:0;"><i class="bi bi-check-circle"></i> Dar de Alta</h3>
+            <i class="bi bi-x" onclick="document.getElementById('altaMedicaModal').classList.remove('show'); document.getElementById('altaMedicaModal').classList.add('hide');" tabindex="0" role="button" aria-label="Cerrar"></i>
+        </div>
+        <form id="formAltaMedica">
+            <div class="vet-modal-body">
+                <div class="detail-section">
+                    <div class="detail-section-title"><i class="bi bi-stethoscope"></i> Diagnóstico Final</div>
+                    <textarea class="form-control" name="diagnostico_final" required rows="3"></textarea>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-section-title"><i class="bi bi-capsule"></i> Tratamiento Post-Alta</div>
+                    <textarea class="form-control" name="tratamiento_post_alta" required rows="3"></textarea>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-section-title"><i class="bi bi-lightbulb"></i> Recomendaciones</div>
+                    <textarea class="form-control" name="recomendaciones" required rows="3" placeholder="Reposo, dieta, medicamentos en casa, cuidados especiales..."></textarea>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-section-title"><i class="bi bi-calendar-check"></i> Próxima Revisión (opcional)</div>
+                    <input type="date" class="form-control" name="proxima_revision">
+                </div>
+            </div>
+            <div class="vet-modal-footer d-flex justify-content-end">
+                <button type="submit" class="vet-btn vet-btn-primary">
+                    <i class="bi bi-check-lg"></i> Completar Alta
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    // Obtener datos del paciente desde la API
-    const pacienteId = {{ paciente.id }};
-    
-    fetch(`/clinica/pacientes/${pacienteId}/data/`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.pacienteData = data.paciente;
-                console.log('✅ [API] window.pacienteData cargado:', window.pacienteData);
-            } else {
-                console.error('❌ Error en API:', data.error);
-                window.pacienteData = { id: pacienteId };
-            }
-        })
-        .catch(error => {
-            console.error('❌ Error al cargar datos del paciente:', error);
-            // Fallback: usar al menos el ID
-            window.pacienteData = { id: pacienteId };
-        });
-</script>
+<script src="{% static 'js/pacientes/hospitalizaciones.js' %}"></script>
 <script src="{% static 'js/base/modals_base.js' %}"></script>
 <script src="{% static 'js/pacientes/editar_ficha.js' %}"></script>
 <script src="{% static 'js/pacientes/antecedentes_medicos.js' %}"></script>

@@ -71,8 +71,9 @@ class Hospitalizacion(models.Model):
     fecha_ingreso = models.DateTimeField()
     fecha_alta = models.DateTimeField(blank=True, null=True)
     motivo = models.TextField()
+    diagnostico_hosp = models.TextField(blank=True)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='activa')
-    notas = models.TextField(blank=True, null=True)
+    observaciones = models.TextField(blank=True, null=True)
     
     class Meta:
         ordering = ['-fecha_ingreso']
@@ -81,6 +82,72 @@ class Hospitalizacion(models.Model):
     
     def __str__(self):
         return f"Hospitalización de {self.paciente.nombre} - {self.fecha_ingreso.strftime('%d/%m/%Y')}"
+
+
+class Cirugia(models.Model):
+    """Modelo para cirugías dentro de una hospitalización"""
+    RESULTADO_CHOICES = [
+        ('exitosa', 'Exitosa'),
+        ('parcial', 'Parcial'),
+        ('problemas', 'Con problemas'),
+    ]
+    
+    hospitalizacion = models.OneToOneField(Hospitalizacion, on_delete=models.CASCADE, related_name='cirugia', null=True, blank=True)
+    fecha_cirugia = models.DateTimeField()
+    veterinario_cirujano = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='cirugias_realizadas')
+    tipo_cirugia = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    duracion_minutos = models.IntegerField(blank=True, null=True)
+    anestesiologo = models.CharField(max_length=100, blank=True)
+    tipo_anestesia = models.CharField(max_length=100, blank=True)
+    medicamentos = models.ManyToManyField(Insumo, blank=True, related_name='cirugias_usadas')
+    complicaciones = models.TextField(blank=True)
+    resultado = models.CharField(max_length=20, choices=RESULTADO_CHOICES, default='exitosa')
+    
+    class Meta:
+        ordering = ['-fecha_cirugia']
+        verbose_name = 'Cirugía'
+        verbose_name_plural = 'Cirugías'
+    
+    def __str__(self):
+        return f"{self.tipo_cirugia} - {self.fecha_cirugia.strftime('%d/%m/%Y')}"
+
+
+class RegistroDiario(models.Model):
+    """Registro diario durante hospitalización"""
+    hospitalizacion = models.ForeignKey(Hospitalizacion, on_delete=models.CASCADE, related_name='registros_diarios')
+    fecha_registro = models.DateTimeField()
+    temperatura = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    peso = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    frecuencia_cardiaca = models.IntegerField(null=True, blank=True)
+    frecuencia_respiratoria = models.IntegerField(null=True, blank=True)
+    observaciones = models.TextField(blank=True)
+    medicamentos = models.ManyToManyField(Insumo, blank=True, related_name='registros_usados')
+    
+    class Meta:
+        ordering = ['-fecha_registro']
+        verbose_name = 'Registro Diario'
+        verbose_name_plural = 'Registros Diarios'
+    
+    def __str__(self):
+        return f"Registro {self.hospitalizacion.paciente.nombre} - {self.fecha_registro.strftime('%d/%m/%Y')}"
+
+
+class Alta(models.Model):
+    """Resumen de alta médica"""
+    hospitalizacion = models.OneToOneField(Hospitalizacion, on_delete=models.CASCADE, related_name='alta_medica')
+    fecha_alta = models.DateTimeField()
+    diagnostico_final = models.TextField()
+    tratamiento_post_alta = models.TextField()
+    recomendaciones = models.TextField()
+    proxima_revision = models.DateField(blank=True, null=True)
+    
+    class Meta:
+        verbose_name = 'Alta Médica'
+        verbose_name_plural = 'Altas Médicas'
+    
+    def __str__(self):
+        return f"Alta de {self.hospitalizacion.paciente.nombre} - {self.fecha_alta.strftime('%d/%m/%Y')}"
 
 
 class Examen(models.Model):

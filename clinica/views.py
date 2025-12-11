@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
-from .models import Consulta
+from .models import Consulta, Hospitalizacion, Cirugia, RegistroDiario, Alta
 from pacientes.models import Paciente
 from cuentas.models import CustomUser
 from servicios.models import Servicio
@@ -391,6 +391,282 @@ def obtener_servicios(request):
             'servicios': list(servicios)
         })
     except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+# ============================================
+# VISTAS PARA HOSPITALIZACIONES
+# ============================================
+
+@login_required
+@require_http_methods(["POST"])
+def crear_hospitalizacion(request, paciente_id):
+    """Crea una nueva hospitalización"""
+    try:
+        paciente = get_object_or_404(Paciente, id=paciente_id)
+        data = json.loads(request.body)
+        
+        hospitalizacion = Hospitalizacion.objects.create(
+            paciente=paciente,
+            veterinario=request.user,
+            fecha_ingreso=timezone.now(),
+            motivo=data.get('motivo', ''),
+            diagnostico_hosp=data.get('diagnostico', ''),
+            estado='activa',
+            observaciones=data.get('observaciones', '')
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Hospitalización iniciada',
+            'hospitalizacion_id': hospitalizacion.id
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+@login_required
+@require_http_methods(["POST"])
+def crear_cirugia(request, hospitalizacion_id):
+    """Crea una cirugía para una hospitalización"""
+    try:
+        hospitalizacion = get_object_or_404(Hospitalizacion, id=hospitalizacion_id)
+        data = json.loads(request.body)
+        
+        cirugia = Cirugia.objects.create(
+            hospitalizacion=hospitalizacion,
+            fecha_cirugia=timezone.now(),
+            veterinario_cirujano=request.user,
+            tipo_cirugia=data.get('tipo_cirugia', ''),
+            descripcion=data.get('descripcion', ''),
+            duracion_minutos=data.get('duracion_minutos'),
+            anestesiologo=data.get('anestesiologo', ''),
+            tipo_anestesia=data.get('tipo_anestesia', ''),
+            complicaciones=data.get('complicaciones', ''),
+            resultado=data.get('resultado', 'exitosa')
+        )
+        
+        # Procesar medicamentos si existen
+        medicamentos = data.get('medicamentos', [])
+        if medicamentos:
+            from inventario.models import Insumo
+            for med_id in medicamentos:
+                try:
+                    insumo = Insumo.objects.get(id=med_id)
+                    cirugia.medicamentos.add(insumo)
+                except Insumo.DoesNotExist:
+                    pass
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Cirugía registrada',
+            'cirugia_id': cirugia.id
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+@login_required
+@require_http_methods(["POST"])
+def crear_registro_diario(request, hospitalizacion_id):
+    """Crea un registro diario de una hospitalización"""
+    try:
+        hospitalizacion = get_object_or_404(Hospitalizacion, id=hospitalizacion_id)
+        data = json.loads(request.body)
+        
+        registro = RegistroDiario.objects.create(
+            hospitalizacion=hospitalizacion,
+            fecha_registro=timezone.now(),
+            temperatura=data.get('temperatura'),
+            peso=data.get('peso'),
+            frecuencia_cardiaca=data.get('frecuencia_cardiaca'),
+            frecuencia_respiratoria=data.get('frecuencia_respiratoria'),
+            observaciones=data.get('observaciones', '')
+        )
+        
+        # Procesar medicamentos si existen
+        medicamentos = data.get('medicamentos', [])
+        if medicamentos:
+            from inventario.models import Insumo
+            for med_id in medicamentos:
+                try:
+                    insumo = Insumo.objects.get(id=med_id)
+                    registro.medicamentos.add(insumo)
+                except Insumo.DoesNotExist:
+                    pass
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Registro diario creado',
+            'registro_id': registro.id
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+@login_required
+@require_http_methods(["POST"])
+def crear_alta_medica(request, hospitalizacion_id):
+    """Crea un alta médica para una hospitalización"""
+    try:
+        hospitalizacion = get_object_or_404(Hospitalizacion, id=hospitalizacion_id)
+        data = json.loads(request.body)
+        
+        # Crear el alta
+        alta = Alta.objects.create(
+            hospitalizacion=hospitalizacion,
+            fecha_alta=timezone.now(),
+            diagnostico_final=data.get('diagnostico_final', ''),
+            tratamiento_post_alta=data.get('tratamiento_post_alta', ''),
+            recomendaciones=data.get('recomendaciones', ''),
+            proxima_revision=data.get('proxima_revision')
+        )
+        
+        # Actualizar estado de hospitalización
+        hospitalizacion.estado = 'alta'
+        hospitalizacion.fecha_alta = timezone.now()
+        hospitalizacion.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Alta médica registrada',
+            'alta_id': alta.id
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+@login_required
+@require_http_methods(["GET"])
+def obtener_hospitalizaciones(request, paciente_id):
+    """Retorna lista de hospitalizaciones del paciente"""
+    try:
+        paciente = get_object_or_404(Paciente, id=paciente_id)
+        hospitalizaciones = paciente.hospitalizaciones.all().order_by('-fecha_ingreso')
+        
+        data = []
+        for hosp in hospitalizaciones:
+            hosp_data = {
+                'id': hosp.id,
+                'fecha_ingreso': hosp.fecha_ingreso.strftime('%d/%m/%Y %H:%M'),
+                'motivo': hosp.motivo,
+                'estado': hosp.get_estado_display(),
+                'tiene_cirugia': hasattr(hosp, 'cirugia') and hosp.cirugia is not None,
+                'registros_diarios': hosp.registros_diarios.count(),
+            }
+            
+            if hosp.fecha_alta:
+                hosp_data['fecha_alta'] = hosp.fecha_alta.strftime('%d/%m/%Y %H:%M')
+            
+            if hasattr(hosp, 'alta_medica'):
+                hosp_data['tiene_alta'] = True
+            
+            data.append(hosp_data)
+        
+        return JsonResponse({
+            'success': True,
+            'hospitalizaciones': data
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+@login_required
+@require_http_methods(["GET"])
+def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
+    """Retorna detalles completos de una hospitalización"""
+    try:
+        print(f"🔍 Buscando hospitalización: paciente_id={paciente_id}, hospitalizacion_id={hospitalizacion_id}")
+        hospitalizacion = Hospitalizacion.objects.get(
+            id=hospitalizacion_id,
+            paciente_id=paciente_id
+        )
+        print(f"✅ Hospitalización encontrada: {hospitalizacion.id}")
+        
+        # Datos básicos
+        data = {
+            'id': hospitalizacion.id,
+            'fecha_ingreso': hospitalizacion.fecha_ingreso.strftime('%d/%m/%Y %H:%M'),
+            'motivo': hospitalizacion.motivo,
+            'diagnostico': hospitalizacion.diagnostico_hosp,
+            'estado': hospitalizacion.get_estado_display(),
+            'observaciones': hospitalizacion.observaciones,
+            'veterinario': f"{hospitalizacion.veterinario.nombre} {hospitalizacion.veterinario.apellido}",
+        }
+        
+        if hospitalizacion.fecha_alta:
+            data['fecha_alta'] = hospitalizacion.fecha_alta.strftime('%d/%m/%Y %H:%M')
+        
+        # Cirugía si existe
+        if hasattr(hospitalizacion, 'cirugia') and hospitalizacion.cirugia:
+            cirugia = hospitalizacion.cirugia
+            data['cirugia'] = {
+                'tipo': cirugia.tipo_cirugia,
+                'fecha': cirugia.fecha_cirugia.strftime('%d/%m/%Y %H:%M'),
+                'veterinario': f"{cirugia.veterinario_cirujano.nombre} {cirugia.veterinario_cirujano.apellido}",
+                'descripcion': cirugia.descripcion,
+                'duracion': cirugia.duracion_minutos,
+                'anestesia': cirugia.tipo_anestesia,
+                'resultado': cirugia.get_resultado_display(),
+                'complicaciones': cirugia.complicaciones,
+            }
+        
+        # Registros diarios
+        data['registros_diarios'] = []
+        for registro in hospitalizacion.registros_diarios.all():
+            data['registros_diarios'].append({
+                'fecha': registro.fecha_registro.strftime('%d/%m/%Y %H:%M'),
+                'temperatura': str(registro.temperatura) if registro.temperatura else '-',
+                'peso': str(registro.peso) if registro.peso else '-',
+                'frecuencia_cardiaca': registro.frecuencia_cardiaca,
+                'frecuencia_respiratoria': registro.frecuencia_respiratoria,
+                'observaciones': registro.observaciones,
+                'veterinario': f"{registro.veterinario.nombre} {registro.veterinario.apellido}" if registro.veterinario else 'Sin asignar',
+            })
+        
+        # Alta médica si existe
+        if hasattr(hospitalizacion, 'alta_medica'):
+            alta = hospitalizacion.alta_medica
+            data['alta'] = {
+                'fecha': alta.fecha_alta.strftime('%d/%m/%Y'),
+                'diagnostico_final': alta.diagnostico_final,
+                'tratamiento_post': alta.tratamiento_post_alta,
+                'recomendaciones': alta.recomendaciones,
+                'proxima_revision': alta.proxima_revision.strftime('%d/%m/%Y') if alta.proxima_revision else None,
+            }
+        
+        return JsonResponse({
+            'success': True,
+            'hospitalizacion': data
+        })
+    except Hospitalizacion.DoesNotExist:
+        print(f"❌ Hospitalización no encontrada: paciente_id={paciente_id}, hospitalizacion_id={hospitalizacion_id}")
+        return JsonResponse({
+            'success': False,
+            'message': 'Hospitalización no encontrada'
+        }, status=404)
+    except Exception as e:
+        import traceback
+        print(f"❌ Error en detalle_hospitalizacion: {str(e)}")
+        print(traceback.format_exc())
         return JsonResponse({
             'success': False,
             'error': str(e)

@@ -1776,3 +1776,276 @@ td[colspan][style*="text-align: center"] {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(159, 207, 159, 0.1);
 }
+
+/* ===========================
+   ESTILOS PARA HOSPITALIZACIONES
+=========================== */
+
+.hospitalizacion-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.hospitalizacion-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+}
+
+.hosp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.hosp-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.hosp-fecha {
+    font-size: 0.85rem;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.hosp-motivo {
+    font-size: 1rem;
+    color: #212529;
+    font-weight: 600;
+}
+
+.hosp-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: fit-content;
+}
+
+.estado-activa {
+    background: #d4edda;
+    color: #155724;
+}
+
+.estado-alta {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.estado-fallecido {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.btn-expandir {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: #495057;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.btn-expandir:hover {
+    background: #f8f9fa;
+    color: var(--primary-color);
+    border-radius: 4px;
+}
+
+.hosp-detalles {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.hosp-info-completa {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.hosp-info-completa p {
+    margin: 0;
+    color: #495057;
+}
+
+.cirugia-info,
+.registros-info,
+.alta-info {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: white;
+    border-left: 3px solid var(--primary-color);
+    border-radius: 4px;
+}
+
+.cirugia-info h5,
+.registros-info h5,
+.alta-info h5 {
+    margin: 0 0 0.75rem 0;
+    color: #103012;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.registro-item {
+    display: flex;
+    gap: 1rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 0.85rem;
+    align-items: center;
+}
+
+.registro-item:last-child {
+    border-bottom: none;
+}
+
+.reg-fecha {
+    font-weight: 600;
+    color: #103012;
+    min-width: 140px;
+}
+
+.reg-temp, .reg-peso {
+    background: #e7f5e7;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    font-weight: 500;
+}
+
+.reg-obs {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.hosp-acciones {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+    flex-wrap: wrap;
+}
+
+.btn-accion {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 500;
+}
+
+.btn-cirugia {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+.btn-cirugia:hover {
+    background: #ffe69c;
+    border-color: #ffd959;
+}
+
+.btn-registro {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.btn-registro:hover {
+    background: #a7d8de;
+    border-color: #88d4e8;
+}
+
+.btn-alta {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.btn-alta:hover {
+    background: #b8e0c8;
+    border-color: #a0d9ad;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: #dee2e6;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Modal para nueva hospitalización */
+#nuevaHospitalizacionModal {
+    display: flex;
+}
+
+#nuevaHospitalizacionModal.hide {
+    display: none;
+}
+
+/* Tabs para hospitalizaciones */
+.hosp-tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 2px solid #dee2e6;
+    margin-bottom: 1rem;
+}
+
+.hosp-tab {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-weight: 500;
+    color: #6c757d;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.hosp-tab.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.hosp-tab:hover:not(.active) {
+    color: #495057;
+}
