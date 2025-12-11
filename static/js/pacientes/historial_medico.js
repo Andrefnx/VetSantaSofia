@@ -282,35 +282,49 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ===== MODAL NUEVA CONSULTA (fuera del DOMContentLoaded) =====
-// Modal Nueva Consulta
-document.getElementById('btnNuevaConsulta').onclick = async function () {
-    openVetModal('nuevaConsultaModal');
-    await cargarInventario();
-};
+// Modal Nueva Consulta (si el botón existe)
+const btnNuevaConsulta = document.getElementById('btnNuevaConsulta');
+if (btnNuevaConsulta) {
+    btnNuevaConsulta.onclick = async function () {
+        openVetModal('nuevaConsultaModal');
+        await cargarInventario();
+    };
+}
 
-document.getElementById('closeNuevaConsultaModal').onclick = function () {
-    closeVetModal('nuevaConsultaModal');
-};
+const closeNuevaConsultaModal = document.getElementById('closeNuevaConsultaModal');
+if (closeNuevaConsultaModal) {
+    closeNuevaConsultaModal.onclick = function () {
+        closeVetModal('nuevaConsultaModal');
+    };
 
-document.getElementById('closeNuevaConsultaModal').onkeydown = function (e) {
-    if (e.key === "Enter" || e.key === " ") closeVetModal('nuevaConsultaModal');
-};
+    closeNuevaConsultaModal.onkeydown = function (e) {
+        if (e.key === "Enter" || e.key === " ") closeVetModal('nuevaConsultaModal');
+    };
+}
 
-// Abrir modal de agendar cita
-document.getElementById('btnAgendarCitaModal').onclick = function () {
-    openVetModal('agendarCitaModal');
-};
+// Abrir modal de agendar cita (si el botón existe)
+const btnAgendarCitaModal = document.getElementById('btnAgendarCitaModal');
+if (btnAgendarCitaModal) {
+    btnAgendarCitaModal.onclick = function () {
+        openVetModal('agendarCitaModal');
+    };
+}
 
-document.getElementById('closeAgendarCitaModal').onclick = function () {
-    closeVetModal('agendarCitaModal');
-};
+const closeAgendarCitaModal = document.getElementById('closeAgendarCitaModal');
+if (closeAgendarCitaModal) {
+    closeAgendarCitaModal.onclick = function () {
+        closeVetModal('agendarCitaModal');
+    };
 
-document.getElementById('closeAgendarCitaModal').onkeydown = function (e) {
-    if (e.key === "Enter" || e.key === " ") closeVetModal('agendarCitaModal');
-};
+    closeAgendarCitaModal.onkeydown = function (e) {
+        if (e.key === "Enter" || e.key === " ") closeVetModal('agendarCitaModal');
+    };
+}
 
-// Guardar nueva consulta
-document.getElementById('formNuevaConsulta').onsubmit = async function (e) {
+// Guardar nueva consulta (si el formulario existe)
+const formNuevaConsulta = document.getElementById('formNuevaConsulta');
+if (formNuevaConsulta) {
+    formNuevaConsulta.onsubmit = async function (e) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
@@ -358,29 +372,23 @@ document.getElementById('formNuevaConsulta').onsubmit = async function (e) {
         console.error('❌ Error de red:', error);
         alert('Error al guardar la consulta. Por favor intente nuevamente.');
     }
-};
+    };
+}
 
 // Modal detalle
-document.getElementById('closeDetalleModal').onclick = function () {
-    closeVetModal('detalleConsultaModal');
-};
-
-document.getElementById('closeDetalleModal').onkeydown = function (e) {
-    if (e.key === "Enter" || e.key === " ") closeVetModal('detalleConsultaModal');
-};
-
-document.getElementById('btnAgendarCita').onclick = function () {
-    closeVetModal('detalleConsultaModal');
-    openVetModal('agendarCitaModal');
-};
+// Los eventos se configuran al final del archivo
 
 window.onclick = function (event) {
     const modalDetalle = document.getElementById('detalleConsultaModal');
     const modalNueva = document.getElementById('nuevaConsultaModal');
     const modalCita = document.getElementById('agendarCitaModal');
-    if (event.target === modalDetalle) closeVetModal('detalleConsultaModal');
-    if (event.target === modalNueva) closeVetModal('nuevaConsultaModal');
-    if (event.target === modalCita) closeVetModal('agendarCitaModal');
+    
+    // Cerrar si haces click en el overlay (fondo gris)
+    if (event.target.classList.contains('vet-modal-overlay')) {
+        if (event.target === modalDetalle) closeVetModal('detalleConsultaModal');
+        if (event.target === modalNueva) closeVetModal('nuevaConsultaModal');
+        if (event.target === modalCita) closeVetModal('agendarCitaModal');
+    }
 }
 
 // Cargar inventario
@@ -640,3 +648,55 @@ document.getElementById('btnRecuperarDatos')?.addEventListener('click', async fu
         alert('❌ Error de red al guardar');
     }
 });
+
+// ===== CONFIGURAR CIERRE DEL MODAL =====
+(function() {
+    console.log('🔧 Configurando eventos del modal de detalle...');
+    
+    const closeBtn = document.getElementById('closeDetalleModal');
+    const modalDetalle = document.getElementById('detalleConsultaModal');
+    
+    if (!closeBtn) {
+        console.error('❌ closeDetalleModal no encontrado en el DOM');
+        return;
+    }
+    
+    if (!modalDetalle) {
+        console.error('❌ detalleConsultaModal no encontrado en el DOM');
+        return;
+    }
+    
+    console.log('✅ Elementos del modal encontrados');
+    
+    // Función para cerrar el modal
+    function cerrarModal() {
+        console.log('🔴 Cerrando modal detalleConsultaModal');
+        modalDetalle.classList.add('hide');
+    }
+    
+    // Click en la X
+    closeBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('✅ Cierre por click en X');
+        cerrarModal();
+    });
+    
+    // Click en el overlay (fondo gris)
+    modalDetalle.addEventListener('click', function(e) {
+        if (e.target === this) {
+            console.log('✅ Cierre por click en overlay');
+            cerrarModal();
+        }
+    });
+    
+    // Tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !modalDetalle.classList.contains('hide')) {
+            console.log('✅ Cierre por Escape');
+            cerrarModal();
+        }
+    });
+    
+    console.log('✅ Eventos del modal configurados correctamente');
+})();
