@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 formData.append('propietario_id', inputId.value);
             }
             
-            const url = `/hospital/pacientes/${pacienteId}/editar/`;
+            const url = `/pacientes/editar/${pacienteId}/`;
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
             
             // Debug: mostrar todos los datos que se enviarán
@@ -304,5 +304,158 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         return cookieValue;
+    }
+
+    // ============ EDITAR RESPONSABLE ============
+    const btnEditarResponsable = document.getElementById('btnEditarResponsable');
+    const btnCancelarResponsable = document.getElementById('btnCancelarResponsable');
+    const btnGuardarResponsable = document.getElementById('btnGuardarResponsable');
+    const btnEditResponsableActions = document.getElementById('btnEditResponsableActions');
+    const infoResponsable = document.getElementById('infoResponsable');
+
+    console.log('Responsable Edit Elements:', {
+        btnEditarResponsable,
+        btnCancelarResponsable,
+        btnGuardarResponsable,
+        btnEditResponsableActions,
+        infoResponsable
+    });
+
+    if (btnEditarResponsable) {
+        btnEditarResponsable.addEventListener('click', function() {
+            console.log('Botón editar responsable clickeado');
+            
+            // Mostrar botones de guardar/cancelar
+            btnEditarResponsable.style.display = 'none';
+            btnEditResponsableActions.style.display = 'flex';
+            
+            // Ocultar todos los span.view-mode y mostrar todos los inputs.edit-mode
+            infoResponsable.querySelectorAll('.view-mode').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            infoResponsable.querySelectorAll('input.edit-mode').forEach(el => {
+                el.style.display = 'block';
+            });
+            
+            infoResponsable.querySelectorAll('textarea.edit-mode').forEach(el => {
+                el.style.display = 'block';
+            });
+            
+            // Ocultar divs con clase edit-mode (propietarioSelector, etc)
+            infoResponsable.querySelectorAll('div.edit-mode').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Guardar datos originales para cancelación
+            originalData = {};
+            infoResponsable.querySelectorAll('input.edit-mode, textarea.edit-mode').forEach(el => {
+                if (el.name) {
+                    originalData[el.name] = el.value;
+                    console.log('Guardando dato original:', el.name, '=', el.value);
+                }
+            });
+        });
+    } else {
+        console.error('btnEditarResponsable no encontrado');
+    }
+
+    if (btnCancelarResponsable) {
+        btnCancelarResponsable.addEventListener('click', function() {
+            console.log('Botón cancelar responsable clickeado');
+            
+            // Restaurar datos originales
+            infoResponsable.querySelectorAll('input.edit-mode, textarea.edit-mode').forEach(el => {
+                if (el.name && originalData[el.name] !== undefined) {
+                    el.value = originalData[el.name];
+                    console.log('Restaurando:', el.name, '=', originalData[el.name]);
+                }
+            });
+            
+            // Volver a modo vista: mostrar spans y ocultar inputs
+            infoResponsable.querySelectorAll('.view-mode').forEach(el => {
+                el.style.display = 'inline';
+            });
+            
+            infoResponsable.querySelectorAll('input.edit-mode').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            infoResponsable.querySelectorAll('textarea.edit-mode').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            infoResponsable.querySelectorAll('div.edit-mode').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Ocultar botones de guardar/cancelar y mostrar botón de editar
+            btnEditarResponsable.style.display = 'inline-block';
+            btnEditResponsableActions.style.display = 'none';
+        });
+    } else {
+        console.error('btnCancelarResponsable no encontrado');
+    }
+
+    if (btnGuardarResponsable) {
+        btnGuardarResponsable.addEventListener('click', function() {
+            console.log('Botón guardar responsable clickeado');
+            const pacienteId = window.location.pathname.split('/').filter(Boolean).pop();
+            const formData = new FormData();
+            
+            // Recopilar datos de la sección Responsable
+            const responsableFields = [
+                'propietario_nombre_edit',
+                'propietario_apellido_edit',
+                'propietario_id',
+                'propietario_telefono',
+                'propietario_email',
+                'propietario_direccion'
+            ];
+            
+            responsableFields.forEach(fieldName => {
+                const element = infoResponsable.querySelector(`input[name="${fieldName}"], textarea[name="${fieldName}"]`);
+                if (element) {
+                    formData.append(fieldName, element.value || '');
+                }
+            });
+            
+            const url = `/pacientes/editar/${pacienteId}/`;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            console.log('=== Guardando datos de Responsable ===');
+            for (let [key, value] of formData.entries()) {
+                console.log(key + ': ' + value);
+            }
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response:', data);
+                if (data.success) {
+                    alert('Datos del responsable guardados exitosamente');
+                    location.reload();
+                } else {
+                    alert('Error al guardar: ' + (data.error || 'Error desconocido'));
+                }
+            })
+            .catch(error => {
+                console.error('Error completo:', error);
+                alert('Error al guardar los cambios: ' + error.message);
+            });
+        });
+    } else {
+        console.error('btnGuardarResponsable no encontrado');
     }
 });

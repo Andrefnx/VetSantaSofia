@@ -106,6 +106,16 @@ def crear_consulta(request, paciente_id):
         print(f'✅ Consulta creada con ID: {consulta.id}')
         print(f'✅ Tipo guardado: {consulta.tipo_consulta}')
         
+        # ⭐ ACTUALIZAR EL PESO DEL PACIENTE SI SE PROPORCIONÓ
+        if peso:
+            try:
+                peso_float = float(peso)
+                paciente.ultimo_peso = peso_float
+                paciente.save()
+                print(f'✅ Peso del paciente actualizado: {peso_float} kg')
+            except (ValueError, TypeError) as e:
+                print(f'⚠️  Error al actualizar peso: {str(e)}')
+        
         # Procesar medicamentos - CREAR MedicamentoUtilizado
         from .models import MedicamentoUtilizado
         medicamentos = data.get('medicamentos', [])
@@ -235,6 +245,16 @@ def guardar_consulta(request, paciente_id):
                     dosis=med.get('dosis'),
                     peso_paciente=data.get('peso')
                 )
+            
+            # ⭐ ACTUALIZAR EL PESO DEL PACIENTE SI SE PROPORCIONÓ
+            peso = data.get('peso')
+            if peso:
+                try:
+                    peso_float = float(peso)
+                    paciente.ultimo_peso = peso_float
+                    paciente.save()
+                except (ValueError, TypeError):
+                    pass  # Si no se puede convertir, simplemente ignorar
             
             return JsonResponse({
                 'success': True,

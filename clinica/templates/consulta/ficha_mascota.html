@@ -105,47 +105,63 @@
                         </p>
                     </div>
                     {% endif %}
+                </div>
+            </div>
 
-                    <!-- Responsable integrado en Información General -->
-                    <div class="responsable-integrado">
-                        <h3>Responsable</h3>
-                        <div class="info-row">
-                            <div>
-                                <p><strong>Dueño:</strong>
-                                    <span class="view-mode">{{ paciente.propietario.nombre_completo }}</span>
-                                </p>
-                                <div class="edit-mode" id="propietarioSelector" style="display:none;">
-                                    <input type="text" class="form-control" id="buscarPropietario"
-                                        placeholder="Buscar propietario..." autocomplete="off">
-                                    <div id="resultadosBusqueda" class="search-results" style="display:none;"></div>
-                                    <button type="button" class="vet-btn vet-btn-secondary" id="btnNuevoPropietario" style="margin-top: 8px;">
-                                        <i class="bi bi-plus-circle"></i> Crear nuevo responsable
-                                    </button>
-                                </div>
-                                <div id="camposNombrePropietario" class="edit-mode" style="display:none;">
-                                    <input type="text" class="form-control" name="propietario_nombre_edit"
-                                        placeholder="Nombre" value="{{ paciente.propietario.nombre }}" style="margin-bottom: 8px;">
-                                    <input type="text" class="form-control" name="propietario_apellido_edit"
-                                        placeholder="Apellido" value="{{ paciente.propietario.apellido }}">
-                                    <input type="hidden" name="propietario_id" value="{{ paciente.propietario.id }}">
-                                </div>
+            <!-- Responsable como bloque individual separado -->
+            <div class="section responsable-section">
+                <div class="section-header-with-edit">
+                    <h2>Responsable</h2>
+                    <button class="btn-edit-icon" id="btnEditarResponsable" title="Editar responsable">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <!-- Botones Guardar / Cancelar (ocultos inicialmente) -->
+                    <div id="btnEditResponsableActions" style="display:none;">
+                        <button class="btn-edit-icon btn-cancel" id="btnCancelarResponsable" title="Cancelar">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                        <button class="btn-edit-icon btn-save" id="btnGuardarResponsable" title="Guardar">
+                            <i class="bi bi-check-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="info" id="infoResponsable">
+                    <div class="info-row">
+                        <div>
+                            <p><strong>Dueño:</strong>
+                                <span class="view-mode">{{ paciente.propietario.nombre_completo }}</span>
+                            </p>
+                            <div class="edit-mode" id="propietarioSelector" style="display:none;">
+                                <input type="text" class="form-control edit-mode" id="buscarPropietario"
+                                    placeholder="Buscar propietario..." autocomplete="off">
+                                <div id="resultadosBusqueda" class="search-results" style="display:none;"></div>
+                                <button type="button" class="vet-btn vet-btn-secondary" id="btnNuevoPropietario" style="margin-top: 8px;">
+                                    <i class="bi bi-plus-circle"></i> Crear nuevo responsable
+                                </button>
                             </div>
-                            <p><strong>Teléfono:</strong>
-                                <span class="view-mode">{{ paciente.propietario.telefono|default:"No registrado" }}</span>
-                                <input type="text" class="form-control edit-mode" name="propietario_telefono"
-                                    value="{{ paciente.propietario.telefono }}" style="display:none;">
-                            </p>
-                            <p><strong>Correo Electrónico:</strong>
-                                <span class="view-mode">{{ paciente.propietario.email|default:"No registrado" }}</span>
-                                <input type="email" class="form-control edit-mode" name="propietario_email"
-                                    value="{{ paciente.propietario.email }}" style="display:none;">
-                            </p>
+                            <div id="camposNombrePropietario" class="edit-mode" style="display:none;">
+                                <input type="text" class="form-control edit-mode" name="propietario_nombre_edit"
+                                    placeholder="Nombre" value="{{ paciente.propietario.nombre }}" style="margin-bottom: 8px;">
+                                <input type="text" class="form-control edit-mode" name="propietario_apellido_edit"
+                                    placeholder="Apellido" value="{{ paciente.propietario.apellido }}">
+                                <input type="hidden" name="propietario_id" value="{{ paciente.propietario.id }}">
+                            </div>
                         </div>
-                        <p><strong>Dirección:</strong>
-                            <span class="view-mode">{{ paciente.propietario.direccion|default:"No registrada" }}</span>
-                            <textarea class="form-control edit-mode" name="propietario_direccion" style="display:none;">{{ paciente.propietario.direccion }}</textarea>
+                        <p><strong>Teléfono:</strong>
+                            <span class="view-mode">{{ paciente.propietario.telefono|default:"No registrado" }}</span>
+                            <input type="text" class="form-control edit-mode" name="propietario_telefono"
+                                value="{{ paciente.propietario.telefono }}" style="display:none;">
                         </p>
                     </div>
+                    <p><strong>Correo Electrónico:</strong>
+                        <span class="view-mode">{{ paciente.propietario.email|default:"No registrado" }}</span>
+                        <input type="email" class="form-control edit-mode" name="propietario_email"
+                            value="{{ paciente.propietario.email }}" style="display:none;">
+                    </p>
+                    <p><strong>Dirección:</strong>
+                        <span class="view-mode">{{ paciente.propietario.direccion|default:"No registrada" }}</span>
+                        <textarea class="form-control edit-mode" name="propietario_direccion" style="display:none;">{{ paciente.propietario.direccion }}</textarea>
+                    </p>
                 </div>
             </div>
 
@@ -631,6 +647,7 @@
 
 {% block extra_js %}
 <script src="{% static 'js/base/modals_base.js' %}"></script>
+<script src="{% static 'js/pacientes/editar_ficha.js' %}"></script>
 <script src="{% static 'js/pacientes/historial_medico.js' %}"></script>
 <script src="{% static 'js/pacientes/inventario_consulta.js' %}"></script>
 {% endblock %}
