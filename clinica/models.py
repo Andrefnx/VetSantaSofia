@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from pacientes.models import Paciente
 from inventario.models import Insumo
+from servicios.models import Servicio
 
 class Consulta(models.Model):
     """Modelo para consultas veterinarias"""
@@ -75,6 +76,8 @@ class Hospitalizacion(models.Model):
     diagnostico_hosp = models.TextField(blank=True)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='activa')
     observaciones = models.TextField(blank=True, null=True)
+    # Insumos/implementos usados durante la hospitalización completa
+    insumos = models.ManyToManyField(Insumo, blank=True, related_name='hospitalizaciones_usadas')
     
     class Meta:
         ordering = ['-fecha_ingreso']
@@ -108,12 +111,14 @@ class Hospitalizacion(models.Model):
 class Cirugia(models.Model):
     """Modelo para cirugías dentro de una hospitalización"""
     RESULTADO_CHOICES = [
+        ('', 'Sin resultado'),
         ('exitosa', 'Exitosa'),
-        ('parcial', 'Parcial'),
-        ('problemas', 'Con problemas'),
+        ('con_complicaciones', 'Con complicaciones'),
+        ('problemas', 'Problemas'),
     ]
     
-    hospitalizacion = models.OneToOneField(Hospitalizacion, on_delete=models.CASCADE, related_name='cirugia', null=True, blank=True)
+    hospitalizacion = models.ForeignKey(Hospitalizacion, on_delete=models.CASCADE, related_name='cirugias')
+    servicio = models.ForeignKey(Servicio, on_delete=models.SET_NULL, null=True, blank=True, related_name='cirugias')
     fecha_cirugia = models.DateTimeField()
     veterinario_cirujano = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='cirugias_realizadas')
     tipo_cirugia = models.CharField(max_length=200)
@@ -121,9 +126,10 @@ class Cirugia(models.Model):
     duracion_minutos = models.IntegerField(blank=True, null=True)
     anestesiologo = models.CharField(max_length=100, blank=True)
     tipo_anestesia = models.CharField(max_length=100, blank=True)
+    # Insumos/implementos usados en la cirugía (usa la misma lógica de consultas)
     medicamentos = models.ManyToManyField(Insumo, blank=True, related_name='cirugias_usadas')
     complicaciones = models.TextField(blank=True)
-    resultado = models.CharField(max_length=20, choices=RESULTADO_CHOICES, default='exitosa')
+    resultado = models.CharField(max_length=25, choices=RESULTADO_CHOICES, default='', blank=True)
     
     class Meta:
         ordering = ['-fecha_cirugia']

@@ -18,6 +18,7 @@ urlpatterns = [
     path('pacientes/<int:paciente_id>/consulta/<int:consulta_id>/detalle/', views.detalle_consulta, name='detalle_consulta'),
     path('pacientes/<int:pk>/', views.ficha_mascota, name='ficha_mascota'),
     path('api/servicios/', views.obtener_servicios, name='obtener_servicios'),
+    path('api/insumos/', views.obtener_insumos, name='obtener_insumos'),
     
     # ⭐ NUEVAS RUTAS PARA HOSPITALIZACIONES
     path('pacientes/<int:paciente_id>/hospitalizacion/crear/', views.crear_hospitalizacion, name='crear_hospitalizacion'),

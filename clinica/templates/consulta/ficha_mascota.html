@@ -694,6 +694,7 @@
             
             <!-- COLUMNA DERECHA: Registros Diarios Scrolleables -->
             <div style="flex: 1; padding: 20px; overflow-y: auto;">
+                <div id="insumosHospitalizacionContainer" style="margin-bottom: 16px;"></div>
                 <h5 style="margin-top: 0;"><i class="bi bi-calendar-day"></i> Registros Diarios</h5>
                 <div id="registrosDiariosContainer">
                     <!-- Se llena dinámicamente -->
@@ -745,53 +746,63 @@
         </div>
         <form id="formCirugia">
             <div class="vet-modal-body">
-                <div class="row g-3">
+                <div class="row g-4">
+                    <!-- Columna izquierda: datos de la cirugía -->
                     <div class="col-md-6">
                         <div class="detail-section">
-                            <div class="detail-section-title">Tipo de Cirugía</div>
-                            <input type="text" class="form-control" name="tipo_cirugia" required placeholder="Ej: Ovariohisterectomía">
+                            <div class="detail-section-title">Tipo de Cirugía (servicio)</div>
+                            <select class="form-control" name="servicio_cirugia" id="servicioCirugia" required>
+                                <option value="">Seleccione servicio (categoría: cirugía)</option>
+                            </select>
                         </div>
-                    </div>
-                    <div class="col-md-6">
+
                         <div class="detail-section">
                             <div class="detail-section-title">Resultado</div>
                             <select class="form-control" name="resultado">
+                                <option value="" selected>Seleccione resultado</option>
+                                <option value="problemas">Problemas</option>
                                 <option value="exitosa">Exitosa</option>
-                                <option value="parcial">Parcial</option>
-                                <option value="problemas">Con problemas</option>
+                                <option value="con_complicaciones">Con complicaciones</option>
                             </select>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="detail-section">
-                    <div class="detail-section-title">Descripción de la Cirugía</div>
-                    <textarea class="form-control" name="descripcion" required rows="3"></textarea>
-                </div>
-                
-                <div class="row g-3">
-                    <div class="col-md-6">
+
+                        <div class="detail-section">
+                            <div class="detail-section-title">Duración (minutos)</div>
+                            <input type="number" class="form-control" name="duracion_minutos" id="duracionCirugia" readonly placeholder="Se autocompleta según el servicio">
+                        </div>
+
+                        <div class="detail-section">
+                            <div class="detail-section-title">Descripción de la Cirugía</div>
+                            <textarea class="form-control" name="descripcion" required rows="3"></textarea>
+                        </div>
+
                         <div class="detail-section">
                             <div class="detail-section-title">Anestesiólogo</div>
                             <input type="text" class="form-control" name="anestesiologo" placeholder="Nombre">
                         </div>
-                    </div>
-                    <div class="col-md-6">
+
                         <div class="detail-section">
                             <div class="detail-section-title">Tipo de Anestesia</div>
                             <input type="text" class="form-control" name="tipo_anestesia" placeholder="Ej: Anestesal, Propofol">
                         </div>
+
+                        <div class="detail-section">
+                            <div class="detail-section-title">Complicaciones (si las hubo)</div>
+                            <textarea class="form-control" name="complicaciones" rows="2" placeholder="Dejar en blanco si no hubo complicaciones"></textarea>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="detail-section">
-                    <div class="detail-section-title">Duración (minutos)</div>
-                    <input type="number" class="form-control" name="duracion_minutos">
-                </div>
-                
-                <div class="detail-section">
-                    <div class="detail-section-title">Complicaciones (si las hubo)</div>
-                    <textarea class="form-control" name="complicaciones" rows="2" placeholder="Dejar en blanco si no hubo complicaciones"></textarea>
+
+                    <!-- Columna derecha: insumos y ayudantes -->
+                    <div class="col-md-6">
+                        <div class="detail-section">
+                            <div class="detail-section-title">Insumos / Implementos</div>
+                            <input type="text" class="form-control" id="buscarInsumosCirugia" placeholder="Buscar insumo..." style="margin-bottom:8px;">
+                            <select multiple class="form-control" name="insumos_cirugia" id="insumosCirugia" size="10">
+                                <option value="">Cargando insumos...</option>
+                            </select>
+                            <small style="color:#6c757d; display:block; margin-top:6px;">Nota: los insumos seleccionados se descuentan del stock.</small>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="vet-modal-footer d-flex justify-content-end">

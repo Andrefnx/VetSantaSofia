@@ -5,10 +5,14 @@
 const hospitalizacionesManager = {
     pacienteId: null,
     hospitalizaciones: [],
+    serviciosCirugia: [],
+    insumosCatalogo: [],
 
     init(pacienteId) {
         this.pacienteId = pacienteId;
         this.cargarHospitalizaciones();
+        this.cargarServiciosCirugia();
+        this.cargarInsumos();
         this.setupEventListeners();
     },
 
@@ -57,6 +61,37 @@ const hospitalizacionesManager = {
         // Formulario de cirugía
         const formCirugia = document.getElementById('formCirugia');
         if (formCirugia) {
+            // Hook change for servicio select to autocompletar duración
+            const selectServicio = document.getElementById('servicioCirugia');
+            const duracionInput = document.getElementById('duracionCirugia');
+            if (selectServicio && duracionInput) {
+                selectServicio.addEventListener('change', () => {
+                    const servicioId = selectServicio.value;
+                    const servicio = this.serviciosCirugia.find(s => String(s.idServicio) === String(servicioId));
+                    if (servicio) {
+                        duracionInput.value = servicio.duracion || '';
+                    } else {
+                        duracionInput.value = '';
+                    }
+                });
+            }
+            // Render insumos al abrir
+            const insumosSelect = document.getElementById('insumosCirugia');
+            if (insumosSelect) {
+                insumosSelect.addEventListener('focus', () => {
+                    const buscador = document.getElementById('buscarInsumosCirugia');
+                    this.renderInsumosSelect(buscador ? buscador.value : '');
+                });
+            }
+
+            // Buscador de insumos
+            const buscadorInsumos = document.getElementById('buscarInsumosCirugia');
+            if (buscadorInsumos) {
+                buscadorInsumos.addEventListener('input', (e) => {
+                    this.renderInsumosSelect(e.target.value);
+                });
+            }
+
             formCirugia.addEventListener('submit', (e) => {
                 console.log('🔵 Submit formulario cirugía');
                 this.guardarCirugia(e);
@@ -108,6 +143,58 @@ const hospitalizacionesManager = {
         } catch (error) {
             console.error('Error cargando hospitalizaciones:', error);
         }
+    },
+
+    async cargarServiciosCirugia() {
+        try {
+            const response = await fetch('/clinica/api/servicios/?categoria=cirugia');
+            const data = await response.json();
+            if (data.success) {
+                this.serviciosCirugia = data.servicios || [];
+                const selectServicio = document.getElementById('servicioCirugia');
+                if (selectServicio) {
+                    selectServicio.innerHTML = '<option value="">Seleccione servicio (categoría: cirugía)</option>' +
+                        this.serviciosCirugia.map(s => `<option value="${s.idServicio}" data-duracion="${s.duracion || ''}">${s.nombre}</option>`).join('');
+                }
+            }
+        } catch (err) {
+            console.error('Error cargando servicios de cirugía', err);
+        }
+    },
+    async cargarInsumos() {
+        try {
+            const response = await fetch('/clinica/api/insumos/');
+            const data = await response.json();
+            if (data.success) {
+                this.insumosCatalogo = data.insumos || [];
+                const buscador = document.getElementById('buscarInsumosCirugia');
+                this.renderInsumosSelect(buscador ? buscador.value : '');
+            } else {
+                console.error('API insumos error:', data.error);
+            }
+        } catch (err) {
+            console.error('Error cargando insumos', err);
+        }
+    },
+
+    renderInsumosSelect(filtro = '') {
+        const insumosSelect = document.getElementById('insumosCirugia');
+        if (!insumosSelect) return;
+
+        const seleccionados = Array.from(insumosSelect.selectedOptions).map(opt => opt.value);
+        const termino = (filtro || '').trim().toLowerCase();
+        const catalogoFiltrado = !termino
+            ? this.insumosCatalogo
+            : this.insumosCatalogo.filter(i => `${i.nombre} ${i.sku || ''}`.toLowerCase().includes(termino));
+
+        if (!catalogoFiltrado.length) {
+            insumosSelect.innerHTML = '<option value="">No se encontraron insumos</option>';
+            return;
+        }
+
+        insumosSelect.innerHTML = catalogoFiltrado
+            .map(i => `<option value="${i.id}" data-formato="${i.formato || ''}" data-dosis="${i.dosis_ml || ''}" data-peso="${i.peso_kg || ''}"${seleccionados.includes(String(i.id)) ? ' selected' : ''}>${i.nombre}${i.sku ? ' (' + i.sku + ')' : ''}</option>`)
+            .join('');
     },
 
     actualizarEstadoBtnNuevaHosp() {
@@ -230,6 +317,7 @@ const hospitalizacionesManager = {
 
             if (data.success) {
                 const hosp = data.hospitalizacion;
+                const pesoPaciente = (window.pacienteData && window.pacienteData.peso) ? parseFloat(window.pacienteData.peso) : null;
                 
                 // COLUMNA IZQUIERDA: Información General
                 const detallesIzquierda = document.getElementById('detallesIzquierda');
@@ -254,20 +342,33 @@ const hospitalizacionesManager = {
                             <div style="color: #2d2f33; line-height: 1.4;">${hosp.observaciones || '<em>Sin observaciones</em>'}</div>
                         </div>
                         <p style="margin: 0; color: #555;"><strong>Veterinario a cargo:</strong> ${hosp.veterinario}</p>
+                        ${hosp.insumos && hosp.insumos.length ? `
+                            <div style="margin-top: 10px;">
+                                <small style="display:block; color: #666; margin-bottom: 4px;"><i class="bi bi-box-seam"></i> Implementos utilizados</small>
+                                <div style="display:flex; flex-wrap: wrap; gap: 6px;">
+                                    ${hosp.insumos.map(ins => `<span style=\"background:#f3f4f6; color:#2d2f33; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid #e5e7eb;\">${ins.nombre}</span>`).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
                 `;
                 
-                // Cirugía si existe
-                if (hosp.cirugia) {
+                // Cirugías (lista)
+                if (hosp.cirugias && hosp.cirugias.length) {
                     htmlIzquierda += `
                         <div style="background-color: #fdfaf3; padding: 12px; border-radius: 6px; border: 1px solid #f0e6ce; margin-bottom: 12px;">
-                            <h5 style="margin: 0 0 6px 0; font-size: 15px; color: #2d2f33;"><i class="bi bi-tools"></i> Cirugía</h5>
-                            <p style="margin: 0 0 4px 0; color: #444;"><strong>Tipo:</strong> ${hosp.cirugia.tipo}</p>
-                            <p style="margin: 0 0 4px 0; color: #444;"><strong>Fecha:</strong> ${hosp.cirugia.fecha}</p>
-                            <p style="margin: 0 0 4px 0; color: #444;"><strong>Cirujano:</strong> ${hosp.cirugia.veterinario}</p>
-                            <p style="margin: 0 0 4px 0; color: #444;"><strong>Resultado:</strong> ${hosp.cirugia.resultado}</p>
-                            <p style="margin: 0; color: #444;"><strong>Descripción:</strong> ${hosp.cirugia.descripcion}</p>
-                            ${hosp.cirugia.complicaciones ? `<p style="margin: 6px 0 0 0; color: #8a4b4b;"><strong>Complicaciones:</strong> ${hosp.cirugia.complicaciones}</p>` : ''}
+                            <h5 style="margin: 0 0 6px 0; font-size: 15px; color: #2d2f33;"><i class="bi bi-tools"></i> Cirugías</h5>
+                            ${hosp.cirugias.map(c => `
+                                <div style=\"padding:8px 0; border-bottom:1px solid #eee;\">
+                                    <p style=\"margin:0 0 4px 0; color:#444;\"><strong>Tipo:</strong> ${c.tipo}</p>
+                                    <p style=\"margin:0 0 4px 0; color:#444;\"><strong>Fecha:</strong> ${c.fecha}</p>
+                                    <p style=\"margin:0 0 4px 0; color:#444;\"><strong>Cirujano:</strong> ${c.veterinario}</p>
+                                    <p style=\"margin:0 0 4px 0; color:#444;\"><strong>Resultado:</strong> ${c.resultado}</p>
+                                    <p style=\"margin:0 0 4px 0; color:#444;\"><strong>Descripción:</strong> ${c.descripcion}</p>
+                                    ${c.complicaciones ? `<p style=\"margin:4px 0 0 0; color:#8a4b4b;\"><strong>Complicaciones:</strong> ${c.complicaciones}</p>` : ''}
+                                    ${c.insumos && c.insumos.length ? `<div style=\"margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;\">${c.insumos.map(ins => `<span style=\\\"background:#f3f4f6; color:#2d2f33; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid #e5e7eb;\\\">${ins.nombre}</span>`).join('')}</div>` : ''}
+                                </div>
+                            `).join('')}
                         </div>
                     `;
                 }
@@ -288,6 +389,57 @@ const hospitalizacionesManager = {
                 
                 detallesIzquierda.innerHTML = htmlIzquierda;
                 
+                // COLUMNA DERECHA: Insumos + Registros
+                const insumosContainer = document.getElementById('insumosHospitalizacionContainer');
+                if (insumosContainer) {
+                    const insumosHosp = hosp.insumos || [];
+                    const insumosCirugias = (hosp.cirugias || []).flatMap(c => c.insumos || []);
+                    const insumosReg = (hosp.registros_diarios || []).flatMap(r => r.insumos || []);
+                    const todosInsumos = [...insumosHosp, ...insumosCirugias, ...insumosReg];
+
+                    const renderDosis = (ins) => {
+                        if (!pesoPaciente || !ins) return ins.formato ? ins.formato : '';
+                        const pesoRef = parseFloat(ins.peso_kg || 0);
+                        if (!pesoRef || pesoRef === 0) return '';
+                        const factor = pesoPaciente / pesoRef;
+                        if (ins.dosis_ml) {
+                            const ml = (parseFloat(ins.dosis_ml) * factor).toFixed(2);
+                            return `${ml} ml (peso ${pesoPaciente} kg)`;
+                        }
+                        if (ins.cantidad_pastillas) {
+                            const tabs = (parseFloat(ins.cantidad_pastillas) * factor).toFixed(2);
+                            return `${tabs} pastillas (peso ${pesoPaciente} kg)`;
+                        }
+                        if (ins.unidades_pipeta) {
+                            const pip = (parseFloat(ins.unidades_pipeta) * factor).toFixed(2);
+                            return `${pip} pipetas (peso ${pesoPaciente} kg)`;
+                        }
+                        return '';
+                    };
+
+                    const renderChip = (ins) => {
+                        const dosis = renderDosis(ins);
+                        return `<div style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:6px; background:#fff; display:flex; flex-direction:column; gap:4px;">
+                            <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
+                                <span style="font-weight:600; color:#1f2937;">${ins.nombre || 'Insumo'}</span>
+                                ${ins.codigo ? `<span style=\"font-size:11px; color:#6b7280;\">${ins.codigo}</span>` : ''}
+                            </div>
+                            ${dosis ? `<span style="font-size:12px; color:#374151;">Dosis sugerida: ${dosis}</span>` : ''}
+                        </div>`;
+                    };
+
+                    if (todosInsumos.length) {
+                        insumosContainer.innerHTML = `
+                            <h5 style="margin:0 0 8px 0; font-size:15px; color:#1f2937;"><i class="bi bi-box-seam"></i> Insumos utilizados</h5>
+                            <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px;">
+                                ${todosInsumos.map(renderChip).join('')}
+                            </div>
+                        `;
+                    } else {
+                        insumosContainer.innerHTML = '';
+                    }
+                }
+
                 // COLUMNA DERECHA: Registros Diarios
                 const registrosDiariosContainer = document.getElementById('registrosDiariosContainer');
                 if (hosp.registros_diarios && hosp.registros_diarios.length > 0) {
@@ -412,6 +564,18 @@ const hospitalizacionesManager = {
         const hospId = document.getElementById('cirugiaModal').dataset.hospId;
         const formData = new FormData(form);
 
+        const servicioId = formData.get('servicio_cirugia');
+        const servicio = this.serviciosCirugia.find(s => String(s.idServicio) === String(servicioId));
+        const tipoCirugia = servicio ? servicio.nombre : '';
+        const duracion = servicio ? servicio.duracion : formData.get('duracion_minutos');
+
+        // Insumos seleccionados
+        const insumosSelect = document.getElementById('insumosCirugia');
+        let insumosSeleccionados = [];
+        if (insumosSelect) {
+            insumosSeleccionados = Array.from(insumosSelect.selectedOptions).map(o => o.value).filter(Boolean);
+        }
+
         try {
             const response = await fetch(`/clinica/hospitalizacion/${hospId}/cirugia/crear/`, {
                 method: 'POST',
@@ -420,13 +584,15 @@ const hospitalizacionesManager = {
                     'X-CSRFToken': this.getCookie('csrftoken')
                 },
                 body: JSON.stringify({
-                    tipo_cirugia: formData.get('tipo_cirugia'),
+                    servicio_id: servicioId,
+                    tipo_cirugia: tipoCirugia,
                     descripcion: formData.get('descripcion'),
-                    duracion_minutos: formData.get('duracion_minutos'),
+                    duracion_minutos: duracion,
                     anestesiologo: formData.get('anestesiologo'),
                     tipo_anestesia: formData.get('tipo_anestesia'),
                     complicaciones: formData.get('complicaciones'),
-                    resultado: formData.get('resultado')
+                    resultado: formData.get('resultado'),
+                    medicamentos: insumosSeleccionados,
                 })
             });
 

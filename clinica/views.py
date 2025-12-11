@@ -386,10 +386,44 @@ def ficha_mascota(request, pk):
 def obtener_servicios(request):
     """Retorna lista de servicios en formato JSON para cargar dinámicamente en consultas"""
     try:
-        servicios = Servicio.objects.all().values('idServicio', 'nombre', 'categoria').order_by('nombre')
+        categoria = request.GET.get('categoria')
+        qs = Servicio.objects.all()
+        if categoria:
+            qs = qs.filter(categoria__iexact=categoria)
+        servicios = qs.values('idServicio', 'nombre', 'categoria', 'duracion').order_by('nombre')
         return JsonResponse({
             'success': True,
             'servicios': list(servicios)
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+@login_required
+@require_http_methods(["GET"])
+def obtener_insumos(request):
+    """Retorna insumos de inventario para selección en cirugía/registro"""
+    try:
+        from inventario.models import Insumo
+        insumos = Insumo.objects.all().order_by('medicamento')
+        data = []
+        for ins in insumos:
+            data.append({
+            'id': getattr(ins, 'idInventario', ins.pk),
+                'nombre': ins.medicamento,
+                'formato': getattr(ins, 'formato', None),
+                'dosis_ml': getattr(ins, 'dosis_ml', None),
+                'peso_kg': getattr(ins, 'peso_kg', None),
+                'cantidad_pastillas': getattr(ins, 'cantidad_pastillas', None),
+                'unidades_pipeta': getattr(ins, 'unidades_pipeta', None),
+                'sku': getattr(ins, 'sku', None),
+            })
+        return JsonResponse({
+            'success': True,
+            'insumos': data
         })
     except Exception as e:
         return JsonResponse({
@@ -419,6 +453,13 @@ def crear_hospitalizacion(request, paciente_id):
             estado='activa',
             observaciones=data.get('observaciones', '')
         )
+
+        # Asignar insumos/implementos usados al ingreso
+        insumos_ids = data.get('insumos', [])
+        if insumos_ids:
+            from inventario.models import Insumo
+            insumos_qs = Insumo.objects.filter(id__in=insumos_ids)
+            hospitalizacion.insumos.set(insumos_qs)
         
         return JsonResponse({
             'success': True,
@@ -439,14 +480,26 @@ def crear_cirugia(request, hospitalizacion_id):
     try:
         hospitalizacion = get_object_or_404(Hospitalizacion, id=hospitalizacion_id)
         data = json.loads(request.body)
+
+        # Resolver servicio de cirugía (categoría cirugia)
+        servicio = None
+        servicio_id = data.get('servicio_id')
+        if servicio_id:
+            try:
+                servicio = Servicio.objects.get(idServicio=servicio_id, categoria__iexact='cirugia')
+            except Servicio.DoesNotExist:
+                servicio = None
+        servicio_nombre = servicio.nombre if servicio else data.get('tipo_cirugia', '')
+        duracion = servicio.duracion if servicio else data.get('duracion_minutos')
         
         cirugia = Cirugia.objects.create(
             hospitalizacion=hospitalizacion,
+            servicio=servicio,
             fecha_cirugia=timezone.now(),
             veterinario_cirujano=request.user,
-            tipo_cirugia=data.get('tipo_cirugia', ''),
+            tipo_cirugia=servicio_nombre,
             descripcion=data.get('descripcion', ''),
-            duracion_minutos=data.get('duracion_minutos'),
+            duracion_minutos=duracion,
             anestesiologo=data.get('anestesiologo', ''),
             tipo_anestesia=data.get('tipo_anestesia', ''),
             complicaciones=data.get('complicaciones', ''),
@@ -564,10 +617,10 @@ def obtener_hospitalizaciones(request, paciente_id):
         for hosp in hospitalizaciones:
             hosp_data = {
                 'id': hosp.id,
-                'fecha_ingreso': hosp.fecha_ingreso.strftime('%d/%m/%Y %H:%M'),
+                'fecha_ingreso': timezone.localtime(hosp.fecha_ingreso).strftime('%d/%m/%Y %H:%M'),
                 'motivo': hosp.motivo,
                 'estado': hosp.get_estado_display(),
-                'tiene_cirugia': hasattr(hosp, 'cirugia') and hosp.cirugia is not None,
+                'tiene_cirugia': hosp.cirugias.exists(),
                 'registros_diarios': hosp.registros_diarios.count(),
             }
             
@@ -610,6 +663,18 @@ def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
             'diagnostico': hospitalizacion.diagnostico_hosp,
             'estado': hospitalizacion.get_estado_display(),
             'observaciones': hospitalizacion.observaciones,
+            'insumos': [
+                {
+                    'id': ins.id,
+                    'nombre': ins.nombre,
+                    'codigo': getattr(ins, 'codigo', None),
+                    'formato': getattr(ins, 'formato', None),
+                    'dosis_ml': getattr(ins, 'dosis_ml', None),
+                    'peso_kg': getattr(ins, 'peso_kg', None),
+                    'cantidad_pastillas': getattr(ins, 'cantidad_pastillas', None),
+                    'unidades_pipeta': getattr(ins, 'unidades_pipeta', None),
+                } for ins in hospitalizacion.insumos.all()
+            ],
             # Veterinario puede ser nulo; manejarlo con gracia
             'veterinario': (
                 f"{hospitalizacion.veterinario.nombre} {hospitalizacion.veterinario.apellido}"
@@ -620,10 +685,11 @@ def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
         if hospitalizacion.fecha_alta:
             data['fecha_alta'] = timezone.localtime(hospitalizacion.fecha_alta).strftime('%d/%m/%Y %H:%M')
         
-        # Cirugía si existe
-        if hasattr(hospitalizacion, 'cirugia') and hospitalizacion.cirugia:
-            cirugia = hospitalizacion.cirugia
-            data['cirugia'] = {
+        # Cirugías (pueden ser múltiples)
+        data['cirugias'] = []
+        for cirugia in hospitalizacion.cirugias.all().order_by('-fecha_cirugia'):
+            data['cirugias'].append({
+                'id': cirugia.id,
                 'tipo': cirugia.tipo_cirugia,
                 'fecha': timezone.localtime(cirugia.fecha_cirugia).strftime('%d/%m/%Y %H:%M'),
                 'veterinario': (
@@ -633,9 +699,26 @@ def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
                 'descripcion': cirugia.descripcion,
                 'duracion': cirugia.duracion_minutos,
                 'anestesia': cirugia.tipo_anestesia,
-                'resultado': cirugia.get_resultado_display(),
+                'resultado': cirugia.get_resultado_display() if cirugia.resultado else 'Sin resultado',
                 'complicaciones': cirugia.complicaciones,
-            }
+                'servicio': ({
+                    'id': cirugia.servicio.idServicio,
+                    'nombre': cirugia.servicio.nombre,
+                    'duracion': cirugia.servicio.duracion,
+                } if cirugia.servicio else None),
+                'insumos': [
+                    {
+                        'id': ins.id,
+                        'nombre': ins.nombre,
+                        'codigo': getattr(ins, 'codigo', None),
+                        'formato': getattr(ins, 'formato', None),
+                        'dosis_ml': getattr(ins, 'dosis_ml', None),
+                        'peso_kg': getattr(ins, 'peso_kg', None),
+                        'cantidad_pastillas': getattr(ins, 'cantidad_pastillas', None),
+                        'unidades_pipeta': getattr(ins, 'unidades_pipeta', None),
+                    } for ins in cirugia.medicamentos.all()
+                ]
+            })
         
         # Registros diarios
         data['registros_diarios'] = []
@@ -652,6 +735,18 @@ def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
                     f"{hospitalizacion.veterinario.nombre} {hospitalizacion.veterinario.apellido}"
                     if hospitalizacion.veterinario else 'Sin asignar'
                 ),
+                'insumos': [
+                    {
+                        'id': ins.id,
+                        'nombre': ins.nombre,
+                        'codigo': getattr(ins, 'codigo', None),
+                        'formato': getattr(ins, 'formato', None),
+                        'dosis_ml': getattr(ins, 'dosis_ml', None),
+                        'peso_kg': getattr(ins, 'peso_kg', None),
+                        'cantidad_pastillas': getattr(ins, 'cantidad_pastillas', None),
+                        'unidades_pipeta': getattr(ins, 'unidades_pipeta', None),
+                    } for ins in registro.medicamentos.all()
+                ],
             })
         
         # Alta médica si existe
