@@ -144,7 +144,7 @@ class RegistroDiario(models.Model):
     """Registro diario durante hospitalización"""
     hospitalizacion = models.ForeignKey(Hospitalizacion, on_delete=models.CASCADE, related_name='registros_diarios')
     fecha_registro = models.DateTimeField()
-    temperatura = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    temperatura = models.DecimalField(max_digits=4, decimal_places=1)  # Obligatorio
     peso = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     frecuencia_cardiaca = models.IntegerField(null=True, blank=True)
     frecuencia_respiratoria = models.IntegerField(null=True, blank=True)
@@ -164,9 +164,9 @@ class Alta(models.Model):
     """Resumen de alta médica"""
     hospitalizacion = models.OneToOneField(Hospitalizacion, on_delete=models.CASCADE, related_name='alta_medica')
     fecha_alta = models.DateTimeField()
-    diagnostico_final = models.TextField()
-    tratamiento_post_alta = models.TextField()
-    recomendaciones = models.TextField()
+    diagnostico_final = models.TextField(blank=True)
+    tratamiento_post_alta = models.TextField(blank=True)
+    recomendaciones = models.TextField(blank=True)
     proxima_revision = models.DateField(blank=True, null=True)
     
     class Meta:

@@ -582,15 +582,42 @@ def crear_registro_diario(request, hospitalizacion_id):
         hospitalizacion = get_object_or_404(Hospitalizacion, id=hospitalizacion_id)
         data = json.loads(request.body)
         
+        # Validar que temperatura sea obligatoria
+        temperatura = data.get('temperatura')
+        if not temperatura:
+            return JsonResponse({
+                'success': False,
+                'error': 'La temperatura es obligatoria'
+            }, status=400)
+        
+        # Convertir campos numéricos opcionales: cadenas vacías a None
+        peso = data.get('peso')
+        if peso == '' or peso is None:
+            peso = None
+        
+        frecuencia_cardiaca = data.get('frecuencia_cardiaca')
+        if frecuencia_cardiaca == '' or frecuencia_cardiaca is None:
+            frecuencia_cardiaca = None
+        
+        frecuencia_respiratoria = data.get('frecuencia_respiratoria')
+        if frecuencia_respiratoria == '' or frecuencia_respiratoria is None:
+            frecuencia_respiratoria = None
+        
         registro = RegistroDiario.objects.create(
             hospitalizacion=hospitalizacion,
             fecha_registro=timezone.now(),
-            temperatura=data.get('temperatura'),
-            peso=data.get('peso'),
-            frecuencia_cardiaca=data.get('frecuencia_cardiaca'),
-            frecuencia_respiratoria=data.get('frecuencia_respiratoria'),
+            temperatura=temperatura,
+            peso=peso,
+            frecuencia_cardiaca=frecuencia_cardiaca,
+            frecuencia_respiratoria=frecuencia_respiratoria,
             observaciones=data.get('observaciones', '')
         )
+        
+        # Actualizar el peso de la mascota si se proporcionó
+        if peso:
+            paciente = hospitalizacion.paciente
+            paciente.ultimo_peso = peso
+            paciente.save()
         
         # Procesar medicamentos si existen
         medicamentos = data.get('medicamentos', [])
@@ -623,14 +650,14 @@ def crear_alta_medica(request, hospitalizacion_id):
         hospitalizacion = get_object_or_404(Hospitalizacion, id=hospitalizacion_id)
         data = json.loads(request.body)
         
-        # Crear el alta
+        # Crear el alta (todos los campos son opcionales)
         alta = Alta.objects.create(
             hospitalizacion=hospitalizacion,
             fecha_alta=timezone.now(),
             diagnostico_final=data.get('diagnostico_final', ''),
             tratamiento_post_alta=data.get('tratamiento_post_alta', ''),
             recomendaciones=data.get('recomendaciones', ''),
-            proxima_revision=data.get('proxima_revision')
+            proxima_revision=data.get('proxima_revision') or None
         )
         
         # Actualizar estado de hospitalización
