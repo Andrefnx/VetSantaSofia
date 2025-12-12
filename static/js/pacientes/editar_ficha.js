@@ -208,11 +208,26 @@ document.addEventListener('DOMContentLoaded', function() {
             const pacienteId = window.location.pathname.split('/').filter(Boolean).pop();
             const formData = new FormData();
             
+            // Capturar propietario_id válido y evitar duplicados vacíos
+            const propietarioIdInputs = Array.from(document.querySelectorAll('input[name="propietario_id"]'));
+            let propietarioIdValue = (propietarioIdInputs.find(i => i.value && i.value.trim() !== '') || propietarioIdInputs[0] || { value: '' }).value;
+            // Fallback al id original si el input fue vaciado (ej. al cambiar de modo pero luego volver)
+            if ((!propietarioIdValue || propietarioIdValue.trim() === '') && propietarioIdOriginal) {
+                propietarioIdValue = propietarioIdOriginal;
+            }
+
             editElements.forEach(el => {
                 if (el.name && (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA')) {
+                    if (el.name === 'propietario_id') {
+                        return; // manejamos propietario_id al final para que no entre el vacío
+                    }
                     formData.append(el.name, el.value || '');
                 }
             });
+
+            if (propietarioIdValue) {
+                formData.append('propietario_id', propietarioIdValue);
+            }
             
             // Agregar tipo de edad
             const tipoEdad = document.querySelector('input[name="tipo_edad"]:checked');
@@ -268,11 +283,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: formData
             })
-            .then(response => {
+            .then(async response => {
+                const data = await response.json().catch(() => ({ success: false, error: 'Error desconocido' }));
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(data.error || `Error ${response.status}`);
                 }
-                return response.json();
+                return data;
             })
             .then(data => {
                 console.log('Response:', data);
@@ -325,6 +341,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let propietarioSeleccionado = null; // Para guardar el propietario seleccionado en la búsqueda
     let datosOriginalesPropietario = null; // Para guardar los datos originales del propietario
+    const propietarioIdOriginal = (document.querySelector('#camposNombreEditable input[name="propietario_id"]') || {}).value || null;
 
     console.log('Responsable Edit Elements:', {
         btnEditarResponsable,
@@ -802,29 +819,58 @@ document.addEventListener('DOMContentLoaded', function() {
             const apellidoEdit = document.querySelector('input[name="propietario_apellido_edit"]');
             const nombreNew = document.querySelector('input[name="propietario_nombre_new"]');
             const apellidoNew = document.querySelector('input[name="propietario_apellido_new"]');
-            const propietarioIdInput = document.querySelector('input[name="propietario_id"]');
+            // Hay dos inputs con el mismo name (uno hidden vacío en la sección de nuevo propietario).
+            // Tomamos el que tenga valor distinto de vacío, o el primero si ninguno tiene valor.
+            const propietarioIdInputs = Array.from(document.querySelectorAll('input[name="propietario_id"]'));
+            const propietarioIdInput = propietarioIdInputs.find(i => i.value && i.value.trim() !== '') || propietarioIdInputs[0] || null;
+            let actualizarPropietario = false;
+            let crearNuevoPropietario = false;
+
+            // Reutilizar propietario actual sin obligar a rellenar nombre/apellido
+            const puedeReutilizarActual = propietarioIdInput && propietarioIdInput.value && !propietarioSeleccionado;
+            if (puedeReutilizarActual && datosOriginalesPropietario) {
+                if (nombreEdit && !nombreEdit.value) {
+                    nombreEdit.value = datosOriginalesPropietario['propietario_nombre_edit'] || '';
+                }
+                if (apellidoEdit && !apellidoEdit.value) {
+                    apellidoEdit.value = datosOriginalesPropietario['propietario_apellido_edit'] || '';
+                }
+            }
             
             // Caso 1: Se seleccionó un propietario del buscador
             if (propietarioSeleccionado && propietarioSeleccionado.id) {
                 console.log('Usando propietario del buscador:', propietarioSeleccionado.id);
                 formData.append('propietario_id', propietarioSeleccionado.id);
+                // Si seleccionó otro propietario y editó sus datos, marcar para actualizar
+                actualizarPropietario = true;
+                // Enviar los datos editados (nombre y apellido desde los inputs edit)
+                if (nombreEdit && apellidoEdit) {
+                    formData.append('propietario_nombre_edit', nombreEdit.value || '');
+                    formData.append('propietario_apellido_edit', apellidoEdit.value || '');
+                }
             } 
             // Caso 2: Se está creando un nuevo propietario
             else if (nombreNew && apellidoNew && nombreNew.value && apellidoNew.value) {
                 console.log('Creando nuevo propietario');
+                actualizarPropietario = true;
+                crearNuevoPropietario = true;
                 formData.append('propietario_nombre_edit', nombreNew.value);
                 formData.append('propietario_apellido_edit', apellidoNew.value);
             }
             // Caso 3: Solo se editaron los datos de contacto del propietario actual
-            else if (nombreEdit && apellidoEdit && nombreEdit.value && apellidoEdit.value) {
+            else if (nombreEdit && apellidoEdit && (nombreEdit.value || apellidoEdit.value || puedeReutilizarActual)) {
                 console.log('Editando propietario actual');
+                actualizarPropietario = true;
                 // SIEMPRE pasar el ID del propietario actual si existe
                 if (propietarioIdInput && propietarioIdInput.value) {
                     formData.append('propietario_id', propietarioIdInput.value);
                     console.log('Usando propietario_id:', propietarioIdInput.value);
+                } else if (propietarioIdOriginal) {
+                    formData.append('propietario_id', propietarioIdOriginal);
+                    console.log('Usando propietario_id (original):', propietarioIdOriginal);
                 }
-                formData.append('propietario_nombre_edit', nombreEdit.value);
-                formData.append('propietario_apellido_edit', apellidoEdit.value);
+                formData.append('propietario_nombre_edit', nombreEdit.value || datosOriginalesPropietario['propietario_nombre_edit'] || '');
+                formData.append('propietario_apellido_edit', apellidoEdit.value || datosOriginalesPropietario['propietario_apellido_edit'] || '');
             } else {
                 alert('Por favor completa los datos del responsable');
                 return;
@@ -838,6 +884,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (inputTelefono) formData.append('propietario_telefono', inputTelefono.value || '');
             if (inputEmail) formData.append('propietario_email', inputEmail.value || '');
             if (textareaDireccion) formData.append('propietario_direccion', textareaDireccion.value || '');
+
+            // Indicar si se deben aplicar cambios al propietario actual
+            formData.append('actualizar_propietario', actualizarPropietario ? 'true' : 'false');
+            formData.append('crear_nuevo_propietario', crearNuevoPropietario ? 'true' : 'false');
             
             const url = `/pacientes/editar/${pacienteId}/`;
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -854,11 +904,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: formData
             })
-            .then(response => {
+            .then(async response => {
+                const data = await response.json().catch(() => ({ success: false, error: 'Error desconocido' }));
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(data.error || `Error ${response.status}`);
                 }
-                return response.json();
+                return data;
             })
             .then(data => {
                 console.log('Response:', data);
@@ -871,7 +922,40 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error completo:', error);
-                alert('Error al guardar los cambios: ' + error.message);
+                // Verificar si es una advertencia de nombre duplicado
+                if (error.message && error.message.includes('Ya existe un propietario con ese nombre')) {
+                    if (confirm(error.message + '\n\n¿Desea crear este responsable de todas formas? Son personas diferentes.')) {
+                        // Reenviar con flag de ignorar advertencia
+                        formData.append('ignore_name_warning', 'true');
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrfToken,
+                            },
+                            body: formData
+                        })
+                        .then(async response => {
+                            const data = await response.json().catch(() => ({ success: false, error: 'Error desconocido' }));
+                            if (!response.ok) {
+                                throw new Error(data.error || `Error ${response.status}`);
+                            }
+                            return data;
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                alert('Datos del responsable guardados exitosamente');
+                                location.reload();
+                            } else {
+                                alert('Error al guardar: ' + (data.error || 'Error desconocido'));
+                            }
+                        })
+                        .catch(err => {
+                            alert('Error al guardar: ' + err.message);
+                        });
+                    }
+                } else {
+                    alert('Error al guardar los cambios: ' + error.message);
+                }
             });
         });
     } else {

@@ -52,22 +52,59 @@ def normalizar_texto(texto):
     )
     return texto
 
-def validar_propietario_duplicado(nombre, apellido, telefono, email, propietario_id=None):
+def validar_propietario_duplicado(nombre, apellido, telefono, email, propietario_id=None, ignore_name_warning=False):
     """
     Valida si un propietario ya existe en la base de datos.
     Retorna un diccionario con el resultado de la validación.
     """
+    # Convertir propietario_id a int si es necesario
+    if propietario_id:
+        try:
+            propietario_id = int(propietario_id)
+        except (ValueError, TypeError):
+            propietario_id = None
+    
     # Normalizar teléfono y email
     telefono_normalizado = normalize_chile_phone(telefono) if telefono else ''
     email_normalizado = email.lower().strip() if email else ''
     
-    # 1. Verificar teléfono duplicado (estricto - no permitir)
+    # 1. Verificar nombre y apellido similares PRIMERO (advertencia)
+    if not ignore_name_warning:
+        nombre_norm = normalizar_texto(nombre)
+        apellido_norm = normalizar_texto(apellido)
+        
+        # Buscar propietarios con nombre y apellido similares
+        todos_propietarios = Propietario.objects.all()
+        if propietario_id:
+            todos_propietarios = todos_propietarios.exclude(id=propietario_id)
+        
+        for prop in todos_propietarios:
+            prop_nombre_norm = normalizar_texto(prop.nombre)
+            prop_apellido_norm = normalizar_texto(prop.apellido)
+            
+            if prop_nombre_norm == nombre_norm and prop_apellido_norm == apellido_norm:
+                return {
+                    'valid': False,
+                    'type': 'nombre_duplicado',
+                    'message': f'⚠️ Ya existe un propietario con ese nombre: {prop.nombre_completo}. '
+                              f'Teléfono: {prop.telefono or "No registrado"}, Email: {prop.email or "No registrado"}. '
+                              f'Puede que ya se haya atendido antes con otro número o correo. '
+                              f'Se sugiere buscar el registro existente y actualizar su información.',
+                    'propietario': prop,
+                    'warning': True  # Es una advertencia, no un error estricto
+                }
+    
+    # 2. Verificar teléfono duplicado (estricto - no permitir)
     if telefono_normalizado:
         query = Propietario.objects.filter(telefono=telefono_normalizado)
+        print(f"[VALIDACION] Propietarios con telefono {telefono_normalizado}: {query.count()}")
         if propietario_id:
+            print(f"[VALIDACION] Excluyendo propietario_id={propietario_id} (tipo: {type(propietario_id)})")
             query = query.exclude(id=propietario_id)
+            print(f"[VALIDACION] Despues de exclude: {query.count()}")
         if query.exists():
             prop_existente = query.first()
+            print(f"[VALIDACION] Encontrado duplicado: ID={prop_existente.id}, nombre={prop_existente.nombre_completo}")
             return {
                 'valid': False,
                 'type': 'telefono_duplicado',
@@ -75,7 +112,7 @@ def validar_propietario_duplicado(nombre, apellido, telefono, email, propietario
                 'propietario': prop_existente
             }
     
-    # 2. Verificar email duplicado (estricto - no permitir)
+    # 3. Verificar email duplicado (estricto - no permitir)
     if email_normalizado:
         query = Propietario.objects.filter(email__iexact=email_normalizado)
         if propietario_id:
@@ -87,31 +124,6 @@ def validar_propietario_duplicado(nombre, apellido, telefono, email, propietario
                 'type': 'email_duplicado',
                 'message': f'Ya existe un propietario con ese email: {prop_existente.nombre_completo}',
                 'propietario': prop_existente
-            }
-    
-    # 3. Verificar nombre y apellido similares (advertencia)
-    nombre_norm = normalizar_texto(nombre)
-    apellido_norm = normalizar_texto(apellido)
-    
-    # Buscar propietarios con nombre y apellido similares
-    todos_propietarios = Propietario.objects.all()
-    if propietario_id:
-        todos_propietarios = todos_propietarios.exclude(id=propietario_id)
-    
-    for prop in todos_propietarios:
-        prop_nombre_norm = normalizar_texto(prop.nombre)
-        prop_apellido_norm = normalizar_texto(prop.apellido)
-        
-        if prop_nombre_norm == nombre_norm and prop_apellido_norm == apellido_norm:
-            return {
-                'valid': False,
-                'type': 'nombre_duplicado',
-                'message': f'⚠️ Ya existe un propietario con ese nombre: {prop.nombre_completo}. '
-                          f'Teléfono: {prop.telefono or "No registrado"}, Email: {prop.email or "No registrado"}. '
-                          f'Puede que ya se haya atendido antes con otro número o correo. '
-                          f'Se sugiere buscar el registro existente y actualizar su información.',
-                'propietario': prop,
-                'warning': True  # Es una advertencia, no un error estricto
             }
     
     return {'valid': True}
@@ -242,13 +254,15 @@ def crear_paciente(request):
                     propietario.save()
             else:
                 propietario_data = data.get('propietario', {})
+                ignore_name_warning = data.get('ignore_name_warning', False)
                 
                 # Validar propietario duplicado antes de crear
                 validacion = validar_propietario_duplicado(
                     nombre=propietario_data.get('nombre'),
                     apellido=propietario_data.get('apellido'),
                     telefono=propietario_data.get('telefono', ''),
-                    email=propietario_data.get('email', '')
+                    email=propietario_data.get('email', ''),
+                    ignore_name_warning=ignore_name_warning
                 )
                 
                 if not validacion['valid']:
@@ -357,9 +371,28 @@ def editar_paciente(request, paciente_id):
         paciente_data = payload.get('paciente', payload)
         propietario_data = payload.get('propietario', payload)
         propietario_id = payload.get('propietario_id')
+        # Convertir propietario_id a int si viene como string
+        if propietario_id:
+            try:
+                propietario_id = int(propietario_id)
+            except (ValueError, TypeError):
+                propietario_id = None
         actualizar_propietario = payload.get('actualizar_propietario', False)
+        ignore_name_warning = payload.get('ignore_name_warning', False)
+        if isinstance(ignore_name_warning, str):
+            ignore_name_warning = ignore_name_warning.lower() in ['true', '1', 'on']
         if isinstance(actualizar_propietario, str):
             actualizar_propietario = actualizar_propietario.lower() in ['true', '1', 'on']
+        crear_nuevo_propietario = payload.get('crear_nuevo_propietario', False)
+        if isinstance(crear_nuevo_propietario, str):
+            crear_nuevo_propietario = crear_nuevo_propietario.lower() in ['true', '1', 'on']
+        
+        # LOG DEBUG
+        print(f"\n=== EDITAR PACIENTE DEBUG ===")
+        print(f"propietario_id recibido: {propietario_id}")
+        print(f"actualizar_propietario: {actualizar_propietario}")
+        print(f"crear_nuevo_propietario: {crear_nuevo_propietario}")
+        print(f"paciente.propietario_id actual: {paciente.propietario_id}")
 
         campos_basicos = ['nombre', 'especie', 'raza', 'sexo', 'color', 'microchip']
         for campo in campos_basicos:
@@ -414,40 +447,7 @@ def editar_paciente(request, paciente_id):
                 else:
                     paciente.fecha_nacimiento = date(ano, mes, 30)
         
-        if propietario_id:
-            propietario = get_object_or_404(Propietario, id=propietario_id)
-            paciente.propietario = propietario
-            
-            if actualizar_propietario:
-                nuevo_nombre = propietario_data.get('nombre') or propietario_data.get('propietario_nombre_edit', propietario.nombre)
-                nuevo_apellido = propietario_data.get('apellido') or propietario_data.get('propietario_apellido_edit', propietario.apellido)
-                nuevo_telefono = propietario_data.get('telefono') or propietario_data.get('propietario_telefono', propietario.telefono)
-                nuevo_email = propietario_data.get('email') or propietario_data.get('propietario_email', propietario.email)
-                
-                # Validar si los cambios crean duplicados
-                validacion = validar_propietario_duplicado(
-                    nombre=nuevo_nombre,
-                    apellido=nuevo_apellido,
-                    telefono=nuevo_telefono,
-                    email=nuevo_email,
-                    propietario_id=propietario.id  # Excluir el propietario actual
-                )
-                
-                if not validacion['valid']:
-                    return JsonResponse({
-                        'success': False,
-                        'error': validacion['message'],
-                        'error_type': validacion['type'],
-                        'warning': validacion.get('warning', False)
-                    }, status=400)
-                
-                propietario.nombre = nuevo_nombre
-                propietario.apellido = nuevo_apellido
-                propietario.telefono = normalize_chile_phone(nuevo_telefono)
-                propietario.email = nuevo_email
-                propietario.direccion = propietario_data.get('direccion') or propietario_data.get('propietario_direccion', propietario.direccion)
-                propietario.save()
-        elif propietario_data.get('nombre') or propietario_data.get('propietario_nombre_edit'):
+        if crear_nuevo_propietario:
             nombre_nuevo = propietario_data.get('nombre') or propietario_data.get('propietario_nombre_edit', '')
             apellido_nuevo = propietario_data.get('apellido') or propietario_data.get('propietario_apellido_edit', '')
             telefono_nuevo = propietario_data.get('telefono') or propietario_data.get('propietario_telefono', '')
@@ -458,7 +458,8 @@ def editar_paciente(request, paciente_id):
                 nombre=nombre_nuevo,
                 apellido=apellido_nuevo,
                 telefono=telefono_nuevo,
-                email=email_nuevo
+                email=email_nuevo,
+                ignore_name_warning=ignore_name_warning
             )
             
             if not validacion['valid']:
@@ -477,6 +478,88 @@ def editar_paciente(request, paciente_id):
                 direccion=propietario_data.get('direccion') or propietario_data.get('propietario_direccion', '')
             )
             paciente.propietario = nuevo_propietario
+        else:
+            propietario_id_efectivo = propietario_id or paciente.propietario_id
+            print(f"propietario_id_efectivo calculado: {propietario_id_efectivo}")
+            
+            if propietario_id_efectivo:
+                propietario = get_object_or_404(Propietario, id=propietario_id_efectivo)
+                paciente.propietario = propietario
+                
+                if actualizar_propietario:
+                    nuevo_nombre = propietario_data.get('nombre') or propietario_data.get('propietario_nombre_edit', propietario.nombre)
+                    nuevo_apellido = propietario_data.get('apellido') or propietario_data.get('propietario_apellido_edit', propietario.apellido)
+                    nuevo_telefono = propietario_data.get('telefono') or propietario_data.get('propietario_telefono', propietario.telefono)
+                    nuevo_email = propietario_data.get('email') or propietario_data.get('propietario_email', propietario.email)
+                    
+                    print(f"Actualizando propietario ID: {propietario.id}")
+                    print(f"nuevo_telefono: {nuevo_telefono}")
+                    print(f"nuevo_email: {nuevo_email}")
+                    
+                    # Solo validar si cambió el teléfono o email
+                    telefono_cambio = normalize_chile_phone(nuevo_telefono) != propietario.telefono
+                    email_cambio = nuevo_email.lower().strip() != (propietario.email or '').lower().strip()
+                    
+                    print(f"telefono_cambio: {telefono_cambio}, email_cambio: {email_cambio}")
+                    
+                    if telefono_cambio or email_cambio:
+                        # Validar si los cambios crean duplicados
+                        validacion = validar_propietario_duplicado(
+                            nombre=nuevo_nombre,
+                            apellido=nuevo_apellido,
+                            telefono=nuevo_telefono,
+                            email=nuevo_email,
+                            propietario_id=propietario.id,  # Excluir el propietario actual
+                            ignore_name_warning=ignore_name_warning
+                        )
+                        
+                        print(f"Resultado validación: {validacion}")
+                        
+                        if not validacion['valid']:
+                            return JsonResponse({
+                                'success': False,
+                                'error': validacion['message'],
+                                'error_type': validacion['type'],
+                                'warning': validacion.get('warning', False)
+                            }, status=400)
+                    
+                    propietario.nombre = nuevo_nombre
+                    propietario.apellido = nuevo_apellido
+                    propietario.telefono = normalize_chile_phone(nuevo_telefono)
+                    propietario.email = nuevo_email
+                    propietario.direccion = propietario_data.get('direccion') or propietario_data.get('propietario_direccion', propietario.direccion)
+                    propietario.save()
+            elif propietario_data.get('nombre') or propietario_data.get('propietario_nombre_edit'):
+                nombre_nuevo = propietario_data.get('nombre') or propietario_data.get('propietario_nombre_edit', '')
+                apellido_nuevo = propietario_data.get('apellido') or propietario_data.get('propietario_apellido_edit', '')
+                telefono_nuevo = propietario_data.get('telefono') or propietario_data.get('propietario_telefono', '')
+                email_nuevo = propietario_data.get('email') or propietario_data.get('propietario_email', '')
+                
+                # Validar propietario duplicado antes de crear
+                validacion = validar_propietario_duplicado(
+                    nombre=nombre_nuevo,
+                    apellido=apellido_nuevo,
+                    telefono=telefono_nuevo,
+                    email=email_nuevo,
+                    ignore_name_warning=ignore_name_warning
+                )
+                
+                if not validacion['valid']:
+                    return JsonResponse({
+                        'success': False,
+                        'error': validacion['message'],
+                        'error_type': validacion['type'],
+                        'warning': validacion.get('warning', False)
+                    }, status=400)
+                
+                nuevo_propietario = Propietario.objects.create(
+                    nombre=nombre_nuevo,
+                    apellido=apellido_nuevo,
+                    telefono=normalize_chile_phone(telefono_nuevo),
+                    email=email_nuevo,
+                    direccion=propietario_data.get('direccion') or propietario_data.get('propietario_direccion', '')
+                )
+                paciente.propietario = nuevo_propietario
         
         paciente.save()
         

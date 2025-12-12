@@ -473,7 +473,8 @@ function saveNewPaciente() {
     // Construir datos
     const data = {
         propietario_id: modoPropietario === 'nuevo' ? null : (propietarioId || (propietarioOriginal ? propietarioOriginal.id : null)),
-        actualizar_propietario: !skipPropietarioValidation && modoPropietario !== 'nuevo',
+        actualizar_propietario: modoPropietario === 'editar' || (esEdicion && modoPropietario !== 'nuevo'),
+        crear_nuevo_propietario: modoPropietario === 'nuevo',
         tipo_edad: tipoEdad,
         fecha_nacimiento: fechaNacimiento,
         edad_anos: edadAnos !== '' ? parseInt(edadAnos) : null,
@@ -511,10 +512,17 @@ function saveNewPaciente() {
     })
     .then(response => {
         console.log('Response status:', response.status);
-        return response.json();
+        return response.json().then(data => {
+            return { status: response.status, data: data };
+        });
     })
-    .then(data => {
+    .then(result => {
+        const { status, data } = result;
+        console.log('Response status:', status);
         console.log('Response data:', data);
+        console.log('Error type:', data.error_type);
+        console.log('Warning:', data.warning);
+        
         if (data.success) {
             const mensaje = esEdicion ? '¡Paciente actualizado exitosamente!' : '¡Paciente creado exitosamente!';
             alert(mensaje);
@@ -523,7 +531,66 @@ function saveNewPaciente() {
                 window.location.reload();
             }, 400);
         } else {
-            alert('Error: ' + (data.error || 'Error desconocido'));
+            // Verificar si es una advertencia de nombre duplicado
+            if (data.error_type === 'nombre_duplicado' && data.warning) {
+                if (confirm(data.error + '\n\n¿Desea crear este responsable de todas formas? Son personas diferentes.')) {
+                    // Construir datos originales con el flag de ignorar
+                    const dataToSend = {
+                        propietario_id: modoPropietario === 'nuevo' ? null : (propietarioId || (propietarioOriginal ? propietarioOriginal.id : null)),
+                        actualizar_propietario: modoPropietario === 'editar' || (esEdicion && modoPropietario !== 'nuevo'),
+                        crear_nuevo_propietario: modoPropietario === 'nuevo',
+                        tipo_edad: tipoEdad,
+                        fecha_nacimiento: fechaNacimiento,
+                        edad_anos: edadAnos !== '' ? parseInt(edadAnos) : null,
+                        edad_meses: edadMeses !== '' ? parseInt(edadMeses) : null,
+                        ignore_name_warning: true,
+                        propietario: {
+                            nombre: propietarioNombre,
+                            apellido: propietarioApellido,
+                            telefono: propietarioTelefono,
+                            email: propietarioEmail,
+                            direccion: propietarioDireccion,
+                        },
+                        paciente: {
+                            nombre: nombrePaciente,
+                            especie: especiePaciente,
+                            raza: razaPaciente,
+                            sexo: sexoPaciente,
+                        }
+                    };
+                    
+                    console.log('=== REINTENTANDO CON ignore_name_warning ===');
+                    console.log('Datos a reenviar:', JSON.stringify(dataToSend, null, 2));
+                    
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken'),
+                        },
+                        body: JSON.stringify(dataToSend)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const mensaje = esEdicion ? '¡Paciente actualizado exitosamente!' : '¡Paciente creado exitosamente!';
+                            alert(mensaje);
+                            closeVetModal('modalNuevoPaciente');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 400);
+                        } else {
+                            alert('Error: ' + (data.error || 'Error desconocido'));
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error en reintento:', err);
+                        alert('Error al guardar: ' + err.message);
+                    });
+                }
+            } else {
+                alert('Error: ' + (data.error || 'Error desconocido'));
+            }
         }
     })
     .catch(error => {
