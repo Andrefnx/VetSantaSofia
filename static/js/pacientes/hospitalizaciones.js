@@ -626,7 +626,7 @@ const hospitalizacionesManager = {
                 // COLUMNA IZQUIERDA: Información General
                 const detallesIzquierda = document.getElementById('detallesIzquierda');
                 let htmlIzquierda = `
-                    <div style="padding:8px 0; margin-bottom:12px; border-bottom:2px solid #e5e7eb; font-size:12px; color:#374151;">
+                    <div style="padding:8px 0; margin-bottom:12px; border-bottom:2px solid #e5e7eb; font-size:13px; color:#374151;">
                         <strong style="font-weight:600; color:#111;">${hosp.estado}</strong> | 
                         <span>${hosp.fecha_ingreso}</span> | 
                         <span>${hosp.motivo}</span> | 
@@ -634,14 +634,14 @@ const hospitalizacionesManager = {
                     </div>
                     
                     <div style="padding:10px 0; margin-bottom:10px; border-bottom:1px solid #e5e7eb;">
-                        <h6 style="margin:0 0 8px 0; font-size:13px; font-weight:600; color:#111;"><i class="bi bi-journal-text" style="font-size:12px;"></i> Diagnóstico</h6>
-                        <div style="font-size:12px; color:#374151; line-height:1.5; margin-bottom:8px;">
+                        <h6 style="margin:0 0 8px 0; font-size:14px; font-weight:600; color:#111;"><i class="bi bi-journal-text" style="font-size:13px;"></i> Diagnóstico</h6>
+                        <div style="font-size:13px; color:#374151; line-height:1.5; margin-bottom:8px;">
                             ${hosp.diagnostico || '<em style="color:#9ca3af;">Sin diagnóstico</em>'}
                         </div>
                         ${hosp.observaciones ? `
                             <div style="margin-top:8px;">
-                                <div style="font-size:11px; font-weight:600; color:#6b7280; margin-bottom:4px;">Observaciones</div>
-                                <div style="font-size:12px; color:#374151; line-height:1.5;">${hosp.observaciones}</div>
+                                <div style="font-size:12px; font-weight:600; color:#6b7280; margin-bottom:4px;">Observaciones</div>
+                                <div style="font-size:13px; color:#374151; line-height:1.5;">${hosp.observaciones}</div>
                             </div>
                         ` : ''}
                     </div>
@@ -672,25 +672,25 @@ const hospitalizacionesManager = {
                     
                     htmlIzquierda += `
                         <div style="padding:10px 0; margin-bottom:10px; border-bottom:1px solid #e5e7eb;">
-                            <h6 style="margin:0 0 10px 0; font-size:13px; font-weight:600; color:#111;"><i class="bi bi-tools" style="font-size:12px;"></i> Cirugías</h6>
+                            <h6 style="margin:0 0 10px 0; font-size:14px; font-weight:600; color:#111;"><i class="bi bi-tools" style="font-size:13px;"></i> Cirugías</h6>
                             ${hosp.cirugias.map((c, idx) => `
                                 <div style=\"margin-bottom:8px; padding-bottom:8px; ${idx < hosp.cirugias.length - 1 ? 'border-bottom:1px solid #f3f4f6;' : ''}\">
                                     <div onclick=\"this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.querySelector('.toggle-icon').classList.toggle('bi-chevron-down'); this.querySelector('.toggle-icon').classList.toggle('bi-chevron-right');\" style=\"display:flex; justify-content:space-between; align-items:center; cursor:pointer; padding:4px 0;\">
                                         <div style=\"display:flex; align-items:center; gap:8px;\">
                                             <i class=\"bi bi-chevron-right toggle-icon\" style=\"font-size:10px; color:#6b7280;\"></i>
-                                            <strong style=\"font-size:12px; color:#111;\">${c.tipo}</strong>
-                                            <span style=\"font-size:11px; color:#6b7280;\">${c.fecha}</span>
-                                            ${c.complicaciones ? `<span style=\"font-size:11px; color:#dc2626;\"><i class=\"bi bi-exclamation-triangle\"></i> Complicaciones</span>` : ''}
+                                            <strong style=\"font-size:13px; color:#111;\">${c.tipo}</strong>
+                                            <span style=\"font-size:12px; color:#6b7280;\">${c.fecha}</span>
+                                            ${c.complicaciones ? `<span style=\"font-size:12px; color:#dc2626;\"><i class=\"bi bi-exclamation-triangle\"></i> Complicaciones</span>` : ''}
                                         </div>
                                     </div>
-                                    <div style=\"display:none; padding:8px 0 0 18px; font-size:12px; color:#374151;\">
+                                    <div style=\"display:none; padding:8px 0 0 18px; font-size:13px; color:#374151;\">
                                         <div style=\"margin-bottom:6px; line-height:1.5;\">${c.descripcion}</div>
-                                        <div style=\"display:flex; gap:12px; margin-bottom:4px; font-size:11px; color:#6b7280;\">
+                                        <div style=\"display:flex; gap:12px; margin-bottom:4px; font-size:12px; color:#6b7280;\">
                                             <div><i class=\"bi bi-person-badge\"></i> ${c.veterinario}</div>
                                             <div><i class=\"bi bi-check-circle\"></i> ${c.resultado}</div>
                                         </div>
-                                        ${c.complicaciones ? `<div style=\"font-size:11px; color:#dc2626; margin:6px 0;\"><strong>Complicaciones:</strong> ${c.complicaciones}</div>` : ''}
-                                        ${c.insumos && c.insumos.length ? `<div style=\"margin-top:8px;\"><div style=\"font-size:11px; font-weight:600; color:#6b7280; margin-bottom:4px;\">Insumos utilizados:</div><div style=\"display:flex; flex-wrap:wrap; gap:4px;\">${c.insumos.map(ins => `<span style=\\\"border:1px solid #e5e7eb; color:#374151; padding:2px 6px; border-radius:3px; font-size:11px;\\\">${ins.nombre}<strong style=\\\"color:#16a34a;\\\">${calcularDosisDetalle(ins)}</strong></span>`).join('')}</div></div>` : ''}
+                                        ${c.complicaciones ? `<div style=\"font-size:12px; color:#dc2626; margin:6px 0;\"><strong>Complicaciones:</strong> ${c.complicaciones}</div>` : ''}
+                                        ${c.insumos && c.insumos.length ? `<div style=\"margin-top:8px;\"><div style=\"font-size:12px; font-weight:600; color:#6b7280; margin-bottom:4px;\">Insumos utilizados:</div><div style=\"display:flex; flex-wrap:wrap; gap:4px;\">${c.insumos.map(ins => `<span style=\\\"border:1px solid #e5e7eb; color:#374151; padding:2px 6px; border-radius:3px; font-size:12px;\\\">${ins.nombre}<strong style=\\\"color:#16a34a;\\\">${calcularDosisDetalle(ins)}</strong></span>`).join('')}</div></div>` : ''}
                                     </div>
                                 </div>
                             `).join('')}
@@ -719,15 +719,6 @@ const hospitalizacionesManager = {
                     return '';
                 };
 
-                const renderChip = (ins, count = 1) => {
-                    const dosis = renderDosis(ins);
-                    return `<div style="padding:4px 8px; border:1px solid #e5e7eb; border-radius:4px; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; position:relative; transition:all 0.2s;"
-                        onmouseenter="this.style.overflow='visible'; this.style.whiteSpace='normal'; this.style.zIndex='10'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';"
-                        onmouseleave="this.style.overflow='hidden'; this.style.whiteSpace='nowrap'; this.style.zIndex='1'; this.style.boxShadow='none';">
-                        <strong style="color:#111;">${ins.nombre || 'Insumo'}</strong>${dosis ? ` - <span style="color:#16a34a;">${dosis}</span>` : ''}${count > 1 ? ` <span style="color:#6b7280;">(x${count})</span>` : ''}
-                    </div>`;
-                };
-
                 // Insumos totales después de cirugías
                 const insumosHosp = hosp.insumos || [];
                 const insumosCirugias = (hosp.cirugias || []).flatMap(c => c.insumos || []);
@@ -750,10 +741,14 @@ const hospitalizacionesManager = {
                     
                     htmlIzquierda += `
                         <div style="padding:10px 0; margin-bottom:10px; border-bottom:1px solid #e5e7eb;">
-                            <h6 style="margin:0 0 8px 0; font-size:13px; font-weight:600; color:#111;"><i class="bi bi-box-seam" style="font-size:12px;"></i> Insumos utilizados</h6>
-                            <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:6px;">
-                                ${uniqueInsumos.map(ins => renderChip(ins, idCounts[ins.idInventario || ins.id])).join('')}
-                            </div>
+                            <h6 style="margin:0 0 8px 0; font-size:14px; font-weight:600; color:#111;"><i class="bi bi-box-seam" style="font-size:13px;"></i> Insumos utilizados</h6>
+                            ${uniqueInsumos.map(ins => {
+                                const dosis = renderDosis(ins);
+                                const count = idCounts[ins.idInventario || ins.id];
+                                return `<div style="padding:4px 0; border-bottom:1px solid #f9fafb; font-size:12px; color:#374151;">
+                                    <strong style="color:#111;">${ins.nombre || 'Insumo'}</strong>${dosis ? ` | <span style="color:#16a34a;">${dosis}</span>` : ''}${count > 1 ? ` | <span style="color:#6b7280;">(x${count})</span>` : ''}
+                                </div>`;
+                            }).join('')}
                         </div>
                     `;
                 }
@@ -762,22 +757,22 @@ const hospitalizacionesManager = {
                 if (hosp.alta) {
                     htmlIzquierda += `
                         <div style="padding:10px 0; border-bottom:1px solid #e5e7eb;">
-                            <h6 style="margin:0 0 8px 0; font-size:13px; font-weight:600; color:#111;"><i class="bi bi-check-circle" style="font-size:12px;"></i> Alta médica</h6>
-                            <div style="font-size:12px; color:#374151; line-height:1.8;">
+                            <h6 style="margin:0 0 8px 0; font-size:14px; font-weight:600; color:#111;"><i class="bi bi-check-circle" style="font-size:13px;"></i> Alta médica</h6>
+                            <div style="font-size:13px; color:#374151; line-height:1.8;">
                                 <div style="margin-bottom:6px;"><span style="color:#6b7280;">Fecha:</span> <strong>${hosp.alta.fecha}</strong></div>
                                 <div style="margin:8px 0;">
-                                    <div style="font-size:11px; font-weight:600; color:#6b7280; margin-bottom:4px;">Diagnóstico final:</div>
-                                    <div style="font-size:12px;">${hosp.alta.diagnostico_final}</div>
+                                    <div style="font-size:12px; font-weight:600; color:#6b7280; margin-bottom:4px;">Diagnóstico final:</div>
+                                    <div style="font-size:13px;">${hosp.alta.diagnostico_final}</div>
                                 </div>
                                 <div style="margin:8px 0;">
-                                    <div style="font-size:11px; font-weight:600; color:#6b7280; margin-bottom:4px;">Tratamiento post-alta:</div>
-                                    <div style="font-size:12px;">${hosp.alta.tratamiento_post}</div>
+                                    <div style="font-size:12px; font-weight:600; color:#6b7280; margin-bottom:4px;">Tratamiento post-alta:</div>
+                                    <div style="font-size:13px;">${hosp.alta.tratamiento_post}</div>
                                 </div>
                                 <div style="margin:8px 0;">
-                                    <div style="font-size:11px; font-weight:600; color:#6b7280; margin-bottom:4px;">Recomendaciones:</div>
-                                    <div style="font-size:12px;">${hosp.alta.recomendaciones}</div>
+                                    <div style="font-size:12px; font-weight:600; color:#6b7280; margin-bottom:4px;">Recomendaciones:</div>
+                                    <div style="font-size:13px;">${hosp.alta.recomendaciones}</div>
                                 </div>
-                                ${hosp.alta.proxima_revision ? `<div style="margin-top:8px; padding:4px 0; font-size:11px;"><i class="bi bi-calendar-check"></i> Próxima revisión: <strong>${hosp.alta.proxima_revision}</strong></div>` : ''}
+                                ${hosp.alta.proxima_revision ? `<div style="margin-top:8px; padding:4px 0; font-size:12px;"><i class="bi bi-calendar-check"></i> Próxima revisión: <strong>${hosp.alta.proxima_revision}</strong></div>` : ''}
                             </div>
                         </div>
                     `;
@@ -789,20 +784,10 @@ const hospitalizacionesManager = {
                 const registrosDiariosContainer = document.getElementById('registrosDiariosContainer');
                 if (hosp.registros_diarios && hosp.registros_diarios.length > 0) {
                     const htmlRegistros = hosp.registros_diarios.map((reg, idx) => `
-                        <div style="padding:8px 0; border-bottom:1px solid #f3f4f6; margin-bottom:6px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                                <strong style="color:#111; font-size:12px;"><i class="bi bi-calendar-day" style="font-size:11px;"></i> ${reg.fecha}</strong>
-                                <span style="font-size:11px; color:#6b7280;">
-                                    ${reg.veterinario || 'N/A'}
-                                </span>
-                            </div>
-                            <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; font-size:11px; color:#374151;">
-                                <div><i class="bi bi-thermometer-half"></i> <strong>${reg.temperatura}°C</strong></div>
-                                <div><i class="bi bi-clipboard-pulse"></i> <strong>${reg.peso} kg</strong></div>
-                                <div>FC: <strong>${reg.frecuencia_cardiaca || 'N/A'}</strong></div>
-                                <div>FR: <strong>${reg.frecuencia_respiratoria || 'N/A'}</strong></div>
-                            </div>
-                            ${reg.observaciones ? `<div style=\"margin-top:6px; color:#6b7280; font-size:11px; line-height:1.5;\">${reg.observaciones}</div>` : ''}
+                        <div style="padding:6px 0; border-bottom:1px solid #f3f4f6; margin-bottom:6px; font-size:12px;">
+                            <div style="color:#111; margin-bottom:3px;"><i class="bi bi-calendar-day"></i> <strong>${reg.fecha}</strong> | <i class="bi bi-person-badge"></i> ${reg.veterinario || 'N/A'}</div>
+                            <div style="color:#374151; margin-bottom:3px;"><i class="bi bi-thermometer-half"></i> ${reg.temperatura}°C | <i class="bi bi-clipboard-pulse"></i> ${reg.peso} kg | <i class="bi bi-heart-pulse"></i> ${reg.frecuencia_cardiaca || 'N/A'} | <i class="bi bi-lungs"></i> ${reg.frecuencia_respiratoria || 'N/A'}</div>
+                            ${reg.observaciones ? `<div style=\"color:#6b7280;\"><i class=\"bi bi-chat-left-text\"></i> ${reg.observaciones}</div>` : ''}
                         </div>
                     `).join('');
                     
