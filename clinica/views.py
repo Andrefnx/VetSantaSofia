@@ -706,8 +706,8 @@ def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
             'observaciones': hospitalizacion.observaciones,
             'insumos': [
                 {
-                    'id': ins.id,
-                    'nombre': ins.nombre,
+                    'id': getattr(ins, 'idInventario', getattr(ins, 'pk', None)),
+                    'nombre': getattr(ins, 'medicamento', getattr(ins, 'nombre', '')),
                     'codigo': getattr(ins, 'codigo', None),
                     'formato': getattr(ins, 'formato', None),
                     'dosis_ml': getattr(ins, 'dosis_ml', None),
@@ -749,8 +749,8 @@ def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
                 } if cirugia.servicio else None),
                 'insumos': [
                     {
-                        'id': ins.id,
-                        'nombre': ins.nombre,
+                        'id': getattr(ins, 'idInventario', getattr(ins, 'pk', None)),
+                        'nombre': getattr(ins, 'medicamento', getattr(ins, 'nombre', '')),
                         'codigo': getattr(ins, 'codigo', None),
                         'formato': getattr(ins, 'formato', None),
                         'dosis_ml': getattr(ins, 'dosis_ml', None),
@@ -778,8 +778,8 @@ def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
                 ),
                 'insumos': [
                     {
-                        'id': ins.id,
-                        'nombre': ins.nombre,
+                        'id': getattr(ins, 'idInventario', getattr(ins, 'pk', None)),
+                        'nombre': getattr(ins, 'medicamento', getattr(ins, 'nombre', '')),
                         'codigo': getattr(ins, 'codigo', None),
                         'formato': getattr(ins, 'formato', None),
                         'dosis_ml': getattr(ins, 'dosis_ml', None),
