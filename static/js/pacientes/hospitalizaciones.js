@@ -194,6 +194,10 @@ const hospitalizacionesManager = {
             const data = await response.json();
             if (data.success) {
                 this.insumosCatalogo = data.insumos || [];
+                console.log(`📦 Insumos cargados: ${this.insumosCatalogo.length}`);
+                // Verificar cuántos tienen peso_kg
+                const conPeso = this.insumosCatalogo.filter(i => i.peso_kg && parseFloat(i.peso_kg) > 0);
+                console.log(`⚖️  Insumos con peso_kg: ${conPeso.length}`, conPeso.slice(0, 3));
                 const buscador = document.getElementById('buscarInsumosCirugia');
                 this.renderInsumosSelect(buscador ? buscador.value : '');
                 this.renderInsumosSeleccionados();
@@ -234,11 +238,19 @@ const hospitalizacionesManager = {
         const especiePac = this.getPacienteEspecie();
         const pesoPac = this.getPacientePeso();
 
+        // Filtro de especie: solo excluir si especie es estrictamente incompatible
         if (insumo.especie && especiePac && String(insumo.especie).toLowerCase() !== especiePac) {
-            return false;
+            // Excepción: si es un medicamento general o sin especie específica, permitir
+            const especieInsumo = String(insumo.especie).toLowerCase();
+            if (especieInsumo !== 'perro' && especieInsumo !== 'gato' && especieInsumo !== '') {
+                return false;
+            }
+            // Advertencia: medicamento de otra especie pero se permite (veterinario decide)
+            console.warn(`⚠️ ${insumo.nombre} es para ${insumo.especie}, paciente es ${especiePac}`);
         }
 
-        if (!pesoPac) return true; // sin peso, mostrar todos
+        // Filtro de peso: solo para pipetas con rango estricto
+        if (!pesoPac) return true;
 
         const min = insumo.peso_min_kg ? parseFloat(insumo.peso_min_kg) : null;
         const max = insumo.peso_max_kg ? parseFloat(insumo.peso_max_kg) : null;
@@ -246,13 +258,7 @@ const hospitalizacionesManager = {
             return pesoPac >= min && pesoPac <= max;
         }
 
-        const ref = insumo.peso_kg ? parseFloat(insumo.peso_kg) : null;
-        if (ref && ref > 0) {
-            const lower = ref * 0.5;
-            const upper = ref * 1.5;
-            return pesoPac >= lower && pesoPac <= upper;
-        }
-
+        // Para otros medicamentos con peso_kg: mostrar todos (el cálculo ajusta la dosis)
         return true;
     },
 
@@ -271,17 +277,23 @@ const hospitalizacionesManager = {
             return;
         }
 
+        let contadorDosis = 0;
         insumosContainer.innerHTML = catalogoFiltrado
             .map(i => {
                 const isSelected = seleccionados.includes(String(i.id));
                 const tipo = i.tipo || 'N/A';
+                const dosis = this.calcularDosis(i);
+                if (dosis) contadorDosis++;
+                const dosisText = dosis ? ` - <strong style="color:#16a34a;">${dosis}</strong>` : '';
                 return `<div class="selectable-item ${isSelected ? 'selected' : ''}">
-                    <span class="selectable-item-text">${i.nombre} <span class="selectable-item-subtext">(${tipo})</span></span>
+                    <span class="selectable-item-text">${i.nombre} <span class="selectable-item-subtext">(${tipo}${dosisText})</span></span>
                     <button type="button" onclick="hospitalizacionesManager.${isSelected ? 'removerInsumo' : 'agregarInsumo'}('${i.id}')" class="${isSelected ? 'btn-remove-inline' : 'btn-add'}" title="${isSelected ? 'Eliminar' : 'Agregar'}">
                         ${isSelected ? '−' : '+'}
                     </button>
                 </div>`;
             }).join('');
+        
+        console.log(`💊 Renderizados: ${catalogoFiltrado.length} insumos, ${contadorDosis} con dosis calculada`);
 
         this.renderInsumosSeleccionados();
     },
@@ -292,7 +304,20 @@ const hospitalizacionesManager = {
 
         const ref = insumo.peso_kg ? parseFloat(insumo.peso_kg) : null;
         if (!ref || ref === 0) return '';
+        
         const factor = pesoPac / ref;
+
+        // Log temporal para debug
+        if (insumo.nombre && insumo.nombre.includes('Amoxicilina')) {
+            console.log(`🔍 ${insumo.nombre}:`, {
+                peso_kg: insumo.peso_kg,
+                ref,
+                pesoPac,
+                factor,
+                dosis_ml: insumo.dosis_ml,
+                cantidad_pastillas: insumo.cantidad_pastillas
+            });
+        }
 
         if (insumo.dosis_ml) {
             const ml = (parseFloat(insumo.dosis_ml) * factor).toFixed(2);
@@ -604,6 +629,27 @@ const hospitalizacionesManager = {
                 
                 // Cirugías (lista)
                 if (hosp.cirugias && hosp.cirugias.length) {
+                    // Función para calcular dosis en cirugías
+                    const calcularDosisDetalle = (ins) => {
+                        if (!pesoPaciente || !ins) return '';
+                        const pesoRef = parseFloat(ins.peso_kg || 0);
+                        if (!pesoRef || pesoRef === 0) return '';
+                        const factor = pesoPaciente / pesoRef;
+                        if (ins.dosis_ml) {
+                            const ml = (parseFloat(ins.dosis_ml) * factor).toFixed(2);
+                            return ` - ${ml} ml`;
+                        }
+                        if (ins.cantidad_pastillas) {
+                            const tabs = (parseFloat(ins.cantidad_pastillas) * factor).toFixed(2);
+                            return ` - ${tabs} pastillas`;
+                        }
+                        if (ins.unidades_pipeta) {
+                            const pip = (parseFloat(ins.unidades_pipeta) * factor).toFixed(2);
+                            return ` - ${pip} pipetas`;
+                        }
+                        return '';
+                    };
+                    
                     htmlIzquierda += `
                         <div style="background-color: #fdfaf3; padding: 12px; border-radius: 6px; border: 1px solid #f0e6ce; margin-bottom: 12px;">
                             <h5 style="margin: 0 0 6px 0; font-size: 15px; color: #2d2f33;"><i class="bi bi-tools"></i> Cirugías</h5>
@@ -615,7 +661,7 @@ const hospitalizacionesManager = {
                                     <p style=\"margin:0 0 4px 0; color:#444;\"><strong>Resultado:</strong> ${c.resultado}</p>
                                     <p style=\"margin:0 0 4px 0; color:#444;\"><strong>Descripción:</strong> ${c.descripcion}</p>
                                     ${c.complicaciones ? `<p style=\"margin:4px 0 0 0; color:#8a4b4b;\"><strong>Complicaciones:</strong> ${c.complicaciones}</p>` : ''}
-                                    ${c.insumos && c.insumos.length ? `<div style=\"margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;\">${c.insumos.map(ins => `<span style=\\\"background:#f3f4f6; color:#2d2f33; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid #e5e7eb;\\\">${ins.nombre}</span>`).join('')}</div>` : ''}
+                                    ${c.insumos && c.insumos.length ? `<div style=\"margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;\">${c.insumos.map(ins => `<span style=\\\"background:#f3f4f6; color:#2d2f33; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid #e5e7eb;\\\">${ins.nombre}<strong style=\\\"color:#16a34a;\\\">${calcularDosisDetalle(ins)}</strong></span>`).join('')}</div>` : ''}
                                 </div>
                             `).join('')}
                         </div>
