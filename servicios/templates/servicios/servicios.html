@@ -3,10 +3,6 @@
 
 {% block title %}Servicios Veterinarios{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/style_servicios.css' %}" type="text/css" media="all">
-{% endblock %}
-
 {% block table_title %}
 <i class="fas fa-stethoscope"></i> Servicios Veterinarios
 {% endblock %}
@@ -31,7 +27,7 @@
 
 {% block table_rows %}
 {% for servicio in servicios %}
-<tr data-id="{{ servicio.idServicio }}" data-categoria="{{ servicio.categoria|default_if_none:'' }}">
+<tr data-id="{{ servicio.idServicio }}" data-categoria="{{ servicio.categoria|default_if_none:'' }}" data-descripcion="{{ servicio.descripcion|default_if_none:'' }}">
     <td>{{ servicio.nombre }}</td>
     <td>{{ servicio.categoria }}</td>
     <td>${{ servicio.precio|floatformat:0 }}</td>

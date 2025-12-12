@@ -23,7 +23,8 @@ function abrirModalServicio(btn, mode) {
 
     const data = {
         nombre: tr.cells[0].textContent.trim(),
-        categoria: tr.cells[1].textContent.trim(),
+        categoria: tr.getAttribute('data-categoria') || tr.cells[1].textContent.trim(),
+        descripcion: tr.getAttribute('data-descripcion') || '',
         precio: tr.cells[2].textContent.replace(/[^0-9.,]/g, '').trim(),
         duracion: tr.cells[3].textContent.replace(/[^0-9]/g, '').trim()
     };
@@ -75,7 +76,13 @@ function openServicioModal(mode, data = {}) {
             .forEach(el => el.textContent = data[key] ?? "-");
 
         modal.querySelectorAll(`.field-edit[data-field="${key}"]`)
-            .forEach(el => el.value = data[key] ?? "");
+            .forEach(el => {
+                el.value = data[key] ?? "";
+                // Para select, forzar la actualización
+                if (el.tagName === 'SELECT') {
+                    el.value = data[key] ?? "";
+                }
+            });
     });
 
     // Guardar ID
