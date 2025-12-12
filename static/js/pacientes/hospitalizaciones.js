@@ -9,6 +9,15 @@ const hospitalizacionesManager = {
     insumosCatalogo: [],
     veterinariosCatalogo: [],
 
+    normalizarServiciosCirugia(servicios = []) {
+        return (servicios || []).map(s => ({
+            id: s.idServicio ?? s.id ?? s.pk ?? s.id_servicio ?? s.servicio_id ?? s.value ?? null,
+            nombre: s.nombre ?? s.titulo ?? s.label ?? '',
+            duracion: s.duracion ?? s.duracion_minutos ?? s.duracionMinutos ?? '',
+            descripcion: s.descripcion ?? s.detalle ?? s.nombre ?? ''
+        })).filter(s => s.nombre);
+    },
+
     init(pacienteId) {
         this.pacienteId = pacienteId;
         this.cargarHospitalizaciones();
@@ -60,45 +69,23 @@ const hospitalizacionesManager = {
             });
         }
 
-        // Formulario de cirugía
+        // ✅ Formulario de cirugía (event delegation - funciona aunque el select se agregue dinámicamente)
         const formCirugia = document.getElementById('formCirugia');
         if (formCirugia) {
-            // Hook change for servicio select to autocompletar duración
-            const selectServicio = document.getElementById('servicioCirugia');
-            const duracionInput = document.getElementById('duracionCirugia');
-            const descripcionInput = document.querySelector('textarea[name="descripcion"]');
-            if (selectServicio && duracionInput) {
-                selectServicio.addEventListener('change', () => {
-                    const servicioId = selectServicio.value;
-                    const servicio = this.serviciosCirugia.find(s => String(s.idServicio) === String(servicioId));
-                    if (servicio) {
-                        duracionInput.value = servicio.duracion || '';
-                        if (descripcionInput) {
-                            descripcionInput.value = servicio.nombre || '';
-                        }
-                    } else {
-                        duracionInput.value = '';
-                        if (descripcionInput) {
-                            descripcionInput.value = '';
-                        }
-                    }
-                });
-            }
-            // Buscador de insumos
-            const buscadorInsumos = document.getElementById('buscarInsumosCirugia');
-            if (buscadorInsumos) {
-                buscadorInsumos.addEventListener('input', (e) => {
-                    this.renderInsumosSelect(e.target.value);
-                });
-            }
+            formCirugia.addEventListener('change', (e) => {
+                const target = e.target;
+                if (!target || target.id !== 'servicioCirugia') return;
 
-            // Buscador de equipo
-            const buscadorEquipo = document.getElementById('buscarEquipoCirugia');
-            if (buscadorEquipo) {
-                buscadorEquipo.addEventListener('input', (e) => {
-                    this.renderEquipoSelect(e.target.value);
-                });
-            }
+                const selectServicio = target;
+                const opt = selectServicio.selectedOptions?.[0];
+                if (!opt) return;
+
+                const duracionInput = document.getElementById('duracionCirugia');
+                const descripcionInput = formCirugia.querySelector('textarea[name="descripcion"]');
+
+                if (duracionInput) duracionInput.value = opt.dataset.duracion || '';
+                if (descripcionInput) descripcionInput.value = opt.dataset.descripcion || '';
+            });
 
             formCirugia.addEventListener('submit', (e) => {
                 console.log('🔵 Submit formulario cirugía');
@@ -155,14 +142,46 @@ const hospitalizacionesManager = {
 
     async cargarServiciosCirugia() {
         try {
-            const response = await fetch('/clinica/api/servicios/?categoria=cirugia');
+            // ✅ Traer TODOS los servicios (sin filtro en el backend)
+            const response = await fetch('/clinica/api/servicios/');
             const data = await response.json();
+
+            console.log('API servicios raw[0]:', data?.servicios?.[0]);
+
             if (data.success) {
-                this.serviciosCirugia = data.servicios || [];
+                // ✅ Filtrar en JS (case-insensitive, acepta "Cirugía", "cirugia", "CIRUGIA")
+                const serviciosCirugia = (data.servicios || []).filter(s => {
+                    const cat = (s.categoria || '').toLowerCase();
+                    return cat.includes('cirug') || cat.includes('quirur');
+                });
+
+                this.serviciosCirugia = this.normalizarServiciosCirugia(serviciosCirugia);
+                console.log(`✅ Servicios de cirugía filtrados: ${this.serviciosCirugia.length}`, this.serviciosCirugia);
+
                 const selectServicio = document.getElementById('servicioCirugia');
                 if (selectServicio) {
-                    selectServicio.innerHTML = '<option value="">Seleccione servicio (categoría: cirugía)</option>' +
-                        this.serviciosCirugia.map(s => `<option value="${s.idServicio}" data-duracion="${s.duracion || ''}">${s.nombre}</option>`).join('');
+                    selectServicio.innerHTML = '<option value="">Seleccione servicio (cirugía)</option>';
+
+                    this.serviciosCirugia.forEach(s => {
+                        const opt = document.createElement('option');
+
+                        if (s.id == null || s.id === '' || s.id === undefined) {
+                            console.warn('Servicio sin ID desde API:', s);
+                            opt.value = '';
+                            opt.disabled = true;
+                            opt.textContent = `${s.nombre} (SIN ID en API)`;
+                        } else {
+                            opt.value = String(s.id);
+                            opt.textContent = s.nombre;
+                        }
+
+                        opt.dataset.duracion = s.duracion ?? '';
+                        opt.dataset.descripcion = s.descripcion ?? '';
+
+                        selectServicio.appendChild(opt);
+                    });
+
+                    selectServicio.dispatchEvent(new Event('change'));
                 }
             }
         } catch (err) {
@@ -790,10 +809,18 @@ const hospitalizacionesManager = {
         const hospId = document.getElementById('cirugiaModal').dataset.hospId;
         const formData = new FormData(form);
 
+        // ⚠️ asegúrate que tu <select> tenga name="servicio_cirugia"
         const servicioId = formData.get('servicio_cirugia');
-        const servicio = this.serviciosCirugia.find(s => String(s.idServicio) === String(servicioId));
+
+        // ✅ CORREGIDO: ahora el normalizador usa s.id (no s.idServicio)
+        const servicio = this.serviciosCirugia.find(s => String(s.id) === String(servicioId));
         const tipoCirugia = servicio ? servicio.nombre : '';
-        const duracion = servicio ? servicio.duracion : formData.get('duracion_minutos');
+        const duracion = servicio ? (servicio.duracion || '') : (formData.get('duracion_minutos') || '');
+
+        if (!servicioId) {
+            alert('❌ El servicio seleccionado no tiene ID. Revisa la API /clinica/api/servicios/ (debe incluir id).');
+            return;
+        }
 
         // Insumos seleccionados
         const insumosSelect = document.getElementById('insumosCirugia');
