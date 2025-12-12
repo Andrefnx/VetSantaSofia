@@ -1384,20 +1384,25 @@
                             </div>
                         </div>
                         <div style="background: #f9f9f9; border: 1px dashed var(--border-color); border-radius: 8px; padding: 1rem;">
-                            <!-- Búsqueda Principal -->
+                            <!-- Búsqueda Principal: FILTER-SEARCH -->
                             <div style="margin-bottom: 1rem;">
-                                <label style="font-size: 0.75rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.75rem;">Buscar</label>
+                                <label style="font-size: 0.75rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.75rem;">
+                                    <i class="fas fa-search"></i> Buscar (filter-search)
+                                </label>
                                 <input type="text" class="form-control" placeholder="Motivo, diagnóstico..." style="padding: 0.75rem 0.85rem; font-size: 0.95rem;">
                             </div>
                             
                             <!-- Filtros Grid -->
                             <div style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border-color);">
-                                <!-- Filtro Fecha -->
+                                <!-- Filtro Fecha Mes/Año: FILTER-DATE-MONTH-YEAR -->
                                 <div>
                                     <label style="font-size: 0.75rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
-                                        <i class="fas fa-calendar"></i> Fecha
+                                        <i class="fas fa-calendar"></i> Fecha Mes/Año (filter-date-month-year)
                                     </label>
-                                    <div style="display: flex; gap: 0.5rem;">
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <button class="btn btn-primary" style="padding: 0.5rem 0.75rem; display: flex; align-items: center; justify-content: center;" title="Período anterior">
+                                            <i class="fas fa-arrow-left" style="font-size: 0.9rem;"></i>
+                                        </button>
                                         <select class="form-control" style="flex: 1; padding: 0.5rem;">
                                             <option value="">Mes</option>
                                             <option>Enero</option>
@@ -1409,26 +1414,73 @@
                                             <option>2024</option>
                                             <option>2025</option>
                                         </select>
-                                        <button class="btn btn-primary" style="padding: 0.5rem 0.75rem; width: 44px; display: flex; align-items: center; justify-content: center;">
+                                        <button class="btn btn-primary" style="padding: 0.5rem 0.75rem; display: flex; align-items: center; justify-content: center;" title="Período siguiente">
                                             <i class="fas fa-arrow-right" style="font-size: 0.9rem;"></i>
                                         </button>
                                     </div>
                                 </div>
                                 
-                                <!-- Filtro Estado -->
+                                <!-- Filtro Fecha Calendario: FILTER-DATE-PICKER -->
                                 <div>
                                     <label style="font-size: 0.75rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
-                                        <i class="fas fa-filter"></i> Estado
+                                        <i class="fas fa-calendar-alt"></i> Fecha Calendario (filter-date-picker)
                                     </label>
-                                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 0.75rem; background: #f8f9fa; border-radius: 6px; font-size: 0.9rem;">
-                                            <input type="checkbox" checked style="cursor: pointer;"> 
-                                            <span style="color: var(--primary-color); font-weight: 600;">✓ Activa</span>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <input type="date" class="form-control" style="flex: 1; padding: 0.5rem;">
+                                        <input type="date" class="form-control" style="flex: 1; padding: 0.5rem;" placeholder="Hasta">
+                                        <button class="btn btn-primary" style="padding: 0.5rem 0.75rem; display: flex; align-items: center; justify-content: center;" title="Aplicar rango de fechas">
+                                            <i class="fas fa-check" style="font-size: 0.9rem;"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Filtro Estado Mejorado: FILTER-STATUS-CHECKBOX -->
+                                <div>
+                                    <label style="font-size: 0.75rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                        <i class="fas fa-toggle-on"></i> Estado (filter-status-checkbox)
+                                    </label>
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem;">
+                                        <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; padding: 0.65rem 0.9rem; background: white; border: 1.5px solid #e0e0e0; border-radius: 6px; font-size: 0.95rem; font-weight: 500; transition: all 0.2s; color: #333;">
+                                            <input type="checkbox" checked style="cursor: pointer; width: 14px; height: 14px; margin: 0;"> 
+                                            <span>Activa</span>
                                         </label>
-                                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 0.75rem; background: #f8f9fa; border-radius: 6px; font-size: 0.9rem;">
-                                            <input type="checkbox" checked style="cursor: pointer;"> 
-                                            <span style="color: #6b8e6b; font-weight: 600;">✓ Alta</span>
+                                        <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; padding: 0.65rem 0.9rem; background: white; border: 1.5px solid #e0e0e0; border-radius: 6px; font-size: 0.95rem; font-weight: 500; transition: all 0.2s; color: #333;">
+                                            <input type="checkbox" checked style="cursor: pointer; width: 14px; height: 14px; margin: 0;"> 
+                                            <span>Pausada</span>
                                         </label>
+                                        <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; padding: 0.65rem 0.9rem; background: white; border: 1.5px solid #e0e0e0; border-radius: 6px; font-size: 0.95rem; font-weight: 500; transition: all 0.2s; color: #333;">
+                                            <input type="checkbox" style="cursor: pointer; width: 14px; height: 14px; margin: 0;"> 
+                                            <span>Inactiva</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Filtro Categoría: FILTER-SELECT-SINGLE -->
+                                <div>
+                                    <label style="font-size: 0.75rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                        <i class="fas fa-list"></i> Categoría (filter-select-single)
+                                    </label>
+                                    <select class="form-control" style="padding: 0.75rem;">
+                                        <option value="">-- Todas las categorías --</option>
+                                        <option>Consulta General</option>
+                                        <option>Urgencia</option>
+                                        <option>Cirugía</option>
+                                        <option>Vacunación</option>
+                                    </select>
+                                </div>
+
+                                <!-- Filtro Rango Numérico: FILTER-RANGE-NUMBER -->
+                                <div>
+                                    <label style="font-size: 0.75rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                        <i class="fas fa-sliders-h"></i> Rango Precio (filter-range-number)
+                                    </label>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <input type="number" class="form-control" placeholder="Desde" style="padding: 0.5rem; flex: 1;">
+                                        <span style="color: #999; font-weight: 600;">-</span>
+                                        <input type="number" class="form-control" placeholder="Hasta" style="padding: 0.5rem; flex: 1;">
+                                        <button class="btn btn-primary" style="padding: 0.5rem 0.75rem; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-check" style="font-size: 0.9rem;"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
