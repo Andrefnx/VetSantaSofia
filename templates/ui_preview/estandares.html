@@ -1354,25 +1354,36 @@ function toggleActionDetails(row) {
 
 // Toggle selector con cambio de color según selección
 document.addEventListener('DOMContentLoaded', function() {
-    // Selectores tipo grid o flex con botones que cambian de color
-    const selectorGroups = document.querySelectorAll('[style*="grid"][style*="grid-template-columns"], [style*="flex"]');
+    // Encontrar todos los contenedores con selectores
+    const selectorContainers = document.querySelectorAll('.grid-2col, .flex-gap-075, [class*="grid-"], [class*="flex"]');
     
-    selectorGroups.forEach(group => {
-        const buttons = group.querySelectorAll('.btn');
-        if (buttons.length > 1 && buttons[0].classList.contains('btn-primary')) {
-            // Este es un selector group
-            buttons.forEach((button, index) => {
-                button.addEventListener('click', function(e) {
-                    // Remover clases de todos los botones
-                    buttons.forEach(btn => {
-                        btn.classList.remove('btn-primary');
-                        btn.classList.add('btn-secondary');
+    selectorContainers.forEach(container => {
+        // Buscar botones con clase btn-selector o btn-flex-1
+        const buttons = container.querySelectorAll('.btn-selector, .btn-flex-1, .btn.btn-primary, .btn.btn-secondary');
+        
+        // Solo procesar si hay al menos 2 botones y al menos uno tiene btn-primary o btn-secondary
+        if (buttons.length >= 2) {
+            const hasStates = Array.from(buttons).some(btn => 
+                btn.classList.contains('btn-primary') || btn.classList.contains('btn-secondary')
+            );
+            
+            if (hasStates) {
+                buttons.forEach((button) => {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // Remover btn-primary de todos los botones del grupo
+                        buttons.forEach(btn => {
+                            btn.classList.remove('btn-primary');
+                            btn.classList.add('btn-secondary');
+                        });
+                        
+                        // Agregar btn-primary al botón clickeado
+                        this.classList.remove('btn-secondary');
+                        this.classList.add('btn-primary');
                     });
-                    // Agregar clase al seleccionado
-                    this.classList.remove('btn-secondary');
-                    this.classList.add('btn-primary');
                 });
-            });
+            }
         }
     });
 });
