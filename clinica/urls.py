@@ -34,4 +34,9 @@ urlpatterns = [
     
     # Rutas para altas médicas
     path('hospitalizacion/<int:hospitalizacion_id>/alta/crear/', views.crear_alta_medica, name='crear_alta_medica'),
+    
+    # Rutas para documentos
+    path('pacientes/<int:paciente_id>/documento/subir/', views.subir_documento, name='subir_documento'),
+    path('documento/<int:documento_id>/descargar/', views.descargar_documento, name='descargar_documento'),
+    path('documento/<int:documento_id>/eliminar/', views.eliminar_documento, name='eliminar_documento'),
 ]

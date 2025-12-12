@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Consulta, Hospitalizacion, Cirugia, RegistroDiario, Alta
+from .models import Consulta, Hospitalizacion, Cirugia, RegistroDiario, Alta, Documento
 
 @admin.register(Consulta)
 class ConsultaAdmin(admin.ModelAdmin):
@@ -115,3 +115,23 @@ class AltaAdmin(admin.ModelAdmin):
     
     ordering = ('-fecha_alta',)
     date_hierarchy = 'fecha_alta'
+
+
+@admin.register(Documento)
+class DocumentoAdmin(admin.ModelAdmin):
+    list_display = ('id', 'nombre', 'paciente', 'fecha_subida')
+    list_filter = ('fecha_subida', 'paciente')
+    search_fields = ('nombre', 'descripcion', 'paciente__nombre')
+    readonly_fields = ('fecha_subida',)
+    
+    fieldsets = (
+        ('Información del Documento', {
+            'fields': ('paciente', 'nombre', 'descripcion')
+        }),
+        ('Archivo', {
+            'fields': ('archivo', 'fecha_subida')
+        }),
+    )
+    
+    ordering = ('-fecha_subida',)
+    date_hierarchy = 'fecha_subida'

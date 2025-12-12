@@ -518,13 +518,13 @@
                         <div style="margin-bottom: 1rem;">
                             <label class="vet-btn vet-btn-primary" style="cursor:pointer;">
                                 <i class="bi bi-paperclip"></i> Adjuntar Documento
-                                <input type="file" name="adjuntar_documento" style="display:none;"
+                                <input type="file" id="inputDocumento" name="adjuntar_documento" style="display:none;"
                                     onchange="subirDocumento(this, {{ paciente.id }})">
                             </label>
                         </div>
-                        <ul class="list-group">
+                        <ul class="list-group" id="listaDocumentos">
                             {% for doc in documentos %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <li class="list-group-item d-flex justify-content-between align-items-center" data-doc-id="{{ doc.id }}">
                                 <div>
                                     <strong>{{ doc.nombre }}</strong>
                                     {% if doc.descripcion %}
@@ -532,12 +532,17 @@
                                     {% endif %}
                                     <br><small class="text-muted">{{ doc.fecha_subida|date:"d/m/Y H:i" }}</small>
                                 </div>
-                                <a href="{{ doc.archivo.url }}" target="_blank" class="vet-link-exam">
-                                    <i class="bi bi-file-earmark-text"></i> Descargar
-                                </a>
+                                <div style="display: flex; gap: 10px;">
+                                    <a href="{{ doc.archivo.url }}" target="_blank" class="vet-link-exam">
+                                        <i class="bi bi-file-earmark-text"></i> Ver
+                                    </a>
+                                    <button class="btn btn-sm btn-danger" onclick="eliminarDocumento({{ doc.id }})" title="Eliminar documento">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
                             </li>
                             {% empty %}
-                            <li class="list-group-item" style="text-align: center; padding: 2rem; color: #999;">
+                            <li class="list-group-item" id="mensajeSinDocumentos" style="text-align: center; padding: 2rem; color: #999;">
                                 No hay documentos adjuntos
                             </li>
                             {% endfor %}
@@ -1009,5 +1014,154 @@
 <script src="{% static 'js/pacientes/antecedentes_medicos.js' %}"></script>
 <script src="{% static 'js/pacientes/historial_medico.js' %}"></script>
 <script src="{% static 'js/pacientes/inventario_consulta.js' %}"></script>
+
+<script>
+// Función para subir documento
+function subirDocumento(input, pacienteId) {
+    const archivo = input.files[0];
+    if (!archivo) return;
+    
+    // Mostrar indicador de carga
+    const lista = document.getElementById('listaDocumentos');
+    const cargandoItem = document.createElement('li');
+    cargandoItem.className = 'list-group-item text-center';
+    cargandoItem.id = 'cargandoDocumento';
+    cargandoItem.innerHTML = '<i class="bi bi-hourglass-split"></i> Subiendo documento...';
+    
+    // Eliminar mensaje de sin documentos si existe
+    const mensajeSin = document.getElementById('mensajeSinDocumentos');
+    if (mensajeSin) {
+        mensajeSin.remove();
+    }
+    
+    lista.appendChild(cargandoItem);
+    
+    // Crear FormData
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+    formData.append('nombre', archivo.name);
+    
+    // Obtener el token CSRF
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // Enviar archivo
+    fetch(`/clinica/pacientes/${pacienteId}/documento/subir/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Eliminar indicador de carga
+        cargandoItem.remove();
+        
+        if (data.success) {
+            // Agregar nuevo documento a la lista
+            const nuevoItem = document.createElement('li');
+            nuevoItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+            nuevoItem.setAttribute('data-doc-id', data.documento.id);
+            nuevoItem.innerHTML = `
+                <div>
+                    <strong>${data.documento.nombre}</strong>
+                    ${data.documento.descripcion ? '<br><small class="text-muted">' + data.documento.descripcion + '</small>' : ''}
+                    <br><small class="text-muted">${data.documento.fecha_subida}</small>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <a href="${data.documento.url}" target="_blank" class="vet-link-exam">
+                        <i class="bi bi-file-earmark-text"></i> Ver
+                    </a>
+                    <button class="btn btn-sm btn-danger" onclick="eliminarDocumento(${data.documento.id})" title="Eliminar documento">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            lista.appendChild(nuevoItem);
+            
+            // Mostrar mensaje de éxito
+            mostrarMensaje('Documento subido correctamente', 'success');
+        } else {
+            mostrarMensaje(data.message || 'Error al subir documento', 'error');
+        }
+        
+        // Limpiar input
+        input.value = '';
+    })
+    .catch(error => {
+        cargandoItem.remove();
+        console.error('Error:', error);
+        mostrarMensaje('Error al subir documento', 'error');
+        input.value = '';
+    });
+}
+
+// Función para eliminar documento
+function eliminarDocumento(documentoId) {
+    if (!confirm('¿Está seguro de eliminar este documento?')) {
+        return;
+    }
+    
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch(`/clinica/documento/${documentoId}/eliminar/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Eliminar elemento de la lista
+            const item = document.querySelector(`[data-doc-id="${documentoId}"]`);
+            if (item) {
+                item.remove();
+            }
+            
+            // Si no quedan documentos, mostrar mensaje
+            const lista = document.getElementById('listaDocumentos');
+            if (lista.children.length === 0) {
+                const mensajeSin = document.createElement('li');
+                mensajeSin.className = 'list-group-item';
+                mensajeSin.id = 'mensajeSinDocumentos';
+                mensajeSin.style.cssText = 'text-align: center; padding: 2rem; color: #999;';
+                mensajeSin.textContent = 'No hay documentos adjuntos';
+                lista.appendChild(mensajeSin);
+            }
+            
+            mostrarMensaje('Documento eliminado correctamente', 'success');
+        } else {
+            mostrarMensaje(data.message || 'Error al eliminar documento', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensaje('Error al eliminar documento', 'error');
+    });
+}
+
+// Función auxiliar para mostrar mensajes
+function mostrarMensaje(mensaje, tipo) {
+    const alertClass = tipo === 'success' ? 'alert-success' : 'alert-danger';
+    const icono = tipo === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill';
+    
+    const alerta = document.createElement('div');
+    alerta.className = `alert ${alertClass} alert-dismissible fade show`;
+    alerta.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alerta.innerHTML = `
+        <i class="bi bi-${icono}"></i> ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alerta);
+    
+    // Auto-cerrar después de 5 segundos
+    setTimeout(() => {
+        alerta.remove();
+    }, 5000);
+}
+</script>
 
 {% endblock %}

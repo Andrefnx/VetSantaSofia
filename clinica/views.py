@@ -1,15 +1,16 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse, Http404
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from .models import Consulta, Hospitalizacion, Cirugia, RegistroDiario, Alta
+from .models import Consulta, Hospitalizacion, Cirugia, RegistroDiario, Alta, Documento
 from pacientes.models import Paciente
 from cuentas.models import CustomUser
 from servicios.models import Servicio
 import json
 import sys
+import os
 
 @login_required
 def consulta_view(request):
@@ -39,6 +40,9 @@ def ficha_paciente(request, paciente_id):
     # Obtener consultas del paciente ordenadas por fecha
     consultas = Consulta.objects.filter(paciente=paciente).select_related('veterinario').order_by('-fecha')
     
+    # Obtener documentos del paciente
+    documentos = Documento.objects.filter(paciente=paciente).order_by('-fecha_subida')
+    
     # Obtener nombre completo del veterinario logueado
     nombre_veterinario = f"{request.user.nombre} {request.user.apellido}".strip()
     
@@ -48,6 +52,7 @@ def ficha_paciente(request, paciente_id):
     context = {
         'paciente': paciente,
         'consultas': consultas,
+        'documentos': documentos,
         'nombre_veterinario': nombre_veterinario,
         'veterinarios': veterinarios,
     }
@@ -819,3 +824,94 @@ def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
             'success': False,
             'error': str(e)
         }, status=400)
+
+
+@login_required
+@require_http_methods(["POST"])
+def subir_documento(request, paciente_id):
+    """Sube un documento para un paciente"""
+    try:
+        paciente = get_object_or_404(Paciente, id=paciente_id)
+        
+        if 'archivo' not in request.FILES:
+            return JsonResponse({
+                'success': False,
+                'message': 'No se ha seleccionado ningún archivo'
+            }, status=400)
+        
+        archivo = request.FILES['archivo']
+        nombre = request.POST.get('nombre', archivo.name)
+        descripcion = request.POST.get('descripcion', '')
+        
+        # Crear el documento
+        documento = Documento.objects.create(
+            paciente=paciente,
+            nombre=nombre,
+            descripcion=descripcion,
+            archivo=archivo
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Documento subido correctamente',
+            'documento': {
+                'id': documento.id,
+                'nombre': documento.nombre,
+                'descripcion': documento.descripcion,
+                'fecha_subida': documento.fecha_subida.strftime('%d/%m/%Y %H:%M'),
+                'url': documento.archivo.url
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al subir documento: {str(e)}'
+        }, status=500)
+
+
+@login_required
+def descargar_documento(request, documento_id):
+    """Descarga un documento"""
+    try:
+        documento = get_object_or_404(Documento, id=documento_id)
+        
+        # Verificar que el archivo existe
+        if not os.path.exists(documento.archivo.path):
+            raise Http404("El archivo no existe")
+        
+        # Retornar el archivo
+        response = FileResponse(
+            open(documento.archivo.path, 'rb'),
+            content_type='application/octet-stream'
+        )
+        response['Content-Disposition'] = f'attachment; filename="{documento.nombre}"'
+        return response
+    except Documento.DoesNotExist:
+        raise Http404("Documento no encontrado")
+    except Exception as e:
+        raise Http404(f"Error al descargar documento: {str(e)}")
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def eliminar_documento(request, documento_id):
+    """Elimina un documento"""
+    try:
+        documento = get_object_or_404(Documento, id=documento_id)
+        
+        # Eliminar el archivo físico
+        if os.path.exists(documento.archivo.path):
+            os.remove(documento.archivo.path)
+        
+        # Eliminar el registro de la base de datos
+        documento.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Documento eliminado correctamente'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al eliminar documento: {str(e)}'
+        }, status=500)
