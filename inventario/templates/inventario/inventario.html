@@ -129,6 +129,9 @@
                 <button type="button" onclick="openConfigNivelesModal(this)">
                     <i class="fas fa-sliders-h"></i> Niveles
                 </button>
+                <button type="button" onclick="abrirModalEliminarProducto(this)">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
                 <button type="button" onclick="abrirModalArchivarProducto(this, {{ insumo.idInventario }}, false)">
                     <i class="fas fa-archive"></i> Archivar
                 </button>
@@ -464,9 +467,9 @@
 <div class="vet-modal-overlay hide" id="modalModificarStock">
     <div class="vet-modal-compact">
         <div class="vet-modal-content">
-            <div class="vet-custom-modal-title">
-                <h3><i class="fas fa-boxes"></i> Modificar Stock</h3>
-                <i class="bi bi-x" onclick="closeVetModal('modalModificarStock')"></i>
+            <div class="vet-custom-modal-title" style="background: #10b981;">
+                <h2 style="color: white; font-size: 1rem; margin: 0;"><i class="fas fa-boxes"></i> Modificar Stock</h2>
+                <i class="bi bi-x vet-close-btn" onclick="closeVetModal('modalModificarStock')"></i>
             </div>
             <div class="vet-modal-body">
                 <div class="text-center mb-3">
@@ -485,11 +488,11 @@
                         </button>
                     </div>
                 </div>
-                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <div class="vet-modal-footer">
                     <button type="button" class="vet-btn-cancel" onclick="closeVetModal('modalModificarStock')">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
-                    <button type="button" class="vet-btn-grey success" onclick="guardarStock()">
+                    <button type="button" onclick="guardarStock()">
                         <i class="bi bi-floppy-fill"></i> Guardar
                     </button>
                 </div>
@@ -502,11 +505,11 @@
 <div class="vet-modal-overlay hide" id="modalConfigNiveles">
     <div class="vet-modal-compact">
         <div class="vet-modal-content">
-            <div class="vet-custom-modal-title">
-                <h2><i class="fas fa-sliders-h"></i> Niveles de stock - <span id="productoNombreNiveles"></span></h2>
+            <div class="vet-custom-modal-title" style="background: #0b4d2d;">
+                <h2 style="color: white; font-size: 1rem; margin: 0;"><i class="fas fa-sliders-h"></i> Niveles de stock - <span id="productoNombreNiveles"></span></h2>
                 <i class="bi bi-x vet-close-btn" onclick="closeVetModal('modalConfigNiveles')"></i>
             </div>
-            <div class="vet-custom-modal-body">
+            <div class="vet-modal-body">
                 <input type="hidden" id="idProductoNiveles">
                 
                 <div class="mb-3">
@@ -532,12 +535,11 @@
                     <strong>Stock Alto (Verde):</strong>
                     Se marcará automáticamente cuando el stock supere el nivel medio.
                 </div>
-                
-                <div class="vet-custom-modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+                <div class="vet-modal-footer">
                     <button type="button" class="vet-btn-cancel" onclick="closeVetModal('modalConfigNiveles')">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
-                    <button type="button" class="vet-btn-grey success" onclick="guardarNivelesStock()">
+                    <button type="button" onclick="guardarNivelesStock()">
                         <i class="bi bi-floppy-fill"></i> Guardar
                     </button>
                 </div>
@@ -550,18 +552,18 @@
 <div class="vet-modal-overlay hide" id="modalArchivarProducto">
     <div class="vet-modal-compact">
         <div class="vet-modal-content">
-            <div class="vet-custom-modal-title">
-                <h2><i class="fas fa-archive"></i> <span id="tituloArchivar">Archivar Producto</span></h2>
+            <div class="vet-custom-modal-title" style="background: #f59e0b;">
+                <h2 style="color: white; font-size: 1rem; margin: 0;"><i class="fas fa-archive"></i> <span id="tituloArchivar">Archivar Producto</span></h2>
                 <i class="bi bi-x vet-close-btn" onclick="closeArchivarProductoModal()"></i>
             </div>
-            <div class="vet-custom-modal-body">
-                <p id="archivarProductoMensaje">¿Estás seguro que deseas archivar este producto? Podrás restaurarlo desde la pestaña de archivados.</p>
+            <div class="vet-modal-body">
+                <p id="archivarProductoMensaje" class="text-center mb-4">¿Estás seguro que deseas archivar este producto? Podrás restaurarlo desde la pestaña de archivados.</p>
                 
-                <div class="vet-custom-modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+                <div class="vet-modal-footer">
                     <button type="button" class="vet-btn-cancel" onclick="closeArchivarProductoModal()">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
-                    <button type="button" id="btnConfirmarArchivarProducto" class="vet-btn-grey success">
+                    <button type="button" id="btnConfirmarArchivarProducto">
                         <i class="fas fa-archive"></i> <span id="btnTextoArchivar">Archivar</span>
                     </button>
                 </div>
@@ -575,5 +577,5 @@
 {% block extra_js %}
 <script src="{% static 'js/inventario/gestion_wheel.js' %}?v=10"></script>
 <script src="{% static 'js/inventario/dosis_calculator.js' %}"></script>
-<script src="{% static 'js/inventario/crud_inventario.js' %}?v=11"></script>
+<script src="{% static 'js/inventario/crud_inventario.js' %}?v=13"></script>
 {% endblock %}

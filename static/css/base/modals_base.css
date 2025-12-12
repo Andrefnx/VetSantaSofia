@@ -148,6 +148,13 @@
     max-height: 70vh !important;
 }
 
+.vet-custom-modal-body {
+    padding: 20px 24px !important;
+    background: #fff !important;
+    overflow-y: auto !important;
+    flex: 1 1 auto !important;
+}
+
 .vet-custom-modal button:not(.btn-thin):not(.vet-btn-cancel) {
     cursor: pointer !important;
     border: none !important;
