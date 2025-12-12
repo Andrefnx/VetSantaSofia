@@ -1,283 +1,267 @@
 {% extends 'partials/base.html' %}
 {% load static %}
 
-{% block title %}Agenda{% endblock %}
+{% block title %}Agenda Veterinaria{% endblock %}
 
 {% block styles %}
-<link rel="stylesheet" href="{% static 'agenda/css/agenda.css' %}">
-
-<style>
-.agenda-container {
-    padding: 32px 24px;
-    background: #f7fafc;
-    min-height: 90vh;
-    border-radius: 18px;
-    box-shadow: 0 2px 16px #0001;
-    max-width: 900px;
-    margin: 30px auto;
-}
-
-.agenda-header {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    margin-bottom: 32px;
-    justify-content: center;
-}
-
-.agenda-header h2 {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #0096d6;
-    letter-spacing: 1px;
-}
-
-.day-nav {
-    padding: 8px 18px;
-    font-size: 22px;
-    background: #e3f2fd;
-    border-radius: 8px;
-    border: none;
-    color: #0096d6;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.day-nav:hover {
-    background: #b7e5ff;
-}
-
-.daily-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-
-.hour-block {
-    display: flex;
-    gap: 18px;
-    align-items: center;
-}
-
-.hour-label {
-    width: 90px;
-    font-weight: bold;
-    color: #444;
-    font-size: 1.1rem;
-    text-align: right;
-}
-
-.hour-slots {
-    display: flex;
-    gap: 10px;
-}
-
-.slot {
-    width: 100px;
-    height: 54px;
-    border-radius: 8px;
-    border: 1.5px solid #d0e3f1;
-    background: #fff;
-    position: relative;
-    cursor: pointer;
-    padding: 6px;
-    box-shadow: 0 1px 4px #0001;
-    transition: border 0.2s, box-shadow 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.slot:hover {
-    border: 1.5px solid #0096d6;
-    box-shadow: 0 2px 8px #0096d622;
-}
-.slot.has-cita {
-    background: linear-gradient(135deg, #b7e5ff 60%, #e3f2fd 100%);
-    border-color: #0096d6;
-    color: #0a3a5a;
-    font-weight: 600;
-}
-
-.slot-time {
-    font-size: 1.1rem;
-    color: #0096d6;
-    font-weight: 500;
-}
-
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: #00000055;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.hide {
-    display: none !important;
-}
-
-.modal-card {
-    background: white;
-    padding: 32px 28px;
-    border-radius: 14px;
-    width: 400px;
-    box-shadow: 0 4px 24px #0002;
-}
-
-.modal-card h3 {
-    margin-bottom: 18px;
-    color: #0096d6;
-    font-size: 1.3rem;
-    font-weight: 700;
-}
-
-.modal-card form {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-.modal-card label {
-    font-weight: 500;
-    color: #444;
-}
-
-.modal-card input,
-.modal-card select,
-.modal-card textarea {
-    border: 1.2px solid #d0e3f1;
-    border-radius: 6px;
-    padding: 7px 10px;
-    font-size: 1rem;
-    background: #f7fafc;
-    transition: border 0.2s;
-}
-.modal-card input:focus,
-.modal-card select:focus,
-.modal-card textarea:focus {
-    border-color: #0096d6;
-    outline: none;
-}
-
-.btn-primary {
-    background: #0096d6;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    padding: 9px 0;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.btn-primary:hover {
-    background: #007bb3;
-}
-
-.btn-secondary {
-    background: #e3f2fd;
-    color: #0096d6;
-    border: none;
-    border-radius: 6px;
-    padding: 9px 0;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    margin-top: 4px;
-    transition: background 0.2s;
-}
-.btn-secondary:hover {
-    background: #b7e5ff;
-}
-</style>
+<link rel="stylesheet" href="{% static 'agenda/css/agenda-sistema.css' %}">
 {% endblock %}
 
 {% block content %}
+<div class="page-header">
+    <h3 class="fw-bold mb-3">Agenda Veterinaria</h3>
+    <ul class="breadcrumbs mb-3">
+        <li class="nav-home">
+            <a href="{% url 'dashboard:dashboard' %}">
+                <i class="icon-home"></i>
+            </a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Agenda</a>
+        </li>
+    </ul>
+</div>
 
-<div class="agenda-container">
-
-    <div class="agenda-header">
-        <button id="dayPrev" class="day-nav"><</button>
-        <h2 id="currentDay">Cargando...</h2>
-        <button id="dayNext" class="day-nav">></button>
-    </div>
-
-    <div class="daily-grid">
-        {% for h in horas %}
-
-        <div class="hour-block">
-            <div class="hour-label">{{ h }}:00</div>
-            <div class="hour-slots">
-
-                {% for m in minutos %}
-
-                <div class="slot"
-                     data-hour="{{ h }}"
-                     data-minute="{{ m }}">
-                    <span class="slot-time">{{ h }}:{{ m }}</span>
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                
+                <!-- Navegación del calendario -->
+                <div class="calendar-navigation mb-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button id="prevMonth" class="btn btn-outline-primary">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        
+                        <div class="calendar-header-center d-flex gap-3 align-items-center">
+                            <select id="monthSelect" class="form-select" style="width: auto;"></select>
+                            <select id="yearSelect" class="form-select" style="width: auto;"></select>
+                            <button id="todayBtn" class="btn btn-primary">
+                                <i class="fas fa-calendar-day"></i> Hoy
+                            </button>
+                        </div>
+                        
+                        <button id="nextMonth" class="btn btn-outline-primary">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
                 </div>
-                {% endfor %}
+
+                <!-- Vista de calendario mensual -->
+                <div id="calendar" class="agenda-calendar mb-4"></div>
+
+                <!-- Sección de detalles del día seleccionado -->
+                <div id="dayDetails" class="day-details-section" style="display: none;">
+                    <h4 class="mb-3">
+                        <i class="fas fa-calendar-check"></i> 
+                        <span id="selectedDateTitle"></span>
+                    </h4>
+                    
+                    <!-- Tabs para veterinarios -->
+                    <ul class="nav nav-tabs" id="veterinariosTab" role="tablist"></ul>
+                    
+                    <!-- Contenido de tabs -->
+                    <div class="tab-content mt-3" id="veterinariosTabContent"></div>
+                </div>
 
             </div>
         </div>
-        {% endfor %}
     </div>
-
 </div>
 
-{% endblock %}
+<!-- Datos para JavaScript -->
+<script>
+    const VETERINARIOS = {{ veterinarios|safe }};
+    const SERVICIOS = {{ servicios|safe }};
+</script>
 
+{% endblock %}
 
 {% block modals %}
 
-<!-- Modal Nueva Cita -->
-<div class="modal-overlay hide" id="modalNuevaCita">
-    <div class="modal-card">
-        <h3>Nueva Cita</h3>
+<!-- Modal para agendar/editar cita -->
+<div class="modal fade" id="citaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="citaModalTitle">Nueva Cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="citaForm">
+                    <input type="hidden" id="citaId">
+                    <input type="hidden" id="citaFecha">
+                    <input type="hidden" id="citaHora">
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Paciente *</label>
+                            <select id="citaPaciente" class="form-select" required>
+                                <option value="">Seleccione un paciente</option>
+                                {% for paciente in pacientes %}
+                                <option value="{{ paciente.id }}" 
+                                        data-especie="{{ paciente.especie }}"
+                                        data-propietario="{{ paciente.propietario.nombre_completo }}">
+                                    {{ paciente.nombre }} ({{ paciente.get_especie_display }}) - {{ paciente.propietario.nombre_completo }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Veterinario *</label>
+                            <select id="citaVeterinario" class="form-select" required>
+                                <option value="">Seleccione un veterinario</option>
+                                {% for vet in veterinarios %}
+                                <option value="{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Servicio *</label>
+                            <select id="citaServicio" class="form-select" required>
+                                <option value="">Seleccione un servicio</option>
+                                {% regroup servicios by categoria as servicios_agrupados %}
+                                {% for grupo in servicios_agrupados %}
+                                <optgroup label="{{ grupo.grouper }}">
+                                    {% for servicio in grupo.list %}
+                                    <option value="{{ servicio.idServicio }}" 
+                                            data-duracion="{{ servicio.duracion }}"
+                                            data-precio="{{ servicio.precio }}">
+                                        {{ servicio.nombre }} ({{ servicio.duracion }} min - ${{ servicio.precio }})
+                                    </option>
+                                    {% endfor %}
+                                </optgroup>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted" id="servicioDuracion"></small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tipo de Cita *</label>
+                            <select id="citaTipo" class="form-select" required>
+                                <option value="consulta">Consulta General</option>
+                                <option value="vacunacion">Vacunación</option>
+                                <option value="cirugia">Cirugía</option>
+                                <option value="control">Control</option>
+                                <option value="emergencia">Emergencia</option>
+                                <option value="peluqueria">Peluquería</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Hora Inicio *</label>
+                            <input type="time" id="citaHoraInicio" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Hora Fin</label>
+                            <input type="time" id="citaHoraFin" class="form-control">
+                            <small class="text-muted">Se calcula automáticamente según el servicio</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Estado</label>
+                        <select id="citaEstado" class="form-select">
+                            <option value="pendiente">Pendiente</option>
+                            <option value="confirmada">Confirmada</option>
+                            <option value="en_curso">En Curso</option>
+                            <option value="completada">Completada</option>
+                            <option value="cancelada">Cancelada</option>
+                            <option value="no_asistio">No Asistió</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Motivo *</label>
+                        <textarea id="citaMotivo" class="form-control" rows="2" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Notas</label>
+                        <textarea id="citaNotas" class="form-control" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="guardarCita">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-        <form id="formNuevaCita">
-            <input type="hidden" name="hora">
-
-            <label>Mascota</label>
-            <select name="mascota" required>
-                <option value="">Seleccione</option>
-                {% for m in mascotas %}
-                <option value="{{ m.id }}">{{ m.nombre }} ({{ m.especie }})</option>
-                {% endfor %}
-            </select>
-<label>Veterinario</label>
-<select name="veterinario" required>
-    <option value="">Seleccione</option>
-    {% for v in veterinarios %}
-        <option value="{{ v.id }}">{{ v.nombre }} {{ v.apellido }}</option>
-    {% endfor %}
-</select>
-            <label>Tipo</label>
-            <select name="tipo" required>
-                <option value="">Seleccione</option>
-                <option value="consulta">Consulta</option>
-                <option value="vacunacion">Vacunación</option>
-                <option value="control">Control</option>
-                <option value="procedimiento">Procedimiento</option>
-            </select>
-
-            <label>Duración (min)</label>
-            <input type="number" name="duracion" value="30">
-
-            <label>Notas</label>
-            <textarea name="notas"></textarea>
-
-            <button type="submit" class="btn-primary">Guardar</button>
-            <button type="button" class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
-        </form>
+<!-- Modal para disponibilidad -->
+<div class="modal fade" id="disponibilidadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Configurar Disponibilidad</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="disponibilidadForm">
+                    <input type="hidden" id="disponibilidadId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Veterinario *</label>
+                        <select id="dispVeterinario" class="form-select" required>
+                            {% for vet in veterinarios %}
+                            <option value="{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Fecha *</label>
+                        <input type="date" id="dispFecha" class="form-control" required>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Hora Inicio *</label>
+                            <input type="time" id="dispHoraInicio" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Hora Fin *</label>
+                            <input type="time" id="dispHoraFin" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Tipo *</label>
+                        <select id="dispTipo" class="form-select" required>
+                            <option value="disponible">Disponible</option>
+                            <option value="vacaciones">Vacaciones</option>
+                            <option value="licencia">Licencia</option>
+                            <option value="ausencia">Ausencia</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Notas</label>
+                        <textarea id="dispNotas" class="form-control" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="guardarDisponibilidad">Guardar</button>
+            </div>
+        </div>
     </div>
 </div>
 
 {% endblock %}
 
-
 {% block extra_js %}
-<script src="{% static 'agenda/js/agenda.js' %}"></script>
+<script src="{% static 'agenda/js/agenda-sistema.js' %}"></script>
 {% endblock %}

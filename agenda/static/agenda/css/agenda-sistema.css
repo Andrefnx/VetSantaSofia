@@ -1,0 +1,373 @@
+/* ============================================
+   AGENDA VETERINARIA - ESTILOS INTEGRADOS
+   Estilos adaptados al diseño del sistema
+   ============================================ */
+
+.calendar-navigation {
+    background: #f7fafc;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.calendar-header-center {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* ============================================
+   CALENDARIO MENSUAL
+   ============================================ */
+
+.agenda-calendar {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: #0096d6;
+    color: white;
+    font-weight: 600;
+    text-align: center;
+}
+
+.calendar-header-day {
+    padding: 1rem;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.calendar-header-day:last-child {
+    border-right: none;
+}
+
+.calendar-body {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: #e0e0e0;
+}
+
+.calendar-day {
+    background: white;
+    min-height: 100px;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.calendar-day:hover {
+    background: #f0f8ff;
+    box-shadow: inset 0 0 0 2px #0096d6;
+}
+
+.calendar-day.other-month {
+    background: #f5f5f5;
+    color: #999;
+}
+
+.calendar-day.today {
+    background: #e3f2fd;
+    border: 2px solid #0096d6;
+}
+
+.calendar-day.selected {
+    background: #bbdefb;
+    box-shadow: inset 0 0 0 3px #0096d6;
+}
+
+.calendar-day.has-citas {
+    background: linear-gradient(135deg, #b7e5ff 60%, #e3f2fd 100%);
+}
+
+.day-number {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.25rem;
+}
+
+.calendar-day.other-month .day-number {
+    color: #999;
+}
+
+.day-indicator {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.indicator-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #0096d6;
+}
+
+.indicator-badge {
+    background: #0096d6;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+/* ============================================
+   DETALLES DEL DÍA
+   ============================================ */
+
+.day-details-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid #e0e0e0;
+}
+
+/* ============================================
+   TIMELINE DE CITAS
+   ============================================ */
+
+.timeline-container {
+    background: #f7fafc;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.timeline-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: #e0e0e0;
+}
+
+.timeline-slot {
+    display: flex;
+    align-items: stretch;
+    min-height: 50px;
+    background: white;
+}
+
+.timeline-hour {
+    width: 80px;
+    padding: 0.5rem;
+    font-weight: 600;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5f5f5;
+    border-right: 2px solid #0096d6;
+}
+
+.timeline-content {
+    flex: 1;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    position: relative;
+}
+
+.timeline-content:hover {
+    background: #f0f8ff;
+}
+
+.timeline-content.disponible {
+    background: #e8f5e9;
+}
+
+.timeline-content.disponible::after {
+    content: 'Disponible';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #4caf50;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.timeline-content.no-disponible {
+    background: #fafafa;
+    cursor: not-allowed;
+}
+
+.timeline-content.no-disponible::after {
+    content: 'No disponible';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #999;
+    font-size: 0.85rem;
+}
+
+.cita-card {
+    background: linear-gradient(135deg, #0096d6 0%, #0077aa 100%);
+    color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 150, 214, 0.3);
+    width: 100%;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.cita-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 150, 214, 0.4);
+}
+
+.cita-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.cita-time {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.cita-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
+.cita-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.cita-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.cita-info i {
+    width: 16px;
+    text-align: center;
+}
+
+/* Estados de cita */
+.cita-card.pendiente {
+    background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+}
+
+.cita-card.confirmada {
+    background: linear-gradient(135deg, #0096d6 0%, #0077aa 100%);
+}
+
+.cita-card.en_curso {
+    background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+}
+
+.cita-card.completada {
+    background: linear-gradient(135deg, #78909c 0%, #546e7a 100%);
+}
+
+.cita-card.cancelada {
+    background: linear-gradient(135deg, #e57373 0%, #d32f2f 100%);
+}
+
+/* ============================================
+   DISPONIBILIDAD
+   ============================================ */
+
+.disponibilidad-card {
+    background: #e8f5e9;
+    border-left: 4px solid #4caf50;
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.disponibilidad-card.vacaciones {
+    background: #fff3e0;
+    border-left-color: #ff9800;
+}
+
+.disponibilidad-card.licencia {
+    background: #ffebee;
+    border-left-color: #f44336;
+}
+
+.disponibilidad-card.ausencia {
+    background: #f3e5f5;
+    border-left-color: #9c27b0;
+}
+
+/* ============================================
+   ALERTAS Y MENSAJES
+   ============================================ */
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #999;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+}
+
+.empty-state h5 {
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: #999;
+    font-size: 0.9rem;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .calendar-body {
+        font-size: 0.8rem;
+    }
+    
+    .calendar-day {
+        min-height: 70px;
+        padding: 0.25rem;
+    }
+    
+    .day-number {
+        font-size: 0.9rem;
+    }
+    
+    .timeline-hour {
+        width: 60px;
+        font-size: 0.8rem;
+    }
+    
+    .cita-card {
+        padding: 0.75rem;
+    }
+}
