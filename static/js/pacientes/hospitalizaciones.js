@@ -248,7 +248,7 @@ const hospitalizacionesManager = {
             .filter(i => this.insumoCompatible(i));
 
         if (!catalogoFiltrado.length) {
-            insumosContainer.innerHTML = '<div style="padding:8px; text-align:center; color:#6b7280;">No se encontraron insumos</div>';
+            insumosContainer.innerHTML = '<div class="empty-list-message">No se encontraron insumos</div>';
             return;
         }
 
@@ -256,9 +256,9 @@ const hospitalizacionesManager = {
             .map(i => {
                 const isSelected = seleccionados.includes(String(i.id));
                 const tipo = i.tipo || 'N/A';
-                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid #e5e7eb; gap:8px; background:${isSelected ? '#f3f4f6' : '#fff'};">
-                    <span style="font-size:13px; color:#2d2f33;">${i.nombre} <span style="color:#6b7280;">(${tipo})</span></span>
-                    <button type="button" onclick="hospitalizacionesManager.${isSelected ? 'removerInsumo' : 'agregarInsumo'}('${i.id}')" style="background:${isSelected ? '#dc3545' : '#10b981'}; border:none; color:#fff; cursor:pointer; font-size:14px; padding:2px 8px; border-radius:4px; line-height:1;" title="${isSelected ? 'Eliminar' : 'Agregar'}">
+                return `<div class="selectable-item ${isSelected ? 'selected' : ''}">
+                    <span class="selectable-item-text">${i.nombre} <span class="selectable-item-subtext">(${tipo})</span></span>
+                    <button type="button" onclick="hospitalizacionesManager.${isSelected ? 'removerInsumo' : 'agregarInsumo'}('${i.id}')" class="${isSelected ? 'btn-remove-inline' : 'btn-add'}" title="${isSelected ? 'Eliminar' : 'Agregar'}">
                         ${isSelected ? '−' : '+'}
                     </button>
                 </div>`;
@@ -297,7 +297,7 @@ const hospitalizacionesManager = {
 
         const ids = hidden.value.split(',').filter(Boolean);
         if (!ids.length) {
-            container.innerHTML = '<small style="color:#6b7280;">Sin insumos seleccionados.</small>';
+            container.innerHTML = '<small class="chips-empty">Sin insumos seleccionados.</small>';
             return;
         }
 
@@ -307,9 +307,9 @@ const hospitalizacionesManager = {
             const dosis = this.calcularDosis(ins);
             const tipo = ins.tipo || 'N/A';
             const dosisTxt = dosis ? ` | ${dosis}` : '';
-            return `<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 8px; border:1px solid #e5e7eb; border-radius:6px; background:#fff; font-size:13px;">
+            return `<div class="chip">
                 <span>${ins.nombre} | ${tipo}${dosisTxt}</span>
-                <button type="button" onclick="hospitalizacionesManager.removerInsumo('${id}')" style="background:#9ca3af; border:none; color:#fff; cursor:pointer; font-size:10px; padding:0; line-height:1; width:16px; height:16px; display:flex; align-items:center; justify-content:center; border-radius:50%;" title="Eliminar">
+                <button type="button" onclick="hospitalizacionesManager.removerInsumo('${id}')" class="chip-remove-btn" title="Eliminar">
                     ×
                 </button>
             </div>`;
@@ -355,16 +355,16 @@ const hospitalizacionesManager = {
             : this.veterinariosCatalogo.filter(v => v.nombre.toLowerCase().includes(termino));
 
         if (!catalogoFiltrado.length) {
-            equipoContainer.innerHTML = '<div style="padding:8px; text-align:center; color:#6b7280;">No se encontraron veterinarios</div>';
+            equipoContainer.innerHTML = '<div class="empty-list-message">No se encontraron veterinarios</div>';
             return;
         }
 
         equipoContainer.innerHTML = catalogoFiltrado
             .map(v => {
                 const isSelected = seleccionados.includes(String(v.id));
-                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid #e5e7eb; gap:8px; background:${isSelected ? '#f3f4f6' : '#fff'};">
-                    <span style="font-size:13px; color:#2d2f33;">${v.nombre}${v.especialidad ? ' <span style="color:#6b7280;">(' + v.especialidad + ')</span>' : ''}</span>
-                    <button type="button" onclick="hospitalizacionesManager.${isSelected ? 'removerVeterinario' : 'agregarVeterinario'}('${v.id}')" style="background:${isSelected ? '#dc3545' : '#10b981'}; border:none; color:#fff; cursor:pointer; font-size:14px; padding:2px 8px; border-radius:4px; line-height:1;" title="${isSelected ? 'Eliminar' : 'Agregar'}">
+                return `<div class="selectable-item ${isSelected ? 'selected' : ''}">
+                    <span class="selectable-item-text">${v.nombre}${v.especialidad ? ' <span class="selectable-item-subtext">(' + v.especialidad + ')</span>' : ''}</span>
+                    <button type="button" onclick="hospitalizacionesManager.${isSelected ? 'removerVeterinario' : 'agregarVeterinario'}('${v.id}')" class="${isSelected ? 'btn-remove-inline' : 'btn-add'}" title="${isSelected ? 'Eliminar' : 'Agregar'}">
                         ${isSelected ? '−' : '+'}
                     </button>
                 </div>`;
@@ -380,16 +380,16 @@ const hospitalizacionesManager = {
 
         const ids = hidden.value.split(',').filter(Boolean);
         if (!ids.length) {
-            container.innerHTML = '<small style="color:#6b7280;">Sin veterinarios seleccionados.</small>';
+            container.innerHTML = '<small class="chips-empty">Sin veterinarios seleccionados.</small>';
             return;
         }
 
         const chips = ids.map(id => {
             const vet = this.veterinariosCatalogo.find(v => String(v.id) === String(id));
             if (!vet) return '';
-            return `<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 8px; border:1px solid #e5e7eb; border-radius:6px; background:#fff; font-size:13px;">
+            return `<div class="chip">
                 <span>${vet.nombre}</span>
-                <button type="button" onclick="hospitalizacionesManager.removerVeterinario('${id}')" style="background:#9ca3af; border:none; color:#fff; cursor:pointer; font-size:10px; padding:0; line-height:1; width:16px; height:16px; display:flex; align-items:center; justify-content:center; border-radius:50%;" title="Eliminar">
+                <button type="button" onclick="hospitalizacionesManager.removerVeterinario('${id}')" class="chip-remove-btn" title="Eliminar">
                     ×
                 </button>
             </div>`;
