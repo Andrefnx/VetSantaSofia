@@ -14,7 +14,7 @@ const hospitalizacionesManager = {
             id: s.idServicio ?? s.id ?? s.pk ?? s.id_servicio ?? s.servicio_id ?? s.value ?? null,
             nombre: s.nombre ?? s.titulo ?? s.label ?? '',
             duracion: s.duracion ?? s.duracion_minutos ?? s.duracionMinutos ?? '',
-            descripcion: s.descripcion ?? s.detalle ?? s.nombre ?? ''
+            descripcion: s.descripcion ?? s.descripcion_servicio ?? s.descripcionServicio ?? s.desc_servicio ?? s.detalle_servicio ?? s.detalle ?? s.descripcion_corta ?? s.descripcion_larga ?? s.description ?? ''
         })).filter(s => s.nombre);
     },
 

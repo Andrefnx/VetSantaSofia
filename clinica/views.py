@@ -390,10 +390,20 @@ def obtener_servicios(request):
         qs = Servicio.objects.all()
         if categoria:
             qs = qs.filter(categoria__iexact=categoria)
-        servicios = qs.values('idServicio', 'nombre', 'categoria', 'duracion').order_by('nombre')
+
+        servicios_qs = qs.values('idServicio', 'nombre', 'categoria', 'duracion', 'descripcion').order_by('nombre')
+        servicios = [
+            {
+                **s,
+                # Alias para compatibilidad con el front
+                'descripcion_servicio': s.get('descripcion'),
+            }
+            for s in servicios_qs
+        ]
+
         return JsonResponse({
             'success': True,
-            'servicios': list(servicios)
+            'servicios': servicios
         })
     except Exception as e:
         return JsonResponse({
