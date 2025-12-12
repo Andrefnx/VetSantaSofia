@@ -550,8 +550,21 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Ocultar el buscador y resultados
         resultadosBusqueda.style.display = 'none';
-        buscarPropietario.value = nombre + ' ' + apellido;
         propietarioSelector.style.display = 'none';
+        
+        // Actualizar los inputs de edición con los nuevos datos
+        const inputNombreEdit = document.querySelector('input[name="propietario_nombre_edit"]');
+        const inputApellidoEdit = document.querySelector('input[name="propietario_apellido_edit"]');
+        const inputPropietarioId = document.querySelector('input[name="propietario_id"]');
+        
+        if (inputNombreEdit) inputNombreEdit.value = nombre;
+        if (inputApellidoEdit) inputApellidoEdit.value = apellido;
+        if (inputPropietarioId) inputPropietarioId.value = id;
+        
+        // Mostrar los campos de edición con los valores del propietario seleccionado
+        if (camposNombreEditable) {
+            camposNombreEditable.style.display = 'block';
+        }
         
         // Cargar los datos en los inputs de contacto
         const inputTelefono = infoResponsable.querySelector('input[name="propietario_telefono"]');
@@ -569,6 +582,20 @@ document.addEventListener('DOMContentLoaded', function() {
         if (textareaDireccion) {
             textareaDireccion.value = direccion || '';
             textareaDireccion.style.display = 'block';
+        }
+        
+        // Actualizar los spans visibles de contacto
+        const spanTelefono = infoResponsable.querySelector('p:has(strong:contains("Teléfono")) .view-mode');
+        const spanEmail = infoResponsable.querySelector('p:has(strong:contains("Correo")) .view-mode');
+        const spanDireccion = infoResponsable.querySelector('p:has(strong:contains("Dirección")) .view-mode');
+        
+        // Alternativa más simple: buscar todos los spans view-mode y actualizar por posición
+        const viewModeSpans = infoResponsable.querySelectorAll('.view-mode');
+        if (viewModeSpans.length >= 4) {
+            // [0] = nombre, [1] = teléfono, [2] = email, [3] = dirección
+            viewModeSpans[1].textContent = telefono || 'No registrado';
+            viewModeSpans[2].textContent = email || 'No registrado';
+            viewModeSpans[3].textContent = direccion || 'No registrada';
         }
         
         // Mostrar separador y enlace para cambiar de responsable
