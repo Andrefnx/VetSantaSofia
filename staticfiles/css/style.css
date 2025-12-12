@@ -1,0 +1,542 @@
+/* ================================
+   COLORES GLOBALES
+================================ */
+:root {
+    --primary-color: #76af76;
+    --primary-hover: #89C57C;
+    --primary-text: #103012;
+    --background: #f8f9fa;
+    --white: #ffffff;
+    --border-color: #ced4da;
+    --input-focus: rgba(118, 175, 118, 0.25);
+    --error-color: #c1121f;
+    --text-muted: #6c757d;
+}
+
+/* ================================
+   RESET Y ESTILOS GENERALES
+================================ */
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: var(--primary-text);
+    background-color: white;
+}
+
+/* ================================
+   CONTENEDOR PRINCIPAL
+================================ */
+.login-container {
+    width: 100%;
+    max-width: 420px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Contenedor más ancho para registro */
+.login-container.register {
+    max-width: 800px;
+}
+
+.logo {
+    width: 220px;
+    max-width: 420px;
+    height: auto;
+    display: block;
+    margin: 0 auto 2rem;
+}
+
+/* ================================
+   CONTENEDOR DEL FORMULARIO
+================================ */
+form {
+    background: var(--white);
+    padding: 3rem 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    width: 100%;
+}
+
+/* ================================
+   GRUPOS DE FORMULARIO
+================================ */
+.form-group {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+/* ================================
+   INPUTS
+================================ */
+.form-control {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    color: var(--primary-text);
+    background: var(--white);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem var(--input-focus);
+}
+
+.form-control::placeholder {
+    color: #adb5bd;
+}
+
+.form-control:read-only {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+/* ================================
+   PASSWORD TOGGLE
+================================ */
+.password-toggle {
+    position: relative;
+}
+
+.password-toggle .form-control {
+    padding-right: 3rem;
+}
+
+.toggle-icon {
+    position: absolute;
+    right: 1rem;
+    bottom: 0.85rem; /* Alineado con el padding del input */
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    transition: color 0.2s ease;
+    z-index: 10;
+}
+
+.toggle-icon:hover {
+    color: var(--primary-color);
+}
+
+/* ================================
+   PASSWORD TOOLTIP
+================================ */
+.password-info-icon {
+    margin-left: 0.5rem;
+    color: var(--primary-color);
+    cursor: help;
+    font-size: 1rem;
+}
+
+.password-tooltip {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 300px;
+    display: none;
+}
+
+.password-tooltip.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+.password-tooltip h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.95rem;
+    color: var(--primary-text);
+}
+
+.password-tooltip ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.password-tooltip li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0;
+    font-size: 0.85rem;
+    color: #6c757d;
+    transition: color 0.3s ease;
+}
+
+.password-tooltip li i {
+    font-size: 1rem;
+    color: var(--error-color);
+    transition: color 0.3s ease;
+}
+
+.password-tooltip li.valid i {
+    color: var(--primary-color);
+}
+
+.password-tooltip li.valid {
+    color: var(--primary-color);
+}
+
+.password-tooltip li.valid i::before {
+    content: "\f26b"; /* bi-check-circle */
+}
+
+/* ================================
+   GRUPO DE BOTONES
+================================ */
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* ================================
+   BOTÓN
+================================ */
+.btn {
+    flex: 1;
+    padding: 0.9rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(118, 175, 118, 0.3);
+}
+
+.btn-full {
+    width: 100%;
+    max-width: 300px;
+    margin: 1rem auto 0;
+    display: block;
+}
+.btn-primary:active {
+    transform: translateY(0);
+}
+a.btn {
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+    flex: 1;
+    padding: 0.9rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: var(--primary-color);
+    color: var(--white);
+}
+
+a.btn:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(118, 175, 118, 0.3);
+}
+
+a.btn:active {
+    transform: translateY(0);
+}
+
+/* ================================
+   TEXTO
+================================ */
+.forgot-password {
+    text-align: center;
+    margin: 1.5rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.forgot-password:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+/* ================================
+   ALERTAS DE VALIDACIÓN
+================================ */
+.alert {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background-color: #d32f2f;
+    color: #fff;
+    padding: 0.9rem 1rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    width: 100%;
+    border: 1px solid #b71c1c;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    animation: fadeIn 0.3s ease;
+}
+
+.alert.error,
+.alert.danger {
+    background-color: #d32f2f;
+    border-color: #b71c1c;
+}
+
+.alert.success {
+    background-color: #4caf50;
+    border-color: #388e3c;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================================
+   FORMULARIO REGISTRO PROGRESIVO
+================================ */
+h2 {
+    padding-bottom: 1rem;
+}
+.form-step {
+    width: 100%;
+    
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.form-grid .form-group {
+    margin-bottom: 0;
+}
+
+/* Check de verificación */
+.checkbox-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+    font-size: 0.9rem;
+    color: var(--primary-text);
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.checkbox-group label {
+    margin: 0;
+    cursor: pointer;
+}
+
+/* ================================
+   SELECTS PERSONALIZADOS
+================================ */
+select.form-control {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-color: var(--white) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23495057' d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.75rem center !important;
+    background-size: 16px 16px !important;
+    padding-right: 2.5rem !important;
+    cursor: pointer !important;
+}
+
+select.form-control:hover {
+    border-color: var(--primary-color) !important;
+}
+
+select.form-control:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 0.2rem var(--input-focus) !important;
+}
+
+select.form-control option {
+    padding: 0.75rem;
+    font-size: 1rem;
+    background-color: var(--white);
+    color: var(--primary-text);
+}
+
+select.form-control option:hover {
+    background-color: var(--background);
+}
+
+/* ================================
+   CUSTOM SELECT
+================================ */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--white);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.custom-select:hover {
+    border-color: var(--primary-color);
+}
+
+.custom-select.active {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem var(--input-focus);
+}
+
+.custom-select .selected-value {
+    color: var(--primary-text);
+    font-size: 1rem;
+}
+
+.custom-select .selected-value.placeholder {
+    color: #adb5bd;
+}
+
+.custom-select i {
+    color: var(--text-muted);
+    transition: transform 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.custom-select.active i {
+    transform: rotate(180deg);
+}
+
+.custom-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 0.25rem;
+    background: var(--white);
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    list-style: none;
+    padding: 0.5rem 0;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.custom-select-dropdown.active {
+    max-height: 200px;
+    opacity: 1;
+    overflow-y: auto;
+}
+
+.custom-select-dropdown li {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-size: 1rem;
+    color: var(--primary-text);
+}
+
+.custom-select-dropdown li:hover {
+    background-color: var(--background);
+}
+
+.custom-select-dropdown li.selected {
+    background-color: var(--primary-color);
+    color: var(--white);
+}
+
+/* ================================
+   RESPONSIVE
+================================ */
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-container {
+        max-width: 100%;
+        padding: 1rem;
+    }
+
+    .logo {
+        max-width: 300px;
+    }
+
+    form {
+        padding: 2rem 1.5rem;
+    }
+
+    .button-group {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}

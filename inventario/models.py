@@ -30,6 +30,8 @@ class Insumo(models.Model):
     especie = models.CharField(max_length=100, blank=True, null=True)
     
     stock_actual = models.IntegerField(default=0)
+    stock_minimo = models.IntegerField(default=10, help_text="Nivel mínimo de stock (rojo)")
+    stock_medio = models.IntegerField(default=20, help_text="Nivel medio de stock (naranja)")
     precio_venta = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     
     # Campos para dosis - MEJORADOS
@@ -76,6 +78,25 @@ class Insumo(models.Model):
         if self.usuario_ultimo_movimiento:
             return f"{self.usuario_ultimo_movimiento.nombre} {self.usuario_ultimo_movimiento.apellido}"
         return "(sin registro)"
+    
+    def get_stock_nivel(self):
+        """Retorna el nivel de stock: 'bajo', 'medio', 'alto'"""
+        if self.stock_actual <= self.stock_minimo:
+            return 'bajo'
+        elif self.stock_actual <= self.stock_medio:
+            return 'medio'
+        else:
+            return 'alto'
+    
+    def get_stock_color(self):
+        """Retorna el color según el nivel de stock"""
+        nivel = self.get_stock_nivel()
+        colores = {
+            'bajo': '#dc2626',    # rojo
+            'medio': '#f59e0b',   # naranja
+            'alto': '#16a34a'     # verde
+        }
+        return colores.get(nivel, '#6b7280')
     
     def get_dosis_display(self):
         """Retorna la dosis formateada según el formato del producto"""

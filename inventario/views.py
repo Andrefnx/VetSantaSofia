@@ -201,6 +201,8 @@ def detalle_insumo(request, insumo_id):
                 'especie': insumo.especie or '',
                 'precio_venta': float(insumo.precio_venta) if insumo.precio_venta else 0,
                 'stock_actual': insumo.stock_actual,
+                'stock_minimo': float(insumo.stock_minimo) if insumo.stock_minimo else 10,
+                'stock_medio': float(insumo.stock_medio) if insumo.stock_medio else 20,
                 
                 # Dosis según formato
                 'dosis_ml': float(insumo.dosis_ml) if insumo.dosis_ml else None,
@@ -521,3 +523,60 @@ def productos_api(request):
         print(f"Error en productos_api: {str(e)}")
         print(traceback.format_exc())
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@login_required
+def actualizar_niveles_stock(request, insumo_id):
+    """Vista para actualizar los niveles de stock mínimo y medio de un insumo"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            stock_minimo = data.get('stock_minimo')
+            stock_medio = data.get('stock_medio')
+            
+            # Validar datos
+            if stock_minimo is None or stock_medio is None:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Faltan datos requeridos'
+                }, status=400)
+            
+            stock_minimo = float(stock_minimo)
+            stock_medio = float(stock_medio)
+            
+            if stock_minimo >= stock_medio:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'El stock mínimo debe ser menor al stock medio'
+                }, status=400)
+            
+            # Actualizar insumo
+            insumo = get_object_or_404(Insumo, idInventario=insumo_id)
+            insumo.stock_minimo = stock_minimo
+            insumo.stock_medio = stock_medio
+            insumo.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Niveles de stock actualizados correctamente',
+                'data': {
+                    'stock_minimo': float(insumo.stock_minimo),
+                    'stock_medio': float(insumo.stock_medio),
+                    'stock_nivel': insumo.get_stock_nivel(),
+                    'stock_color': insumo.get_stock_color()
+                }
+            })
+            
+        except Exception as e:
+            print(f"❌ ERROR en actualizar_niveles_stock:")
+            traceback.print_exc()
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    return JsonResponse({
+        'success': False,
+        'error': 'Método no permitido'
+    }, status=405)

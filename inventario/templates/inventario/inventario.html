@@ -5,6 +5,21 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/custom/style_inventario.css' %}" type="text/css" media="all">
+<style>
+/* Estilos específicos para modal de niveles de stock */
+#modalConfigNiveles .vet-custom-modal {
+    max-width: 420px !important;
+}
+
+#modalConfigNiveles .vet-custom-modal-body {
+    padding: 20px !important;
+}
+
+#modalConfigNiveles .vet-custom-modal-footer {
+    padding: 16px 20px !important;
+    padding-top: 0 !important;
+}
+</style>
 {% endblock %}
 
 {% block table_title %}
@@ -37,7 +52,7 @@
     <td>{{ insumo.especie|default:"-" }}</td>
     <td>${{ insumo.precio_venta|default:0|floatformat:0 }}</td>
     <td>
-        <span class="vet-badge {% if insumo.stock_actual > 50 %}success{% elif insumo.stock_actual > 20 %}warning{% else %}danger{% endif %}">
+        <span class="vet-badge {% if insumo.get_stock_nivel == 'alto' %}success{% elif insumo.get_stock_nivel == 'medio' %}warning{% else %}danger{% endif %}">
             {{ insumo.stock_actual }}
         </span>
     </td>
@@ -63,6 +78,9 @@
                 </button>
                 <button type="button" onclick="openModificarStockModal(this)">
                     <i class="fas fa-boxes"></i> Stock
+                </button>
+                <button type="button" onclick="openConfigNivelesModal(this)">
+                    <i class="fas fa-sliders-h"></i> Niveles
                 </button>
                 <button type="button" onclick="abrirModalEliminarProducto(this)">
                     <i class="fas fa-trash"></i> Eliminar
@@ -428,10 +446,62 @@
     </div>
 </div>
 
+<!-- Modal: Configurar Niveles de Stock -->
+<div class="vet-modal-overlay hide" id="modalConfigNiveles">
+    <div class="vet-custom-modal" style="width: 95%;">
+        <div class="vet-modal-content">
+            <div class="vet-custom-modal-title">
+                <h2><i class="fas fa-sliders-h"></i> Niveles de stock - <span id="productoNombreNiveles"></span></h2>
+                <i class="bi bi-x vet-close-btn" onclick="closeVetModal('modalConfigNiveles')"></i>
+            </div>
+            <div class="vet-custom-modal-body">
+                <input type="hidden" id="idProductoNiveles">
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-exclamation-triangle" style="color: #dc2626;"></i> 
+                        Stock Mínimo (Rojo)
+                    </label>
+                    <input type="number" class="form-control" id="inputStockMinimo" placeholder="Ej: 10" min="0">
+                    <small class="text-muted">Cuando el stock llegue a este nivel o menos, se marcará en rojo</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-exclamation-circle" style="color: #f59e0b;"></i> 
+                        Stock Medio (Naranja)
+                    </label>
+                    <input type="number" class="form-control" id="inputStockMedio" placeholder="Ej: 20" min="0">
+                    <small class="text-muted">Cuando el stock esté entre el mínimo y este nivel, se marcará en naranja</small>
+                </div>
+                
+                <div style="padding: 12px; background-color: #e8f4fd; border-left: 4px solid #1976d2; border-radius: 4px; margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: start; gap: 8px;">
+                        <i class="fas fa-info-circle" style="color: #1976d2; margin-top: 2px;"></i>
+                        <div>
+                            <strong style="color: #0d47a1;">Stock Alto (Verde):</strong>
+                            <span style="color: #424242;">Se marcará automáticamente cuando el stock supere el nivel medio.</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="vet-custom-modal-footer">
+                    <button type="button" class="vet-btn-grey" onclick="closeVetModal('modalConfigNiveles')">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="button" class="vet-btn-grey success" onclick="guardarNivelesStock()">
+                        <i class="bi bi-floppy-fill"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/inventario/gestion_wheel.js' %}"></script>
+<script src="{% static 'js/inventario/gestion_wheel.js' %}?v=10"></script>
 <script src="{% static 'js/inventario/dosis_calculator.js' %}"></script>
-<script src="{% static 'js/inventario/crud_inventario.js' %}"></script>
+<script src="{% static 'js/inventario/crud_inventario.js' %}?v=10"></script>
 {% endblock %}
