@@ -54,14 +54,18 @@
     }
 
     .edad-selector-group .btn {
-        border-color: #69c087;
+        border: 1px solid #cfe8d9;
+        background: #f6f9f7;
         color: #0b4d2d;
         font-size: 0.9rem;
+        box-shadow: 0 4px 10px rgba(105, 192, 135, 0.15);
     }
 
     .edad-selector-group .btn-check:checked+.btn {
         background-color: #69c087;
         color: #0b4d2d;
+        border-color: #69c087;
+        box-shadow: 0 6px 16px rgba(105, 192, 135, 0.25);
     }
 
     /* Campos de edad aproximada en grid 2 columnas */
@@ -183,6 +187,19 @@
 
     .tab-estado i {
         margin-right: 0.5rem;
+    }
+
+    /* Botón principal del modal más suave y consistente */
+    .vet-btn-primary {
+        background: #69c087;
+        color: #0b4d2d;
+        border: none;
+        box-shadow: 0 6px 18px rgba(105, 192, 135, 0.35);
+    }
+
+    .vet-btn-primary:hover {
+        background: #56b074;
+        color: #0b4d2d;
     }
 </style>
 {% endblock %}

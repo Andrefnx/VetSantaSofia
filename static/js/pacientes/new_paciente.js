@@ -382,14 +382,25 @@ function saveNewPaciente() {
     // Obtener modo propietario
     const radioModo = document.querySelector('input[name="modoPropietario"]:checked');
     const modoPropietario = radioModo ? radioModo.value : document.getElementById('propietarioModo').value;
+    const skipPropietarioValidation = esEdicion && (modoPropietario === 'editar' || modoPropietario === 'existente');
     
     // Obtener valores del propietario
-    const propietarioId = document.getElementById('propietarioId').value;
-    const propietarioNombre = document.getElementById('propietarioNombre').value.trim();
-    const propietarioApellido = document.getElementById('propietarioApellido').value.trim();
+    let propietarioId = document.getElementById('propietarioId').value;
+    let propietarioNombre = document.getElementById('propietarioNombre').value.trim();
+    let propietarioApellido = document.getElementById('propietarioApellido').value.trim();
     let propietarioTelefono = document.getElementById('propietarioTelefono').value.trim();
-    const propietarioEmail = document.getElementById('propietarioEmail').value.trim();
-    const propietarioDireccion = document.getElementById('propietarioDireccion').value.trim();
+    let propietarioEmail = document.getElementById('propietarioEmail').value.trim();
+    let propietarioDireccion = document.getElementById('propietarioDireccion').value.trim();
+
+    // Si omitimos validación, reutilizar datos originales si no fueron tocados
+    if (skipPropietarioValidation && propietarioOriginal) {
+        propietarioId = propietarioId || propietarioOriginal.id;
+        propietarioNombre = propietarioNombre || propietarioOriginal.nombre;
+        propietarioApellido = propietarioApellido || propietarioOriginal.apellido;
+        propietarioTelefono = propietarioTelefono || propietarioOriginal.telefono;
+        propietarioEmail = propietarioEmail || propietarioOriginal.email;
+        propietarioDireccion = propietarioDireccion || propietarioOriginal.direccion;
+    }
     
     // Obtener valores del paciente
     const nombrePaciente = document.getElementById('pacienteNombre').value.trim();
@@ -422,27 +433,26 @@ function saveNewPaciente() {
     console.log('Modo propietario:', modoPropietario);
     console.log('Tipo edad:', tipoEdad);
     
-    // Validar propietario
-    if (!propietarioNombre || !propietarioApellido || !propietarioTelefono) {
-        alert('Error: Debes completar Nombre, Apellido y Teléfono del propietario');
-        return;
+    // Validar propietario (solo si no estamos en modo editar-propietario)
+    if (!skipPropietarioValidation) {
+        if (!propietarioNombre || !propietarioApellido || !propietarioTelefono) {
+            alert('Error: Debes completar Nombre, Apellido y Teléfono del propietario');
+            return;
+        }
+
+        const phoneValid = /^(?:\+?56)?\s*9\s*\d{8}$/.test(propietarioTelefono);
+        if (!phoneValid) {
+            alert('Error: Teléfono chileno inválido. Formato esperado: +56912345678 o 912345678');
+            return;
+        }
+
+        if (propietarioEmail && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(propietarioEmail)) {
+            alert('Error: Correo electrónico inválido');
+            return;
+        }
+
+        propietarioTelefono = normalizeChilePhone(propietarioTelefono);
     }
-    
-    // Validar teléfono
-    const phoneValid = /^(?:\+?56)?\s*9\s*\d{8}$/.test(propietarioTelefono);
-    if (!phoneValid) {
-        alert('Error: Teléfono chileno inválido. Formato esperado: +56912345678 o 912345678');
-        return;
-    }
-    
-    // Validar email si está presente
-    if (propietarioEmail && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(propietarioEmail)) {
-        alert('Error: Correo electrónico inválido');
-        return;
-    }
-    
-    // Normalizar teléfono
-    propietarioTelefono = normalizeChilePhone(propietarioTelefono);
     
     // Validar paciente
     if (!nombrePaciente) {
@@ -462,8 +472,8 @@ function saveNewPaciente() {
     
     // Construir datos
     const data = {
-        propietario_id: modoPropietario === 'nuevo' ? null : (propietarioId || null),
-        actualizar_propietario: modoPropietario !== 'nuevo',
+        propietario_id: modoPropietario === 'nuevo' ? null : (propietarioId || (propietarioOriginal ? propietarioOriginal.id : null)),
+        actualizar_propietario: !skipPropietarioValidation && modoPropietario !== 'nuevo',
         tipo_edad: tipoEdad,
         fecha_nacimiento: fechaNacimiento,
         edad_anos: edadAnos !== '' ? parseInt(edadAnos) : null,
