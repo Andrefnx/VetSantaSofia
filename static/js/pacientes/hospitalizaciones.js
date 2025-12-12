@@ -51,6 +51,9 @@ const hospitalizacionesManager = {
             console.warn('⚠️ Botón btnNuevaHospitalizacion no encontrado');
         }
 
+        // Filtros de hospitalización
+        this.setupFiltrosHospitalizacion();
+
         // Botón para cerrar modal de nueva hospitalización
         const closeModalBtn = document.getElementById('closeHospitalizacionModal');
         if (closeModalBtn) {
@@ -575,37 +578,33 @@ const hospitalizacionesManager = {
         }
 
         container.innerHTML = this.hospitalizaciones.map(hosp => `
-            <div class="hospitalizacion-card" data-hosp-id="${hosp.id}">
-                <div class="hosp-header">
-                    <div class="hosp-info">
-                        <span class="hosp-fecha"><i class="bi bi-calendar"></i> ${hosp.fecha_ingreso}</span>
-                        <span class="hosp-motivo"><strong>${hosp.motivo}</strong></span>
-                        <span class="hosp-estado estado-${(hosp.estado || 'activa').toLowerCase()}">
+            <div class="hospitalizacion-card" data-hosp-id="${hosp.id}" style="padding:6px 10px; margin-bottom:6px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${!hosp.tiene_alta ? '6px' : '0'};">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:12px; color:#6b7280;"><i class="bi bi-calendar"></i> ${hosp.fecha_ingreso}</span>
+                        <span style="font-size:13px; font-weight:600; color:#111;">${hosp.motivo}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="hosp-estado estado-${(hosp.estado || 'activa').toLowerCase()}" style="font-size:11px; padding:2px 6px;">
                             <i class="bi bi-circle-fill"></i> ${hosp.estado || 'N/A'}
                         </span>
+                        <button class="btn-expandir" onclick="hospitalizacionesManager.verDetalles(${hosp.id})" title="Ver detalles" style="padding:4px 8px; font-size:13px;">
+                            <i class="bi bi-eye"></i>
+                        </button>
                     </div>
-                    <button class="btn-expandir" onclick="hospitalizacionesManager.verDetalles(${hosp.id})" title="Ver detalles">
-                        <i class="bi bi-eye"></i>
-                    </button>
                 </div>
                 
                 ${!hosp.tiene_alta ? `
-                    <div class="hosp-acciones">
-                        <button class="btn-accion btn-cirugia" onclick="hospitalizacionesManager.abrirModalCirugia(${hosp.id})">
+                    <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                        <button onclick="hospitalizacionesManager.abrirModalCirugia(${hosp.id})" style="padding:4px 10px; font-size:12px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:6px; color:#374151; cursor:pointer;">
                             <i class="bi bi-tools"></i> ${hosp.tiene_cirugia ? 'Agregar/otra Cirugía' : 'Agregar Cirugía'}
                         </button>
-                        <button class="btn-accion btn-registro" onclick="hospitalizacionesManager.abrirModalRegistro(${hosp.id})">
+                        <button onclick="hospitalizacionesManager.abrirModalRegistro(${hosp.id})" style="padding:4px 10px; font-size:12px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:6px; color:#374151; cursor:pointer;">
                             <i class="bi bi-plus-circle"></i> Registro Diario
                         </button>
-                        <button class="btn-accion btn-alta" onclick="hospitalizacionesManager.abrirModalAlta(${hosp.id})">
+                        <button onclick="hospitalizacionesManager.abrirModalAlta(${hosp.id})" style="padding:4px 10px; font-size:12px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:6px; color:#374151; cursor:pointer;">
                             <i class="bi bi-check-circle"></i> Dar de Alta
                         </button>
-                    </div>
-                ` : ''}
-
-                ${hosp.cirugias_count ? `
-                    <div class="hosp-meta">
-                        <span class="meta-chip"><i class="bi bi-tools"></i> Cirugías: ${hosp.cirugias_count}</span>
                     </div>
                 ` : ''}
             </div>
@@ -1047,6 +1046,123 @@ const hospitalizacionesManager = {
         }
     },
 
+    setupFiltrosHospitalizacion() {
+        // Popular años en el selector
+        const selectYear = document.getElementById('selectHospYear');
+        if (selectYear) {
+            const currentYear = new Date().getFullYear();
+            for (let year = currentYear; year >= currentYear - 10; year--) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                selectYear.appendChild(option);
+            }
+        }
+
+        // Buscador
+        const searchInput = document.getElementById('searchHospitalizacion');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => this.filtrarHospitalizaciones());
+        }
+
+        // Checkboxes de estado
+        document.getElementById('filterHospActiva')?.addEventListener('change', () => this.filtrarHospitalizaciones());
+        document.getElementById('filterHospAlta')?.addEventListener('change', () => this.filtrarHospitalizaciones());
+
+        // Selectores de fecha
+        document.getElementById('selectHospMonth')?.addEventListener('change', () => this.filtrarHospitalizaciones());
+        document.getElementById('selectHospYear')?.addEventListener('change', () => this.filtrarHospitalizaciones());
+
+        // Botones de navegación de mes
+        document.getElementById('btnHospPrevMonth')?.addEventListener('click', () => this.cambiarMesHosp(-1));
+        document.getElementById('btnHospNextMonth')?.addEventListener('click', () => this.cambiarMesHosp(1));
+
+        // Limpiar filtros
+        document.getElementById('btnClearHospFilters')?.addEventListener('click', () => this.limpiarFiltrosHosp());
+    },
+
+    cambiarMesHosp(delta) {
+        const selectMonth = document.getElementById('selectHospMonth');
+        const selectYear = document.getElementById('selectHospYear');
+        
+        if (!selectMonth || !selectYear) return;
+
+        let mes = parseInt(selectMonth.value) || (new Date().getMonth() + 1);
+        let anio = parseInt(selectYear.value) || new Date().getFullYear();
+
+        mes += delta;
+        if (mes < 1) {
+            mes = 12;
+            anio--;
+        } else if (mes > 12) {
+            mes = 1;
+            anio++;
+        }
+
+        selectMonth.value = mes;
+        selectYear.value = anio;
+        this.filtrarHospitalizaciones();
+    },
+
+    limpiarFiltrosHosp() {
+        document.getElementById('searchHospitalizacion').value = '';
+        document.getElementById('selectHospMonth').value = '';
+        document.getElementById('selectHospYear').value = '';
+        document.getElementById('filterHospActiva').checked = true;
+        document.getElementById('filterHospAlta').checked = true;
+        this.filtrarHospitalizaciones();
+    },
+
+    filtrarHospitalizaciones() {
+        const search = document.getElementById('searchHospitalizacion')?.value.toLowerCase() || '';
+        const mes = document.getElementById('selectHospMonth')?.value;
+        const anio = document.getElementById('selectHospYear')?.value;
+        const mostrarActiva = document.getElementById('filterHospActiva')?.checked;
+        const mostrarAlta = document.getElementById('filterHospAlta')?.checked;
+
+        const cards = document.querySelectorAll('.hospitalizacion-card');
+        cards.forEach(card => {
+            const hospId = card.dataset.hospId;
+            const hosp = this.hospitalizaciones.find(h => h.id == hospId);
+            
+            if (!hosp) {
+                card.style.display = 'none';
+                return;
+            }
+
+            let visible = true;
+
+            // Filtro de búsqueda
+            if (search) {
+                const motivo = hosp.motivo?.toLowerCase() || '';
+                const diagnostico = hosp.diagnostico?.toLowerCase() || '';
+                if (!motivo.includes(search) && !diagnostico.includes(search)) {
+                    visible = false;
+                }
+            }
+
+            // Filtro de estado (solo ocultar si ambos están desmarcados o el estado no coincide)
+            const estado = hosp.estado?.toLowerCase();
+            if (!mostrarActiva && !mostrarAlta) {
+                visible = false;
+            } else if (mostrarActiva && !mostrarAlta && estado !== 'activa') {
+                visible = false;
+            } else if (!mostrarActiva && mostrarAlta && estado !== 'alta') {
+                visible = false;
+            }
+
+            // Filtro de fecha (formato dd/mm/yyyy HH:MM)
+            if (mes !== '' || anio !== '') {
+                const fechaStr = hosp.fecha_ingreso.split(' ')[0]; // Obtener solo la parte de fecha dd/mm/yyyy
+                const [day, month, year] = fechaStr.split('/').map(Number);
+                if (mes !== '' && month !== parseInt(mes)) visible = false;
+                if (anio !== '' && year !== parseInt(anio)) visible = false;
+            }
+
+            card.style.display = visible ? 'block' : 'none';
+        });
+    },
+
     getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -1063,11 +1179,8 @@ const hospitalizacionesManager = {
     }
 };
 
-// Inicializar cuando el DOM esté listo
-console.log('🟢 hospitalizaciones.js cargado');
-
-// Esperar a que el DOM esté listo y pacienteData esté disponible
-document.addEventListener('DOMContentLoaded', function() {
+// Inicialización cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', () => {
     console.log('🟢 DOM listo');
     
     // Obtener el ID del paciente del template

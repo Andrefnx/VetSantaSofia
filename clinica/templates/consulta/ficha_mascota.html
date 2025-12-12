@@ -419,14 +419,95 @@
                     </div>
                 </div>
                 <div class="tab-content" id="hosp">
-                    <div class="hospitalizaciones-section">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                            <h3 style="margin: 0;">Registro de Hospitalizaciones</h3>
+                    <div class="hospitalizaciones-section" style="display: flex; gap: 1.5rem;">
+                        <!-- Contenido Principal -->
+                        <div class="historial-main" style="flex: 1;">
+                            <h3 style="margin-bottom: 1.5rem;">Registro de Hospitalizaciones</h3>
+                            
+                            <!-- Contenedor dinámico para hospitalizaciones -->
+                            <div id="hospitalizacionesContainer">
+                                <!-- Se carga dinámicamente via JavaScript -->
+                            </div>
                         </div>
-                        
-                        <!-- Contenedor dinámico para hospitalizaciones -->
-                        <div id="hospitalizacionesContainer">
-                            <!-- Se carga dinámicamente via JavaScript -->
+
+                        <!-- Sidebar Filtros -->
+                        <div class="historial-sidebar">
+                            <!-- Buscador -->
+                            <div class="sidebar-section">
+                                <label class="sidebar-label">Buscar</label>
+                                <div class="sidebar-search">
+                                    <i class="bi bi-search"></i>
+                                    <input type="text" id="searchHospitalizacion" class="form-control form-control-sm"
+                                        placeholder="Motivo, diagnóstico...">
+                                </div>
+                            </div>
+
+                            <!-- Filtros -->
+                            <div class="sidebar-section">
+                                <div class="sidebar-label-with-clear">
+                                    <label class="sidebar-label">Filtros</label>
+                                    <button class="btn-clear-all" id="btnClearHospFilters" title="Limpiar filtros">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Contenedor Grid para Filtros -->
+                                <div class="filters-grid">
+                                    <!-- Filtro de Fecha -->
+                                    <div class="filter-block">
+                                        <span class="filter-label">
+                                            <i class="bi bi-calendar3"></i> Fecha
+                                        </span>
+                                        <div class="calendar-inline compact">
+                                            <div class="calendar-header">
+                                                <button class="calendar-nav" id="btnHospPrevMonth">
+                                                    <i class="bi bi-chevron-left"></i>
+                                                </button>
+                                                <div class="calendar-title">
+                                                    <select id="selectHospMonth" class="calendar-select">
+                                                        <option value="">Mes</option>
+                                                        <option value="1">Ene</option>
+                                                        <option value="2">Feb</option>
+                                                        <option value="3">Mar</option>
+                                                        <option value="4">Abr</option>
+                                                        <option value="5">May</option>
+                                                        <option value="6">Jun</option>
+                                                        <option value="7">Jul</option>
+                                                        <option value="8">Ago</option>
+                                                        <option value="9">Sep</option>
+                                                        <option value="10">Oct</option>
+                                                        <option value="11">Nov</option>
+                                                        <option value="12">Dic</option>
+                                                    </select>
+                                                    <select id="selectHospYear" class="calendar-select">
+                                                        <option value="">Año</option>
+                                                    </select>
+                                                </div>
+                                                <button class="calendar-nav" id="btnHospNextMonth">
+                                                    <i class="bi bi-chevron-right"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Filtro de Estado -->
+                                    <div class="filter-block">
+                                        <span class="filter-label">
+                                            <i class="bi bi-circle-fill"></i> Estado
+                                        </span>
+                                        <div class="filter-checkboxes">
+                                            <label class="filter-checkbox">
+                                                <input type="checkbox" id="filterHospActiva" value="activa" checked>
+                                                <span>Activa</span>
+                                            </label>
+                                            <label class="filter-checkbox">
+                                                <input type="checkbox" id="filterHospAlta" value="alta" checked>
+                                                <span>Alta</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

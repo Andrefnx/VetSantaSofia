@@ -1483,10 +1483,11 @@ td[colspan][style*="text-align: center"] {
     z-index: 1;
 }
 
-.sidebar-search input {
-    padding-left: 2.5rem !important;
+.sidebar-search input.form-control {
+    padding-left: 2.75rem !important;
     width: 100% !important;
     border-radius: 6px !important;
+    padding-right: 0.75rem !important;
 }
 
 /* Filtros en Sidebar */
