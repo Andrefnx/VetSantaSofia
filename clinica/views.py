@@ -497,7 +497,8 @@ def crear_hospitalizacion(request, paciente_id):
         insumos_ids = data.get('insumos', [])
         if insumos_ids:
             from inventario.models import Insumo
-            insumos_qs = Insumo.objects.filter(id__in=insumos_ids)
+            # Insumo usa pk = idInventario
+            insumos_qs = Insumo.objects.filter(idInventario__in=insumos_ids)
             hospitalizacion.insumos.set(insumos_qs)
         
         return JsonResponse({
@@ -537,12 +538,12 @@ def crear_cirugia(request, hospitalizacion_id):
             fecha_cirugia=timezone.now(),
             veterinario_cirujano=request.user,
             tipo_cirugia=servicio_nombre,
-            descripcion=data.get('descripcion', ''),
+            descripcion=data.get('descripcion') or '',
             duracion_minutos=duracion,
-            anestesiologo=data.get('anestesiologo', ''),
-            tipo_anestesia=data.get('tipo_anestesia', ''),
-            complicaciones=data.get('complicaciones', ''),
-            resultado=data.get('resultado', 'exitosa')
+            anestesiologo=data.get('anestesiologo') or '',
+            tipo_anestesia=data.get('tipo_anestesia') or '',
+            complicaciones=data.get('complicaciones') or '',
+            resultado=data.get('resultado') or 'exitosa'
         )
         
         # Procesar medicamentos si existen
@@ -551,7 +552,7 @@ def crear_cirugia(request, hospitalizacion_id):
             from inventario.models import Insumo
             for med_id in medicamentos:
                 try:
-                    insumo = Insumo.objects.get(id=med_id)
+                    insumo = Insumo.objects.get(idInventario=med_id)
                     cirugia.medicamentos.add(insumo)
                 except Insumo.DoesNotExist:
                     pass
@@ -592,7 +593,7 @@ def crear_registro_diario(request, hospitalizacion_id):
             from inventario.models import Insumo
             for med_id in medicamentos:
                 try:
-                    insumo = Insumo.objects.get(id=med_id)
+                    insumo = Insumo.objects.get(idInventario=med_id)
                     registro.medicamentos.add(insumo)
                 except Insumo.DoesNotExist:
                     pass
@@ -660,6 +661,7 @@ def obtener_hospitalizaciones(request, paciente_id):
                 'motivo': hosp.motivo,
                 'estado': hosp.get_estado_display(),
                 'tiene_cirugia': hosp.cirugias.exists(),
+                'cirugias_count': hosp.cirugias.count(),
                 'registros_diarios': hosp.registros_diarios.count(),
             }
             

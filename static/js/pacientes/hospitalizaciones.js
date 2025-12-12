@@ -536,17 +536,21 @@ const hospitalizacionesManager = {
                 
                 ${!hosp.tiene_alta ? `
                     <div class="hosp-acciones">
-                        ${!hosp.tiene_cirugia ? `
-                            <button class="btn-accion btn-cirugia" onclick="hospitalizacionesManager.abrirModalCirugia(${hosp.id})">
-                                <i class="bi bi-tools"></i> Agregar Cirugía
-                            </button>
-                        ` : ''}
+                        <button class="btn-accion btn-cirugia" onclick="hospitalizacionesManager.abrirModalCirugia(${hosp.id})">
+                            <i class="bi bi-tools"></i> ${hosp.tiene_cirugia ? 'Agregar/otra Cirugía' : 'Agregar Cirugía'}
+                        </button>
                         <button class="btn-accion btn-registro" onclick="hospitalizacionesManager.abrirModalRegistro(${hosp.id})">
                             <i class="bi bi-plus-circle"></i> Registro Diario
                         </button>
                         <button class="btn-accion btn-alta" onclick="hospitalizacionesManager.abrirModalAlta(${hosp.id})">
                             <i class="bi bi-check-circle"></i> Dar de Alta
                         </button>
+                    </div>
+                ` : ''}
+
+                ${hosp.cirugias_count ? `
+                    <div class="hosp-meta">
+                        <span class="meta-chip"><i class="bi bi-tools"></i> Cirugías: ${hosp.cirugias_count}</span>
                     </div>
                 ` : ''}
             </div>
@@ -822,12 +826,13 @@ const hospitalizacionesManager = {
             return;
         }
 
-        // Insumos seleccionados
-        const insumosSelect = document.getElementById('insumosCirugia');
-        let insumosSeleccionados = [];
-        if (insumosSelect) {
-            insumosSeleccionados = Array.from(insumosSelect.selectedOptions).map(o => o.value).filter(Boolean);
-        }
+        // Insumos seleccionados (usamos el hidden para evitar errores si el contenedor no es un <select>)
+        const insumosHidden = document.getElementById('insumosCirugiaHidden');
+        const insumosSeleccionados = insumosHidden ? insumosHidden.value.split(',').filter(Boolean) : [];
+
+        // Equipo seleccionado
+        const equipoHidden = document.getElementById('equipoCirugiaHidden');
+        const equipoSeleccionado = equipoHidden ? equipoHidden.value.split(',').filter(Boolean) : [];
 
         try {
             const response = await fetch(`/clinica/hospitalizacion/${hospId}/cirugia/crear/`, {
@@ -846,6 +851,7 @@ const hospitalizacionesManager = {
                     complicaciones: formData.get('complicaciones'),
                     resultado: formData.get('resultado'),
                     medicamentos: insumosSeleccionados,
+                    equipo: equipoSeleccionado,
                 })
             });
 
