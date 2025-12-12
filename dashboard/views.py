@@ -117,7 +117,8 @@ def _datos_administrador(hoy):
     
     # Agregar cálculo de días de hospitalización
     for hosp in hospitalizaciones_activas:
-        hosp.dias_hospitalizacion = (hoy.date() - hosp.fecha_ingreso.date()).days
+        fecha_ingreso = hosp.fecha_ingreso.date() if hasattr(hosp.fecha_ingreso, 'date') else hosp.fecha_ingreso
+        hosp.dias_hospitalizacion = (hoy - fecha_ingreso).days
     
     fecha_limite = hoy - timedelta(days=5)
     hospitalizaciones_prolongadas = hospitalizaciones_activas.filter(

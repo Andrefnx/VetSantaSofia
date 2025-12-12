@@ -6,16 +6,45 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
+    // Función para activar una tab
+    function activateTab(tabName) {
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        const targetButton = document.querySelector(`[data-tab="${tabName}"]`);
+        const targetContent = document.getElementById(tabName);
+        
+        if (targetButton && targetContent) {
+            targetButton.classList.add('active');
+            targetContent.classList.add('active');
+        }
+    }
+
+    // Detectar hash en la URL para abrir tab específica
+    setTimeout(() => {
+        if (window.location.hash) {
+            const hash = window.location.hash.substring(1);
+            console.log('🔗 Hash detectado en URL:', hash);
+            
+            if (hash === 'hospitalizaciones' || hash === 'hosp') {
+                console.log('➡️ Activando tab de hospitalizaciones');
+                activateTab('hosp');
+            } else if (hash === 'documentos' || hash === 'docs') {
+                console.log('➡️ Activando tab de documentos');
+                activateTab('docs');
+            } else if (hash === 'historial') {
+                console.log('➡️ Activando tab de historial');
+                activateTab('historial');
+            }
+        } else {
+            console.log('ℹ️ No hay hash en la URL');
+        }
+    }, 100);
+
     tabButtons.forEach(button => {
         button.addEventListener('click', function() {
             const targetTab = this.getAttribute('data-tab');
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
-            this.classList.add('active');
-            const targetContent = document.getElementById(targetTab);
-            if (targetContent) {
-                targetContent.classList.add('active');
-            }
+            activateTab(targetTab);
         });
     });
 

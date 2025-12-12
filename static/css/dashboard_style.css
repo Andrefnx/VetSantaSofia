@@ -98,6 +98,94 @@
     border-color: #eef1f4;
 }
 
+/* Compact gray vet-card for indicators */
+.vet-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.vet-card .card-body {
+    padding: 14px 16px;
+}
+
+.vet-card-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.vet-card-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.vet-card-icon i {
+    font-size: 1.2rem;
+    color: #6b7280;
+}
+
+.vet-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.vet-card-label {
+    margin: 0 0 4px 0;
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.vet-card-value {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #374151;
+    line-height: 1.2;
+}
+
+/* Gray buttons for dashboard actions */
+.vet-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    background: #6b7280;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.vet-btn:hover {
+    background: #4b5563;
+    color: white;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.vet-btn-sm {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+
+.vet-btn-block {
+    display: flex;
+    width: 100%;
+}
+
 .btn-primary {
     background-color: var(--primary-color) !important;
     border-color: var(--primary-color) !important;

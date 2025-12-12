@@ -25,19 +25,15 @@
 <!-- Indicadores Principales -->
 <div class="row">
     <div class="col-sm-6 col-md-3">
-        <div class="card card-stats card-round">
+        <div class="card vet-card card-round">
             <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-icon">
-                        <div class="icon-big text-center icon-primary bubble-shadow-small">
-                            <i class="fas fa-users"></i>
-                        </div>
+                <div class="vet-card-content">
+                    <div class="vet-card-icon">
+                        <i class="fas fa-users"></i>
                     </div>
-                    <div class="col col-stats ms-3 ms-sm-0">
-                        <div class="numbers">
-                            <p class="card-category">Pacientes Atendidos Hoy</p>
-                            <h4 class="card-title">{{ indicadores.pacientes_atendidos_hoy }}</h4>
-                        </div>
+                    <div class="vet-card-info">
+                        <p class="vet-card-label">Pacientes Atendidos Hoy</p>
+                        <h4 class="vet-card-value">{{ indicadores.pacientes_atendidos_hoy }}</h4>
                     </div>
                 </div>
             </div>
@@ -45,19 +41,15 @@
     </div>
     
     <div class="col-sm-6 col-md-3">
-        <div class="card card-stats card-round">
+        <div class="card vet-card card-round">
             <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-icon">
-                        <div class="icon-big text-center icon-success bubble-shadow-small">
-                            <i class="fas fa-dollar-sign"></i>
-                        </div>
+                <div class="vet-card-content">
+                    <div class="vet-card-icon">
+                        <i class="fas fa-dollar-sign"></i>
                     </div>
-                    <div class="col col-stats ms-3 ms-sm-0">
-                        <div class="numbers">
-                            <p class="card-category">Ingresos del Día</p>
-                            <h4 class="card-title">${{ indicadores.ingresos_del_dia|floatformat:0 }}</h4>
-                        </div>
+                    <div class="vet-card-info">
+                        <p class="vet-card-label">Ingresos del Día</p>
+                        <h4 class="vet-card-value">${{ indicadores.ingresos_del_dia|floatformat:0 }}</h4>
                     </div>
                 </div>
             </div>
@@ -65,19 +57,15 @@
     </div>
     
     <div class="col-sm-6 col-md-3">
-        <div class="card card-stats card-round">
+        <div class="card vet-card card-round">
             <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-icon">
-                        <div class="icon-big text-center icon-info bubble-shadow-small">
-                            <i class="fas fa-calendar-check"></i>
-                        </div>
+                <div class="vet-card-content">
+                    <div class="vet-card-icon">
+                        <i class="fas fa-calendar-check"></i>
                     </div>
-                    <div class="col col-stats ms-3 ms-sm-0">
-                        <div class="numbers">
-                            <p class="card-category">Citas del Día</p>
-                            <h4 class="card-title">{{ citas_stats.total }}</h4>
-                        </div>
+                    <div class="vet-card-info">
+                        <p class="vet-card-label">Citas del Día</p>
+                        <h4 class="vet-card-value">{{ citas_stats.total }}</h4>
                     </div>
                 </div>
             </div>
@@ -85,19 +73,15 @@
     </div>
     
     <div class="col-sm-6 col-md-3">
-        <div class="card card-stats card-round">
+        <div class="card vet-card card-round">
             <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-icon">
-                        <div class="icon-big text-center icon-warning bubble-shadow-small">
-                            <i class="fas fa-hospital"></i>
-                        </div>
+                <div class="vet-card-content">
+                    <div class="vet-card-icon">
+                        <i class="fas fa-hospital"></i>
                     </div>
-                    <div class="col col-stats ms-3 ms-sm-0">
-                        <div class="numbers">
-                            <p class="card-category">Hospitalizados</p>
-                            <h4 class="card-title">{{ indicadores.hospitalizaciones_activas_count }}</h4>
-                        </div>
+                    <div class="vet-card-info">
+                        <p class="vet-card-label">Hospitalizados</p>
+                        <h4 class="vet-card-value">{{ indicadores.hospitalizaciones_activas_count }}</h4>
                     </div>
                 </div>
             </div>
@@ -105,12 +89,10 @@
     </div>
 </div>
 
-<!-- Contenido Principal en 2 Columnas -->
+<!-- Contenido Principal en 3 Columnas -->
 <div class="row">
-    <!-- Columna Izquierda -->
-    <div class="col-md-8">
-        
-        <!-- Agenda del Día -->
+    <!-- Agenda del Día -->
+    <div class="col-md-4">
         <div class="card card-round">
             <div class="card-header">
                 <div class="card-head-row">
@@ -119,10 +101,8 @@
                         Agenda del Día
                     </div>
                     <div class="card-tools">
-                        <a href="{% url 'agenda:agenda' %}" class="btn btn-label-primary btn-round btn-sm">
-                            <span class="btn-label">
-                                <i class="fa fa-eye"></i>
-                            </span>
+                        <a href="{% url 'agenda:agenda' %}" class="vet-btn vet-btn-sm">
+                            <i class="fa fa-eye me-1"></i>
                             Ver Agenda Completa
                         </a>
                     </div>
@@ -191,8 +171,10 @@
                 {% endif %}
             </div>
         </div>
-        
-        <!-- Hospitalizaciones Activas -->
+    </div>
+    
+    <!-- Hospitalizaciones Activas -->
+    <div class="col-md-4">
         <div class="card card-round">
             <div class="card-header">
                 <div class="card-head-row">
@@ -201,10 +183,8 @@
                         Hospitalizaciones Activas
                     </div>
                     <div class="card-tools">
-                        <a href="/hospital/" class="btn btn-label-info btn-round btn-sm">
-                            <span class="btn-label">
-                                <i class="fa fa-eye"></i>
-                            </span>
+                        <a href="/hospital/" class="vet-btn vet-btn-sm">
+                            <i class="fa fa-eye me-1"></i>
                             Ver Todas
                         </a>
                     </div>
@@ -217,8 +197,8 @@
                             <thead>
                                 <tr>
                                     <th>Paciente</th>
-                                    <th>Ingreso</th>
                                     <th>Veterinario</th>
+                                    <th>Contacto</th>
                                     <th>Días</th>
                                 </tr>
                             </thead>
@@ -230,11 +210,43 @@
                                         {% if hosp in hospitalizaciones_prolongadas %}
                                             <i class="fas fa-exclamation-triangle text-warning ms-1" title="Hospitalización prolongada"></i>
                                         {% endif %}
+                                        <br>
+                                        <small class="text-muted">{{ hosp.fecha_ingreso|date:"d/m H:i" }}</small>
+                                        <br>
+                                        <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}#hospitalizaciones" target="_blank" class="text-decoration-none" style="color: #6b7280; font-size: 0.85rem;">
+                                            <i class="fas fa-file-medical me-1"></i> Ver ficha
+                                        </a>
                                     </td>
-                                    <td>{{ hosp.fecha_ingreso|date:"d/m/Y H:i" }}</td>
-                                    <td>{{ hosp.veterinario.nombre|default:"-" }}</td>
                                     <td>
-                                        {{ hosp.dias_hospitalizacion }} día(s)
+                                        {% if hosp.veterinario %}
+                                            {{ hosp.veterinario.nombre }} {{ hosp.veterinario.apellido }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if hosp.paciente.propietario %}
+                                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                                {% if hosp.paciente.propietario.telefono %}
+                                                    <a href="tel:{{ hosp.paciente.propietario.telefono }}" class="text-decoration-none" style="color: #6b7280; font-size: 0.85rem;">
+                                                        <i class="fas fa-phone me-1"></i> Llamar
+                                                    </a>
+                                                {% endif %}
+                                                {% if hosp.paciente.propietario.email %}
+                                                    <a href="mailto:{{ hosp.paciente.propietario.email }}" class="text-decoration-none" style="color: #6b7280; font-size: 0.85rem;">
+                                                        <i class="fas fa-envelope me-1"></i> Enviar correo
+                                                    </a>
+                                                {% endif %}
+                                                {% if not hosp.paciente.propietario.telefono and not hosp.paciente.propietario.email %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ hosp.dias_hospitalizacion }}
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -246,12 +258,10 @@
                 {% endif %}
             </div>
         </div>
-        
     </div>
     
-    <!-- Columna Derecha -->
+    <!-- Columna Derecha: Caja e Inventario -->
     <div class="col-md-4">
-        
         <!-- Estado de Caja -->
         <div class="card card-round">
             <div class="card-header">
@@ -287,21 +297,21 @@
                     </div>
                 {% endif %}
                 
-                <hr>
+                <hr style="border-color: #e5e7eb; margin: 16px 0;">
                 
-                <div class="alert alert-{% if caja_stats.cobros_pendientes_count > 0 %}warning{% else %}success{% endif %}">
-                    <h6 class="mb-1">
-                        <i class="fas fa-clock me-2"></i>
+                <div style="padding: 8px 0;">
+                    <p class="mb-1" style="color: #6b7280; font-size: 0.9rem; font-weight: 500;">
+                        <i class="fas fa-clock me-1" style="color: #9ca3af;"></i>
                         Cobros Pendientes
-                    </h6>
-                    <p class="mb-0">
+                    </p>
+                    <p class="mb-0" style="color: #374151; font-size: 0.95rem;">
                         <strong>{{ caja_stats.cobros_pendientes_count }}</strong> cobro(s) por 
                         <strong>${{ caja_stats.cobros_pendientes_total|floatformat:0 }}</strong>
                     </p>
                 </div>
                 
-                <div class="d-grid gap-2">
-                    <a href="/caja/dashboard/" class="btn btn-primary btn-round">
+                <div class="d-grid gap-2 mt-3">
+                    <a href="/caja/dashboard/" class="vet-btn vet-btn-block">
                         <i class="fas fa-cash-register me-2"></i>
                         Ir a Caja
                     </a>
@@ -339,9 +349,11 @@
                         {% endfor %}
                     </div>
                 {% else %}
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle me-2"></i>
-                        Stock en niveles normales
+                    <div style="padding: 8px 0;">
+                        <p class="mb-0" style="color: #6b7280; font-size: 0.95rem;">
+                            <i class="fas fa-check-circle me-1" style="color: #9ca3af;"></i>
+                            Stock en niveles normales
+                        </p>
                     </div>
                 {% endif %}
                 
@@ -359,7 +371,7 @@
                 {% endif %}
                 
                 <div class="d-grid gap-2 mt-3">
-                    <a href="/inventario/" class="btn btn-outline-primary btn-round">
+                    <a href="/inventario/" class="vet-btn vet-btn-block">
                         <i class="fas fa-box me-2"></i>
                         Ver Inventario
                     </a>
