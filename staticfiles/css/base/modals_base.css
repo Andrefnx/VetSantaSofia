@@ -127,7 +127,7 @@
     max-height: 70vh !important;
 }
 
-.vet-custom-modal button:not(.btn-thin) {
+.vet-custom-modal button:not(.btn-thin):not(.vet-btn-cancel) {
     cursor: pointer !important;
     border: none !important;
     color: white !important;
@@ -138,7 +138,7 @@
     background: #afe1af !important;
 }
 
-.vet-custom-modal button:not(.btn-thin):hover {
+.vet-custom-modal button:not(.btn-thin):not(.vet-btn-cancel):hover {
     background: #89c57c !important;
     transition: 0.3s all ease !important;
 }
@@ -227,6 +227,33 @@ nav.sidebar {
 /* Prevenir scroll cuando modal está abierto */
 body.modal-open {
     overflow: hidden !important;
+}
+
+/* =============================
+   BOTONES CANCELAR GLOBALES
+============================= */
+
+button.vet-btn-cancel,
+.vet-custom-modal button.vet-btn-cancel,
+.vet-modal button.vet-btn-cancel,
+.btn.btn-secondary[data-bs-dismiss="modal"],
+.btn.btn-secondary[data-dismiss="modal"] {
+    background-color: #6b7280 !important;
+    color: white !important;
+    border: none !important;
+    padding: 10px 16px !important;
+    border-radius: 6px !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s ease !important;
+}
+
+button.vet-btn-cancel:hover,
+.vet-custom-modal button.vet-btn-cancel:hover,
+.vet-modal button.vet-btn-cancel:hover,
+.btn.btn-secondary[data-bs-dismiss="modal"]:hover,
+.btn.btn-secondary[data-dismiss="modal"]:hover {
+    background-color: #dc2626 !important;
 }
 
 /* =============================

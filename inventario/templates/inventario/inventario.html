@@ -20,24 +20,24 @@
     padding-top: 0 !important;
 }
 
-/* Estilos globales para botones cancelar */
-button.vet-btn-cancel,
-.vet-custom-modal button.vet-btn-cancel,
-.vet-modal button.vet-btn-cancel {
-    background-color: #6b7280 !important;
-    color: white !important;
-    border: none !important;
-    padding: 10px 16px !important;
-    border-radius: 6px !important;
-    font-size: 0.9rem !important;
-    cursor: pointer !important;
-    transition: background-color 0.3s ease !important;
+/* Estilos específicos para modal de modificar stock */
+#modalModificarStock .vet-custom-modal {
+    max-width: 350px !important;
 }
 
-button.vet-btn-cancel:hover,
-.vet-custom-modal button.vet-btn-cancel:hover,
-.vet-modal button.vet-btn-cancel:hover {
-    background-color: #dc2626 !important;
+#modalModificarStock .vet-modal-body {
+    padding: 20px !important;
+}
+
+#modalModificarStock .btn-stock-action {
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.2rem !important;
+    border-radius: 6px !important;
 }
 </style>
 {% endblock %}
@@ -416,7 +416,7 @@ button.vet-btn-cancel:hover,
             <div class="vet-modal-body">
                 <p id="eliminarProductoMensaje" class="text-center mb-4">¿Estás seguro que deseas eliminar este producto?</p>
                 <div class="text-center">
-                    <button type="button" class="vet-btn-grey" onclick="closeEliminarProductoModal()">
+                    <button type="button" class="vet-btn-cancel" onclick="closeEliminarProductoModal()">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
                     <button type="button" class="vet-btn-grey error" id="btnConfirmarEliminarProducto" onclick="eliminarProductoConfirmado()">
@@ -430,31 +430,31 @@ button.vet-btn-cancel:hover,
 
 <!-- Modal: Modificar Stock -->
 <div class="vet-modal-overlay hide" id="modalModificarStock">
-    <div class="vet-custom-modal" style="max-width: 500px;">
+    <div class="vet-custom-modal" style="width: 95%;">
         <div class="vet-modal-content">
             <div class="vet-custom-modal-title">
                 <h3><i class="fas fa-boxes"></i> Modificar Stock</h3>
                 <i class="bi bi-x" onclick="closeVetModal('modalModificarStock')"></i>
             </div>
             <div class="vet-modal-body">
-                <div class="text-center mb-4">
-                    <h5>Stock Actual</h5>
-                    <h2 id="stockActualValor" class="text-primary">0</h2>
+                <div class="text-center mb-3">
+                    <h5 class="mb-2 fw-bold" style="color: #6b7280;">Stock Actual</h5>
+                    <h2 id="stockActualValor" class="mb-0 fw-bold" style="color: #6b7280;">0</h2>
                 </div>
-                <div class="mb-3">
+                <div class="mb-4">
                     <label class="form-label fw-bold">Cantidad</label>
-                    <input type="number" class="form-control" id="inputStockOperacion" placeholder="Ingrese cantidad">
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-danger btn-stock-action" onclick="restarStockInput()">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <input type="number" class="form-control" id="inputStockOperacion" placeholder="0" style="text-align: center;">
+                        <button type="button" class="btn btn-success btn-stock-action" onclick="sumarStockInput()">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="d-flex gap-2 mb-3">
-                    <button type="button" class="btn btn-success flex-fill" onclick="sumarStockInput()">
-                        <i class="fas fa-plus"></i> Sumar
-                    </button>
-                    <button type="button" class="btn btn-danger flex-fill" onclick="restarStockInput()">
-                        <i class="fas fa-minus"></i> Restar
-                    </button>
-                </div>
-                <div class="text-center">
-                    <button type="button" class="vet-btn-grey" onclick="closeVetModal('modalModificarStock')">
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="vet-btn-cancel" onclick="closeVetModal('modalModificarStock')">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
                     <button type="button" class="vet-btn-grey success" onclick="guardarStock()">
