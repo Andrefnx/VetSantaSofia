@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.exceptions import ValidationError
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Q
 import json
 from datetime import date, datetime, timedelta, time
@@ -26,11 +27,19 @@ def agenda(request):
     
     # Obtener servicios
     servicios = Servicio.objects.all().order_by('categoria', 'nombre')
+
+    veterinarios_json = json.dumps(list(veterinarios.values('id', 'nombre', 'apellido', 'rol')), cls=DjangoJSONEncoder)
+    servicios_json = json.dumps(
+        list(servicios.values('idServicio', 'nombre', 'categoria', 'duracion', 'precio')),
+        cls=DjangoJSONEncoder
+    )
     
     context = {
         'veterinarios': veterinarios,
         'pacientes': pacientes,
         'servicios': servicios,
+        'veterinarios_json': veterinarios_json,
+        'servicios_json': servicios_json,
     }
     return render(request, 'agenda/agenda.html', context)
 

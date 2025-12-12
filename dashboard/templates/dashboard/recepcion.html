@@ -106,7 +106,7 @@
                 </div>
             </div>
             <div class="card-body">
-                <div class="agenda-horaria" style="max-height: 600px; overflow-y: auto;">
+                <div class="agenda-horaria">
                     {% for horario in horarios %}
                     <div class="horario-slot {% if horario.libre %}slot-libre{% else %}slot-ocupado{% endif %} mb-2 p-3 border rounded">
                         <div class="d-flex justify-content-between align-items-start">
@@ -207,7 +207,7 @@
                 </h6>
                 
                 {% if caja_stats.cobros_pendientes %}
-                    <div class="list-group mb-3" style="max-height: 300px; overflow-y: auto;">
+                    <div class="list-group mb-3">
                         {% for cobro in caja_stats.cobros_pendientes %}
                         <div class="list-group-item d-flex justify-content-between align-items-center">
                             <div>

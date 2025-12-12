@@ -544,3 +544,229 @@
 .btn-close-modal:hover {
     color: #000;
 }
+
+/* =============================
+   AGENDA VETERINARIA
+============================= */
+.vet-agenda-calendar,
+.agenda-calendar {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e6e6e6;
+}
+
+.vet-calendar-header,
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
+    color: var(--text-dark);
+    font-weight: 600;
+    text-align: center;
+}
+.vet-calendar-header-day,
+.calendar-header-day {
+    padding: 0.75rem;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+.vet-calendar-header-day:last-child,
+.calendar-header-day:last-child {
+    border-right: none;
+}
+
+.vet-calendar-body,
+.calendar-body {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: #e0e0e0;
+}
+
+.vet-calendar-day,
+.calendar-day {
+    background: white;
+    min-height: 70px;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.vet-calendar-day:not(.vet-disabled):hover,
+.calendar-day:not(.disabled):hover {
+    background: #f0fdf4;
+    border-color: #afe1af;
+}
+
+.vet-calendar-day.vet-other-month,
+.calendar-day.other-month {
+    background: #fafafa;
+    color: #bbb;
+}
+
+.vet-calendar-day.vet-disabled,
+.calendar-day.disabled {
+    background: #f5f5f5;
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+.vet-calendar-day.vet-today,
+.calendar-day.today {
+    background: #dcfce7;
+    border: 2px solid #89c57c;
+    font-weight: 600;
+}
+
+.vet-calendar-day.vet-selected,
+.calendar-day.selected {
+    background: #c8e6c9;
+    border: 2px solid #afe1af;
+}
+
+.vet-calendar-day.vet-has-citas,
+.calendar-day.has-citas {
+    background: #f0fdf4;
+}
+
+.vet-day-number,
+.day-number {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-dark);
+    margin-bottom: 5px;
+}
+
+.vet-citas-count,
+.citas-count {
+    font-size: 0.7rem;
+    background: #afe1af;
+    color: var(--text-dark);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+    /* Indicadores de cita (compatibilidad) */
+    .vet-cita-dot,
+    .cita-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+        margin: 2px;
+    }
+
+    .vet-cita-dot.vet-tipo-consulta,
+    .cita-dot.tipo-consulta { background: #89c57c; }
+
+    .vet-cita-dot.vet-tipo-vacunacion,
+    .cita-dot.tipo-vacunacion { background: #43a047; }
+
+    .vet-cita-dot.vet-tipo-cirugia,
+    .cita-dot.tipo-cirugia { background: #f59e0b; }
+
+    .vet-cita-dot.vet-tipo-control,
+    .cita-dot.tipo-control { background: #afe1af; }
+
+    .vet-cita-dot.vet-tipo-emergencia,
+    .cita-dot.tipo-emergencia { background: #dc2626; }
+
+    .vet-cita-dot.vet-tipo-peluqueria,
+    .cita-dot.tipo-peluqueria { background: #6b8e6b; }
+
+    /* Slots horarios (compatibilidad) */
+    .vet-hour-slot,
+    .hour-slot {
+        display: flex;
+        gap: 4px;
+    }
+
+    .vet-quarter-block,
+    .quarter-block {
+        flex: 1;
+        min-height: 30px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .vet-quarter-block:hover,
+    .quarter-block:hover {
+        background: #f0fdf4;
+        border-color: #afe1af;
+    }
+
+    .vet-quarter-block.vet-has-appointment,
+    .quarter-block.has-appointment {
+        border-width: 2px;
+        padding: 4px 6px;
+    }
+
+    .vet-quarter-block.vet-cita-consulta,
+    .quarter-block.cita-consulta {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border-color: #89c57c;
+    }
+
+    .vet-quarter-block.vet-cita-vacunacion,
+    .quarter-block.cita-vacunacion {
+        background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+        border-color: #43a047;
+    }
+
+    .vet-quarter-block.vet-cita-cirugia,
+    .quarter-block.cita-cirugia {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border-color: #f59e0b;
+    }
+
+    .vet-quarter-block.vet-cita-control,
+    .quarter-block.cita-control {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border-color: #afe1af;
+    }
+
+    .vet-quarter-block.vet-cita-emergencia,
+    .quarter-block.cita-emergencia {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        border-color: #dc2626;
+    }
+
+    .vet-quarter-block.vet-cita-peluqueria,
+    .quarter-block.cita-peluqueria {
+        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+        border-color: #6b8e6b;
+    }
+
+    .vet-cita-info,
+    .cita-info {
+        font-size: 0.7rem;
+        line-height: 1.2;
+    }
+
+    .vet-cita-tipo,
+    .cita-tipo {
+        font-weight: 600;
+        display: block;
+        color: var(--text-dark);
+    }
+
+    .vet-cita-mascota,
+    .vet-cita-especie,
+    .vet-cita-vet,
+    .cita-mascota,
+    .cita-especie,
+    .cita-vet {
+        display: block;
+        color: #6c757d;
+        font-size: 0.65rem;
+    }

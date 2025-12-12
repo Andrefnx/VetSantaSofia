@@ -155,8 +155,18 @@ function renderizarCalendario() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     
+    actualizarTituloMes(year, month);
     actualizarSelectores(year, month);
     renderizarDiasDelMes(year, month);
+}
+
+function actualizarTituloMes(year, month) {
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const title = document.getElementById('currentMonth');
+    if (title) {
+        title.textContent = `${meses[month]} ${year}`;
+    }
 }
 
 function actualizarSelectores(year, month) {

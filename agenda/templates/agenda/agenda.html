@@ -3,10 +3,6 @@
 
 {% block title %}Agenda Veterinaria{% endblock %}
 
-{% block styles %}
-<link rel="stylesheet" href="{% static 'agenda/css/agenda-sistema.css' %}">
-{% endblock %}
-
 {% block content %}
 <div class="page-header">
     <h3 class="fw-bold mb-3">Agenda Veterinaria</h3>
@@ -26,69 +22,75 @@
 </div>
 
 <!-- Alerta compacta de disponibilidad -->
-<div class="alert alert-info alert-dismissible fade show mb-3 py-2" role="alert">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <i class="fas fa-clock"></i> 
-            <strong>Disponibilidad:</strong> <span class="text-muted">Configura los horarios de atención</span>
-        </div>
-        <button type="button" class="btn btn-sm btn-success" onclick="abrirModalDisponibilidad()">
-            <i class="fas fa-cog"></i> Configurar
+<!-- Botón de disponibilidad integrado -->
+<div class="row mb-3">
+    <div class="col-12">
+        <button type="button" class="btn btn-label-success btn-round btn-sm" onclick="abrirModalDisponibilidad()">
+            <span class="btn-label">
+                <i class="fa fa-cog"></i>
+            </span>
+            Configurar Disponibilidad
         </button>
     </div>
 </div>
 
 <!-- Layout: Calendario 50% + Agenda del Día 50% -->
-<div class="row g-3">
+<div class="row">
     <!-- CALENDARIO -->
     <div class="col-lg-6">
-        <div class="card shadow-sm">
-            <div class="card-header bg-success text-white py-2">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fs-6">
-                        <i class="fas fa-calendar-alt"></i> <span id="currentMonth"></span>
-                    </h5>
-                    <div class="btn-group btn-group-sm">
-                        <button id="prevMonth" class="btn btn-outline-light btn-sm">
-                            <i class="fas fa-chevron-left"></i>
+        <div class="card card-round">
+            <div class="card-header">
+                <div class="card-head-row">
+                    <div class="card-title">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        <span id="currentMonth"></span>
+                    </div>
+                    <div class="card-tools">
+                        <button id="prevMonth" class="btn btn-icon btn-round btn-sm me-1">
+                            <i class="fa fa-chevron-left"></i>
                         </button>
-                        <button id="todayBtn" class="btn btn-light btn-sm">
+                        <button id="todayBtn" class="btn btn-sm btn-primary me-1">
                             Hoy
                         </button>
-                        <button id="nextMonth" class="btn btn-outline-light btn-sm">
-                            <i class="fas fa-chevron-right"></i>
+                        <button id="nextMonth" class="btn btn-icon btn-round btn-sm">
+                            <i class="fa fa-chevron-right"></i>
                         </button>
                     </div>
                 </div>
             </div>
             <div class="card-body p-0">
-                <div id="calendar" class="agenda-calendar"></div>
+                <div id="calendar" class="agenda-calendar vet-agenda-calendar"></div>
             </div>
         </div>
     </div>
 
     <!-- AGENDA DEL DÍA -->
     <div class="col-lg-6">
-        <div class="card shadow-sm">
-            <div class="card-header bg-success text-white py-2">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fs-6">
-                        <i class="fas fa-calendar-check"></i> 
-                        <span id="selectedDateTitle">Agenda del Día</span>
-                    </h5>
-                    <button class="btn btn-light btn-sm" onclick="abrirModalCita()">
-                        <i class="fas fa-plus"></i> Nueva
-                    </button>
+        <div class="card card-round">
+            <div class="card-header">
+                <div class="card-head-row">
+                    <div class="card-title">
+                        <i class="fas fa-calendar-check me-2"></i>
+                        Agenda del Día
+                    </div>
+                    <div class="card-tools">
+                        <button class="btn btn-label-success btn-round btn-sm" onclick="abrirModalCita()">
+                            <span class="btn-label">
+                                <i class="fa fa-plus"></i>
+                            </span>
+                            Nueva Cita
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div class="card-body p-2" style="height: 590px; overflow-y: auto;">
+            <div class="card-body">
                 <div id="dayDetails">
-                    <ul class="nav nav-pills nav-fill mb-2 small" id="veterinariosTab" role="tablist"></ul>
+                    <ul class="nav nav-pills nav-secondary mb-3" id="veterinariosTab" role="tablist"></ul>
                     <div class="tab-content" id="veterinariosTabContent"></div>
                 </div>
                 <div id="emptyDayMessage" class="text-center text-muted py-5">
-                    <i class="fas fa-calendar-day fa-3x mb-3 opacity-25"></i>
-                    <p class="mb-0 small">Selecciona un día en el calendario para ver las citas</p>
+                    <i class="fas fa-calendar-day fa-3x mb-3"></i>
+                    <p class="mb-0">Selecciona un día en el calendario para ver las citas</p>
                 </div>
             </div>
         </div>
@@ -97,8 +99,8 @@
 
 <!-- Datos para JavaScript -->
 <script>
-    const VETERINARIOS = {{ veterinarios|safe }};
-    const SERVICIOS = {{ servicios|safe }};
+    const VETERINARIOS = JSON.parse('{{ veterinarios_json|escapejs }}');
+    const SERVICIOS = JSON.parse('{{ servicios_json|escapejs }}');
 </script>
 
 {% endblock %}
