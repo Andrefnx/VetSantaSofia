@@ -58,7 +58,7 @@ class Servicio(models.Model):
 
 class ServicioInsumo(models.Model):
     servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE)
-    insumo = models.ForeignKey(Insumo, on_delete=models.CASCADE)
+    insumo = models.ForeignKey(Insumo, on_delete=models.PROTECT)  # Proteger insumos de eliminación accidental
     cantidad = models.IntegerField()
 
     class Meta:

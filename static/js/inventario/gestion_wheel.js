@@ -27,15 +27,23 @@ function toggleWheel(button) {
     const row = button.closest('tr');
     
     clone.querySelectorAll('button').forEach((btn, i) => {
+        // ⭐ IMPORTANTE: Remover onclick inline para evitar doble ejecución
+        btn.removeAttribute('onclick');
+        
         btn.addEventListener('click', e => {
             e.stopPropagation();
+            e.preventDefault(); // Prevenir cualquier comportamiento por defecto
             
             // Establecer la fila actual
             if (typeof setCurrentRow === 'function') {
                 setCurrentRow(row);
             }
             
-            // Ejecutar la acción original
+            // Guardar referencia a la fila en el botón clonado antes de ejecutar la acción
+            btn.dataset.originalRow = row.getAttribute('data-id');
+            btn.__originalRow = row; // Guardar referencia directa al TR
+            
+            // Ejecutar la acción original con el botón original para mantener el contexto correcto
             originalButtons[i].click();
             closeActiveMenu();
         });

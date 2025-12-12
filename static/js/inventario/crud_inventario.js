@@ -62,9 +62,36 @@ function parseNumeroSeguro(valor) {
    VER / EDITAR PRODUCTO
 ============================================================ */
 function abrirModalProducto(btn, mode) {
-    const tr = btn.closest("tr");
+    // Buscar el TR de manera robusta
+    let tr = btn.closest("tr");
+    
+    // Si no se encuentra con closest, intentar desde el botón padre
     if (!tr) {
-        console.error('No se encontró la fila de la tabla');
+        const manageWheel = btn.closest('.manage-wheel');
+        if (manageWheel) {
+            tr = manageWheel.closest('tr');
+        }
+    }
+    
+    // Si el botón tiene referencia al row original (del wheel clonado)
+    if (!tr && btn.__originalRow) {
+        tr = btn.__originalRow;
+    }
+    
+    // Si aún no se encuentra, buscar el TR que contiene el manage-wheel
+    if (!tr) {
+        const allRows = document.querySelectorAll('tbody tr[data-id]');
+        for (const row of allRows) {
+            if (row.contains(btn) || row.querySelector('.manage-wheel') === btn.closest('.manage-wheel')) {
+                tr = row;
+                break;
+            }
+        }
+    }
+    
+    if (!tr) {
+        console.error('❌ No se encontró la fila de la tabla para el botón:', btn);
+        console.error('❌ Este error no debería ocurrir. Verifica gestion_wheel.js');
         return;
     }
 
@@ -626,7 +653,26 @@ function actualizarFilaTabla(insumoId, data) {
    ELIMINAR PRODUCTO
 ============================================================ */
 function abrirModalEliminarProducto(btn) {
-    const tr = btn.closest("tr");
+    // Buscar el TR de manera más robusta
+    let tr = btn.closest("tr");
+    
+    if (!tr) {
+        const manageWheel = btn.closest('.manage-wheel');
+        if (manageWheel) {
+            tr = manageWheel.closest('tr');
+        }
+    }
+    
+    if (!tr) {
+        const allRows = document.querySelectorAll('tbody tr[data-id]');
+        for (const row of allRows) {
+            if (row.contains(btn) || row.querySelector('.manage-wheel') === btn.closest('.manage-wheel')) {
+                tr = row;
+                break;
+            }
+        }
+    }
+    
     const modal = document.getElementById("modalProducto");
 
     productoAEliminarId = tr
@@ -635,7 +681,7 @@ function abrirModalEliminarProducto(btn) {
 
     const nombre = tr
         ? tr.cells[0].textContent.trim()
-        : modal.querySelector('[data-field="nombre_comercial"]').textContent.trim();
+        : modal.querySelector('[data-field="nombre_comercial"]')?.textContent.trim() || 'este producto';
 
     document.getElementById("eliminarProductoMensaje").textContent =
         `¿Seguro que deseas eliminar "${nombre}"?`;
@@ -673,8 +719,31 @@ let stockOriginal = 0;
 let productoIdStock = null;
 
 function openModificarStockModal(btn) {
+    // Buscar el TR de manera más robusta
     let tr = btn.closest("tr");
-    if (!tr) return;
+    
+    if (!tr) {
+        const manageWheel = btn.closest('.manage-wheel');
+        if (manageWheel) {
+            tr = manageWheel.closest('tr');
+        }
+    }
+    
+    if (!tr) {
+        const allRows = document.querySelectorAll('tbody tr[data-id]');
+        for (const row of allRows) {
+            if (row.contains(btn) || row.querySelector('.manage-wheel') === btn.closest('.manage-wheel')) {
+                tr = row;
+                break;
+            }
+        }
+    }
+    
+    if (!tr) {
+        console.error('❌ No se encontró la fila para modificar stock');
+        console.error('❌ Este error no debería ocurrir. Verifica gestion_wheel.js');
+        return;
+    }
 
     productoIdStock = tr.getAttribute("data-id");
     stockActualTemp = parseInt(tr.cells[3].textContent.replace(/\D/g, "")) || 0;

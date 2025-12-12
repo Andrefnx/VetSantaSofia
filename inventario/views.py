@@ -11,14 +11,7 @@ import traceback
 from .models import Insumo
 from django.db.models import Q
 
-@login_required
-def inventario(request):
-    """Vista para listar el inventario de insumos"""
-    insumos = Insumo.objects.all().order_by('medicamento')
-    context = {
-        'insumos': insumos,
-    }
-    return render(request, 'inventario/inventario.html', context)
+# Esta vista fue renombrada a inventario_view más abajo
 
 @csrf_exempt
 @login_required
@@ -28,25 +21,42 @@ def crear_insumo(request):
         try:
             data = json.loads(request.body)
             
+            # Crear insumo con todos los campos
             insumo = Insumo.objects.create(
-                medicamento=data.get('medicamento'),
+                medicamento=data.get('medicamento') or data.get('nombre_comercial', ''),
+                marca=data.get('marca', ''),
                 sku=data.get('sku', ''),
                 tipo=data.get('tipo', ''),
+                formato=data.get('formato', ''),
                 descripcion=data.get('descripcion', ''),
                 especie=data.get('especie', ''),
-                precio_venta=Decimal(data.get('precio_venta', 0)),
+                precio_venta=Decimal(str(data.get('precio_venta', 0))) if data.get('precio_venta') else None,
                 stock_actual=int(data.get('stock_actual', 0)),
-                dosis_ml=Decimal(data.get('dosis_ml')) if data.get('dosis_ml') else None,
-                peso_kg=Decimal(data.get('peso_kg')) if data.get('peso_kg') else None,
-                ml_contenedor=Decimal(data.get('ml_contenedor')) if data.get('ml_contenedor') else None,
+                
+                # Dosis según formato
+                dosis_ml=Decimal(str(data.get('dosis_ml'))) if data.get('dosis_ml') else None,
+                ml_contenedor=Decimal(str(data.get('ml_contenedor'))) if data.get('ml_contenedor') else None,
+                cantidad_pastillas=int(data.get('cantidad_pastillas')) if data.get('cantidad_pastillas') else None,
+                unidades_pipeta=int(data.get('unidades_pipeta')) if data.get('unidades_pipeta') else None,
+                peso_kg=Decimal(str(data.get('peso_kg'))) if data.get('peso_kg') else None,
+                
+                # Rango de peso
+                tiene_rango_peso=bool(data.get('tiene_rango_peso', False)),
+                peso_min_kg=Decimal(str(data.get('peso_min_kg'))) if data.get('peso_min_kg') else None,
+                peso_max_kg=Decimal(str(data.get('peso_max_kg'))) if data.get('peso_max_kg') else None,
+                
+                # Información adicional
                 precauciones=data.get('precauciones', ''),
                 contraindicaciones=data.get('contraindicaciones', ''),
                 efectos_adversos=data.get('efectos_adversos', ''),
+                
+                # Metadata
                 fecha_creacion=timezone.now(),
                 usuario_ultimo_movimiento=request.user,
                 tipo_ultimo_movimiento='registro_inicial'
             )
             
+            # Actualizar fechas si tiene stock inicial
             if int(data.get('stock_actual', 0)) > 0:
                 insumo.ultimo_ingreso = timezone.now()
                 insumo.ultimo_movimiento = timezone.now()
@@ -228,21 +238,75 @@ def detalle_insumo(request, insumo_id):
 @csrf_exempt
 @login_required
 def eliminar_insumo(request, insumo_id):
-    """Vista para eliminar un insumo"""
+    """Vista para eliminar un insumo - usando SQL puro"""
     if request.method == 'POST':
         try:
-            insumo = get_object_or_404(Insumo, idInventario=insumo_id)
-            insumo.delete()
+            from django.db import connection
+            
+            # Usar solo SQL directo sin tocar Django ORM para evitar tabla servicios
+            with connection.cursor() as cursor:
+                # Obtener el nombre del insumo antes de eliminarlo
+                cursor.execute("SELECT medicamento FROM inventario WHERE idInventario = %s", [insumo_id])
+                row = cursor.fetchone()
+                
+                if not row:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Insumo no encontrado'
+                    }, status=404)
+                
+                nombre_insumo = row[0]
+                
+                # Primero verificar si hay referencias en las tablas ManyToMany
+                try:
+                    cursor.execute("SELECT COUNT(*) FROM clinica_consulta_medicamentos WHERE insumo_id = %s", [insumo_id])
+                    consultas_count = cursor.fetchone()[0]
+                    
+                    cursor.execute("SELECT COUNT(*) FROM clinica_hospitalizacion_insumos WHERE insumo_id = %s", [insumo_id])
+                    hosp_count = cursor.fetchone()[0]
+                    
+                    cursor.execute("SELECT COUNT(*) FROM clinica_cirugia_medicamentos WHERE insumo_id = %s", [insumo_id])
+                    cirugia_count = cursor.fetchone()[0]
+                    
+                    if consultas_count > 0 or hosp_count > 0 or cirugia_count > 0:
+                        relaciones = []
+                        if consultas_count > 0:
+                            relaciones.append(f"{consultas_count} consulta(s)")
+                        if hosp_count > 0:
+                            relaciones.append(f"{hosp_count} hospitalización(ones)")
+                        if cirugia_count > 0:
+                            relaciones.append(f"{cirugia_count} cirugía(s)")
+                        
+                        return JsonResponse({
+                            'success': False,
+                            'error': f'No se puede eliminar "{nombre_insumo}" porque está siendo usado en: {", ".join(relaciones)}'
+                        }, status=400)
+                except Exception as check_error:
+                    # Si hay error al verificar, continuar con la eliminación
+                    print(f"⚠️ Error al verificar relaciones: {str(check_error)}")
+                
+                # Eliminar el insumo directamente con SQL
+                cursor.execute("DELETE FROM inventario WHERE idInventario = %s", [insumo_id])
             
             return JsonResponse({
                 'success': True,
-                'message': 'Insumo eliminado exitosamente'
+                'message': f'Insumo "{nombre_insumo}" eliminado exitosamente'
             })
             
         except Exception as e:
-            print(f"Error al eliminar insumo: {str(e)}")
+            print(f"❌ Error al eliminar insumo ID {insumo_id}: {str(e)}")
+            print(f"❌ Tipo de error: {type(e).__name__}")
             traceback.print_exc()
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+            
+            # Mensaje más claro para el usuario
+            error_msg = 'No se pudo eliminar el insumo.'
+            
+            if 'FOREIGN KEY constraint failed' in str(e) or 'foreign key' in str(e).lower():
+                error_msg = 'No se puede eliminar este insumo porque está siendo usado en otros registros.'
+            else:
+                error_msg = f'Error: {str(e)}'
+            
+            return JsonResponse({'success': False, 'error': error_msg}, status=400)
     
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
