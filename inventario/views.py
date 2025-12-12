@@ -499,19 +499,18 @@ def api_productos(request):
 
 @login_required
 def inventario_view(request):
-    """Vista principal del inventario"""
-    # Obtener parámetro para mostrar archivados
-    mostrar_archivados = request.GET.get('archivados', 'false') == 'true'
+    """Vista principal del inventario (activos o archivados)"""
+    # Obtener el estado desde el parámetro GET (por defecto: activos)
+    estado = request.GET.get('estado', 'activos')
     
-    # Filtrar productos archivados
-    if mostrar_archivados:
+    if estado == 'archivados':
         insumos = Insumo.objects.filter(archivado=True).order_by('medicamento')
     else:
         insumos = Insumo.objects.filter(archivado=False).order_by('medicamento')
     
     context = {
         'insumos': insumos,
-        'mostrar_archivados': mostrar_archivados
+        'estado_actual': estado
     }
     return render(request, 'inventario/inventario.html', context)
 
@@ -599,3 +598,22 @@ def actualizar_niveles_stock(request, insumo_id):
         'success': False,
         'error': 'Método no permitido'
     }, status=405)
+
+@csrf_exempt
+@login_required
+def restaurar_producto(request, producto_id):
+    """Vista para archivar/restaurar un producto"""
+    producto = get_object_or_404(Insumo, idInventario=producto_id)
+    
+    if request.method == 'POST':
+        try:
+            # Alternar el estado archivado
+            producto.archivado = not producto.archivado
+            producto.save()
+            
+            mensaje = 'Producto archivado exitosamente' if producto.archivado else 'Producto restaurado exitosamente'
+            return JsonResponse({'success': True, 'message': mensaje})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)

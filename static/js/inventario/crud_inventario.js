@@ -1041,3 +1041,88 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+
+/* ============================================================
+   CAMBIAR ESTADO DE PESTAÑAS (ACTIVOS/ARCHIVADOS)
+============================================================ */
+function cambiarEstadoProductos(estado) {
+    window.location.href = `/inventario/?estado=${estado}`;
+}
+
+/* ============================================================
+   MODAL ARCHIVAR/RESTAURAR PRODUCTO
+============================================================ */
+function abrirModalArchivarProducto(button, productoId, esRestaurar = false) {
+    const modal = document.getElementById('modalArchivarProducto');
+    const titulo = document.getElementById('tituloArchivar');
+    const mensaje = document.getElementById('archivarProductoMensaje');
+    const btnTexto = document.getElementById('btnTextoArchivar');
+    const modalTitle = modal.querySelector('.vet-custom-modal-title');
+    
+    if (esRestaurar) {
+        titulo.textContent = 'Restaurar Producto';
+        mensaje.textContent = '¿Estás seguro que deseas restaurar este producto? Volverá a aparecer en la lista de activos.';
+        btnTexto.textContent = 'Restaurar';
+        modalTitle.style.background = '#2e7d32';
+    } else {
+        titulo.textContent = 'Archivar Producto';
+        mensaje.textContent = '¿Estás seguro que deseas archivar este producto? Podrás restaurarlo desde la pestaña de archivados.';
+        btnTexto.textContent = 'Archivar';
+        modalTitle.style.background = '#f57c00';
+    }
+    
+    modal.classList.remove('hide');
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
+    document.getElementById('btnConfirmarArchivarProducto').setAttribute('data-producto-id', productoId);
+}
+
+function closeArchivarProductoModal() {
+    const modal = document.getElementById('modalArchivarProducto');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.classList.add('hide');
+    }, 350);
+}
+
+/* ============================================================
+   EVENT LISTENER PARA CONFIRMAR ARCHIVAR/RESTAURAR
+============================================================ */
+document.addEventListener('DOMContentLoaded', function() {
+    const btnConfirmar = document.getElementById('btnConfirmarArchivarProducto');
+    if (btnConfirmar) {
+        btnConfirmar.addEventListener('click', function() {
+            const productoId = this.getAttribute('data-producto-id');
+            
+            if (!productoId) {
+                alert('Error: No se encontró el ID del producto');
+                return;
+            }
+            
+            fetch(`/inventario/restaurar/${productoId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    closeArchivarProductoModal();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 400);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al procesar la solicitud');
+            });
+        });
+    }
+});

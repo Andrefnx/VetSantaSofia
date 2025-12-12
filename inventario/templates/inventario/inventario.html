@@ -17,6 +17,40 @@
     font-size: 1.2rem !important;
     border-radius: 6px !important;
 }
+
+/* Estilos para las pestañas de estado */
+.tabs-estado {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.tab-estado {
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.3s ease;
+}
+
+.tab-estado:hover {
+    color: #0b4d2d;
+    background: rgba(105, 192, 135, 0.1);
+}
+
+.tab-estado.active {
+    color: #0b4d2d;
+    border-bottom-color: #69c087;
+    background: rgba(105, 192, 135, 0.1);
+}
+
+.tab-estado i {
+    margin-right: 0.5rem;
+}
 </style>
 {% endblock %}
 
@@ -27,19 +61,24 @@
 {% block table_filters %}
 {% endblock %}
 
+{% block table_tabs %}
+<!-- Pestañas de estado -->
+<div class="tabs-estado" style="margin: 1rem 0; padding: 0 1rem;">
+    <button type="button" class="tab-estado {% if estado_actual != 'archivados' %}active{% endif %}" 
+            onclick="cambiarEstadoProductos('activos')">
+        <i class="fas fa-box-open"></i> Activos
+    </button>
+    <button type="button" class="tab-estado {% if estado_actual == 'archivados' %}active{% endif %}" 
+            onclick="cambiarEstadoProductos('archivados')">
+        <i class="fas fa-archive"></i> Archivados
+    </button>
+</div>
+{% endblock %}
+
 {% block table_buttons %}
 <button type="button" class="vet-btn vet-btn-primary" onclick="abrirModalNuevoProducto()">
     <i class="fas fa-plus"></i> Nuevo Producto
 </button>
-{% if mostrar_archivados %}
-<a href="{% url 'inventario:inventario' %}" class="vet-btn" style="background-color: #10b981;">
-    <i class="fas fa-box-open"></i> Ver Productos Activos
-</a>
-{% else %}
-<a href="{% url 'inventario:inventario' %}?archivados=true" class="vet-btn" style="background-color: #6b7280;">
-    <i class="fas fa-archive"></i> Ver Archivados
-</a>
-{% endif %}
 {% endblock %}
 
 {% block table_columns %}
@@ -80,6 +119,7 @@
                 <button type="button" onclick="abrirModalProducto(this, 'view')">
                     <i class="bi bi-eye"></i> Ver
                 </button>
+                {% if not insumo.archivado %}
                 <button type="button" onclick="abrirModalProducto(this, 'edit')">
                     <i class="fas fa-edit"></i> Editar
                 </button>
@@ -89,9 +129,14 @@
                 <button type="button" onclick="openConfigNivelesModal(this)">
                     <i class="fas fa-sliders-h"></i> Niveles
                 </button>
-                <button type="button" onclick="abrirModalEliminarProducto(this)">
-                    <i class="fas fa-trash"></i> Eliminar
+                <button type="button" onclick="abrirModalArchivarProducto(this, {{ insumo.idInventario }}, false)">
+                    <i class="fas fa-archive"></i> Archivar
                 </button>
+                {% else %}
+                <button type="button" onclick="abrirModalArchivarProducto(this, {{ insumo.idInventario }}, true)">
+                    <i class="bi bi-arrow-clockwise"></i> Restaurar
+                </button>
+                {% endif %}
             </div>
         </div>
     </td>
@@ -501,10 +546,34 @@
     </div>
 </div>
 
+<!-- Modal: Archivar/Restaurar Producto -->
+<div class="vet-modal-overlay hide" id="modalArchivarProducto">
+    <div class="vet-modal-compact">
+        <div class="vet-modal-content">
+            <div class="vet-custom-modal-title">
+                <h2><i class="fas fa-archive"></i> <span id="tituloArchivar">Archivar Producto</span></h2>
+                <i class="bi bi-x vet-close-btn" onclick="closeArchivarProductoModal()"></i>
+            </div>
+            <div class="vet-custom-modal-body">
+                <p id="archivarProductoMensaje">¿Estás seguro que deseas archivar este producto? Podrás restaurarlo desde la pestaña de archivados.</p>
+                
+                <div class="vet-custom-modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="vet-btn-cancel" onclick="closeArchivarProductoModal()">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="button" id="btnConfirmarArchivarProducto" class="vet-btn-grey success">
+                        <i class="fas fa-archive"></i> <span id="btnTextoArchivar">Archivar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/inventario/gestion_wheel.js' %}?v=10"></script>
 <script src="{% static 'js/inventario/dosis_calculator.js' %}"></script>
-<script src="{% static 'js/inventario/crud_inventario.js' %}?v=10"></script>
+<script src="{% static 'js/inventario/crud_inventario.js' %}?v=11"></script>
 {% endblock %}
