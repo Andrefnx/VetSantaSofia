@@ -479,11 +479,11 @@
                 <div class="mb-4">
                     <label class="form-label fw-bold">Cantidad</label>
                     <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="btn btn-danger btn-stock-action" onclick="restarStockInput()">
+                        <button type="button" class="vet-btn vet-btn-primary btn-stock-action" onclick="restarStockInput()" aria-label="Restar">
                             <i class="fas fa-minus"></i>
                         </button>
                         <input type="number" class="form-control" id="inputStockOperacion" placeholder="0" style="text-align: center;">
-                        <button type="button" class="btn btn-success btn-stock-action" onclick="sumarStockInput()">
+                        <button type="button" class="vet-btn vet-btn-primary btn-stock-action" onclick="sumarStockInput()" aria-label="Sumar">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
@@ -492,7 +492,7 @@
                     <button type="button" class="vet-btn-cancel" onclick="closeVetModal('modalModificarStock')">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
-                    <button type="button" onclick="guardarStock()">
+                    <button type="button" class="vet-btn vet-btn-primary" onclick="guardarStock()">
                         <i class="bi bi-floppy-fill"></i> Guardar
                     </button>
                 </div>
@@ -539,7 +539,7 @@
                     <button type="button" class="vet-btn-cancel" onclick="closeVetModal('modalConfigNiveles')">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
-                    <button type="button" onclick="guardarNivelesStock()">
+                    <button type="button" class="vet-btn vet-btn-primary" onclick="guardarNivelesStock()">
                         <i class="bi bi-floppy-fill"></i> Guardar
                     </button>
                 </div>
@@ -563,7 +563,7 @@
                     <button type="button" class="vet-btn-cancel" onclick="closeArchivarProductoModal()">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
-                    <button type="button" id="btnConfirmarArchivarProducto">
+                    <button type="button" class="vet-btn vet-btn-primary" id="btnConfirmarArchivarProducto">
                         <i class="fas fa-archive"></i> <span id="btnTextoArchivar">Archivar</span>
                     </button>
                 </div>
