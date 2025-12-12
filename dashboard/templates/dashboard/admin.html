@@ -1,0 +1,372 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Administrador{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h3 class="fw-bold mb-3">Dashboard Administrador</h3>
+    <ul class="breadcrumbs mb-3">
+        <li class="nav-home">
+            <a href="{% url 'dashboard:dashboard' %}">
+                <i class="icon-home"></i>
+            </a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Dashboard</a>
+        </li>
+    </ul>
+</div>
+
+<!-- Indicadores Principales -->
+<div class="row">
+    <div class="col-sm-6 col-md-3">
+        <div class="card card-stats card-round">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-icon">
+                        <div class="icon-big text-center icon-primary bubble-shadow-small">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                            <p class="card-category">Pacientes Atendidos Hoy</p>
+                            <h4 class="card-title">{{ indicadores.pacientes_atendidos_hoy }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-sm-6 col-md-3">
+        <div class="card card-stats card-round">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-icon">
+                        <div class="icon-big text-center icon-success bubble-shadow-small">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                    <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                            <p class="card-category">Ingresos del Día</p>
+                            <h4 class="card-title">${{ indicadores.ingresos_del_dia|floatformat:0 }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-sm-6 col-md-3">
+        <div class="card card-stats card-round">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-icon">
+                        <div class="icon-big text-center icon-info bubble-shadow-small">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                    </div>
+                    <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                            <p class="card-category">Citas del Día</p>
+                            <h4 class="card-title">{{ citas_stats.total }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-sm-6 col-md-3">
+        <div class="card card-stats card-round">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-icon">
+                        <div class="icon-big text-center icon-warning bubble-shadow-small">
+                            <i class="fas fa-hospital"></i>
+                        </div>
+                    </div>
+                    <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                            <p class="card-category">Hospitalizados</p>
+                            <h4 class="card-title">{{ indicadores.hospitalizaciones_activas_count }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenido Principal en 2 Columnas -->
+<div class="row">
+    <!-- Columna Izquierda -->
+    <div class="col-md-8">
+        
+        <!-- Agenda del Día -->
+        <div class="card card-round">
+            <div class="card-header">
+                <div class="card-head-row">
+                    <div class="card-title">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Agenda del Día
+                    </div>
+                    <div class="card-tools">
+                        <a href="{% url 'agenda:agenda' %}" class="btn btn-label-primary btn-round btn-sm">
+                            <span class="btn-label">
+                                <i class="fa fa-eye"></i>
+                            </span>
+                            Ver Agenda Completa
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h5 class="mb-0">{{ citas_stats.pendientes }}</h5>
+                            <small class="text-muted">Pendientes</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h5 class="mb-0">{{ citas_stats.confirmadas }}</h5>
+                            <small class="text-muted">Confirmadas</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h5 class="mb-0">{{ citas_stats.completadas }}</h5>
+                            <small class="text-muted">Completadas</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h5 class="mb-0">{{ citas_stats.canceladas }}</h5>
+                            <small class="text-muted">Canceladas</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6 class="mb-3">Próximas Citas</h6>
+                {% if proximas_citas %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Hora</th>
+                                    <th>Paciente</th>
+                                    <th>Veterinario</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cita in proximas_citas %}
+                                <tr>
+                                    <td><strong>{{ cita.hora_inicio|time:"H:i" }}</strong></td>
+                                    <td>{{ cita.paciente.nombre }}</td>
+                                    <td>{{ cita.veterinario.nombre }}</td>
+                                    <td>
+                                        <span class="badge badge-{% if cita.estado == 'confirmada' %}success{% elif cita.estado == 'pendiente' %}warning{% else %}secondary{% endif %}">
+                                            {{ cita.get_estado_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No hay citas próximas</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Hospitalizaciones Activas -->
+        <div class="card card-round">
+            <div class="card-header">
+                <div class="card-head-row">
+                    <div class="card-title">
+                        <i class="fas fa-hospital-user me-2"></i>
+                        Hospitalizaciones Activas
+                    </div>
+                    <div class="card-tools">
+                        <a href="/hospital/" class="btn btn-label-info btn-round btn-sm">
+                            <span class="btn-label">
+                                <i class="fa fa-eye"></i>
+                            </span>
+                            Ver Todas
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if hospitalizaciones_activas %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Paciente</th>
+                                    <th>Ingreso</th>
+                                    <th>Veterinario</th>
+                                    <th>Días</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for hosp in hospitalizaciones_activas %}
+                                <tr class="{% if hosp in hospitalizaciones_prolongadas %}table-warning{% endif %}">
+                                    <td>
+                                        <strong>{{ hosp.paciente.nombre }}</strong>
+                                        {% if hosp in hospitalizaciones_prolongadas %}
+                                            <i class="fas fa-exclamation-triangle text-warning ms-1" title="Hospitalización prolongada"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ hosp.fecha_ingreso|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ hosp.veterinario.nombre|default:"-" }}</td>
+                                    <td>
+                                        {{ hosp.dias_hospitalizacion }} día(s)
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No hay pacientes hospitalizados</p>
+                {% endif %}
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Columna Derecha -->
+    <div class="col-md-4">
+        
+        <!-- Estado de Caja -->
+        <div class="card card-round">
+            <div class="card-header">
+                <div class="card-head-row">
+                    <div class="card-title">
+                        <i class="fas fa-cash-register me-2"></i>
+                        Estado de Caja
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Estado:</span>
+                        <span class="badge badge-{% if caja_stats.estado == 'abierta' %}success{% else %}danger{% endif %} badge-lg">
+                            {{ caja_stats.estado|upper }}
+                        </span>
+                    </div>
+                </div>
+                
+                {% if caja_stats.sesion %}
+                    <div class="mb-2">
+                        <small class="text-muted">Abierta por:</small>
+                        <p class="mb-0"><strong>{{ caja_stats.sesion.usuario_apertura.nombre_completo }}</strong></p>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Monto Inicial:</small>
+                        <p class="mb-0"><strong>${{ caja_stats.sesion.monto_inicial|floatformat:0 }}</strong></p>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Total Vendido Hoy:</small>
+                        <p class="mb-0 text-success"><strong>${{ caja_stats.total_vendido_hoy|floatformat:0 }}</strong></p>
+                    </div>
+                {% endif %}
+                
+                <hr>
+                
+                <div class="alert alert-{% if caja_stats.cobros_pendientes_count > 0 %}warning{% else %}success{% endif %}">
+                    <h6 class="mb-1">
+                        <i class="fas fa-clock me-2"></i>
+                        Cobros Pendientes
+                    </h6>
+                    <p class="mb-0">
+                        <strong>{{ caja_stats.cobros_pendientes_count }}</strong> cobro(s) por 
+                        <strong>${{ caja_stats.cobros_pendientes_total|floatformat:0 }}</strong>
+                    </p>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <a href="/caja/dashboard/" class="btn btn-primary btn-round">
+                        <i class="fas fa-cash-register me-2"></i>
+                        Ir a Caja
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Alertas de Inventario -->
+        <div class="card card-round">
+            <div class="card-header">
+                <div class="card-head-row">
+                    <div class="card-title">
+                        <i class="fas fa-boxes me-2"></i>
+                        Inventario
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if stock_bajo %}
+                    <div class="alert alert-danger">
+                        <h6 class="mb-1">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Stock Bajo
+                        </h6>
+                        <p class="mb-0"><strong>{{ stock_bajo|length }}</strong> ítem(s) con stock bajo</p>
+                    </div>
+                    
+                    <h6 class="mb-2">Ítems con Stock Bajo:</h6>
+                    <div class="list-group">
+                        {% for item in stock_bajo %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{{ item.medicamento|truncatechars:25 }}</span>
+                            <span class="badge badge-danger">{{ item.stock_actual }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Stock en niveles normales
+                    </div>
+                {% endif %}
+                
+                {% if insumos_utilizados_hoy %}
+                    <hr>
+                    <h6 class="mb-2">Más Utilizados Hoy:</h6>
+                    <div class="list-group">
+                        {% for item in insumos_utilizados_hoy %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{{ item.descripcion|truncatechars:25 }}</span>
+                            <span class="badge badge-info">{{ item.cantidad_total|floatformat:0 }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <div class="d-grid gap-2 mt-3">
+                    <a href="/inventario/" class="btn btn-outline-primary btn-round">
+                        <i class="fas fa-box me-2"></i>
+                        Ver Inventario
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+{% endblock %}

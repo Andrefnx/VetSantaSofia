@@ -10,7 +10,7 @@ from datetime import date, datetime, timedelta, time
 from pacientes.models import Paciente
 from servicios.models import Servicio
 from cuentas.models import CustomUser
-from .models import Cita, DisponibilidadVeterinario
+from .models import Cita, DisponibilidadVeterinario, HorarioFijoVeterinario
 
 @login_required
 def agenda(request):
@@ -68,9 +68,47 @@ def crear_cita(request):
         try:
             data = json.loads(request.body)
             
+            # Validar disponibilidad del veterinario
+            veterinario_id = data.get('veterinario_id')
+            fecha_str = data.get('fecha')
+            hora_inicio_str = data.get('hora_inicio')
+            
+            if veterinario_id and fecha_str and hora_inicio_str:
+                fecha_cita = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+                hora_inicio_cita = datetime.strptime(hora_inicio_str, '%H:%M').time()
+                dia_semana = fecha_cita.weekday()
+                
+                # Verificar si tiene horario fijo para ese día
+                horario_fijo = HorarioFijoVeterinario.objects.filter(
+                    veterinario_id=veterinario_id,
+                    dia_semana=dia_semana,
+                    activo=True,
+                    hora_inicio__lte=hora_inicio_cita,
+                    hora_fin__gt=hora_inicio_cita
+                ).exists()
+                
+                # Verificar si hay excepción (ausencia) para esa fecha
+                excepcion = DisponibilidadVeterinario.objects.filter(
+                    veterinario_id=veterinario_id,
+                    fecha=fecha_cita,
+                    tipo__in=['vacaciones', 'licencia', 'ausencia']
+                ).exists()
+                
+                if not horario_fijo:
+                    return JsonResponse({
+                        'success': False, 
+                        'error': 'El veterinario no tiene disponibilidad configurada para este día'
+                    }, status=400)
+                
+                if excepcion:
+                    return JsonResponse({
+                        'success': False, 
+                        'error': 'El veterinario no está disponible en esta fecha (vacaciones/licencia)'
+                    }, status=400)
+            
             cita = Cita(
                 paciente_id=data.get('paciente_id'),
-                veterinario_id=data.get('veterinario_id'),
+                veterinario_id=veterinario_id,
                 servicio_id=data.get('servicio_id'),
                 fecha=data.get('fecha'),
                 hora_inicio=data.get('hora_inicio'),
@@ -408,6 +446,115 @@ def slots_disponibles(request, veterinario_id, year, month, day):
             'fecha': fecha.isoformat(),
             'veterinario': f"{veterinario.nombre} {veterinario.apellido}",
             'slots': slots_disponibles
+        })
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+# ============================================
+# VISTAS DE HORARIOS FIJOS
+# ============================================
+
+@login_required
+@require_http_methods(["GET"])
+def horarios_fijos(request, veterinario_id):
+    """Obtener horarios fijos de un veterinario"""
+    try:
+        veterinario = get_object_or_404(CustomUser, pk=veterinario_id, rol='veterinario')
+        horarios = HorarioFijoVeterinario.objects.filter(
+            veterinario=veterinario,
+            activo=True
+        ).order_by('dia_semana', 'hora_inicio')
+        
+        horarios_data = []
+        for horario in horarios:
+            horarios_data.append({
+                'id': horario.id,
+                'dia_semana': horario.dia_semana,
+                'dia_nombre': horario.get_dia_semana_display(),
+                'hora_inicio': horario.hora_inicio.strftime('%H:%M'),
+                'hora_fin': horario.hora_fin.strftime('%H:%M'),
+                'notas': horario.notas or ''
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'horarios': horarios_data
+        })
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@login_required
+@require_http_methods(["POST"])
+def crear_horario_fijo(request):
+    """Crear un nuevo horario fijo"""
+    try:
+        data = json.loads(request.body)
+        veterinario = get_object_or_404(CustomUser, pk=data['veterinario_id'], rol='veterinario')
+        
+        horario = HorarioFijoVeterinario.objects.create(
+            veterinario=veterinario,
+            dia_semana=int(data['dia_semana']),
+            hora_inicio=data['hora_inicio'],
+            hora_fin=data['hora_fin'],
+            notas=data.get('notas', '')
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Horario fijo creado exitosamente',
+            'horario_id': horario.id
+        })
+    
+    except ValidationError as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@login_required
+@require_http_methods(["POST"])
+def editar_horario_fijo(request, horario_id):
+    """Editar un horario fijo existente"""
+    try:
+        data = json.loads(request.body)
+        horario = get_object_or_404(HorarioFijoVeterinario, pk=horario_id)
+        
+        horario.dia_semana = int(data.get('dia_semana', horario.dia_semana))
+        horario.hora_inicio = data.get('hora_inicio', horario.hora_inicio)
+        horario.hora_fin = data.get('hora_fin', horario.hora_fin)
+        horario.notas = data.get('notas', horario.notas)
+        horario.activo = data.get('activo', horario.activo)
+        
+        horario.full_clean()
+        horario.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Horario fijo actualizado exitosamente'
+        })
+    
+    except ValidationError as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@login_required
+@require_http_methods(["POST"])
+def eliminar_horario_fijo(request, horario_id):
+    """Eliminar (desactivar) un horario fijo"""
+    try:
+        horario = get_object_or_404(HorarioFijoVeterinario, pk=horario_id)
+        horario.activo = False
+        horario.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Horario fijo eliminado exitosamente'
         })
     
     except Exception as e:

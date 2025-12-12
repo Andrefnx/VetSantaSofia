@@ -1,0 +1,346 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Recepción{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h3 class="fw-bold mb-3">Dashboard Recepción</h3>
+    <ul class="breadcrumbs mb-3">
+        <li class="nav-home">
+            <a href="{% url 'dashboard:dashboard' %}">
+                <i class="icon-home"></i>
+            </a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Dashboard</a>
+        </li>
+    </ul>
+</div>
+
+<!-- Acciones Rápidas -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card card-round">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="fas fa-bolt me-2"></i>Acciones Rápidas</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <a href="{% url 'agenda:crear_cita' %}" class="btn btn-primary btn-block w-100">
+                            <i class="fas fa-calendar-plus me-2"></i>
+                            Nueva Cita
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <a href="#" onclick="buscarPacienteModal(); return false;" class="btn btn-info btn-block w-100">
+                            <i class="fas fa-search me-2"></i>
+                            Buscar Paciente
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        {% if caja_stats.estado == 'cerrada' %}
+                            <a href="/caja/abrir/" class="btn btn-success btn-block w-100">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Abrir Caja
+                            </a>
+                        {% else %}
+                            <a href="/caja/dashboard/" class="btn btn-warning btn-block w-100">
+                                <i class="fas fa-cash-register me-2"></i>
+                                Ir a Caja
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Columna Izquierda: Agenda -->
+    <div class="col-md-8">
+        
+        <!-- Resumen de Agenda -->
+        <div class="card card-round mb-3">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-3 text-center">
+                        <h4 class="mb-0">{{ agenda_stats.total_citas }}</h4>
+                        <small class="text-muted">Total Citas</small>
+                    </div>
+                    <div class="col-3 text-center">
+                        <h4 class="mb-0 text-warning">{{ agenda_stats.pendientes }}</h4>
+                        <small class="text-muted">Pendientes</small>
+                    </div>
+                    <div class="col-3 text-center">
+                        <h4 class="mb-0 text-info">{{ agenda_stats.confirmadas }}</h4>
+                        <small class="text-muted">Confirmadas</small>
+                    </div>
+                    <div class="col-3 text-center">
+                        <h4 class="mb-0 text-success">{{ agenda_stats.completadas }}</h4>
+                        <small class="text-muted">Completadas</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Agenda del Día - Vista Horaria -->
+        <div class="card card-round">
+            <div class="card-header">
+                <div class="card-head-row">
+                    <div class="card-title">
+                        <i class="fas fa-calendar-day me-2"></i>
+                        Agenda del Día - {{ hoy|date:"l, d F Y" }}
+                    </div>
+                    <div class="card-tools">
+                        <a href="{% url 'agenda:agenda' %}" class="btn btn-label-primary btn-round btn-sm">
+                            <span class="btn-label">
+                                <i class="fa fa-calendar"></i>
+                            </span>
+                            Agenda Completa
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="agenda-horaria" style="max-height: 600px; overflow-y: auto;">
+                    {% for horario in horarios %}
+                    <div class="horario-slot {% if horario.libre %}slot-libre{% else %}slot-ocupado{% endif %} mb-2 p-3 border rounded">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-2">
+                                    <i class="far fa-clock me-2"></i>
+                                    {{ horario.hora }}
+                                    {% if horario.libre %}
+                                        <span class="badge badge-success ms-2">Libre</span>
+                                    {% else %}
+                                        <span class="badge badge-primary ms-2">{{ horario.citas.count }} cita(s)</span>
+                                    {% endif %}
+                                </h6>
+                                
+                                {% if horario.citas %}
+                                    {% for cita in horario.citas %}
+                                    <div class="cita-info mb-2 ps-3 border-start border-3 {% if cita.estado == 'completada' %}border-success{% elif cita.estado == 'confirmada' %}border-info{% elif cita.estado == 'en_curso' %}border-warning{% else %}border-secondary{% endif %}">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>{{ cita.hora_inicio|time:"H:i" }}</strong> - 
+                                                <strong>{{ cita.paciente.nombre }}</strong>
+                                                <small class="text-muted d-block">
+                                                    Dr/a. {{ cita.veterinario.nombre }} | {{ cita.get_tipo_display }}
+                                                </small>
+                                            </div>
+                                            <div>
+                                                <span class="badge badge-{% if cita.estado == 'completada' %}success{% elif cita.estado == 'confirmada' %}info{% elif cita.estado == 'en_curso' %}warning{% elif cita.estado == 'cancelada' %}danger{% else %}secondary{% endif %}">
+                                                    {{ cita.get_estado_display }}
+                                                </span>
+                                                <div class="btn-group btn-group-sm mt-1">
+                                                    <a href="/agenda/" class="btn btn-sm btn-outline-primary" title="Ver detalle">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if cita.estado != 'completada' and cita.estado != 'cancelada' %}
+                                                    <a href="{% url 'agenda:editar_cita' cita.id %}" class="btn btn-sm btn-outline-warning" title="Editar">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            
+                            {% if horario.libre %}
+                            <div>
+                                <a href="{% url 'agenda:crear_cita' %}?hora={{ horario.hora }}" class="btn btn-sm btn-success">
+                                    <i class="fas fa-plus"></i> Agendar
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Columna Derecha: Caja y Pacientes -->
+    <div class="col-md-4">
+        
+        <!-- Estado de Caja -->
+        <div class="card card-round mb-3">
+            <div class="card-header">
+                <div class="card-head-row">
+                    <div class="card-title">
+                        <i class="fas fa-cash-register me-2"></i>
+                        Caja
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Estado:</span>
+                        <span class="badge badge-{% if caja_stats.estado == 'abierta' %}success{% else %}danger{% endif %} badge-lg">
+                            {{ caja_stats.estado|upper }}
+                        </span>
+                    </div>
+                </div>
+                
+                {% if caja_stats.sesion %}
+                    <div class="mb-2">
+                        <small class="text-muted">Total Acumulado:</small>
+                        <h4 class="text-success mb-0">${{ caja_stats.total_acumulado|floatformat:0 }}</h4>
+                    </div>
+                {% endif %}
+                
+                <hr>
+                
+                <h6 class="mb-2">
+                    <i class="fas fa-clock me-2"></i>
+                    Cobros Pendientes ({{ caja_stats.cobros_pendientes_count }})
+                </h6>
+                
+                {% if caja_stats.cobros_pendientes %}
+                    <div class="list-group mb-3" style="max-height: 300px; overflow-y: auto;">
+                        {% for cobro in caja_stats.cobros_pendientes %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ cobro.numero_venta }}</strong>
+                                <small class="d-block text-muted">
+                                    {% if cobro.paciente %}
+                                        {{ cobro.paciente.nombre }}
+                                    {% else %}
+                                        Venta Libre
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <strong class="text-warning">${{ cobro.total|floatformat:0 }}</strong>
+                                {% if caja_stats.estado == 'abierta' %}
+                                <a href="/caja/cobro/{{ cobro.id }}/" class="btn btn-sm btn-success mt-1">
+                                    <i class="fas fa-dollar-sign"></i> Cobrar
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No hay cobros pendientes</p>
+                {% endif %}
+                
+                <div class="d-grid gap-2">
+                    {% if caja_stats.estado == 'cerrada' %}
+                        <a href="/caja/abrir/" class="btn btn-success btn-round">
+                            <i class="fas fa-unlock me-2"></i>
+                            Abrir Caja
+                        </a>
+                    {% else %}
+                        <a href="/caja/dashboard/" class="btn btn-primary btn-round">
+                            <i class="fas fa-cash-register me-2"></i>
+                            Ir a Caja
+                        </a>
+                        <a href="/caja/crear-venta-libre/" class="btn btn-outline-primary btn-round">
+                            <i class="fas fa-shopping-cart me-2"></i>
+                            Venta Libre
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pacientes Recientes -->
+        <div class="card card-round">
+            <div class="card-header">
+                <div class="card-head-row">
+                    <div class="card-title">
+                        <i class="fas fa-paw me-2"></i>
+                        Pacientes Recientes
+                    </div>
+                    <div class="card-tools">
+                        <a href="/pacientes/" class="btn btn-label-info btn-round btn-sm">
+                            <span class="btn-label">
+                                <i class="fa fa-list"></i>
+                            </span>
+                            Ver Todos
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if pacientes_recientes %}
+                    <div class="list-group">
+                        {% for paciente in pacientes_recientes %}
+                        <a href="/pacientes/{{ paciente.id }}/" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">{{ paciente.nombre }}</h6>
+                                    <small class="text-muted">
+                                        {{ paciente.propietario.nombre_completo }} | 
+                                        {{ paciente.get_especie_display }}
+                                    </small>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-primary" onclick="agendarCitaPaciente({{ paciente.id }}); return false;">
+                                        <i class="fas fa-calendar-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No hay pacientes registrados</p>
+                {% endif %}
+                
+                <div class="d-grid gap-2 mt-3">
+                    <button class="btn btn-outline-primary btn-round" onclick="buscarPacienteModal()">
+                        <i class="fas fa-search me-2"></i>
+                        Buscar Paciente
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function buscarPacienteModal() {
+    // Redirigir a la búsqueda de pacientes
+    window.location.href = '/pacientes/';
+}
+
+function agendarCitaPaciente(pacienteId) {
+    // Redirigir a agendar cita con paciente preseleccionado
+    window.location.href = '/agenda/agendar/?paciente=' + pacienteId;
+}
+</script>
+
+<style>
+.slot-libre {
+    background-color: #f0f9ff;
+    border-left: 4px solid #22c55e !important;
+}
+
+.slot-ocupado {
+    background-color: #fff;
+    border-left: 4px solid #3b82f6 !important;
+}
+
+.cita-info {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 8px;
+}
+</style>
+{% endblock %}

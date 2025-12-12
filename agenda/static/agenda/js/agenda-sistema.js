@@ -4,6 +4,26 @@
  */
 
 // ============================================
+// UTILIDADES
+// ============================================
+
+// Función para obtener el CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// ============================================
 // VARIABLES GLOBALES
 // ============================================
 
@@ -52,22 +72,68 @@ function inicializarEventos() {
     
     // Formularios
     document.getElementById('guardarCita')?.addEventListener('click', guardarCita);
-    document.getElementById('guardarDisponibilidad')?.addEventListener('click', guardarDisponibilidad);
+    document.getElementById('guardarHorarioFijo')?.addEventListener('click', guardarHorarioFijo);
+    document.getElementById('guardarExcepcion')?.addEventListener('click', guardarExcepcion);
     
     // Auto-calcular hora fin
     document.getElementById('citaServicio')?.addEventListener('change', calcularHoraFin);
     document.getElementById('citaHoraInicio')?.addEventListener('change', calcularHoraFin);
+    
+    // Buscador de pacientes
+    document.getElementById('buscarPaciente')?.addEventListener('input', filtrarPacientes);
+}
+
+function filtrarPacientes() {
+    const searchInput = document.getElementById('buscarPaciente');
+    const selectPaciente = document.getElementById('citaPaciente');
+    
+    if (!searchInput || !selectPaciente) return;
+    
+    const searchTerm = searchInput.value.toLowerCase();
+    const options = selectPaciente.options;
+    
+    for (let i = 1; i < options.length; i++) {
+        const option = options[i];
+        const nombre = option.dataset.nombre || '';
+        const propietario = (option.dataset.propietario || '').toLowerCase();
+        const text = option.textContent.toLowerCase();
+        
+        if (nombre.includes(searchTerm) || propietario.includes(searchTerm) || text.includes(searchTerm)) {
+            option.style.display = '';
+        } else {
+            option.style.display = 'none';
+        }
+    }
 }
 
 function calcularHoraFin() {
     const servicioSelect = document.getElementById('citaServicio');
     const horaInicioInput = document.getElementById('citaHoraInicio');
     const horaFinInput = document.getElementById('citaHoraFin');
+    const tipoSelect = document.getElementById('citaTipo');
     const duracionSpan = document.getElementById('servicioDuracion');
     
-    const duracion = servicioSelect?.options[servicioSelect.selectedIndex]?.dataset?.duracion;
+    const selectedOption = servicioSelect?.options[servicioSelect.selectedIndex];
+    const duracion = selectedOption?.dataset?.duracion;
+    const categoria = selectedOption?.dataset?.categoria;
     const horaInicio = horaInicioInput?.value;
     
+    // Auto-establecer tipo según categoría del servicio
+    if (categoria && tipoSelect) {
+        const categoriaToTipo = {
+            'Consulta': 'consulta',
+            'Vacunación': 'vacunacion',
+            'Cirugía': 'cirugia',
+            'Control': 'control',
+            'Emergencia': 'emergencia',
+            'Peluquería': 'peluqueria',
+            'Otro': 'otro'
+        };
+        const tipoMap = categoriaToTipo[categoria] || 'consulta';
+        tipoSelect.value = tipoMap;
+    }
+    
+    // Calcular hora fin
     if (duracion && horaInicio) {
         const [horas, minutos] = horaInicio.split(':').map(Number);
         const fecha = new Date();
@@ -124,17 +190,21 @@ function renderizarDiasDelMes(year, month) {
     const primerDia = new Date(year, month, 1);
     const ultimoDia = new Date(year, month + 1, 0);
     const diasEnMes = ultimoDia.getDate();
-    const primerDiaSemana = primerDia.getDay();
+    let primerDiaSemana = primerDia.getDay();
+    
+    // Ajustar para que lunes sea el primer día (0=Dom, 1=Lun, etc.)
+    // Convertir: Dom=6, Lun=0, Mar=1, Mié=2, Jue=3, Vie=4, Sáb=5
+    primerDiaSemana = primerDiaSemana === 0 ? 6 : primerDiaSemana - 1;
     
     const calendar = document.getElementById('calendar');
     if (!calendar) return;
     
     calendar.innerHTML = '';
     
-    // Header
+    // Header - Lunes primero
     const header = document.createElement('div');
     header.className = 'calendar-header';
-    ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].forEach(dia => {
+    ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].forEach(dia => {
         const headerDay = document.createElement('div');
         headerDay.className = 'calendar-header-day';
         headerDay.textContent = dia;
@@ -171,14 +241,24 @@ function crearCeldaDia(year, month, dia, otroMes) {
     const dayCell = document.createElement('div');
     dayCell.className = 'calendar-day';
     
-    if (otroMes) dayCell.classList.add('other-month');
-    
     const fecha = new Date(year, month, dia);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    fecha.setHours(0, 0, 0, 0);
+    
+    // Verificar si es día pasado
+    const esPasado = fecha < hoy;
+    
+    if (otroMes) dayCell.classList.add('other-month');
+    if (esPasado) {
+        dayCell.classList.add('disabled');
+        dayCell.style.pointerEvents = 'none';
+    }
+    
     const fechaStr = formatearFecha(fecha);
     
     // Hoy
-    const hoy = new Date();
-    if (fecha.toDateString() === hoy.toDateString()) {
+    if (fecha.getTime() === hoy.getTime()) {
         dayCell.classList.add('today');
     }
     
@@ -193,8 +273,8 @@ function crearCeldaDia(year, month, dia, otroMes) {
     dayNumber.textContent = dia;
     dayCell.appendChild(dayNumber);
     
-    // Indicador de citas
-    if (citasDelMes[fechaStr]) {
+    // Indicador de citas (solo si no es pasado)
+    if (citasDelMes[fechaStr] && !esPasado) {
         dayCell.classList.add('has-citas');
         const indicator = document.createElement('div');
         indicator.className = 'day-indicator';
@@ -205,8 +285,10 @@ function crearCeldaDia(year, month, dia, otroMes) {
         dayCell.appendChild(indicator);
     }
     
-    // Click
-    dayCell.addEventListener('click', () => seleccionarDia(fecha));
+    // Click solo si no es pasado
+    if (!esPasado) {
+        dayCell.addEventListener('click', () => seleccionarDia(fecha));
+    }
     
     return dayCell;
 }
@@ -223,12 +305,16 @@ function seleccionarDia(fecha) {
 
 function mostrarDetallesDia(fecha) {
     const detailsSection = document.getElementById('dayDetails');
+    const emptyMessage = document.getElementById('emptyDayMessage');
     const titleElement = document.getElementById('selectedDateTitle');
     
     if (!detailsSection || !titleElement) return;
     
     const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     titleElement.textContent = fecha.toLocaleDateString('es-ES', opciones);
+    
+    // Ocultar mensaje vacío y mostrar detalles
+    if (emptyMessage) emptyMessage.style.display = 'none';
     detailsSection.style.display = 'block';
     
     cargarDetallesDia(fecha);
@@ -449,7 +535,10 @@ async function guardarCita() {
     try {
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
             body: JSON.stringify(data)
         });
         
@@ -468,38 +557,78 @@ async function guardarCita() {
     }
 }
 
-async function guardarDisponibilidad() {
-    const dispId = document.getElementById('disponibilidadId').value;
-    const url = dispId ? `/agenda/disponibilidad/editar/${dispId}/` : '/agenda/disponibilidad/crear/';
+async function guardarHorarioFijo() {
+    const horarioId = document.getElementById('horarioFijoId').value;
+    const url = horarioId ? `/agenda/horarios-fijos/editar/${horarioId}/` : '/agenda/horarios-fijos/crear/';
     
     const data = {
-        veterinario_id: document.getElementById('dispVeterinario').value,
-        fecha: document.getElementById('dispFecha').value,
-        hora_inicio: document.getElementById('dispHoraInicio').value,
-        hora_fin: document.getElementById('dispHoraFin').value,
-        tipo: document.getElementById('dispTipo').value,
-        notas: document.getElementById('dispNotas').value
+        veterinario_id: document.getElementById('horarioVeterinario').value,
+        dia_semana: document.getElementById('horarioDiaSemana').value,
+        hora_inicio: document.getElementById('horarioHoraInicio').value,
+        hora_fin: document.getElementById('horarioHoraFin').value,
+        notas: document.getElementById('horarioNotas').value
     };
     
     try {
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
             body: JSON.stringify(data)
         });
         
         const result = await response.json();
         
         if (result.success) {
-            bootstrap.Modal.getInstance(document.getElementById('disponibilidadModal')).hide();
             mostrarExito(result.message);
+            document.getElementById('horarioFijoForm').reset();
+            renderizarCalendario();
+        } else {
+            mostrarError(result.error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarError('Error al guardar el horario fijo');
+    }
+}
+
+async function guardarExcepcion() {
+    const excepcionId = document.getElementById('excepcionId').value;
+    const url = excepcionId ? `/agenda/disponibilidad/editar/${excepcionId}/` : '/agenda/disponibilidad/crear/';
+    
+    const data = {
+        veterinario_id: document.getElementById('excepcionVeterinario').value,
+        fecha: document.getElementById('excepcionFecha').value,
+        hora_inicio: '00:00',
+        hora_fin: '23:59',
+        tipo: document.getElementById('excepcionTipo').value,
+        notas: document.getElementById('excepcionNotas').value
+    };
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            mostrarExito(result.message);
+            document.getElementById('excepcionForm').reset();
             if (selectedDate) mostrarDetallesDia(selectedDate);
         } else {
             mostrarError(result.error);
         }
     } catch (error) {
         console.error('Error:', error);
-        mostrarError('Error al guardar la disponibilidad');
+        mostrarError('Error al guardar la excepción');
     }
 }
 

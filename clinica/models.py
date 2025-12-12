@@ -217,3 +217,235 @@ class Documento(models.Model):
     
     def __str__(self):
         return f"{self.nombre} - {self.paciente.nombre}"
+
+
+# =============================================================================
+# ✅ NUEVOS MODELOS - Control de Insumos con Cálculo Automático por Dosis
+# =============================================================================
+
+class ConsultaInsumo(models.Model):
+    """
+    Tabla intermedia para registrar insumos usados en consultas
+    con cálculo automático de cantidad basado en dosis y peso
+    """
+    consulta = models.ForeignKey(Consulta, on_delete=models.CASCADE, related_name='insumos_detalle')
+    insumo = models.ForeignKey(Insumo, on_delete=models.PROTECT)
+    
+    # Datos para el cálculo
+    peso_paciente = models.DecimalField(max_digits=6, decimal_places=2)
+    dosis_ml_por_kg = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    dosis_total_ml = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    ml_por_contenedor = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Cantidad final (puede ser automática o manual)
+    cantidad_calculada = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    cantidad_manual = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    cantidad_final = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    
+    # Metadata
+    calculo_automatico = models.BooleanField(default=False)
+    requiere_confirmacion = models.BooleanField(default=False, help_text="Faltan datos para cálculo automático")
+    confirmado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='insumos_consulta_confirmados'
+    )
+    fecha_confirmacion = models.DateTimeField(null=True, blank=True)
+    observaciones = models.TextField(blank=True, null=True)
+    
+    # Registro
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Insumo de Consulta'
+        verbose_name_plural = 'Insumos de Consulta'
+        ordering = ['id']
+    
+    def __str__(self):
+        return f"{self.insumo.medicamento} x{self.cantidad_final} - Consulta #{self.consulta.id}"
+    
+    def calcular_cantidad(self):
+        """
+        Calcula la cantidad de ítems necesarios basándose en:
+        - Peso del paciente
+        - Dosis ml/kg del insumo
+        - ML por contenedor
+        """
+        from decimal import Decimal, ROUND_UP
+        
+        # Si ya tiene cantidad manual, usar esa
+        if self.cantidad_manual:
+            self.cantidad_final = self.cantidad_manual
+            self.calculo_automatico = False
+            return
+        
+        # Verificar datos mínimos para cálculo automático
+        if not all([self.peso_paciente, self.dosis_ml_por_kg, self.ml_por_contenedor]):
+            self.requiere_confirmacion = True
+            self.cantidad_final = Decimal('1')  # Default
+            return
+        
+        # Calcular dosis total
+        self.dosis_total_ml = self.peso_paciente * self.dosis_ml_por_kg
+        
+        # Calcular cantidad de contenedores (redondear hacia arriba)
+        self.cantidad_calculada = (self.dosis_total_ml / self.ml_por_contenedor).quantize(
+            Decimal('1'), 
+            rounding=ROUND_UP
+        )
+        
+        self.cantidad_final = self.cantidad_calculada
+        self.calculo_automatico = True
+        self.requiere_confirmacion = False
+    
+    def save(self, *args, **kwargs):
+        """Calcula cantidad antes de guardar"""
+        self.calcular_cantidad()
+        super().save(*args, **kwargs)
+
+
+class HospitalizacionInsumo(models.Model):
+    """
+    Tabla intermedia para registrar insumos usados en hospitalizaciones
+    Similar a ConsultaInsumo pero para hospitalizaciones
+    """
+    hospitalizacion = models.ForeignKey(Hospitalizacion, on_delete=models.CASCADE, related_name='insumos_detalle')
+    insumo = models.ForeignKey(Insumo, on_delete=models.PROTECT)
+    
+    # Datos para el cálculo
+    peso_paciente = models.DecimalField(max_digits=6, decimal_places=2)
+    dosis_ml_por_kg = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    dosis_total_ml = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    ml_por_contenedor = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Cantidad final
+    cantidad_calculada = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    cantidad_manual = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    cantidad_final = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    
+    # Metadata
+    calculo_automatico = models.BooleanField(default=False)
+    requiere_confirmacion = models.BooleanField(default=False)
+    confirmado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='insumos_hosp_confirmados'
+    )
+    fecha_confirmacion = models.DateTimeField(null=True, blank=True)
+    observaciones = models.TextField(blank=True, null=True)
+    
+    # Registro
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Insumo de Hospitalización'
+        verbose_name_plural = 'Insumos de Hospitalización'
+        ordering = ['id']
+    
+    def __str__(self):
+        return f"{self.insumo.medicamento} x{self.cantidad_final} - Hosp #{self.hospitalizacion.id}"
+    
+    def calcular_cantidad(self):
+        """Mismo cálculo que ConsultaInsumo"""
+        from decimal import Decimal, ROUND_UP
+        
+        if self.cantidad_manual:
+            self.cantidad_final = self.cantidad_manual
+            self.calculo_automatico = False
+            return
+        
+        if not all([self.peso_paciente, self.dosis_ml_por_kg, self.ml_por_contenedor]):
+            self.requiere_confirmacion = True
+            self.cantidad_final = Decimal('1')
+            return
+        
+        self.dosis_total_ml = self.peso_paciente * self.dosis_ml_por_kg
+        self.cantidad_calculada = (self.dosis_total_ml / self.ml_por_contenedor).quantize(
+            Decimal('1'),
+            rounding=ROUND_UP
+        )
+        
+        self.cantidad_final = self.cantidad_calculada
+        self.calculo_automatico = True
+        self.requiere_confirmacion = False
+    
+    def save(self, *args, **kwargs):
+        """Calcula cantidad antes de guardar"""
+        self.calcular_cantidad()
+        super().save(*args, **kwargs)
+
+
+class CirugiaInsumo(models.Model):
+    """
+    Tabla intermedia para insumos usados en cirugías
+    """
+    cirugia = models.ForeignKey(Cirugia, on_delete=models.CASCADE, related_name='insumos_detalle')
+    insumo = models.ForeignKey(Insumo, on_delete=models.PROTECT)
+    
+    # Datos para el cálculo
+    peso_paciente = models.DecimalField(max_digits=6, decimal_places=2)
+    dosis_ml_por_kg = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    dosis_total_ml = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    ml_por_contenedor = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Cantidad final
+    cantidad_calculada = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    cantidad_manual = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    cantidad_final = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    
+    # Metadata
+    calculo_automatico = models.BooleanField(default=False)
+    requiere_confirmacion = models.BooleanField(default=False)
+    confirmado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='insumos_cirugia_confirmados'
+    )
+    fecha_confirmacion = models.DateTimeField(null=True, blank=True)
+    observaciones = models.TextField(blank=True, null=True)
+    
+    # Registro
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Insumo de Cirugía'
+        verbose_name_plural = 'Insumos de Cirugía'
+        ordering = ['id']
+    
+    def __str__(self):
+        return f"{self.insumo.medicamento} x{self.cantidad_final} - Cirugía #{self.cirugia.id}"
+    
+    def calcular_cantidad(self):
+        """Mismo cálculo"""
+        from decimal import Decimal, ROUND_UP
+        
+        if self.cantidad_manual:
+            self.cantidad_final = self.cantidad_manual
+            self.calculo_automatico = False
+            return
+        
+        if not all([self.peso_paciente, self.dosis_ml_por_kg, self.ml_por_contenedor]):
+            self.requiere_confirmacion = True
+            self.cantidad_final = Decimal('1')
+            return
+        
+        self.dosis_total_ml = self.peso_paciente * self.dosis_ml_por_kg
+        self.cantidad_calculada = (self.dosis_total_ml / self.ml_por_contenedor).quantize(
+            Decimal('1'),
+            rounding=ROUND_UP
+        )
+        
+        self.cantidad_final = self.cantidad_calculada
+        self.calculo_automatico = True
+        self.requiere_confirmacion = False
+    
+    def save(self, *args, **kwargs):
+        """Calcula cantidad antes de guardar"""
+        self.calcular_cantidad()
+        super().save(*args, **kwargs)

@@ -1,44 +1,41 @@
 /* ============================================
-   AGENDA VETERINARIA - ESTILOS INTEGRADOS
-   Estilos adaptados al diseño del sistema
+   AGENDA VETERINARIA - TEMA VERDE
    ============================================ */
 
-.calendar-navigation {
-    background: #f7fafc;
-    padding: 1.5rem;
-    border-radius: 10px;
-    margin-bottom: 1.5rem;
+:root {
+    --primary-green: #81c784;
+    --primary-green-hover: #66bb6a;
+    --primary-green-light: #e8f5e9;
+    --success-green: #a5d6a7;
+    --dark-green: #66bb6a;
+    --border-green: #c8e6c9;
+    --text-dark: #2e7d32;
 }
-
-.calendar-header-center {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-/* ============================================
-   CALENDARIO MENSUAL
-   ============================================ */
 
 .agenda-calendar {
     background: white;
-    border-radius: 10px;
+    border-radius: 0;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .calendar-header {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    background: #0096d6;
+    background: linear-gradient(135deg, #81c784 0%, #a5d6a7 100%);
     color: white;
     font-weight: 600;
     text-align: center;
 }
 
 .calendar-header-day {
-    padding: 1rem;
+    padding: 0.75rem;
     border-right: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .calendar-header-day:last-child {
@@ -50,46 +47,64 @@
     grid-template-columns: repeat(7, 1fr);
     gap: 1px;
     background: #e0e0e0;
+    flex: 1;
 }
 
 .calendar-day {
     background: white;
-    min-height: 100px;
-    padding: 0.5rem;
+    min-height: 70px;
+    padding: 0.3rem;
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
+    border: 1px solid transparent;
+    display: flex;
+    flex-direction: column;
 }
 
-.calendar-day:hover {
-    background: #f0f8ff;
-    box-shadow: inset 0 0 0 2px #0096d6;
+.calendar-day:not(.disabled):hover {
+    background: #f1f8f4;
+    box-shadow: inset 0 0 0 2px var(--primary-green);
+    transform: translateY(-2px);
 }
 
 .calendar-day.other-month {
+    background: #fafafa;
+    color: #bbb;
+}
+
+.calendar-day.disabled {
     background: #f5f5f5;
-    color: #999;
+    color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.calendar-day.disabled .day-number {
+    color: #ccc;
 }
 
 .calendar-day.today {
-    background: #e3f2fd;
-    border: 2px solid #0096d6;
+    background: var(--primary-green-light);
+    border: 2px solid var(--primary-green);
+    font-weight: 600;
 }
 
 .calendar-day.selected {
-    background: #bbdefb;
-    box-shadow: inset 0 0 0 3px #0096d6;
+    background: #c8e6c9;
+    box-shadow: inset 0 0 0 3px var(--primary-green);
 }
 
-.calendar-day.has-citas {
-    background: linear-gradient(135deg, #b7e5ff 60%, #e3f2fd 100%);
+.calendar-day.has-citas:not(.disabled) {
+    background: linear-gradient(135deg, #e8f5e9 60%, #f1f8e9 100%);
+    border-color: var(--border-green);
 }
 
 .day-number {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: #333;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.2rem;
 }
 
 .calendar-day.other-month .day-number {
@@ -107,15 +122,15 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #0096d6;
+    background: var(--primary-green);
 }
 
 .indicator-badge {
-    background: #0096d6;
+    background: var(--primary-green);
     color: white;
-    font-size: 0.7rem;
-    padding: 2px 6px;
-    border-radius: 10px;
+    font-size: 0.65rem;
+    padding: 1px 5px;
+    border-radius: 8px;
     font-weight: 600;
 }
 
@@ -172,7 +187,7 @@
     align-items: center;
     justify-content: center;
     background: #f5f5f5;
-    border-right: 2px solid #0096d6;
+    border-right: 2px solid var(--primary-green);
 }
 
 .timeline-content {
@@ -218,11 +233,11 @@
 }
 
 .cita-card {
-    background: linear-gradient(135deg, #0096d6 0%, #0077aa 100%);
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
     color: white;
     padding: 1rem;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 150, 214, 0.3);
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
     width: 100%;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
@@ -230,7 +245,7 @@
 
 .cita-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 150, 214, 0.4);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
 }
 
 .cita-card-header {
@@ -276,11 +291,11 @@
 }
 
 .cita-card.confirmada {
-    background: linear-gradient(135deg, #0096d6 0%, #0077aa 100%);
+    background: linear-gradient(135deg, #a5d6a7 0%, #81c784 100%);
 }
 
 .cita-card.en_curso {
-    background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+    background: linear-gradient(135deg, #81c784 0%, #66bb6a 100%);
 }
 
 .cita-card.completada {
@@ -296,26 +311,32 @@
    ============================================ */
 
 .disponibilidad-card {
-    background: #e8f5e9;
-    border-left: 4px solid #4caf50;
-    padding: 0.75rem;
+    background: #f1f8e9;
+    border-left: 4px solid var(--primary-green);
+    padding: 0.6rem 0.75rem;
     border-radius: 6px;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
 }
 
 .disponibilidad-card.vacaciones {
-    background: #fff3e0;
-    border-left-color: #ff9800;
+    background: #fff8e1;
+    border-left-color: #ffa726;
 }
 
 .disponibilidad-card.licencia {
     background: #ffebee;
-    border-left-color: #f44336;
+    border-left-color: #ef5350;
 }
 
 .disponibilidad-card.ausencia {
     background: #f3e5f5;
-    border-left-color: #9c27b0;
+    border-left-color: #ab47bc;
+}
+
+.disponibilidad-card small {
+    font-size: 0.8rem;
+    opacity: 0.9;
 }
 
 /* ============================================
@@ -345,6 +366,67 @@
 }
 
 /* ============================================
+   BUSCADOR DE PACIENTES
+   ============================================ */
+
+#citaPaciente[size] {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+}
+
+#citaPaciente[size] option {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+#citaPaciente[size] option:hover {
+    background: var(--primary-green-light);
+}
+
+#citaPaciente[size] option:checked {
+    background: var(--primary-green);
+    color: white;
+}
+
+/* ============================================
+   MODAL DE DISPONIBILIDAD
+   ============================================ */
+
+.nav-tabs .nav-link {
+    color: #666;
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--text-dark);
+    border-bottom: 3px solid var(--primary-green);
+    font-weight: 600;
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--primary-green);
+}
+
+/* ============================================
+   OPTIMIZACIÓN DE ALTURA
+   ============================================ */
+
+.card-body {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.disponibilidad-item {
+    margin-bottom: 1rem !important;
+}
+
+.disponibilidad-item h6 {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 
@@ -368,6 +450,32 @@
     }
     
     .cita-card {
-        padding: 0.75rem;
+        padding: 0.5rem;
+        font-size: 0.8rem;
     }
 }
+
+/* ============================================
+   OPTIMIZACIONES ADICIONALES
+   ============================================ */
+
+.card-body {
+    padding: 0.75rem !important;
+}
+
+.card-header {
+    padding: 0.5rem 0.75rem !important;
+}
+
+#emptyDayMessage {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.alert-info {
+    background-color: #e3f2fd;
+    border-color: #90caf9;
+    color: #1565c0;

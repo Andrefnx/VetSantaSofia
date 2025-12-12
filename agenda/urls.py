@@ -24,4 +24,10 @@ urlpatterns = [
     
     # Slots disponibles para agendamiento
     path('slots/<int:veterinario_id>/<int:year>/<int:month>/<int:day>/', views.slots_disponibles, name='slots_disponibles'),
+    
+    # Horarios fijos
+    path('horarios-fijos/<int:veterinario_id>/', views.horarios_fijos, name='horarios_fijos'),
+    path('horarios-fijos/crear/', views.crear_horario_fijo, name='crear_horario_fijo'),
+    path('horarios-fijos/editar/<int:horario_id>/', views.editar_horario_fijo, name='editar_horario_fijo'),
+    path('horarios-fijos/eliminar/<int:horario_id>/', views.eliminar_horario_fijo, name='eliminar_horario_fijo'),
 ]

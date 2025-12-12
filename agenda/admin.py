@@ -1,5 +1,26 @@
 from django.contrib import admin
-from .models import Cita, DisponibilidadVeterinario
+from .models import Cita, DisponibilidadVeterinario, HorarioFijoVeterinario
+
+
+@admin.register(HorarioFijoVeterinario)
+class HorarioFijoVeterinarioAdmin(admin.ModelAdmin):
+    list_display = ['veterinario', 'get_dia_semana_display', 'hora_inicio', 'hora_fin', 'activo']
+    list_filter = ['dia_semana', 'activo', 'veterinario']
+    search_fields = ['veterinario__nombre', 'veterinario__apellido', 'notas']
+    ordering = ['veterinario', 'dia_semana', 'hora_inicio']
+    
+    fieldsets = (
+        ('Veterinario', {
+            'fields': ('veterinario',)
+        }),
+        ('Horario Semanal', {
+            'fields': ('dia_semana', 'hora_inicio', 'hora_fin', 'activo')
+        }),
+        ('Notas', {
+            'fields': ('notas',),
+            'classes': ('collapse',)
+        }),
+    )
 
 
 @admin.register(DisponibilidadVeterinario)
