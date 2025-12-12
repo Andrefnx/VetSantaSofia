@@ -19,6 +19,26 @@
     padding: 16px 20px !important;
     padding-top: 0 !important;
 }
+
+/* Estilos globales para botones cancelar */
+button.vet-btn-cancel,
+.vet-custom-modal button.vet-btn-cancel,
+.vet-modal button.vet-btn-cancel {
+    background-color: #6b7280 !important;
+    color: white !important;
+    border: none !important;
+    padding: 10px 16px !important;
+    border-radius: 6px !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s ease !important;
+}
+
+button.vet-btn-cancel:hover,
+.vet-custom-modal button.vet-btn-cancel:hover,
+.vet-modal button.vet-btn-cancel:hover {
+    background-color: #dc2626 !important;
+}
 </style>
 {% endblock %}
 
@@ -475,18 +495,14 @@
                     <small class="text-muted">Cuando el stock esté entre el mínimo y este nivel, se marcará en naranja</small>
                 </div>
                 
-                <div style="padding: 12px; background-color: #e8f4fd; border-left: 4px solid #1976d2; border-radius: 4px; margin-bottom: 1rem;">
-                    <div style="display: flex; align-items: start; gap: 8px;">
-                        <i class="fas fa-info-circle" style="color: #1976d2; margin-top: 2px;"></i>
-                        <div>
-                            <strong style="color: #0d47a1;">Stock Alto (Verde):</strong>
-                            <span style="color: #424242;">Se marcará automáticamente cuando el stock supere el nivel medio.</span>
-                        </div>
-                    </div>
+                <div class="mb-3" style="color: #6b7280; font-size: 0.9rem;">
+                    <i class="fas fa-info-circle" style="color: #10b981;"></i>
+                    <strong>Stock Alto (Verde):</strong>
+                    Se marcará automáticamente cuando el stock supere el nivel medio.
                 </div>
                 
-                <div class="vet-custom-modal-footer">
-                    <button type="button" class="vet-btn-grey" onclick="closeVetModal('modalConfigNiveles')">
+                <div class="vet-custom-modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="vet-btn-cancel" onclick="closeVetModal('modalConfigNiveles')">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
                     <button type="button" class="vet-btn-grey success" onclick="guardarNivelesStock()">
