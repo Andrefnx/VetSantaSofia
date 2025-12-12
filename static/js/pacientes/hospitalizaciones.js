@@ -361,14 +361,21 @@ const hospitalizacionesManager = {
             return;
         }
 
-        const chips = ids.map(id => {
+        // Agrupar IDs repetidos y contar
+        const idCounts = {};
+        ids.forEach(id => {
+            idCounts[id] = (idCounts[id] || 0) + 1;
+        });
+
+        const chips = Object.entries(idCounts).map(([id, count]) => {
             const ins = this.insumosCatalogo.find(i => String(i.id) === String(id));
             if (!ins) return '';
             const dosis = this.calcularDosis(ins);
             const tipo = ins.tipo || 'N/A';
             const dosisTxt = dosis ? ` | ${dosis}` : '';
+            const countTxt = count > 1 ? ` <strong>(x${count})</strong>` : '';
             return `<div class="chip">
-                <span>${ins.nombre} | ${tipo}${dosisTxt}</span>
+                <span>${ins.nombre} | ${tipo}${dosisTxt}${countTxt}</span>
                 <button type="button" onclick="hospitalizacionesManager.removerInsumo('${id}')" class="chip-remove-btn" title="Eliminar">
                     ×
                 </button>
@@ -444,11 +451,18 @@ const hospitalizacionesManager = {
             return;
         }
 
-        const chips = ids.map(id => {
+        // Agrupar IDs repetidos y contar
+        const idCounts = {};
+        ids.forEach(id => {
+            idCounts[id] = (idCounts[id] || 0) + 1;
+        });
+
+        const chips = Object.entries(idCounts).map(([id, count]) => {
             const vet = this.veterinariosCatalogo.find(v => String(v.id) === String(id));
             if (!vet) return '';
+            const countTxt = count > 1 ? ` <strong>(x${count})</strong>` : '';
             return `<div class="chip">
-                <span>${vet.nombre}</span>
+                <span>${vet.nombre}${countTxt}</span>
                 <button type="button" onclick="hospitalizacionesManager.removerVeterinario('${id}')" class="chip-remove-btn" title="Eliminar">
                     ×
                 </button>
@@ -728,22 +742,33 @@ const hospitalizacionesManager = {
                         return '';
                     };
 
-                    const renderChip = (ins) => {
+                    const renderChip = (ins, count = 1) => {
                         const dosis = renderDosis(ins);
-                        return `<div style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:6px; background:#fff; display:flex; flex-direction:column; gap:4px;">
-                            <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
-                                <span style="font-weight:600; color:#1f2937;">${ins.nombre || 'Insumo'}</span>
-                                ${ins.codigo ? `<span style=\"font-size:11px; color:#6b7280;\">${ins.codigo}</span>` : ''}
-                            </div>
-                            ${dosis ? `<span style="font-size:12px; color:#374151;">Dosis sugerida: ${dosis}</span>` : ''}
+                        return `<div style="padding:4px 8px; border:1px solid #e5e7eb; border-radius:4px; background:#f9fafb; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; position:relative; transition:all 0.2s;"
+                            onmouseenter="this.style.overflow='visible'; this.style.whiteSpace='normal'; this.style.zIndex='10'; this.style.boxShadow='0 4px 6px -1px rgb(0 0 0 / 0.1)'; this.style.background='#fff';"
+                            onmouseleave="this.style.overflow='hidden'; this.style.whiteSpace='nowrap'; this.style.zIndex='1'; this.style.boxShadow='none'; this.style.background='#f9fafb';">
+                            <strong style="color:#1f2937;">${ins.nombre || 'Insumo'}</strong>${dosis ? ` - <span style="color:#16a34a;">${dosis}</span>` : ''}${count > 1 ? ` <span style="color:#6b7280;">(x${count})</span>` : ''}
                         </div>`;
                     };
 
                     if (todosInsumos.length) {
+                        // Agrupar por ID
+                        const idCounts = {};
+                        const uniqueInsumos = [];
+                        todosInsumos.forEach(ins => {
+                            const key = ins.idInventario || ins.id;
+                            if (!idCounts[key]) {
+                                idCounts[key] = 1;
+                                uniqueInsumos.push(ins);
+                            } else {
+                                idCounts[key]++;
+                            }
+                        });
+                        
                         insumosContainer.innerHTML = `
                             <h5 style="margin:0 0 8px 0; font-size:15px; color:#1f2937;"><i class="bi bi-box-seam"></i> Insumos utilizados</h5>
                             <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px;">
-                                ${todosInsumos.map(renderChip).join('')}
+                                ${uniqueInsumos.map(ins => renderChip(ins, idCounts[ins.idInventario || ins.id])).join('')}
                             </div>
                         `;
                     } else {
@@ -923,7 +948,24 @@ const hospitalizacionesManager = {
                 const modal = document.getElementById('cirugiaModal');
                 modal.classList.remove('show');
                 modal.classList.add('hide');
+                
+                // Limpiar formulario completamente
                 form.reset();
+                
+                // Limpiar insumos seleccionados
+                const insumosHidden = document.getElementById('insumosCirugiaHidden');
+                if (insumosHidden) insumosHidden.value = '';
+                
+                // Limpiar equipo seleccionado
+                const equipoHidden = document.getElementById('equipoCirugiaHidden');
+                if (equipoHidden) equipoHidden.value = '';
+                
+                // Re-renderizar listas vacías
+                this.renderInsumosSelect('');
+                this.renderInsumosSeleccionados();
+                this.renderEquipoSelect('');
+                this.renderEquipoSeleccionado();
+                
                 this.cargarHospitalizaciones();
             } else {
                 alert('Error: ' + data.error);
