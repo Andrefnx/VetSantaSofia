@@ -336,6 +336,7 @@ if (formNuevaConsulta) {
     const data = {
         paciente_id: window.pacienteData.id,
         tipo_consulta: formData.get('tipo_consulta'),
+        servicios_ids: formData.get('servicios_ids'),
         temperatura: formData.get('temperatura'),
         peso: formData.get('peso'),
         frecuencia_cardiaca: formData.get('frecuencia_cardiaca'),
@@ -461,7 +462,7 @@ function verDetalleConsulta(consultaId) {
                     const c = data.consulta;
                     
                     document.getElementById('detalleTitulo').innerHTML = 
-                        `<i class="bi bi-clipboard2-pulse"></i> ${c.tipo_consulta} - ${c.fecha}`;
+                        `<i class="bi bi-clipboard2-pulse"></i> ${c.tipo_consulta || 'Consulta'} - ${c.fecha}`;
                     
                     let datosVitales = [];
                     if (c.temperatura !== '-') datosVitales.push(`<div class="detalle-dato-item"><i class="bi bi-thermometer-half"></i> Temp: <strong>${c.temperatura}°C</strong></div>`);

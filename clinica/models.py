@@ -34,6 +34,9 @@ class Consulta(models.Model):
     # ⭐ NUEVO: Relación ManyToMany con Insumos
     medicamentos = models.ManyToManyField(Insumo, blank=True, related_name='consultas_usadas')
     
+    # ⭐ Relación ManyToMany con Servicios
+    servicios = models.ManyToManyField(Servicio, blank=True, related_name='consultas')
+    
     class Meta:
         ordering = ['-fecha']
         verbose_name = 'Consulta'
@@ -41,6 +44,10 @@ class Consulta(models.Model):
     
     def __str__(self):
         return f"Consulta de {self.paciente.nombre} - {self.fecha.strftime('%d/%m/%Y')}"
+    
+    def servicios_nombres(self):
+        """Retorna los nombres de los servicios separados por comas"""
+        return ', '.join([s.nombre for s in self.servicios.all()]) if self.servicios.exists() else self.get_tipo_consulta_display()
 
 
 class MedicamentoUtilizado(models.Model):

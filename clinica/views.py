@@ -132,13 +132,39 @@ def crear_consulta(request, paciente_id):
             }, status=400)
         
         # Extraer y validar campos
-        tipo_consulta = data.get('tipo_consulta')
+        servicios_ids = data.get('servicios_ids', '')
         temperatura = data.get('temperatura')
         peso = data.get('peso')
         fc = data.get('frecuencia_cardiaca')
         fr = data.get('frecuencia_respiratoria')
         
-        print(f'📋 Tipo de consulta: {tipo_consulta}')
+        # Determinar tipo de consulta basado en servicios seleccionados
+        tipo_consulta = 'otros'  # Por defecto para múltiples servicios
+        if servicios_ids:
+            ids_list = servicios_ids.split(',')
+            if len(ids_list) == 1:
+                # Si es un solo servicio, intentar mapear su categoría
+                try:
+                    servicio = Servicio.objects.get(idServicio=ids_list[0])
+                    categoria = servicio.categoria.lower() if servicio.categoria else ''
+                    
+                    # Mapear categoría a tipo de consulta válido
+                    mapeo_categorias = {
+                        'vacunacion': 'vacuna',
+                        'desparasitacion': 'desparacitacion',
+                        'cirugia': 'cirugia',
+                        'urgencia': 'urgencia',
+                        'control': 'control'
+                    }
+                    tipo_consulta = mapeo_categorias.get(categoria, 'otros')
+                except Servicio.DoesNotExist:
+                    tipo_consulta = 'otros'
+            else:
+                # Múltiples servicios = otros
+                tipo_consulta = 'otros'
+        
+        print(f'📋 Servicios IDs: {servicios_ids}')
+        print(f'📋 Tipo de consulta derivado: {tipo_consulta}')
         print(f'🌡️  Temperatura: {temperatura}')
         print(f'⚖️  Peso: {peso}')
         print(f'❤️  FC: {fc}')
@@ -161,6 +187,17 @@ def crear_consulta(request, paciente_id):
         )
         print(f'✅ Consulta creada con ID: {consulta.id}')
         print(f'✅ Tipo guardado: {consulta.tipo_consulta}')
+        
+        # ⭐ AGREGAR SERVICIOS A LA CONSULTA
+        if servicios_ids:
+            ids_list = servicios_ids.split(',')
+            for servicio_id in ids_list:
+                try:
+                    servicio = Servicio.objects.get(idServicio=servicio_id.strip())
+                    consulta.servicios.add(servicio)
+                    print(f'✅ Servicio agregado: {servicio.nombre}')
+                except Servicio.DoesNotExist:
+                    print(f'⚠️  Servicio no encontrado: {servicio_id}')
         
         # ⭐ ACTUALIZAR EL PESO DEL PACIENTE SI SE PROPORCIONÓ
         if peso:
@@ -247,7 +284,7 @@ def detalle_consulta(request, paciente_id, consulta_id):
             'consulta': {
                 'id': consulta.id,
                 'fecha': consulta.fecha.strftime('%d/%m/%Y %H:%M'),
-                'tipo_consulta': consulta.get_tipo_consulta_display(),
+                'tipo_consulta': consulta.servicios_nombres(),
                 'veterinario': veterinario_nombre,
                 'temperatura': str(consulta.temperatura) if consulta.temperatura else '-',
                 'peso': str(consulta.peso) if consulta.peso else '-',

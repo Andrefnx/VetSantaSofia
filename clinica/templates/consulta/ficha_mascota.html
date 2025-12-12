@@ -298,7 +298,7 @@
                                         <div class="timeline-item-header">
                                             <div class="timeline-item-info">
                                                 <h3 class="event-title timeline-item-title">
-                                                    {{ consulta.get_tipo_consulta_display|default:"Consulta general" }}
+                                                    {{ consulta.servicios_nombres|default:"Consulta general" }}
                                                     <span class="timeline-item-date">
                                                         {{ consulta.fecha|date:"d/m/Y H:i" }}
                                                     </span>
@@ -591,11 +591,14 @@
                         <span class="info-label">Fecha:</span>
                         <span class="info-value" id="fechaConsulta">{% now "d/m/Y" %}</span>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">Tipo:</span>
-                        <select class="form-control-compact" id="tipoConsultaSelect" name="tipo_consulta" required>
-                            <option value="">Seleccionar</option>
-                        </select>
+                    <div class="info-item" style="flex: 1;">
+                        <span class="info-label">Servicios:</span>
+                        <div style="position: relative;">
+                            <input type="text" class="form-control-compact" id="buscarServicio" placeholder="Buscar servicios..." autocomplete="off" style="width: 100%;">
+                            <div id="resultadosServicio" style="display: none; position: absolute; top: 100%; left: 0; z-index: 1000; background: white; border: 1px solid #ddd; border-radius: 4px; max-height: 300px; overflow-y: auto; width: 100%; margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
+                        </div>
+                        <div id="serviciosSeleccionados" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; max-height: 50px; overflow-y: auto;"></div>
+                        <input type="hidden" id="serviciosIds" name="servicios_ids">
                     </div>
                 </div>
 
@@ -1016,6 +1019,156 @@
 <script src="{% static 'js/pacientes/inventario_consulta.js' %}"></script>
 
 <script>
+// Variables globales para servicios
+let todosLosServicios = [];
+
+// Cargar servicios al inicio
+document.addEventListener('DOMContentLoaded', function() {
+    cargarServicios();
+});
+
+function cargarServicios() {
+    fetch('/clinica/api/servicios/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.servicios) {
+                // Filtrar cirugías
+                todosLosServicios = data.servicios.filter(servicio => 
+                    servicio.categoria !== 'cirugia'
+                );
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar servicios:', error);
+        });
+}
+
+// Variables para múltiples servicios
+let serviciosSeleccionadosArray = [];
+
+// Buscador de servicios
+const buscarServicio = document.getElementById('buscarServicio');
+const resultadosServicio = document.getElementById('resultadosServicio');
+
+// Añadir estilos
+document.addEventListener('DOMContentLoaded', function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .resultado-item:hover {
+            background-color: #f0f9ff !important;
+            border-left: 3px solid #3b82f6 !important;
+        }
+        .servicio-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background: #6366f1;
+            color: white;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .servicio-chip .remove-btn {
+            cursor: pointer;
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-left: 2px;
+        }
+        .servicio-chip .remove-btn:hover {
+            opacity: 1;
+        }
+    `;
+    document.head.appendChild(style);
+});
+
+if (buscarServicio) {
+    buscarServicio.addEventListener('input', function() {
+        const termino = this.value.toLowerCase().trim();
+        
+        if (termino.length === 0) {
+            resultadosServicio.style.display = 'none';
+            return;
+        }
+        
+        // Filtrar servicios que no estén ya seleccionados
+        const serviciosFiltrados = todosLosServicios.filter(servicio =>
+            !serviciosSeleccionadosArray.some(s => s.id === servicio.idServicio) &&
+            (servicio.nombre.toLowerCase().includes(termino) ||
+            (servicio.categoria && servicio.categoria.toLowerCase().includes(termino)))
+        );
+        
+        if (serviciosFiltrados.length > 0) {
+            resultadosServicio.innerHTML = serviciosFiltrados.map(servicio => `
+                <div class="resultado-item" onclick="agregarServicio(${servicio.idServicio}, '${servicio.nombre.replace(/'/g, "\\'")}')"
+                     style="padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #e5e7eb; background-color: white; transition: all 0.2s;">
+                    <div style="font-weight: 600; color: #1f2937; margin-bottom: 3px;">${servicio.nombre}</div>
+                    ${servicio.categoria ? `<small style="color: #6b7280; text-transform: capitalize;">${servicio.categoria.replace('_', ' ')}</small>` : ''}
+                </div>
+            `).join('');
+            resultadosServicio.style.display = 'block';
+        } else {
+            const mensaje = serviciosSeleccionadosArray.length > 0 && termino.length > 0 
+                ? 'Servicio ya agregado o no encontrado'
+                : 'No se encontraron servicios';
+            resultadosServicio.innerHTML = `<div style="padding: 20px; text-align: center; color: #9ca3af; font-style: italic;">${mensaje}</div>`;
+            resultadosServicio.style.display = 'block';
+        }
+    });
+    
+    // Cerrar resultados al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (!buscarServicio.contains(e.target) && !resultadosServicio.contains(e.target)) {
+            resultadosServicio.style.display = 'none';
+        }
+    });
+}
+
+function agregarServicio(id, nombre) {
+    // Verificar que no esté ya agregado
+    if (serviciosSeleccionadosArray.some(s => s.id === id)) {
+        return;
+    }
+    
+    // Agregar al array
+    serviciosSeleccionadosArray.push({ id, nombre });
+    
+    // Actualizar vista
+    actualizarServiciosSeleccionados();
+    
+    // Limpiar buscador
+    buscarServicio.value = '';
+    resultadosServicio.style.display = 'none';
+}
+
+function eliminarServicio(id) {
+    serviciosSeleccionadosArray = serviciosSeleccionadosArray.filter(s => s.id !== id);
+    actualizarServiciosSeleccionados();
+}
+
+function actualizarServiciosSeleccionados() {
+    const container = document.getElementById('serviciosSeleccionados');
+    const idsInput = document.getElementById('serviciosIds');
+    
+    if (!container || !idsInput) return;
+    
+    // Actualizar campo hidden con los IDs
+    idsInput.value = serviciosSeleccionadosArray.map(s => s.id).join(',');
+    
+    // Actualizar chips visuales
+    if (serviciosSeleccionadosArray.length === 0) {
+        container.innerHTML = '<small style="color: #9ca3af; font-style: italic;">No hay servicios seleccionados</small>';
+    } else {
+        container.innerHTML = serviciosSeleccionadosArray.map(servicio => `
+            <span class="servicio-chip">
+                ${servicio.nombre}
+                <i class="bi bi-x-circle remove-btn" onclick="eliminarServicio(${servicio.id})"></i>
+            </span>
+        `).join('');
+    }
+}
+
 // Función para subir documento
 function subirDocumento(input, pacienteId) {
     const archivo = input.files[0];
