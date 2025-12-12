@@ -793,23 +793,24 @@
                             <textarea class="form-control" name="complicaciones" rows="2" placeholder="Dejar en blanco si no hubo complicaciones"></textarea>
                         </div>
 
-                        <hr style="margin:12px 0; border-color:#e5e7eb;">
+                    </div>
 
+                    <!-- Columna derecha: equipo e insumos -->
+                    <div class="col-md-6">
                         <div class="detail-section">
                             <div class="detail-section-title">Equipo (veterinarios)</div>
                             <input type="text" class="form-control" id="buscarEquipoCirugia" placeholder="Buscar veterinario..." style="margin-bottom:8px;">
-                            <div id="equipoCirugia" style="max-height:200px; overflow-y:auto; border:1px solid #ced4da; border-radius:4px; padding:4px;"></div>
+                            <div id="equipoCirugia" style="max-height:150px; overflow-y:auto; border:1px solid #ced4da; border-radius:4px; padding:4px;"></div>
                             <input type="hidden" name="equipo_cirugia" id="equipoCirugiaHidden">
                             <div id="equipoSeleccionadoCirugia" style="margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
                         </div>
-                    </div>
 
-                    <!-- Columna derecha: insumos -->
-                    <div class="col-md-6">
+                        <hr style="margin:16px 0; border-color:#e5e7eb;">
+
                         <div class="detail-section">
                             <div class="detail-section-title">Insumos / Implementos</div>
                             <input type="text" class="form-control" id="buscarInsumosCirugia" placeholder="Buscar insumo..." style="margin-bottom:8px;">
-                            <div id="insumosCirugia" style="max-height:250px; overflow-y:auto; border:1px solid #ced4da; border-radius:4px; padding:4px;"></div>
+                            <div id="insumosCirugia" style="max-height:200px; overflow-y:auto; border:1px solid #ced4da; border-radius:4px; padding:4px;"></div>
                             <input type="hidden" name="insumos_cirugia" id="insumosCirugiaHidden">
                             <small style="color:#6c757d; display:block; margin-top:6px;">Nota: los insumos seleccionados se descuentan del stock.</small>
                             <div id="insumosSeleccionadosCirugia" style="margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
