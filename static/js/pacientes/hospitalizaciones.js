@@ -122,6 +122,22 @@ const hospitalizacionesManager = {
                 }
             });
         });
+
+        // Buscador de insumos
+        const buscarInsumos = document.getElementById('buscarInsumosCirugia');
+        if (buscarInsumos) {
+            buscarInsumos.addEventListener('input', (e) => {
+                this.renderInsumosSelect(e.target.value);
+            });
+        }
+
+        // Buscador de equipo/veterinarios
+        const buscarEquipo = document.getElementById('buscarEquipoCirugia');
+        if (buscarEquipo) {
+            buscarEquipo.addEventListener('input', (e) => {
+                this.renderEquipoSelect(e.target.value);
+            });
+        }
     },
 
     async cargarHospitalizaciones() {
