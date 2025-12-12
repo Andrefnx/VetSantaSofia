@@ -626,32 +626,22 @@ const hospitalizacionesManager = {
                 // COLUMNA IZQUIERDA: Información General
                 const detallesIzquierda = document.getElementById('detallesIzquierda');
                 let htmlIzquierda = `
-                    <div style="background-color: #f8f9fb; padding: 12px; border-radius: 6px; margin-bottom: 12px; border: 1px solid #e5e7eb;">
-                        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <h5 style="margin: 0; font-size: 16px; color: #2d2f33;"><i class="bi bi-info-circle"></i> Información</h5>
-                            <span style="background-color: ${hosp.estado.toLowerCase() === 'activa' ? '#e5f4ed' : '#f4e8e8'}; color: ${hosp.estado.toLowerCase() === 'activa' ? '#1b7f4f' : '#8a4b4b'}; padding: 4px 10px; border-radius: 999px; font-size: 12px;">${hosp.estado}</span>
-                        </div>
-                        <p style="margin: 0 0 4px 0; color: #444;"><strong>Fecha ingreso:</strong> ${hosp.fecha_ingreso}</p>
-                        <p style="margin: 0 0 4px 0; color: #444;"><strong>Motivo:</strong> ${hosp.motivo}</p>
+                    <div style="padding:8px 0; margin-bottom:12px; border-bottom:2px solid #e5e7eb; font-size:12px; color:#374151;">
+                        <strong style="font-weight:600; color:#111;">${hosp.estado}</strong> | 
+                        <span>${hosp.fecha_ingreso}</span> | 
+                        <span>${hosp.motivo}</span> | 
+                        <span>${hosp.veterinario}</span>
                     </div>
                     
-                    <div style="background-color: #f8f9fb; padding: 12px; border-radius: 6px; margin-bottom: 12px; border: 1px solid #e5e7eb;">
-                        <h5 style="margin: 0 0 8px 0; font-size: 16px; color: #2d2f33;"><i class="bi bi-journal-text"></i> Diagnóstico y observaciones</h5>
-                        <div style="background-color: white; padding: 10px; border-radius: 4px; border: 1px solid #e5e7eb; margin-bottom: 8px;">
-                            <small style="display:block; color: #666; margin-bottom: 4px;">Diagnóstico</small>
-                            <div style="color: #2d2f33; line-height: 1.4;">${hosp.diagnostico || '<em>Sin diagnóstico</em>'}</div>
+                    <div style="padding:10px 0; margin-bottom:10px; border-bottom:1px solid #e5e7eb;">
+                        <h6 style="margin:0 0 8px 0; font-size:13px; font-weight:600; color:#111;"><i class="bi bi-journal-text" style="font-size:12px;"></i> Diagnóstico</h6>
+                        <div style="font-size:12px; color:#374151; line-height:1.5; margin-bottom:8px;">
+                            ${hosp.diagnostico || '<em style="color:#9ca3af;">Sin diagnóstico</em>'}
                         </div>
-                        <div style="background-color: white; padding: 10px; border-radius: 4px; border: 1px solid #e5e7eb; margin-bottom: 8px;">
-                            <small style="display:block; color: #666; margin-bottom: 4px;">Observaciones</small>
-                            <div style="color: #2d2f33; line-height: 1.4;">${hosp.observaciones || '<em>Sin observaciones</em>'}</div>
-                        </div>
-                        <p style="margin: 0; color: #555;"><strong>Veterinario a cargo:</strong> ${hosp.veterinario}</p>
-                        ${hosp.insumos && hosp.insumos.length ? `
-                            <div style="margin-top: 10px;">
-                                <small style="display:block; color: #666; margin-bottom: 4px;"><i class="bi bi-box-seam"></i> Implementos utilizados</small>
-                                <div style="display:flex; flex-wrap: wrap; gap: 6px;">
-                                    ${hosp.insumos.map(ins => `<span style=\"background:#f3f4f6; color:#2d2f33; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid #e5e7eb;\">${ins.nombre}</span>`).join('')}
-                                </div>
+                        ${hosp.observaciones ? `
+                            <div style="margin-top:8px;">
+                                <div style="font-size:11px; font-weight:600; color:#6b7280; margin-bottom:4px;">Observaciones</div>
+                                <div style="font-size:12px; color:#374151; line-height:1.5;">${hosp.observaciones}</div>
                             </div>
                         ` : ''}
                     </div>
@@ -681,119 +671,138 @@ const hospitalizacionesManager = {
                     };
                     
                     htmlIzquierda += `
-                        <div style="background-color: #fdfaf3; padding: 12px; border-radius: 6px; border: 1px solid #f0e6ce; margin-bottom: 12px;">
-                            <h5 style="margin: 0 0 6px 0; font-size: 15px; color: #2d2f33;"><i class="bi bi-tools"></i> Cirugías</h5>
-                            ${hosp.cirugias.map(c => `
-                                <div style=\"padding:8px 0; border-bottom:1px solid #eee;\">
-                                    <p style=\"margin:0 0 4px 0; color:#444;\"><strong>Tipo:</strong> ${c.tipo}</p>
-                                    <p style=\"margin:0 0 4px 0; color:#444;\"><strong>Fecha:</strong> ${c.fecha}</p>
-                                    <p style=\"margin:0 0 4px 0; color:#444;\"><strong>Cirujano:</strong> ${c.veterinario}</p>
-                                    <p style=\"margin:0 0 4px 0; color:#444;\"><strong>Resultado:</strong> ${c.resultado}</p>
-                                    <p style=\"margin:0 0 4px 0; color:#444;\"><strong>Descripción:</strong> ${c.descripcion}</p>
-                                    ${c.complicaciones ? `<p style=\"margin:4px 0 0 0; color:#8a4b4b;\"><strong>Complicaciones:</strong> ${c.complicaciones}</p>` : ''}
-                                    ${c.insumos && c.insumos.length ? `<div style=\"margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;\">${c.insumos.map(ins => `<span style=\\\"background:#f3f4f6; color:#2d2f33; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid #e5e7eb;\\\">${ins.nombre}<strong style=\\\"color:#16a34a;\\\">${calcularDosisDetalle(ins)}</strong></span>`).join('')}</div>` : ''}
+                        <div style="padding:10px 0; margin-bottom:10px; border-bottom:1px solid #e5e7eb;">
+                            <h6 style="margin:0 0 10px 0; font-size:13px; font-weight:600; color:#111;"><i class="bi bi-tools" style="font-size:12px;"></i> Cirugías</h6>
+                            ${hosp.cirugias.map((c, idx) => `
+                                <div style=\"margin-bottom:8px; padding-bottom:8px; ${idx < hosp.cirugias.length - 1 ? 'border-bottom:1px solid #f3f4f6;' : ''}\">
+                                    <div onclick=\"this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.querySelector('.toggle-icon').classList.toggle('bi-chevron-down'); this.querySelector('.toggle-icon').classList.toggle('bi-chevron-right');\" style=\"display:flex; justify-content:space-between; align-items:center; cursor:pointer; padding:4px 0;\">
+                                        <div style=\"display:flex; align-items:center; gap:8px;\">
+                                            <i class=\"bi bi-chevron-right toggle-icon\" style=\"font-size:10px; color:#6b7280;\"></i>
+                                            <strong style=\"font-size:12px; color:#111;\">${c.tipo}</strong>
+                                            <span style=\"font-size:11px; color:#6b7280;\">${c.fecha}</span>
+                                            ${c.complicaciones ? `<span style=\"font-size:11px; color:#dc2626;\"><i class=\"bi bi-exclamation-triangle\"></i> Complicaciones</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div style=\"display:none; padding:8px 0 0 18px; font-size:12px; color:#374151;\">
+                                        <div style=\"margin-bottom:6px; line-height:1.5;\">${c.descripcion}</div>
+                                        <div style=\"display:flex; gap:12px; margin-bottom:4px; font-size:11px; color:#6b7280;\">
+                                            <div><i class=\"bi bi-person-badge\"></i> ${c.veterinario}</div>
+                                            <div><i class=\"bi bi-check-circle\"></i> ${c.resultado}</div>
+                                        </div>
+                                        ${c.complicaciones ? `<div style=\"font-size:11px; color:#dc2626; margin:6px 0;\"><strong>Complicaciones:</strong> ${c.complicaciones}</div>` : ''}
+                                        ${c.insumos && c.insumos.length ? `<div style=\"margin-top:8px;\"><div style=\"font-size:11px; font-weight:600; color:#6b7280; margin-bottom:4px;\">Insumos utilizados:</div><div style=\"display:flex; flex-wrap:wrap; gap:4px;\">${c.insumos.map(ins => `<span style=\\\"border:1px solid #e5e7eb; color:#374151; padding:2px 6px; border-radius:3px; font-size:11px;\\\">${ins.nombre}<strong style=\\\"color:#16a34a;\\\">${calcularDosisDetalle(ins)}</strong></span>`).join('')}</div></div>` : ''}
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
                     `;
                 }
                 
+                // Preparar funciones para insumos (antes de usarlas en cirugías)
+                const renderDosis = (ins) => {
+                    if (!pesoPaciente || !ins) return ins.formato ? ins.formato : '';
+                    const pesoRef = parseFloat(ins.peso_kg || 0);
+                    if (!pesoRef || pesoRef === 0) return '';
+                    const factor = pesoPaciente / pesoRef;
+                    if (ins.dosis_ml) {
+                        const ml = (parseFloat(ins.dosis_ml) * factor).toFixed(2);
+                        return `${ml} ml (peso ${pesoPaciente} kg)`;
+                    }
+                    if (ins.cantidad_pastillas) {
+                        const tabs = (parseFloat(ins.cantidad_pastillas) * factor).toFixed(2);
+                        return `${tabs} pastillas (peso ${pesoPaciente} kg)`;
+                    }
+                    if (ins.unidades_pipeta) {
+                        const pip = (parseFloat(ins.unidades_pipeta) * factor).toFixed(2);
+                        return `${pip} pipetas (peso ${pesoPaciente} kg)`;
+                    }
+                    return '';
+                };
+
+                const renderChip = (ins, count = 1) => {
+                    const dosis = renderDosis(ins);
+                    return `<div style="padding:4px 8px; border:1px solid #e5e7eb; border-radius:4px; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; position:relative; transition:all 0.2s;"
+                        onmouseenter="this.style.overflow='visible'; this.style.whiteSpace='normal'; this.style.zIndex='10'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';"
+                        onmouseleave="this.style.overflow='hidden'; this.style.whiteSpace='nowrap'; this.style.zIndex='1'; this.style.boxShadow='none';">
+                        <strong style="color:#111;">${ins.nombre || 'Insumo'}</strong>${dosis ? ` - <span style="color:#16a34a;">${dosis}</span>` : ''}${count > 1 ? ` <span style="color:#6b7280;">(x${count})</span>` : ''}
+                    </div>`;
+                };
+
+                // Insumos totales después de cirugías
+                const insumosHosp = hosp.insumos || [];
+                const insumosCirugias = (hosp.cirugias || []).flatMap(c => c.insumos || []);
+                const insumosReg = (hosp.registros_diarios || []).flatMap(r => r.insumos || []);
+                const todosInsumos = [...insumosHosp, ...insumosCirugias, ...insumosReg];
+
+                if (todosInsumos.length) {
+                    // Agrupar por ID
+                    const idCounts = {};
+                    const uniqueInsumos = [];
+                    todosInsumos.forEach(ins => {
+                        const key = ins.idInventario || ins.id;
+                        if (!idCounts[key]) {
+                            idCounts[key] = 1;
+                            uniqueInsumos.push(ins);
+                        } else {
+                            idCounts[key]++;
+                        }
+                    });
+                    
+                    htmlIzquierda += `
+                        <div style="padding:10px 0; margin-bottom:10px; border-bottom:1px solid #e5e7eb;">
+                            <h6 style="margin:0 0 8px 0; font-size:13px; font-weight:600; color:#111;"><i class="bi bi-box-seam" style="font-size:12px;"></i> Insumos utilizados</h6>
+                            <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:6px;">
+                                ${uniqueInsumos.map(ins => renderChip(ins, idCounts[ins.idInventario || ins.id])).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
                 // Alta médica si existe
                 if (hosp.alta) {
                     htmlIzquierda += `
-                        <div style="background-color: #f6fbf6; padding: 12px; border-radius: 6px; border: 1px solid #dce9dc;">
-                            <h5 style="margin: 0 0 6px 0; font-size: 15px; color: #2d2f33;"><i class="bi bi-check-circle"></i> Alta médica</h5>
-                            <p style="margin: 0 0 4px 0; color: #444;"><strong>Fecha:</strong> ${hosp.alta.fecha}</p>
-                            <p style="margin: 0 0 4px 0; color: #444;"><strong>Diagnóstico final:</strong> ${hosp.alta.diagnostico_final}</p>
-                            <p style="margin: 0 0 4px 0; color: #444;"><strong>Tratamiento post-alta:</strong> ${hosp.alta.tratamiento_post}</p>
-                            <p style="margin: 0; color: #444;"><strong>Recomendaciones:</strong> ${hosp.alta.recomendaciones}</p>
-                            ${hosp.alta.proxima_revision ? `<p style="margin: 6px 0 0 0; color: #444;"><strong>Próxima revisión:</strong> ${hosp.alta.proxima_revision}</p>` : ''}
+                        <div style="padding:10px 0; border-bottom:1px solid #e5e7eb;">
+                            <h6 style="margin:0 0 8px 0; font-size:13px; font-weight:600; color:#111;"><i class="bi bi-check-circle" style="font-size:12px;"></i> Alta médica</h6>
+                            <div style="font-size:12px; color:#374151; line-height:1.8;">
+                                <div style="margin-bottom:6px;"><span style="color:#6b7280;">Fecha:</span> <strong>${hosp.alta.fecha}</strong></div>
+                                <div style="margin:8px 0;">
+                                    <div style="font-size:11px; font-weight:600; color:#6b7280; margin-bottom:4px;">Diagnóstico final:</div>
+                                    <div style="font-size:12px;">${hosp.alta.diagnostico_final}</div>
+                                </div>
+                                <div style="margin:8px 0;">
+                                    <div style="font-size:11px; font-weight:600; color:#6b7280; margin-bottom:4px;">Tratamiento post-alta:</div>
+                                    <div style="font-size:12px;">${hosp.alta.tratamiento_post}</div>
+                                </div>
+                                <div style="margin:8px 0;">
+                                    <div style="font-size:11px; font-weight:600; color:#6b7280; margin-bottom:4px;">Recomendaciones:</div>
+                                    <div style="font-size:12px;">${hosp.alta.recomendaciones}</div>
+                                </div>
+                                ${hosp.alta.proxima_revision ? `<div style="margin-top:8px; padding:4px 0; font-size:11px;"><i class="bi bi-calendar-check"></i> Próxima revisión: <strong>${hosp.alta.proxima_revision}</strong></div>` : ''}
+                            </div>
                         </div>
                     `;
                 }
                 
                 detallesIzquierda.innerHTML = htmlIzquierda;
-                
-                // COLUMNA DERECHA: Insumos + Registros
-                const insumosContainer = document.getElementById('insumosHospitalizacionContainer');
-                if (insumosContainer) {
-                    const insumosHosp = hosp.insumos || [];
-                    const insumosCirugias = (hosp.cirugias || []).flatMap(c => c.insumos || []);
-                    const insumosReg = (hosp.registros_diarios || []).flatMap(r => r.insumos || []);
-                    const todosInsumos = [...insumosHosp, ...insumosCirugias, ...insumosReg];
-
-                    const renderDosis = (ins) => {
-                        if (!pesoPaciente || !ins) return ins.formato ? ins.formato : '';
-                        const pesoRef = parseFloat(ins.peso_kg || 0);
-                        if (!pesoRef || pesoRef === 0) return '';
-                        const factor = pesoPaciente / pesoRef;
-                        if (ins.dosis_ml) {
-                            const ml = (parseFloat(ins.dosis_ml) * factor).toFixed(2);
-                            return `${ml} ml (peso ${pesoPaciente} kg)`;
-                        }
-                        if (ins.cantidad_pastillas) {
-                            const tabs = (parseFloat(ins.cantidad_pastillas) * factor).toFixed(2);
-                            return `${tabs} pastillas (peso ${pesoPaciente} kg)`;
-                        }
-                        if (ins.unidades_pipeta) {
-                            const pip = (parseFloat(ins.unidades_pipeta) * factor).toFixed(2);
-                            return `${pip} pipetas (peso ${pesoPaciente} kg)`;
-                        }
-                        return '';
-                    };
-
-                    const renderChip = (ins, count = 1) => {
-                        const dosis = renderDosis(ins);
-                        return `<div style="padding:4px 8px; border:1px solid #e5e7eb; border-radius:4px; background:#f9fafb; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; position:relative; transition:all 0.2s;"
-                            onmouseenter="this.style.overflow='visible'; this.style.whiteSpace='normal'; this.style.zIndex='10'; this.style.boxShadow='0 4px 6px -1px rgb(0 0 0 / 0.1)'; this.style.background='#fff';"
-                            onmouseleave="this.style.overflow='hidden'; this.style.whiteSpace='nowrap'; this.style.zIndex='1'; this.style.boxShadow='none'; this.style.background='#f9fafb';">
-                            <strong style="color:#1f2937;">${ins.nombre || 'Insumo'}</strong>${dosis ? ` - <span style="color:#16a34a;">${dosis}</span>` : ''}${count > 1 ? ` <span style="color:#6b7280;">(x${count})</span>` : ''}
-                        </div>`;
-                    };
-
-                    if (todosInsumos.length) {
-                        // Agrupar por ID
-                        const idCounts = {};
-                        const uniqueInsumos = [];
-                        todosInsumos.forEach(ins => {
-                            const key = ins.idInventario || ins.id;
-                            if (!idCounts[key]) {
-                                idCounts[key] = 1;
-                                uniqueInsumos.push(ins);
-                            } else {
-                                idCounts[key]++;
-                            }
-                        });
-                        
-                        insumosContainer.innerHTML = `
-                            <h5 style="margin:0 0 8px 0; font-size:15px; color:#1f2937;"><i class="bi bi-box-seam"></i> Insumos utilizados</h5>
-                            <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px;">
-                                ${uniqueInsumos.map(ins => renderChip(ins, idCounts[ins.idInventario || ins.id])).join('')}
-                            </div>
-                        `;
-                    } else {
-                        insumosContainer.innerHTML = '';
-                    }
-                }
 
                 // COLUMNA DERECHA: Registros Diarios
                 const registrosDiariosContainer = document.getElementById('registrosDiariosContainer');
                 if (hosp.registros_diarios && hosp.registros_diarios.length > 0) {
-                    const htmlRegistros = hosp.registros_diarios.map(reg => `
-                        <div style="padding: 10px 12px; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                                <strong style="color: #2d2f33; font-size: 13px;">${reg.fecha}</strong>
-                                <span style="font-size: 12px; color: #4b5563; background-color: #f3f4f6; padding: 4px 8px; border-radius: 999px;">
-                                    Dr. ${reg.veterinario || 'N/A'}
+                    const htmlRegistros = hosp.registros_diarios.map((reg, idx) => `
+                        <div style="padding:8px 0; border-bottom:1px solid #f3f4f6; margin-bottom:6px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <strong style="color:#111; font-size:12px;"><i class="bi bi-calendar-day" style="font-size:11px;"></i> ${reg.fecha}</strong>
+                                <span style="font-size:11px; color:#6b7280;">
+                                    ${reg.veterinario || 'N/A'}
                                 </span>
                             </div>
-                            <div style="display:flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; color: #2d2f33; font-size: 13px;">
-                                <span><strong>Temperatura:</strong> ${reg.temperatura}°C</span>
-                                <span><strong>Peso:</strong> ${reg.peso} kg</span>
-                                <span><strong>FC:</strong> ${reg.frecuencia_cardiaca || 'N/A'} lpm</span>
-                                <span><strong>FR:</strong> ${reg.frecuencia_respiratoria || 'N/A'} rpm</span>
+                            <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; font-size:11px; color:#374151;">
+                                <div><i class="bi bi-thermometer-half"></i> <strong>${reg.temperatura}°C</strong></div>
+                                <div><i class="bi bi-clipboard-pulse"></i> <strong>${reg.peso} kg</strong></div>
+                                <div>FC: <strong>${reg.frecuencia_cardiaca || 'N/A'}</strong></div>
+                                <div>FR: <strong>${reg.frecuencia_respiratoria || 'N/A'}</strong></div>
                             </div>
-                            ${reg.observaciones ? `<div style=\"margin-top:6px; color:#4b5563; font-size:12.5px;\"><strong style=\"color:#2d2f33;\">Obs:</strong> ${reg.observaciones}</div>` : ''}
+                            ${reg.observaciones ? `<div style=\"margin-top:6px; color:#6b7280; font-size:11px; line-height:1.5;\">${reg.observaciones}</div>` : ''}
                         </div>
                     `).join('');
                     
