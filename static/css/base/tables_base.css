@@ -453,17 +453,20 @@
     color: var(--primary-color) !important;
     transform: rotate(90deg);
 }
-.manage-options,
-.manage-options.show {
+.manage-options {
+    display: none;
     min-width: 180px;
     background: #fff;
     border: 1.5px solid var(--primary-color);
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(175, 225, 175, 0.18);
-    display: flex;
     flex-direction: column;
     padding: 8px 0;
     z-index: 9999;
+}
+
+.manage-options.show {
+    display: flex;
     animation: fadeInWheel 0.18s;
 }
 .manage-options button {

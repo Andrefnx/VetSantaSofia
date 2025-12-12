@@ -7,562 +7,10 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/base/estilos_generales.css' %}">
 <link rel="stylesheet" href="{% static 'css/base/tables_base.css' %}">
-<style>
-    :root {
-        --primary-color: #afe1af;
-        --primary-hover: #89c57c;
-        --text-dark: #103012;
-        --bg-light: #f8f9fa;
-        --border-color: #e0e0e0;
-        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
-    }
-    
-    .preview-section {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        box-shadow: var(--shadow-sm);
-    }
-    
-    .preview-section h2 {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid var(--primary-color);
-        color: var(--text-dark);
-        font-size: 1.4rem;
-    }
-    
-    .preview-section h2 i {
-        color: var(--primary-color);
-        font-size: 1.8rem;
-    }
-    
-    /* Tarjetas Compactas de Información */
-    .compact-cards-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-    }
-    
-    .info-card {
-        background: white;
-        border-radius: 8px;
-        box-shadow: var(--shadow-sm);
-        padding: 1rem;
-        border: 1px solid var(--border-color);
-        transition: all 0.2s ease;
-    }
-    
-    .info-card:hover {
-        box-shadow: var(--shadow-md);
-    }
-    
-    .info-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.75rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid var(--border-color);
-    }
-    
-    .info-card-header h4 {
-        margin: 0;
-        font-size: 0.95rem;
-        color: var(--text-dark);
-        font-weight: 600;
-    }
-    
-    .info-card-actions {
-        display: flex;
-        gap: 0.3rem;
-    }
-    
-    .info-card-actions button {
-        background: none;
-        border: none;
-        color: #666;
-        cursor: pointer;
-        padding: 0.2rem;
-        font-size: 0.9rem;
-        transition: all 0.2s ease;
-    }
-    
-    .info-card-actions button:hover {
-        color: var(--primary-color);
-        transform: scale(1.1);
-    }
-    
-    .info-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .info-row.full {
-        grid-template-columns: 1fr;
-    }
-    
-    .info-item {
-        font-size: 0.8rem;
-    }
-    
-    .info-label {
-        color: #999;
-        font-weight: 500;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .info-value {
-        color: var(--text-dark);
-        font-weight: 600;
-        margin-top: 0.2rem;
-    }
-    
-    /* Tabs/Pestañas */
-    .tabs-group {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 1.5rem;
-        border-bottom: 2px solid var(--border-color);
-        flex-wrap: wrap;
-    }
-    
-    .tab-button {
-        background: none;
-        border: none;
-        padding: 0.75rem 1rem;
-        color: #999;
-        font-weight: 500;
-        cursor: pointer;
-        border-bottom: 3px solid transparent;
-        transition: all 0.2s ease;
-        font-size: 0.9rem;
-    }
-    
-    .tab-button:hover {
-        color: var(--text-dark);
-    }
-    
-    .tab-button.active {
-        color: var(--primary-color);
-        border-bottom-color: var(--primary-color);
-    }
-    
-    .tab-content {
-        animation: fadeIn 0.3s ease;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    /* Secciones de información */
-    .section {
-        background: white;
-        border-radius: 8px;
-        box-shadow: var(--shadow-sm);
-        padding: 1rem;
-        margin-bottom: 0.8rem;
-    }
-    
-    .section h3 {
-        font-size: 0.95rem;
-        margin: 0 0 0.75rem 0;
-        font-weight: 600;
-        color: var(--text-dark);
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 0.5rem;
-    }
-    
-    .section-content {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.75rem;
-    }
-    
-    .section-content.full {
-        grid-template-columns: 1fr;
-    }
-    
-    .section-item {
-        font-size: 0.85rem;
-    }
-    
-    .section-label {
-        color: #999;
-        font-size: 0.75rem;
-        margin-bottom: 0.2rem;
-    }
-    
-    .section-value {
-        color: var(--text-dark);
-        font-weight: 500;
-    }
-    
-
-    
-
-    
-    .component-group {
-        margin-bottom: 1.5rem;
-    }
-    
-    .component-group h3 {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: #666;
-        margin-bottom: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .component-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        align-items: center;
-        padding: 0.75rem;
-        background: var(--bg-light);
-        border-radius: 8px;
-        margin-bottom: 0.75rem;
-    }
-    
-    .demo-form-group {
-        margin-bottom: 1rem;
-    }
-    
-    .demo-form-group label {
-        display: block;
-        margin-bottom: 0.35rem;
-        font-weight: 500;
-        color: var(--text-dark);
-        font-size: 0.9rem;
-    }
-    
-    /* Estilos para secciones de información (Ficha/Consulta/Hospitalización) */
-    .section-header-with-edit {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-    
-    .section-header-with-edit h2 {
-        border-bottom: none !important;
-        padding-bottom: 0 !important;
-        margin-bottom: 0 !important;
-    }
-    
-    .btn-edit-icon {
-        background: none;
-        border: none;
-        color: var(--primary-color);
-        cursor: pointer;
-        font-size: 1.1rem;
-        padding: 0.3rem 0.5rem;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .btn-edit-icon:hover {
-        color: var(--primary-hover);
-        transform: scale(1.15);
-    }
-    
-    .personal-info .info,
-    .resumen-clinico .info,
-    .responsable-section .info {
-        display: block;
-    }
-    
-    .personal-info .info-row,
-    .resumen-clinico .info-row,
-    .responsable-section .info-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.75rem;
-        border-bottom: 1px solid var(--border-color);
-        padding: 0.75rem 0;
-        margin-bottom: 0;
-    }
-    
-    .personal-info .info-row:last-child,
-    .resumen-clinico .info-row:last-child,
-    .responsable-section .info-row:last-child {
-        border-bottom: none;
-    }
-    
-    .personal-info .info-row.info-row-full,
-    .resumen-clinico .info-row.info-row-full,
-    .responsable-section .info-row.info-row-full {
-        grid-template-columns: 1fr;
-    }
-    
-    .personal-info .info-row p,
-    .resumen-clinico .info-row p,
-    .responsable-section .info-row p {
-        margin: 0;
-        font-size: 0.9rem;
-    }
-    
-    .personal-info .info-row strong,
-    .resumen-clinico .info-row strong,
-    .responsable-section .info-row strong {
-        color: var(--text-dark);
-        font-weight: 600;
-    }
-
-    /* NAVBAR DE NAVEGACIÓN */
-    .navbar-secciones {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 260px;
-        height: 100vh;
-        background: white;
-        border-right: 2px solid var(--primary-color);
-        padding: 1.5rem 0;
-        box-shadow: var(--shadow-md);
-        z-index: 100;
-        overflow-y: auto;
-    }
-
-    .navbar-secciones-content {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        padding: 0;
-    }
-
-    .nav-section-btn {
-        padding: 1rem 1.5rem;
-        background: transparent;
-        border: none;
-        border-left: 3px solid transparent;
-        color: #666;
-        font-weight: 600;
-        font-size: 0.95rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        white-space: nowrap;
-        text-decoration: none;
-        text-align: left;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .nav-section-btn:hover {
-        color: var(--primary-color);
-        background: var(--bg-light);
-    }
-
-    .nav-section-btn.active {
-        color: var(--primary-color);
-        border-left-color: var(--primary-color);
-        background: var(--bg-light);
-    }
-
-    /* TOOLTIPS */
-    .tooltip-trigger {
-        position: relative;
-        cursor: help;
-        border-bottom: 1px dotted var(--primary-color);
-    }
-
-    .tooltip-trigger:hover::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        bottom: 125%;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--text-dark);
-        color: white;
-        padding: 0.75rem 1rem;
-        border-radius: 6px;
-        font-size: 0.85rem;
-        white-space: nowrap;
-        z-index: 1000;
-        box-shadow: var(--shadow-md);
-        pointer-events: none;
-        animation: tooltipFade 0.3s ease;
-    }
-
-    .tooltip-trigger:hover::before {
-        content: '';
-        position: absolute;
-        bottom: 115%;
-        left: 50%;
-        transform: translateX(-50%);
-        border: 6px solid transparent;
-        border-top-color: var(--text-dark);
-        z-index: 1000;
-    }
-
-    /* Enlaces inline visibles y consistentes */
-    .link-inline {
-        color: var(--primary-color);
-        text-decoration: underline;
-        font-weight: 600;
-    }
-    .link-inline:hover {
-        color: var(--primary-hover);
-    }
-
-    @keyframes tooltipFade {
-        from {
-            opacity: 0;
-            bottom: 120%;
-        }
-        to {
-            opacity: 1;
-            bottom: 125%;
-        }
-    }
-
-    /* MODALS */
-    .modal-overlay {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0);
-        z-index: 2000;
-        opacity: 0;
-        pointer-events: none;
-        transition: all 0.3s ease;
-    }
-
-    .modal-overlay.show {
-        background: rgba(0, 0, 0, 0.5);
-        opacity: 1;
-        pointer-events: auto;
-    }
-
-    .ui-modal {
-        background: white;
-        border-radius: 12px;
-        box-shadow: var(--shadow-md);
-        max-height: 90vh;
-        overflow-y: auto;
-        transform: scale(0.9);
-        transition: transform 0.3s ease;
-        position: relative;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .modal-overlay.show .ui-modal {
-        transform: scale(1);
-    }
-
-    .ui-modal.ui-modal-lg {
-        width: 90%;
-        max-width: 600px;
-    }
-
-    .ui-modal.ui-modal-sm {
-        width: 90%;
-        max-width: 350px;
-    }
-
-    .ui-modal-header {
-        padding: 1.5rem;
-        border-bottom: 1px solid var(--border-color);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .ui-modal-header h2 {
-        margin: 0;
-        font-size: 1.3rem;
-        color: var(--text-dark);
-    }
-
-    .ui-modal-close {
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        color: #666;
-        cursor: pointer;
-        padding: 0;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 6px;
-        transition: all 0.2s ease;
-    }
-
-    .ui-modal-close:hover {
-        background: var(--bg-light);
-        color: var(--primary-color);
-    }
-
-    .ui-modal-body {
-        padding: 1.5rem;
-        color: #666;
-        line-height: 1.6;
-    }
-
-    .ui-modal-footer {
-        padding: 1.5rem;
-        border-top: 1px solid var(--border-color);
-        display: flex;
-        gap: 0.75rem;
-        justify-content: flex-end;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-        to {
-            opacity: 1;
-        }
-    }
-
-    @keyframes slideUp {
-        from {
-            transform: translateY(30px);
-            opacity: 0;
-        }
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
-
-    /* Layout principal con sidebar */
-    #main-content {
-        margin-left: 260px;
-        padding-top: 1.5rem;
-        min-height: 100vh;
-    }
-</style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid" style="padding: 0;">
+<div class="container-fluid p-0">
     <!-- BARRA DE NAVEGACIÓN DE SECCIONES (SIDEBAR) -->
     <div class="navbar-secciones">
         <div class="navbar-secciones-content">
@@ -581,35 +29,35 @@
     </div>
 
     <div id="main-content">
-        <div class="row" style="margin: 0;">
-            <div class="col-12" style="padding: 0;">
+        <div class="row m-0">
+            <div class="col-12 p-0">
                 <!-- TÍTULO PRINCIPAL -->
-                <div style="padding: 1.5rem;">
+                <div class="p-1-5">
                     <div class="preview-section">
-                        <h2 style="margin: 0; border: none; padding-bottom: 0;">
+                        <h2 class="preview-title">
                             <i class="fas fa-palette"></i> Estándares UI - Sistema de Diseño
                         </h2>
                     </div>
-                </div>            <div style="padding: 1.5rem;">
+                </div>            <div class="p-1-5">
             
             <!-- RUEDAS/TOGGLES DE SELECCIÓN (Como en Pacientes) -->
             <div id="selectores" class="preview-section">
                 <h2><i class="fas fa-sliders-h"></i> Selectores (Wheels/Toggles)</h2>
-                <p style="color: #666; font-size: 0.85rem; margin: 0 0 1.5rem 0; padding: 0.5rem 0.75rem; background: var(--bg-light); border-radius: 6px; border-left: 3px solid var(--primary-color);"><span class="tooltip-trigger" data-tooltip="Botones toggle para selección en grid 2 columnas"><code style="background: white; padding: 0.2rem 0.4rem; border-radius: 3px;">class="btn btn-primary/secondary"</code></span></p>
+                <p class="preview-description"><span class="tooltip-trigger" data-tooltip="Botones toggle para selección en grid 2 columnas"><code>class="btn btn-primary/secondary"</code></span></p>
                 
                 <div class="component-group">
                     <h3>Selector de Edad - Grid 2 Columnas</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
-                        <button class="btn btn-primary" style="padding: 0.75rem; border-radius: 6px; text-align: center;">
+                    <div class="grid-2col">
+                        <button class="btn btn-primary btn-selector">
                             <i class="fas fa-paw"></i> 0-2 años
                         </button>
-                        <button class="btn btn-secondary" style="padding: 0.75rem; border-radius: 6px; text-align: center;">
+                        <button class="btn btn-secondary btn-selector">
                             <i class="fas fa-paw"></i> 2-5 años
                         </button>
-                        <button class="btn btn-secondary" style="padding: 0.75rem; border-radius: 6px; text-align: center;">
+                        <button class="btn btn-secondary btn-selector">
                             <i class="fas fa-paw"></i> 5-10 años
                         </button>
-                        <button class="btn btn-secondary" style="padding: 0.75rem; border-radius: 6px; text-align: center;">
+                        <button class="btn btn-secondary btn-selector">
                             <i class="fas fa-paw"></i> +10 años
                         </button>
                     </div>
@@ -617,11 +65,11 @@
                 
                 <div class="component-group">
                     <h3>Selector de Modo Propietario</h3>
-                    <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
-                        <button class="btn btn-primary" style="flex: 1; padding: 0.75rem;">
+                    <div class="flex-gap-075">
+                        <button class="btn btn-primary btn-flex-1">
                             <i class="fas fa-user-circle"></i> Propietario
                         </button>
-                        <button class="btn btn-secondary" style="flex: 1; padding: 0.75rem;">
+                        <button class="btn btn-secondary btn-flex-1">
                             <i class="fas fa-clinic-medical"></i> Clínica
                         </button>
                     </div>
@@ -631,7 +79,7 @@
             <!-- PESTAÑAS/TABS -->
             <div id="pestanas" class="preview-section">
                 <h2><i class="fas fa-folder-open"></i> Pestañas (Tabs)</h2>
-                <p style="color: #666; font-size: 0.85rem; margin: 0 0 1.5rem 0; padding: 0.5rem 0.75rem; background: var(--bg-light); border-radius: 6px; border-left: 3px solid var(--primary-color);"><span class="tooltip-trigger" data-tooltip="Contenido organizado en tabs intercambiables"><code style="background: white; padding: 0.2rem 0.4rem; border-radius: 3px;">class="tabs-group" + class="tab-button" + id="tab-xxx"</code></span></p>
+                <p class="preview-description"><span class="tooltip-trigger" data-tooltip="Contenido organizado en tabs intercambiables"><code>class="tabs-group" + class="tab-button" + id="tab-xxx"</code></span></p>
                 
                 <div class="tabs-group">
                     <button class="tab-button active" data-tab="tab-general">
@@ -648,10 +96,10 @@
                     </button>
                 </div>
                 
-                <div class="tab-content" id="tab-general" style="display: block; padding: 1rem; background: var(--bg-light); border-radius: 8px;">
-                    <h4 style="margin-top: 0; color: var(--text-dark);">Información General</h4>
+                <div class="tab-content tab-content-box" id="tab-general">
+                    <h4>Información General</h4>
                     <p>Esta pestaña muestra la información general del paciente:</p>
-                    <ul style="margin-bottom: 0;">
+                    <ul>
                         <li>Datos básicos del animal</li>
                         <li>Información del propietario</li>
                         <li>Alergias y condiciones especiales</li>
@@ -659,30 +107,30 @@
                     </ul>
                 </div>
                 
-                <div class="tab-content" id="tab-historial" style="display: none; padding: 1rem; background: var(--bg-light); border-radius: 8px;">
-                    <h4 style="margin-top: 0; color: var(--text-dark);">Historial Médico</h4>
+                <div class="tab-content tab-content-box" id="tab-historial" class="d-none-toggle">
+                    <h4>Historial Médico</h4>
                     <p>Registro completo de consultas y tratamientos:</p>
-                    <ul style="margin-bottom: 0;">
+                    <ul>
                         <li><strong>15/01/2024</strong> - Revisión General (Dra. Marta González)</li>
                         <li><strong>10/01/2024</strong> - Vacunación (Dr. Carlos López)</li>
                         <li><strong>05/01/2024</strong> - Limpieza Dental (Dra. Marta González)</li>
                     </ul>
                 </div>
                 
-                <div class="tab-content" id="tab-medicinas" style="display: none; padding: 1rem; background: var(--bg-light); border-radius: 8px;">
-                    <h4 style="margin-top: 0; color: var(--text-dark);">Medicinas Actuales</h4>
+                <div class="tab-content tab-content-box" id="tab-medicinas" class="d-none-toggle">
+                    <h4>Medicinas Actuales</h4>
                     <p>Medicamentos prescritos:</p>
-                    <ul style="margin-bottom: 0;">
+                    <ul>
                         <li><strong>Amoxicilina</strong> - 500mg cada 8 horas (Alergia verificada)</li>
                         <li><strong>Dipirona</strong> - 1000mg cada 6 horas</li>
                         <li><strong>Vitamina B12</strong> - 1000 UI diarias</li>
                     </ul>
                 </div>
                 
-                <div class="tab-content" id="tab-documentos" style="display: none; padding: 1rem; background: var(--bg-light); border-radius: 8px;">
-                    <h4 style="margin-top: 0; color: var(--text-dark);">Documentos</h4>
+                <div class="tab-content tab-content-box" id="tab-documentos" class="d-none-toggle">
+                    <h4>Documentos</h4>
                     <p>Archivos asociados al paciente:</p>
-                    <ul style="margin-bottom: 0;">
+                    <ul>
                         <li>📄 Examen de laboratorio - 10/01/2024</li>
                         <li>📷 Radiografía de cadera - 05/01/2024</li>
                         <li>📋 Certificado de vacunación - 15/01/2024</li>
@@ -693,9 +141,9 @@
             <!-- TABLA DE PACIENTES CON ACCIONES -->
             <div id="tabla" class="preview-section">
                 <h2><i class="fas fa-table"></i> Tabla de Pacientes</h2>
-                <p style="color: #666; font-size: 0.85rem; margin: 0 0 1.5rem 0; padding: 0.5rem 0.75rem; background: var(--bg-light); border-radius: 6px; border-left: 3px solid var(--primary-color);"><span class="tooltip-trigger" data-tooltip="Tabla con menú de acciones flotante"><code style="background: white; padding: 0.2rem 0.4rem; border-radius: 3px;">class="vet-table" + manage-wheel system</code></span></p>
+                <p class="preview-description"><span class="tooltip-trigger" data-tooltip="Tabla con menú de acciones flotante"><code>class="vet-table" + manage-wheel system</code></span></p>
                 
-                <div style="overflow-x: auto; border-radius: 16px; overflow: hidden;">
+                <div class="table-overflow">
                     <table class="vet-table">
                         <thead>
                             <tr>
@@ -719,7 +167,7 @@
                                         <button type="button" onclick="toggleWheel(this)">
                                             <i class="fas fa-cog"></i>
                                         </button>
-                                        <div class="manage-options" style="display:none;">
+                                        <div class="manage-options">
                                             <button type="button"><i class="fas fa-eye"></i> Ver</button>
                                             <button type="button"><i class="fas fa-edit"></i> Editar</button>
                                             <button type="button"><i class="fas fa-trash"></i> Eliminar</button>
@@ -738,7 +186,7 @@
                                         <button type="button" onclick="toggleWheel(this)">
                                             <i class="fas fa-cog"></i>
                                         </button>
-                                        <div class="manage-options" style="display:none;">
+                                        <div class="manage-options">
                                             <button type="button"><i class="fas fa-eye"></i> Ver</button>
                                             <button type="button"><i class="fas fa-edit"></i> Editar</button>
                                             <button type="button"><i class="fas fa-trash"></i> Eliminar</button>
@@ -757,7 +205,7 @@
                                         <button type="button" onclick="toggleWheel(this)">
                                             <i class="fas fa-cog"></i>
                                         </button>
-                                        <div class="manage-options" style="display:none;">
+                                        <div class="manage-options">
                                             <button type="button"><i class="fas fa-eye"></i> Ver</button>
                                             <button type="button"><i class="fas fa-edit"></i> Editar</button>
                                             <button type="button"><i class="fas fa-trash"></i> Eliminar</button>
@@ -768,6 +216,62 @@
                         </tbody>
                     </table>
                 </div>
+            <!-- TABLA CON SELECTOR DE INSUMOS/SERVICIOS -->
+            <div class="preview-section">
+                <h2><i class="fas fa-list-check"></i> Tabla con Selector (Insumos/Servicios)</h2>
+                <p class="preview-description"><span class="tooltip-trigger" data-tooltip="Buscar a la izquierda, seleccionar a la derecha"><code>Columna de búsqueda + Columna de seleccionados</code></span></p>
+                
+                <div class="grid-2col-selector">
+                    <!-- PANEL IZQUIERDO: BÚSQUEDA -->
+                    <div class="panel-search">
+                        <h3>Insumos Disponibles</h3>
+                        
+                        <div class="vet-search mb-1-5">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="search-insumos" placeholder="Buscar insumo...">
+                        </div>
+                        
+                        <div class="insumo-list">
+                            <div class="insumo-item" onclick="addInsumo('Vacuna antirrábica', this)">
+                                <i class="fas fa-capsules"></i>
+                                <span>Vacuna antirrábica</span>
+                            </div>
+                            <div class="insumo-item" onclick="addInsumo('Jeringa 3ml', this)">
+                                <i class="fas fa-syringe"></i>
+                                <span>Jeringa 3ml</span>
+                            </div>
+                            <div class="insumo-item" onclick="addInsumo('Gasas estériles', this)">
+                                <i class="fas fa-bandage"></i>
+                                <span>Gasas estériles</span>
+                            </div>
+                            <div class="insumo-item" onclick="addInsumo('Aguja 21G', this)">
+                                <i class="fas fa-needle"></i>
+                                <span>Aguja 21G</span>
+                            </div>
+                            <div class="insumo-item" onclick="addInsumo('Desinfectante', this)">
+                                <i class="fas fa-spray-can"></i>
+                                <span>Desinfectante</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- PANEL DERECHO: SELECCIONADOS -->
+                    <div class="panel-selected">
+                        <h3>Insumos Seleccionados</h3>
+                        
+                        <div id="selected-insumos" class="selected-container">
+                            <div class="selected-empty">
+                                <i class="fas fa-inbox"></i>
+                                <p>Selecciona insumos</p>
+                            </div>
+                        </div>
+                        
+                        <button id="clear-btn" class="btn btn-danger btn-clear" class="d-none-toggle" onclick="clearInsumos()">
+                            <i class="fas fa-trash"></i> Limpiar
+                        </button>
+                    </div>
+                </div>
+            </div>
             <!-- INFORMACIÓN ESTILO FICHA/CONSULTA/HOSPITALIZACIÓN -->
             <div class="preview-section">
                 <h2><i class="fas fa-file-medical"></i> Información Estilo Ficha/Consulta</h2>
@@ -776,7 +280,7 @@
                     <div class="col-md-6">
                         <div class="section personal-info">
                             <div class="section-header-with-edit">
-                                <h2 style="font-size: 1rem; margin: 0;">Información General</h2>
+                                <h2 class="section-title-sm">Información General</h2>
                                 <button class="btn-edit-icon" title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </button>
@@ -806,26 +310,26 @@
                     
                     <div class="col-md-6">
                         <div class="section resumen-clinico">
-                            <h2 style="font-size: 1rem; margin: 0 0 1rem 0;">Antecedentes Médicos Críticos</h2>
+                            <h2 class="section-title-mb">Antecedentes Médicos Críticos</h2>
                             <div class="info">
                                 <div class="info-row">
-                                    <div style="width: 100%; margin-bottom: 1rem;">
-                                        <p><strong><i class="bi bi-exclamation-triangle" style="color: #dc3545;"></i> Alergias:</strong> 
+                                    <div class="medical-info-item">
+                                        <p><strong><i class="bi bi-exclamation-triangle icon-danger"></i> Alergias:</strong> 
                                             <span>Penicilina, Lácteos</span>
                                         </p>
                                     </div>
-                                    <div style="width: 100%; margin-bottom: 1rem;">
-                                        <p><strong><i class="bi bi-heart-pulse" style="color: #e74c3c;"></i> Enfermedades Crónicas:</strong> 
+                                    <div class="medical-info-item">
+                                        <p><strong><i class="bi bi-heart-pulse icon-heart"></i> Enfermedades Crónicas:</strong> 
                                             <span>Insuficiencia renal leve</span>
                                         </p>
                                     </div>
-                                    <div style="width: 100%; margin-bottom: 1rem;">
-                                        <p><strong><i class="bi bi-capsule" style="color: #3498db;"></i> Medicamentos Actuales:</strong> 
+                                    <div class="medical-info-item">
+                                        <p><strong><i class="bi bi-capsule icon-info"></i> Medicamentos Actuales:</strong> 
                                             <span>Dipirona 500mg c/8hs</span>
                                         </p>
                                     </div>
-                                    <div style="width: 100%;">
-                                        <p><strong><i class="bi bi-hospital" style="color: #9b59b6;"></i> Cirugías Previas:</strong> 
+                                    <div class="medical-info-item">
+                                        <p><strong><i class="bi bi-hospital icon-purple"></i> Cirugías Previas:</strong> 
                                             <span>Esterilización (2021)</span>
                                         </p>
                                     </div>
@@ -835,11 +339,11 @@
                     </div>
                 </div>
                 
-                <div class="row" style="margin-top: 1.5rem;">
+                <div class="row" class="mt-1-5">
                     <div class="col-md-12">
                         <div class="section responsable-section">
                             <div class="section-header-with-edit">
-                                <h2 style="font-size: 1rem; margin: 0;">Responsable</h2>
+                                <h2 class="section-title-sm">Responsable</h2>
                                 <button class="btn-edit-icon" title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </button>
@@ -862,7 +366,7 @@
             </div>
             <div id="tarjetas" class="preview-section">
                 <h2><i class="fas fa-layer-group"></i> Tarjetas - Tipo Compacta</h2>
-                <p style="color: #666; font-size: 0.85rem; margin: 0 0 1.5rem 0; padding: 0.5rem 0.75rem; background: var(--bg-light); border-radius: 6px; border-left: 3px solid var(--primary-color);"><span class="tooltip-trigger" data-tooltip="Tarjetas compactas para mostrar información rápida"><code style="background: white; padding: 0.2rem 0.4rem; border-radius: 3px;">class="info-card" + class="info-card-header"</code></span></p>
+                <p class="preview-description"><span class="tooltip-trigger" data-tooltip="Tarjetas compactas para mostrar información rápida"><code>class="info-card" + class="info-card-header"</code></span></p>
                 
                 <div class="compact-cards-grid">
                     <div class="info-card">
@@ -1001,7 +505,7 @@
                         <div class="section-item">
                             <div class="section-label">Acceso</div>
                             <div class="section-value">
-                                <button class="btn btn-sm btn-primary" style="padding: 0.25rem 0.5rem;">
+                                <button class="btn btn-sm btn-primary" class="btn-p-sm">
                                     <i class="fas fa-download"></i> Ver
                                 </button>
                             </div>
@@ -1016,16 +520,16 @@
                 
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <div class="info-card" style="height: 100%;">
+                        <div class="info-card" class="h-full">
                             <div class="info-card-header">
                                 <h4>Información de Contacto</h4>
                             </div>
-                            <div style="padding: 0.75rem 0;">
-                                <div class="info-item" style="margin-bottom: 0.5rem;">
+                            <div class="info-card-body">
+                                <div class="info-item" class="mb-05">
                                     <div class="info-label">Propietario</div>
                                     <div class="info-value">Juan García López</div>
                                 </div>
-                                <div class="info-item" style="margin-bottom: 0.5rem;">
+                                <div class="info-item" class="mb-05">
                                     <div class="info-label">Teléfono</div>
                                     <div class="info-value"><a href="tel:+34123456789" class="link-inline">+34 123 456 789</a></div>
                                 </div>
@@ -1038,16 +542,16 @@
                     </div>
                     
                     <div class="col-md-4 mb-3">
-                        <div class="info-card" style="height: 100%;">
+                        <div class="info-card" class="h-full">
                             <div class="info-card-header">
                                 <h4>Estado de Salud</h4>
                             </div>
-                            <div style="padding: 0.75rem 0;">
-                                <div class="info-item" style="margin-bottom: 0.5rem;">
+                            <div class="info-card-body">
+                                <div class="info-item" class="mb-05">
                                     <div class="info-label">Vacunas</div>
                                     <div class="info-value"><span class="badge badge-success">Al día</span></div>
                                 </div>
-                                <div class="info-item" style="margin-bottom: 0.5rem;">
+                                <div class="info-item" class="mb-05">
                                     <div class="info-label">Desparasitado</div>
                                     <div class="info-value"><span class="badge badge-success">Sí</span></div>
                                 </div>
@@ -1060,16 +564,16 @@
                     </div>
                     
                     <div class="col-md-4 mb-3">
-                        <div class="info-card" style="height: 100%;">
+                        <div class="info-card" class="h-full">
                             <div class="info-card-header">
                                 <h4>Alergias y Notas</h4>
                             </div>
-                            <div style="padding: 0.75rem 0;">
-                                <div class="info-item" style="margin-bottom: 0.5rem;">
+                            <div class="info-card-body">
+                                <div class="info-item" class="mb-05">
                                     <div class="info-label">Alergias</div>
                                     <div class="info-value">Penicilina, Lácteos</div>
                                 </div>
-                                <div class="info-item" style="margin-bottom: 0.5rem;">
+                                <div class="info-item" class="mb-05">
                                     <div class="info-label">Temperamento</div>
                                     <div class="info-value">Dócil</div>
                                 </div>
@@ -1086,7 +590,7 @@
             <!-- BOTONES DE ACCIÓN -->
             <div id="botones" class="preview-section">
                 <h2><i class="fas fa-hand-pointer"></i> Botones Estándar</h2>
-                <p style="color: #666; font-size: 0.85rem; margin: 0 0 1.5rem 0; padding: 0.5rem 0.75rem; background: var(--bg-light); border-radius: 6px; border-left: 3px solid var(--primary-color);"><span class="tooltip-trigger" data-tooltip="Tres variantes: primario (verde), secundario, peligro"><code style="background: white; padding: 0.2rem 0.4rem; border-radius: 3px;">class="btn btn-primary/secondary/danger"</code></span></p>
+                <p class="preview-description"><span class="tooltip-trigger" data-tooltip="Tres variantes: primario (verde), secundario, peligro"><code>class="btn btn-primary/secondary/danger"</code></span></p>
                 
                 <div class="component-group">
                     <h3>Botones Principales</h3>
@@ -1100,7 +604,7 @@
                 <div class="component-group">
                     <h3>Botones Secundarios</h3>
                     <div class="component-row">
-                        <button class="btn btn-secondary"><i class="fas fa-times"></i> Cancelar</button>
+                        <button class="btn btn-cancel"><i class="fas fa-times"></i> Cancelar</button>
                         <button class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Volver</button>
                     </div>
                 </div>
@@ -1126,7 +630,7 @@
             <!-- FORMULARIOS -->
             <div id="formularios" class="preview-section">
                 <h2><i class="fas fa-form"></i> Elementos de Formulario</h2>
-                <p style="color: #666; font-size: 0.85rem; margin: 0 0 1.5rem 0; padding: 0.5rem 0.75rem; background: var(--bg-light); border-radius: 6px; border-left: 3px solid var(--primary-color);"><span class="tooltip-trigger" data-tooltip="Inputs, selects, textareas con estilos unificados"><code style="background: white; padding: 0.2rem 0.4rem; border-radius: 3px;">class="form-control" + type="text/email/date/select"</code></span></p>
+                <p class="preview-description"><span class="tooltip-trigger" data-tooltip="Inputs, selects, textareas con estilos unificados"><code>class="form-control" + type="text/email/date/select"</code></span></p>
                 
                 <div class="row">
                     <div class="col-md-6">
@@ -1169,52 +673,120 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- INPUTS CON VALIDACIÓN -->
+                <div class="section-divider">
+                    <h3 class="mb-1rem"><i class="fas fa-check-circle"></i> Inputs con Validación</h3>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="demo-form-group">
+                                <label for="input-rut">RUT (ej: 12345678-9)</label>
+                                <input 
+                                    type="text" 
+                                    id="input-rut" 
+                                    class="form-control" 
+                                    placeholder="12345678-9"
+                                    oninput="validateRUT(this)"
+                                    maxlength="12">
+                                <small id="rut-feedback" class="feedback-text"></small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="demo-form-group">
+                                <label for="input-phone">Teléfono (ej: +56912345678)</label>
+                                <input 
+                                    type="tel" 
+                                    id="input-phone" 
+                                    class="form-control" 
+                                    placeholder="+56912345678"
+                                    oninput="validatePhone(this)"
+                                    maxlength="15">
+                                <small id="phone-feedback" class="feedback-text"></small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="demo-form-group">
+                                <label for="input-email">Correo (ej: usuario@ejemplo.com)</label>
+                                <input 
+                                    type="email" 
+                                    id="input-email" 
+                                    class="form-control" 
+                                    placeholder="usuario@ejemplo.com"
+                                    oninput="validateEmail(this)">
+                                <small id="email-feedback" class="feedback-text"></small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: var(--bg-light); border-radius: 6px; border-left: 3px solid var(--info-color);">
+                        <p >
+                            <i class="fas fa-info-circle" class="text-info"></i>
+                            <strong>RUT:</strong> Formato chileno (ej: 12345678-9)<br>
+                            <strong>Teléfono:</strong> Números y símbolos (+, -, espacio) permitidos<br>
+                            <strong>Correo:</strong> Validación de formato email estándar
+                        </p>
+                    </div>
+                </div>
             </div>
             
             <!-- ALERTAS -->
             <div id="alertas" class="preview-section">
                 <h2><i class="fas fa-exclamation-circle"></i> Alertas</h2>
-                <p style="color: #666; font-size: 0.85rem; margin: 0 0 1.5rem 0; padding: 0.5rem 0.75rem; background: var(--bg-light); border-radius: 6px; border-left: 3px solid var(--primary-color);"><span class="tooltip-trigger" data-tooltip="Cuatro tipos: éxito, información, advertencia, peligro"><code style="background: white; padding: 0.2rem 0.4rem; border-radius: 3px;">class="alert alert-success/info/warning/danger"</code></span></p>
+                <p class="preview-description"><span class="tooltip-trigger" data-tooltip="Cuatro tipos: éxito, información, advertencia, peligro"><code>class="alert alert-success/info/warning/danger"</code></span></p>
                 
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i> <strong>Éxito!</strong> Operación completada correctamente.
+                <!-- Botones para mostrar alertas -->
+                <div class="btn-group-flex">
+                    <button class="btn btn-primary" onclick="showAlert('success')"><i class="fas fa-check-circle"></i> Mostrar Éxito</button>
+                    <button class="btn btn-primary" onclick="showAlert('info')"><i class="fas fa-info-circle"></i> Mostrar Info</button>
+                    <button class="btn btn-primary" onclick="showAlert('warning')"><i class="fas fa-exclamation-triangle"></i> Mostrar Advertencia</button>
+                    <button class="btn btn-primary" onclick="showAlert('danger')"><i class="fas fa-times-circle"></i> Mostrar Error</button>
                 </div>
-                
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> <strong>Información:</strong> Información importante para el usuario.
-                </div>
-                
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle"></i> <strong>Advertencia:</strong> Por favor, revise esta información.
-                </div>
-                
-                <div class="alert alert-danger">
-                    <i class="fas fa-times-circle"></i> <strong>Error:</strong> Ocurrió un error al procesar la solicitud.
+
+                <!-- Contenedor de alertas -->
+                <div id="alerts-container" class="alert-container">
+                    <div id="alert-success" class="alert alert-success" class="d-none-toggle alert-animated">
+                        <i class="fas fa-check-circle"></i> <strong>Éxito!</strong> Operación completada correctamente.
+                    </div>
+                    
+                    <div id="alert-info" class="alert alert-info" class="d-none-toggle alert-animated">
+                        <i class="fas fa-info-circle"></i> <strong>Información:</strong> Información importante para el usuario.
+                    </div>
+                    
+                    <div id="alert-warning" class="alert alert-warning" class="d-none-toggle alert-animated">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Advertencia:</strong> Por favor, revise esta información.
+                    </div>
+                    
+                    <div id="alert-danger" class="alert alert-danger" class="d-none-toggle alert-animated">
+                        <i class="fas fa-times-circle"></i> <strong>Error:</strong> Ocurrió un error al procesar la solicitud.
+                    </div>
                 </div>
             </div>
 
             <!-- TOOLTIPS -->
             <div id="tooltips" class="preview-section">
                 <h2><i class="fas fa-comment-dots"></i> Tooltips</h2>
-                <p style="color: #666; font-size: 0.85rem; margin: 0 0 1.5rem 0; padding: 0.5rem 0.75rem; background: var(--bg-light); border-radius: 6px; border-left: 3px solid var(--primary-color);"><span class="tooltip-trigger" data-tooltip="Pequeños textos de ayuda al pasar el mouse"><code style="background: white; padding: 0.2rem 0.4rem; border-radius: 3px;">class="tooltip-trigger" data-tooltip="Tu texto"</code></span></p>
+                <p class="preview-description"><span class="tooltip-trigger" data-tooltip="Pequeños textos de ayuda al pasar el mouse"><code>class="tooltip-trigger" data-tooltip="Tu texto"</code></span></p>
                 
                 <div class="component-group">
                     <h3>Tooltip Básico - Arriba (Por defecto)</h3>
-                    <p style="margin-bottom: 1rem;">
-                        Pasa el mouse sobre: <span class="tooltip-trigger" data-tooltip="Este es un tooltip básico"><strong style="color: var(--primary-color); cursor: help;">información</strong></span>
+                    <p class="mb-1rem">
+                        Pasa el mouse sobre: <span class="tooltip-trigger" data-tooltip="Este es un tooltip básico"><strong class="text-primary" style="cursor: help;">información</strong></span>
                     </p>
                 </div>
 
                 <div class="component-group">
                     <h3>Tooltips en Botones</h3>
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <button class="btn btn-primary" title="Guardar cambios" style="position: relative;">
+                    <div class="tooltip-showcase">
+                        <button class="btn btn-primary" title="Guardar cambios" class="pos-rel">
                             <span class="tooltip-trigger" data-tooltip="Guardar cambios"><i class="fas fa-save"></i> Guardar</span>
                         </button>
-                        <button class="btn btn-secondary" style="position: relative;">
+                        <button class="btn btn-secondary" class="pos-rel">
                             <span class="tooltip-trigger" data-tooltip="Deshacer última acción"><i class="fas fa-undo"></i> Deshacer</span>
                         </button>
-                        <button class="btn btn-secondary" style="position: relative;">
+                        <button class="btn btn-secondary" class="pos-rel">
                             <span class="tooltip-trigger" data-tooltip="Rehacer última acción"><i class="fas fa-redo"></i> Rehacer</span>
                         </button>
                     </div>
@@ -1222,22 +794,22 @@
 
                 <div class="component-group">
                     <h3>Tooltips en Iconos</h3>
-                    <div style="display: flex; gap: 2rem; margin-bottom: 1rem;">
-                        <div style="text-align: center;">
-                            <i class="fas fa-question-circle" style="font-size: 2rem; color: var(--primary-color); cursor: help;" class="tooltip-trigger" data-tooltip="Necesitas ayuda?"></i>
-                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                    <div class="tooltip-showcase-icons">
+                        <div class="tooltip-icon-box">
+                            <i class="fas fa-question-circle" class="tooltip-icon" class="tooltip-trigger" data-tooltip="Necesitas ayuda?"></i>
+                            <p class="tooltip-icon-label">
                                 <span class="tooltip-trigger" data-tooltip="Información disponible">Ayuda</span>
                             </p>
                         </div>
-                        <div style="text-align: center;">
+                        <div class="tooltip-icon-box">
                             <i class="fas fa-info-circle" style="font-size: 2rem; color: #17a2b8; cursor: help;" class="tooltip-trigger" data-tooltip="Más detalles sobre esta sección"></i>
-                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                            <p class="tooltip-icon-label">
                                 <span class="tooltip-trigger" data-tooltip="Detalles adicionales">Información</span>
                             </p>
                         </div>
-                        <div style="text-align: center;">
+                        <div class="tooltip-icon-box">
                             <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ffc107; cursor: help;" class="tooltip-trigger" data-tooltip="Ten cuidado con esto"></i>
-                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                            <p class="tooltip-icon-label">
                                 <span class="tooltip-trigger" data-tooltip="Precaución requerida">Advertencia</span>
                             </p>
                         </div>
@@ -1246,8 +818,8 @@
 
                 <div class="component-group">
                     <h3>Tooltips con Contenido Largo</h3>
-                    <p style="margin-bottom: 1rem;">
-                        Pasa el mouse sobre: <span class="tooltip-trigger" data-tooltip="Este es un tooltip con más información para el usuario"><strong style="color: var(--primary-color); cursor: help;">texto de ayuda</strong></span>
+                    <p class="mb-1rem">
+                        Pasa el mouse sobre: <span class="tooltip-trigger" data-tooltip="Este es un tooltip con más información para el usuario"><strong class="text-primary" style="cursor: help;">texto de ayuda</strong></span>
                     </p>
                 </div>
             </div>
@@ -1255,7 +827,7 @@
             <!-- MODALS -->
             <div id="modals" class="preview-section">
                 <h2><i class="fas fa-window-maximize"></i> Modals</h2>
-                <p style="color: #666; font-size: 0.85rem; margin: 0 0 1.5rem 0; padding: 0.5rem 0.75rem; background: var(--bg-light); border-radius: 6px; border-left: 3px solid var(--primary-color);"><span class="tooltip-trigger" data-tooltip="Ventanas modales para diálogos y confirmaciones"><code style="background: white; padding: 0.2rem 0.4rem; border-radius: 3px;">class="modal-overlay show" + class="ui-modal ui-modal-lg/sm"</code></span></p>
+                <p class="preview-description"><span class="tooltip-trigger" data-tooltip="Ventanas modales para diálogos y confirmaciones"><code>class="modal-overlay show" + class="ui-modal ui-modal-lg/sm"</code></span></p>
 
                 <!-- Modal Completo Estático -->
                 <div class="component-group">
@@ -1272,7 +844,7 @@
                                 <p style="margin-bottom: 0;">Los modales son perfectos para confirmar acciones, solicitar información o mostrar detalles.</p>
                             </div>
                             <div style="padding: 1.5rem; border-top: 1px solid var(--border-color); display: flex; gap: 0.75rem; justify-content: flex-end;">
-                                <button class="btn btn-secondary" style="padding: 0.5rem 1rem;">Cancelar</button>
+                                <button class="btn btn-cancel" style="padding: 0.5rem 1rem;">Cancelar</button>
                                 <button class="btn btn-primary" style="padding: 0.5rem 1rem;">Confirmar</button>
                             </div>
                         </div>
@@ -1306,7 +878,7 @@
                 <div class="component-group">
                     <h3>Modals Funcionales</h3>
                     <p style="margin-bottom: 1rem; font-size: 0.9rem; color: #999;">Haz click para abrir</p>
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <div class="tooltip-showcase">
                         <button class="btn btn-primary" onclick="openModal('modalLarge')">
                             <i class="fas fa-expand"></i> Abrir Modal Grande
                         </button>
@@ -1339,7 +911,7 @@
                         </div>
                     </div>
                     <div class="ui-modal-footer">
-                        <button class="btn btn-secondary" onclick="closeModal(null, 'modalLarge')">Cancelar</button>
+                        <button class="btn btn-cancel" onclick="closeModal(null, 'modalLarge')">Cancelar</button>
                         <button class="btn btn-primary" onclick="closeModal(null, 'modalLarge')">Guardar Cambios</button>
                     </div>
                 </div>
@@ -1353,14 +925,14 @@
                         <button class="ui-modal-close" onclick="closeModal(null, 'modalSmall')"><i class="fas fa-times"></i></button>
                     </div>
                     <div class="ui-modal-body" style="text-align: center;">
-                        <div style="margin-bottom: 1rem;">
+                        <div class="mb-1rem">
                             <i class="fas fa-exclamation-triangle" style="font-size: 2.5rem; color: #ffc107;"></i>
                         </div>
                         <p><strong>¿Estás seguro?</strong></p>
                         <p style="margin-bottom: 0; font-size: 0.9rem; color: #999;">Esta acción no se puede deshacer.</p>
                     </div>
                     <div class="ui-modal-footer">
-                        <button class="btn btn-secondary" onclick="closeModal(null, 'modalSmall')">Cancelar</button>
+                        <button class="btn btn-cancel" onclick="closeModal(null, 'modalSmall')">Cancelar</button>
                         <button class="btn btn-danger" onclick="closeModal(null, 'modalSmall')">Eliminar</button>
                     </div>
                 </div>
@@ -1369,7 +941,7 @@
             <!-- COMPONENTES AVANZADOS POR CATEGORÍAS -->
             <div id="componentes-avanzados" class="preview-section">
                 <h2><i class="fas fa-layer-group"></i> Componentes Estándar Avanzados</h2>
-                <p style="color: #666; font-size: 0.85rem; margin: 0 0 1.5rem 0; padding: 0.5rem 0.75rem; background: var(--bg-light); border-radius: 6px; border-left: 3px solid var(--primary-color);"><span class="tooltip-trigger" data-tooltip="Componentes reutilizables para casos específicos"><code style="background: white; padding: 0.2rem 0.4rem; border-radius: 3px;">component-group + custom HTML structure</code></span></p>
+                <p class="preview-description"><span class="tooltip-trigger" data-tooltip="Componentes reutilizables para casos específicos"><code>component-group + custom HTML structure</code></span></p>
                 
                 <div class="advanced-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem;">
                     <!-- Búsqueda y Filtros -->
@@ -1385,7 +957,7 @@
                         </div>
                         <div style="background: #f9f9f9; border: 1px dashed var(--border-color); border-radius: 8px; padding: 1rem;">
                             <!-- Búsqueda Principal: FILTER-SEARCH -->
-                            <div style="margin-bottom: 1rem;">
+                            <div class="mb-1rem">
                                 <label style="font-size: 0.75rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.75rem;">
                                     <i class="fas fa-search"></i> Buscar (filter-search)
                                 </label>
@@ -1601,13 +1173,13 @@
             <!-- GUÍA DE INTEGRACIÓN -->
             <div id="guia" class="preview-section">
                 <h2><i class="fas fa-book"></i> Guía de Integración e Importación</h2>
-                <p style="color: #666; font-size: 0.85rem; margin: 0 0 1.5rem 0; padding: 0.5rem 0.75rem; background: var(--bg-light); border-radius: 6px; border-left: 3px solid var(--primary-color);"><span class="tooltip-trigger" data-tooltip="Importa el CSS base y vincula los archivos estáticos"><code style="background: white; padding: 0.2rem 0.4rem; border-radius: 3px;">@import "estilos_generales.css" + link static files</code></span></p>
+                <p class="preview-description"><span class="tooltip-trigger" data-tooltip="Importa el CSS base y vincula los archivos estáticos"><code>@import "estilos_generales.css" + link static files</code></span></p>
                 
                 <div class="row">
                     <div class="col-md-6">
-                        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary-color);">
-                            <h4 style="margin-top: 0; color: var(--text-dark);">1. Importar Estilos Base</h4>
-                            <pre style="background: white; padding: 1rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto;"><code>{# En tu template #}
+                        <div class="guide-box">
+                            <h4>1. Importar Estilos Base</h4>
+                            <pre><code>{# En tu template #}
 {% load static %}
 
 &lt;!-- En block extra_css --&gt;
@@ -1617,9 +1189,9 @@
                     </div>
                     
                     <div class="col-md-6">
-                        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary-color);">
-                            <h4 style="margin-top: 0; color: var(--text-dark);">2. Usar Componentes Estándar</h4>
-                            <pre style="background: white; padding: 1rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto;"><code>{# Botones #}
+                        <div class="guide-box">
+                            <h4>2. Usar Componentes Estándar</h4>
+                            <pre><code>{# Botones #}
 &lt;button class="btn btn-primary"&gt;
   &lt;i class="fas fa-save"&gt;&lt;/i&gt; Guardar
 &lt;/button&gt;
@@ -1630,11 +1202,11 @@
                     </div>
                 </div>
                 
-                <div class="row" style="margin-top: 1.5rem;">
+                <div class="row" class="mt-1-5">
                     <div class="col-md-6">
-                        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary-color);">
-                            <h4 style="margin-top: 0; color: var(--text-dark);">3. Secciones de Información</h4>
-                            <pre style="background: white; padding: 1rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto;"><code>&lt;div class="section"&gt;
+                        <div class="guide-box">
+                            <h4>3. Secciones de Información</h4>
+                            <pre><code>&lt;div class="section"&gt;
   &lt;h3&gt;Título&lt;/h3&gt;
   &lt;div class="info"&gt;
     &lt;div class="info-row"&gt;
@@ -1648,14 +1220,14 @@
                     </div>
                     
                     <div class="col-md-6">
-                        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary-color);">
-                            <h4 style="margin-top: 0; color: var(--text-dark);">4. Sistema de Wheels (Acciones)</h4>
-                            <pre style="background: white; padding: 1rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto;"><code>&lt;div class="manage-wheel"&gt;
+                        <div class="guide-box">
+                            <h4>4. Sistema de Wheels (Acciones)</h4>
+                            <pre><code>&lt;div class="manage-wheel"&gt;
   &lt;button onclick="toggleWheel(this)"&gt;
     &lt;i class="fas fa-cog"&gt;&lt;/i&gt;
   &lt;/button&gt;
   &lt;div class="manage-options" 
-    style="display:none;"&gt;
+    class="d-none-toggle"&gt;
     &lt;button&gt;Opción 1&lt;/button&gt;
   &lt;/div&gt;
 &lt;/div&gt;</code></pre>
@@ -1664,8 +1236,8 @@
                 </div>
                 
                 <div style="margin-top: 1.5rem; background: #e8f5e9; padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary-color);">
-                    <h4 style="margin-top: 0; color: var(--text-dark);">📌 Variables CSS Disponibles</h4>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <h4>📌 Variables CSS Disponibles</h4>
+                    <div class="guide-variables-grid">
                         <div style="font-size: 0.9rem;">
                             <strong>Colores:</strong><br>
                             <code style="background: white; padding: 0.25rem 0.5rem; border-radius: 3px;">--primary-color: #afe1af</code><br>
@@ -1682,11 +1254,11 @@
                 </div>
                 
                 <div style="margin-top: 1.5rem; background: #fff3e0; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #ff9800;">
-                    <h4 style="margin-top: 0; color: var(--text-dark);">⚠️ Archivo JavaScript Requerido</h4>
+                    <h4>⚠️ Archivo JavaScript Requerido</h4>
                     <p style="margin: 0.5rem 0; font-size: 0.9rem;">Para que funcionen los <strong>manage-wheels</strong>, asegúrate de incluir en tu template base la función <code>toggleWheel()</code> del archivo:</p>
-                    <pre style="background: white; padding: 1rem; border-radius: 4px; font-size: 0.85rem;"><code>static/js/inventario/gestion_wheel.js</code></pre>
+                    <pre><code>static/js/inventario/gestion_wheel.js</code></pre>
                     <p style="margin: 0.5rem 0; font-size: 0.9rem;">O agrega el script directamente en tu template:</p>
-                    <pre style="background: white; padding: 1rem; border-radius: 4px; font-size: 0.75rem; overflow-x: auto;"><code>&lt;script src="{% static 'js/inventario/gestion_wheel.js' %}"&gt;&lt;/script&gt;</code></pre>
+                    <pre><code>&lt;script src="{% static 'js/inventario/gestion_wheel.js' %}"&gt;&lt;/script&gt;</code></pre>
                 </div>
             </div>
                 <h2><i class="fas fa-paint-brush"></i> Paleta de Colores</h2>
@@ -1780,6 +1352,31 @@ function toggleActionDetails(row) {
     }
 }
 
+// Toggle selector con cambio de color según selección
+document.addEventListener('DOMContentLoaded', function() {
+    // Selectores tipo grid o flex con botones que cambian de color
+    const selectorGroups = document.querySelectorAll('[style*="grid"][style*="grid-template-columns"], [style*="flex"]');
+    
+    selectorGroups.forEach(group => {
+        const buttons = group.querySelectorAll('.btn');
+        if (buttons.length > 1 && buttons[0].classList.contains('btn-primary')) {
+            // Este es un selector group
+            buttons.forEach((button, index) => {
+                button.addEventListener('click', function(e) {
+                    // Remover clases de todos los botones
+                    buttons.forEach(btn => {
+                        btn.classList.remove('btn-primary');
+                        btn.classList.add('btn-secondary');
+                    });
+                    // Agregar clase al seleccionado
+                    this.classList.remove('btn-secondary');
+                    this.classList.add('btn-primary');
+                });
+            });
+        }
+    });
+});
+
 // Función para abrir modals
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
@@ -1846,9 +1443,183 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Función para mostrar/ocultar alertas
+function showAlert(type) {
+    const alertId = `alert-${type}`;
+    const alertElement = document.getElementById(alertId);
+    
+    if (alertElement) {
+        if (alertElement.style.display === 'none') {
+            alertElement.style.display = 'block';
+            // Auto-ocultar después de 5 segundos
+            setTimeout(() => {
+                alertElement.style.display = 'none';
+            }, 5000);
+        } else {
+            alertElement.style.display = 'none';
+        }
+    }
+}
+
+// Validación de RUT (formato chileno: 12345678-9)
+function validateRUT(input) {
+    let value = input.value.toUpperCase();
+    const feedback = document.getElementById('rut-feedback');
+    
+    // Solo permitir números, guión y K
+    value = value.replace(/[^0-9K-]/g, '');
+    
+    // Agregar guión automáticamente si tiene 8 dígitos
+    if (value.length >= 8 && !value.includes('-')) {
+        value = value.slice(0, 8) + '-' + value.slice(8);
+    }
+    
+    input.value = value;
+    
+    // Validar formato
+    const rutRegex = /^\d{7,8}-[0-9K]$/;
+    if (value === '') {
+        feedback.textContent = '';
+        input.style.borderColor = 'var(--border-color)';
+    } else if (rutRegex.test(value)) {
+        feedback.textContent = '✓ RUT válido';
+        feedback.style.color = 'var(--success-color)';
+        input.style.borderColor = 'var(--success-color)';
+    } else {
+        feedback.textContent = '✗ Formato: 12345678-9';
+        feedback.style.color = 'var(--danger-color)';
+        input.style.borderColor = 'var(--danger-color)';
+    }
+}
+
+// Validación de Teléfono (+56912345678)
+function validatePhone(input) {
+    let value = input.value;
+    const feedback = document.getElementById('phone-feedback');
+    
+    // Solo permitir números y +
+    value = value.replace(/[^0-9+]/g, '');
+    input.value = value;
+    
+    // Validar formato exacto: +56 + 9 dígitos = +56912345678
+    const phoneRegex = /^\+56\d{9}$/;
+    if (value === '') {
+        feedback.textContent = '';
+        input.style.borderColor = 'var(--border-color)';
+    } else if (phoneRegex.test(value)) {
+        feedback.textContent = '✓ Teléfono válido';
+        feedback.style.color = 'var(--success-color)';
+        input.style.borderColor = 'var(--success-color)';
+    } else {
+        const digitsCount = value.replace(/\D/g, '').length;
+        feedback.textContent = `✗ Formato: +56912345678 (${value.length}/12)`;
+        feedback.style.color = 'var(--danger-color)';
+        input.style.borderColor = 'var(--danger-color)';
+    }
+}
+
+// Validación de Email
+function validateEmail(input) {
+    const value = input.value;
+    const feedback = document.getElementById('email-feedback');
+    
+    // Validar formato email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (value === '') {
+        feedback.textContent = '';
+        input.style.borderColor = 'var(--border-color)';
+    } else if (emailRegex.test(value)) {
+        feedback.textContent = '✓ Email válido';
+        feedback.style.color = 'var(--success-color)';
+        input.style.borderColor = 'var(--success-color)';
+    } else {
+        feedback.textContent = '✗ Formato: usuario@ejemplo.com';
+        feedback.style.color = 'var(--danger-color)';
+        input.style.borderColor = 'var(--danger-color)';
+    }
+}
+
+// Selector de Insumos/Servicios
+const selectedInsumos = [];
+
+function addInsumo(insumo, element) {
+    if (selectedInsumos.includes(insumo)) {
+        selectedInsumos.splice(selectedInsumos.indexOf(insumo), 1);
+    } else {
+        selectedInsumos.push(insumo);
+    }
+    
+    renderSelectedInsumos();
+    updateElementStyle(element);
+}
+
+function removeInsumo(insumo) {
+    selectedInsumos.splice(selectedInsumos.indexOf(insumo), 1);
+    renderSelectedInsumos();
+}
+
+function renderSelectedInsumos() {
+    const container = document.getElementById('selected-insumos');
+    const clearBtn = document.getElementById('clear-btn');
+    
+    if (selectedInsumos.length === 0) {
+        container.innerHTML = `
+            <div class="selected-empty">
+                <i class="fas fa-inbox"></i>
+                <p>Selecciona insumos</p>
+            </div>
+        `;
+        clearBtn.style.display = 'none';
+        return;
+    }
+    
+    clearBtn.style.display = 'block';
+    
+    container.innerHTML = selectedInsumos.map((insumo, index) => `
+        <div class="selected-item">
+            <div class="selected-item-content">
+                <span class="selected-item-number">${index + 1}.</span>
+                <i class="fas fa-check-circle selected-item-icon"></i>
+                <span>${insumo}</span>
+            </div>
+            <button class="btn-edit-icon" onclick="removeInsumo('${insumo}'); renderSelectedInsumos();">
+                <i class="fas fa-times text-danger"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function clearInsumos() {
+    selectedInsumos.length = 0;
+    renderSelectedInsumos();
+    document.querySelectorAll('.insumo-item').forEach(item => {
+        item.style.opacity = '1';
+        item.style.background = 'white';
+    });
+}
+
+function updateElementStyle(element) {
+    if (selectedInsumos.includes(element.textContent.trim().split('\n')[1]?.trim() || element.textContent.trim())) {
+        element.style.opacity = '1';
+        element.style.background = 'rgba(175, 225, 175, 0.2)';
+    } else {
+        element.style.opacity = '1';
+        element.style.background = 'white';
+    }
+}
 </script>
 {% endblock %}
             </div>
         </div>
     </div>
     </div>
+
+
+
+
+
+
+
+
+
