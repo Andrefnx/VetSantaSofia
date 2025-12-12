@@ -238,15 +238,15 @@ const hospitalizacionesManager = {
         const especiePac = this.getPacienteEspecie();
         const pesoPac = this.getPacientePeso();
 
-        // Filtro de especie: solo excluir si especie es estrictamente incompatible
-        if (insumo.especie && especiePac && String(insumo.especie).toLowerCase() !== especiePac) {
-            // Excepción: si es un medicamento general o sin especie específica, permitir
-            const especieInsumo = String(insumo.especie).toLowerCase();
-            if (especieInsumo !== 'perro' && especieInsumo !== 'gato' && especieInsumo !== '') {
-                return false;
-            }
+        // Filtro de especie: solo aplicar si el insumo tiene especie específica (perro/gato)
+        const especieInsumo = insumo.especie ? String(insumo.especie).toLowerCase().trim() : '';
+        
+        // Si especie está vacía o es 'todos', disponible para todos
+        if (!especieInsumo || especieInsumo === '' || especieInsumo === 'todos') {
+            // Sin restricción de especie
+        } else if (especiePac && especieInsumo !== especiePac) {
             // Advertencia: medicamento de otra especie pero se permite (veterinario decide)
-            console.warn(`⚠️ ${insumo.nombre} es para ${insumo.especie}, paciente es ${especiePac}`);
+            console.warn(`⚠️ ${insumo.nombre} es para ${especieInsumo}, paciente es ${especiePac}`);
         }
 
         // Filtro de peso: solo para pipetas con rango estricto
