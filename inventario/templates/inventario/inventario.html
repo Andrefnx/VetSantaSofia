@@ -6,30 +6,8 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/custom/style_inventario.css' %}" type="text/css" media="all">
 <style>
-/* Estilos específicos para modal de niveles de stock */
-#modalConfigNiveles .vet-custom-modal {
-    max-width: 420px !important;
-}
-
-#modalConfigNiveles .vet-custom-modal-body {
-    padding: 20px !important;
-}
-
-#modalConfigNiveles .vet-custom-modal-footer {
-    padding: 16px 20px !important;
-    padding-top: 0 !important;
-}
-
-/* Estilos específicos para modal de modificar stock */
-#modalModificarStock .vet-custom-modal {
-    max-width: 350px !important;
-}
-
-#modalModificarStock .vet-modal-body {
-    padding: 20px !important;
-}
-
-#modalModificarStock .btn-stock-action {
+/* Estilos para botones de acción de stock */
+.btn-stock-action {
     width: 40px !important;
     height: 40px !important;
     padding: 0 !important;
@@ -53,6 +31,15 @@
 <button type="button" class="vet-btn vet-btn-primary" onclick="abrirModalNuevoProducto()">
     <i class="fas fa-plus"></i> Nuevo Producto
 </button>
+{% if mostrar_archivados %}
+<a href="{% url 'inventario:inventario' %}" class="vet-btn" style="background-color: #10b981;">
+    <i class="fas fa-box-open"></i> Ver Productos Activos
+</a>
+{% else %}
+<a href="{% url 'inventario:inventario' %}?archivados=true" class="vet-btn" style="background-color: #6b7280;">
+    <i class="fas fa-archive"></i> Ver Archivados
+</a>
+{% endif %}
 {% endblock %}
 
 {% block table_columns %}
@@ -407,7 +394,7 @@
 
 <!-- Modal: Confirmar Eliminación -->
 <div class="vet-modal-overlay hide" id="modalEliminarProducto">
-    <div class="vet-custom-modal" style="max-width: 500px;">
+    <div class="vet-modal-compact">
         <div class="vet-modal-content">
             <div class="vet-custom-modal-title" style="background: #b71c1c;">
                 <h3><i class="fas fa-trash-alt"></i> Eliminar Producto</h3>
@@ -415,11 +402,11 @@
             </div>
             <div class="vet-modal-body">
                 <p id="eliminarProductoMensaje" class="text-center mb-4">¿Estás seguro que deseas eliminar este producto?</p>
-                <div class="text-center">
+                <div style="display: flex; justify-content: center; gap: 10px;">
                     <button type="button" class="vet-btn-cancel" onclick="closeEliminarProductoModal()">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
-                    <button type="button" class="vet-btn-grey error" id="btnConfirmarEliminarProducto" onclick="eliminarProductoConfirmado()">
+                    <button type="button" class="vet-btn-delete" id="btnConfirmarEliminarProducto" onclick="eliminarProductoConfirmado()">
                         <i class="bi bi-trash3-fill"></i> Eliminar
                     </button>
                 </div>
@@ -430,7 +417,7 @@
 
 <!-- Modal: Modificar Stock -->
 <div class="vet-modal-overlay hide" id="modalModificarStock">
-    <div class="vet-custom-modal" style="width: 95%;">
+    <div class="vet-modal-compact">
         <div class="vet-modal-content">
             <div class="vet-custom-modal-title">
                 <h3><i class="fas fa-boxes"></i> Modificar Stock</h3>
@@ -468,7 +455,7 @@
 
 <!-- Modal: Configurar Niveles de Stock -->
 <div class="vet-modal-overlay hide" id="modalConfigNiveles">
-    <div class="vet-custom-modal" style="width: 95%;">
+    <div class="vet-modal-compact">
         <div class="vet-modal-content">
             <div class="vet-custom-modal-title">
                 <h2><i class="fas fa-sliders-h"></i> Niveles de stock - <span id="productoNombreNiveles"></span></h2>

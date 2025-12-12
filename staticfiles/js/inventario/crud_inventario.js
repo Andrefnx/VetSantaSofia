@@ -848,9 +848,13 @@ function abrirModalEliminarProducto(btn) {
 }
 
 function eliminarProductoConfirmado() {
-    if (!productoAEliminarId) return;
+    if (!productoAEliminarId) {
+        console.error('No hay producto seleccionado para eliminar');
+        return;
+    }
 
-    // ⭐ URL CORREGIDA
+    console.log('Eliminando producto ID:', productoAEliminarId);
+    
     fetch(`/inventario/${productoAEliminarId}/eliminar/`, {
         method: "POST",
         headers: { 
@@ -858,15 +862,33 @@ function eliminarProductoConfirmado() {
             'X-CSRFToken': getCookie('csrftoken')
         },
     })
-        .then((r) => r.json())
-        .then((resp) => {
-            if (resp.success) location.reload();
-            else alert('Error: ' + (resp.error || 'No se pudo eliminar'));
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al eliminar el producto');
-        });
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        
+        if (data.success) {
+            // Mostrar mensaje de éxito
+            alert(data.message || 'Producto eliminado exitosamente');
+            
+            // Cerrar modal
+            closeEliminarProductoModal();
+            
+            // Recargar página para actualizar la tabla
+            location.reload();
+        } else {
+            // Mostrar error específico
+            alert('Error: ' + (data.error || 'No se pudo eliminar el producto'));
+            closeEliminarProductoModal();
+        }
+    })
+    .catch(error => {
+        console.error('Error en la petición:', error);
+        alert('Error de conexión al intentar eliminar el producto');
+        closeEliminarProductoModal();
+    });
 }
 
 /* ============================================================

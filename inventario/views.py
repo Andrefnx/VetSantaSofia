@@ -238,79 +238,86 @@ def detalle_insumo(request, insumo_id):
         }, status=500)
 
 @csrf_exempt
-@login_required
 def eliminar_insumo(request, insumo_id):
-    """Vista para eliminar un insumo - usando SQL puro"""
-    if request.method == 'POST':
-        try:
-            from django.db import connection
+    """Vista para eliminar/archivar un insumo"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+    
+    print(f"🗑️ Procesando eliminación de insumo ID: {insumo_id}")
+    
+    from django.db import connection
+    
+    try:
+        with connection.cursor() as cursor:
+            # Desactivar foreign keys temporalmente (SQLite)
+            cursor.execute("PRAGMA foreign_keys = OFF")
             
-            # Usar solo SQL directo sin tocar Django ORM para evitar tabla servicios
-            with connection.cursor() as cursor:
-                # Obtener el nombre del insumo antes de eliminarlo
-                cursor.execute("SELECT medicamento FROM inventario WHERE idInventario = %s", [insumo_id])
-                row = cursor.fetchone()
-                
-                if not row:
-                    return JsonResponse({
-                        'success': False,
-                        'error': 'Insumo no encontrado'
-                    }, status=404)
-                
-                nombre_insumo = row[0]
-                
-                # Primero verificar si hay referencias en las tablas ManyToMany
+            # 1. Verificar existencia
+            cursor.execute("SELECT medicamento FROM inventario WHERE idInventario = %s", [insumo_id])
+            row = cursor.fetchone()
+            
+            if not row:
+                return JsonResponse({'success': False, 'error': 'Producto no encontrado'}, status=404)
+            
+            nombre_insumo = row[0]
+            print(f"📦 Producto: {nombre_insumo}")
+            
+            # 2. Verificar relaciones (solo tablas que existen)
+            relaciones = []
+            tablas = [
+                ('clinica_consulta_medicamentos', 'insumo_id', 'consultas'),
+                ('clinica_hospitalizacion_insumos', 'insumo_id', 'hospitalizaciones'),  
+                ('clinica_cirugia_medicamentos', 'insumo_id', 'cirugías'),
+            ]
+            
+            for tabla, col, desc in tablas:
                 try:
-                    cursor.execute("SELECT COUNT(*) FROM clinica_consulta_medicamentos WHERE insumo_id = %s", [insumo_id])
-                    consultas_count = cursor.fetchone()[0]
-                    
-                    cursor.execute("SELECT COUNT(*) FROM clinica_hospitalizacion_insumos WHERE insumo_id = %s", [insumo_id])
-                    hosp_count = cursor.fetchone()[0]
-                    
-                    cursor.execute("SELECT COUNT(*) FROM clinica_cirugia_medicamentos WHERE insumo_id = %s", [insumo_id])
-                    cirugia_count = cursor.fetchone()[0]
-                    
-                    if consultas_count > 0 or hosp_count > 0 or cirugia_count > 0:
-                        relaciones = []
-                        if consultas_count > 0:
-                            relaciones.append(f"{consultas_count} consulta(s)")
-                        if hosp_count > 0:
-                            relaciones.append(f"{hosp_count} hospitalización(ones)")
-                        if cirugia_count > 0:
-                            relaciones.append(f"{cirugia_count} cirugía(s)")
-                        
-                        return JsonResponse({
-                            'success': False,
-                            'error': f'No se puede eliminar "{nombre_insumo}" porque está siendo usado en: {", ".join(relaciones)}'
-                        }, status=400)
-                except Exception as check_error:
-                    # Si hay error al verificar, continuar con la eliminación
-                    print(f"⚠️ Error al verificar relaciones: {str(check_error)}")
+                    cursor.execute(f"SELECT COUNT(*) FROM {tabla} WHERE {col} = %s", [insumo_id])
+                    count = cursor.fetchone()[0]
+                    if count > 0:
+                        relaciones.append(f"{count} {desc}")
+                except:
+                    pass  # Tabla no existe, ignorar
+            
+            # 3. Si está en uso, ARCHIVAR en lugar de eliminar
+            if relaciones:
+                cursor.execute("UPDATE inventario SET archivado = 1 WHERE idInventario = %s", [insumo_id])
+                print(f"📁 Archivado (en uso en: {", ".join(relaciones)}): {nombre_insumo}")
                 
-                # Eliminar el insumo directamente con SQL
-                cursor.execute("DELETE FROM inventario WHERE idInventario = %s", [insumo_id])
+                # Reactivar foreign keys
+                cursor.execute("PRAGMA foreign_keys = ON")
+                
+                return JsonResponse({
+                    'success': True,
+                    'archived': True,
+                    'message': f'El producto "{nombre_insumo}" está siendo usado en {", ".join(relaciones)}. Se ha archivado en lugar de eliminarse.'
+                })
+            
+            # 4. Si NO está en uso, eliminar permanentemente
+            cursor.execute("DELETE FROM inventario WHERE idInventario = %s", [insumo_id])
+            print(f"✅ Eliminado permanentemente: {nombre_insumo}")
+            
+            # Reactivar foreign keys
+            cursor.execute("PRAGMA foreign_keys = ON")
             
             return JsonResponse({
                 'success': True,
-                'message': f'Insumo "{nombre_insumo}" eliminado exitosamente'
+                'archived': False,
+                'message': f'Producto "{nombre_insumo}" eliminado exitosamente'
             })
-            
-        except Exception as e:
-            print(f"❌ Error al eliminar insumo ID {insumo_id}: {str(e)}")
-            print(f"❌ Tipo de error: {type(e).__name__}")
-            traceback.print_exc()
-            
-            # Mensaje más claro para el usuario
-            error_msg = 'No se pudo eliminar el insumo.'
-            
-            if 'FOREIGN KEY constraint failed' in str(e) or 'foreign key' in str(e).lower():
-                error_msg = 'No se puede eliminar este insumo porque está siendo usado en otros registros.'
-            else:
-                error_msg = f'Error: {str(e)}'
-            
-            return JsonResponse({'success': False, 'error': error_msg}, status=400)
     
-    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+    except Exception as e:
+        print(f"❌ ERROR CRÍTICO: {str(e)}")
+        print(f"❌ Tipo de excepción: {type(e).__name__}")
+        import traceback
+        traceback.print_exc()
+        
+        # Devolver el error específico para debugging
+        return JsonResponse({
+            'success': False,
+            'error': f'Error: {str(e)}',
+            'error_type': type(e).__name__
+        }, status=400)
 
 @csrf_exempt
 @login_required
@@ -493,8 +500,20 @@ def api_productos(request):
 @login_required
 def inventario_view(request):
     """Vista principal del inventario"""
-    insumos = Insumo.objects.all()
-    return render(request, 'inventario/inventario.html', {'insumos': insumos})
+    # Obtener parámetro para mostrar archivados
+    mostrar_archivados = request.GET.get('archivados', 'false') == 'true'
+    
+    # Filtrar productos archivados
+    if mostrar_archivados:
+        insumos = Insumo.objects.filter(archivado=True).order_by('medicamento')
+    else:
+        insumos = Insumo.objects.filter(archivado=False).order_by('medicamento')
+    
+    context = {
+        'insumos': insumos,
+        'mostrar_archivados': mostrar_archivados
+    }
+    return render(request, 'inventario/inventario.html', context)
 
 @login_required
 def productos_api(request):

@@ -71,12 +71,33 @@
     pointer-events: auto !important;
 }
 
-.vet-modal-overlay.show .vet-custom-modal {
+/* Modal compacto - para acciones simples con poca información */
+.vet-modal-compact {
+    position: relative !important;
+    width: 95% !important;
+    max-width: 400px !important;
+    max-height: 90vh !important;
+    background-color: #fff !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.18), 0 6px 20px 0 rgba(0, 0, 0, 0.19) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    transform: scale(0.98) !important;
+    opacity: 0 !important;
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    z-index: 999999 !important;
+    pointer-events: auto !important;
+}
+
+.vet-modal-overlay.show .vet-custom-modal,
+.vet-modal-overlay.show .vet-modal-compact {
     opacity: 1 !important;
     transform: translateY(0) scale(1) !important;
 }
 
-.vet-modal-overlay.hide .vet-custom-modal {
+.vet-modal-overlay.hide .vet-custom-modal,
+.vet-modal-overlay.hide .vet-modal-compact {
     opacity: 0 !important;
     transform: scale(0.98) !important;
 }
@@ -148,15 +169,22 @@
     color: white !important;
 }
 
-.vet-btn-grey.error {
+.vet-btn-grey.error,
+.vet-btn-delete {
     background: #dc3545 !important;
     color: white !important;
+    border: none !important;
+    padding: 10px 16px !important;
+    border-radius: 6px !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s ease !important;
 }
 
-.vet-btn-grey.error:hover {
+.vet-btn-grey.error:hover,
+.vet-btn-delete:hover {
     background: #c82333 !important;
     color: #fff !important;
-    transition: 0.3s all ease !important;
 }
 
 .vet-btn-grey.success {

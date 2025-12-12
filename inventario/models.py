@@ -33,6 +33,7 @@ class Insumo(models.Model):
     stock_minimo = models.IntegerField(default=10, help_text="Nivel mínimo de stock (rojo)")
     stock_medio = models.IntegerField(default=20, help_text="Nivel medio de stock (naranja)")
     precio_venta = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    archivado = models.BooleanField(default=False, help_text="Producto archivado (no se muestra en listado activo)")
     
     # Campos para dosis - MEJORADOS
     # Para líquidos
