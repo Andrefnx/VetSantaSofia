@@ -522,18 +522,40 @@ function saveNewPaciente() {
     });
 }
 
-// Modal eliminar
-function abrirModalEliminarPaciente(button, pacienteId) {
-    const modal = document.getElementById('modalEliminarPaciente');
+// Cambiar estado de pestañas
+function cambiarEstadoPacientes(estado) {
+    window.location.href = `/pacientes/?estado=${estado}`;
+}
+
+// Modal archivar/restaurar
+function abrirModalArchivarPaciente(button, pacienteId, esRestaurar = false) {
+    const modal = document.getElementById('modalArchivarPaciente');
+    const titulo = document.getElementById('tituloArchivar');
+    const mensaje = document.getElementById('archivarPacienteMensaje');
+    const btnTexto = document.getElementById('btnTextoArchivar');
+    const modalTitle = modal.querySelector('.vet-custom-modal-title');
+    
+    if (esRestaurar) {
+        titulo.textContent = 'Restaurar Paciente';
+        mensaje.textContent = '¿Estás seguro que deseas restaurar este paciente? Volverá a aparecer en la lista de activos.';
+        btnTexto.textContent = 'Restaurar';
+        modalTitle.style.background = '#2e7d32';
+    } else {
+        titulo.textContent = 'Archivar Paciente';
+        mensaje.textContent = '¿Estás seguro que deseas archivar este paciente? Podrás restaurarlo desde la pestaña de archivados.';
+        btnTexto.textContent = 'Archivar';
+        modalTitle.style.background = '#f57c00';
+    }
+    
     modal.classList.remove('hide');
     setTimeout(() => {
         modal.classList.add('show');
     }, 10);
-    document.getElementById('btnConfirmarEliminarPaciente').setAttribute('data-paciente-id', pacienteId);
+    document.getElementById('btnConfirmarArchivarPaciente').setAttribute('data-paciente-id', pacienteId);
 }
 
-function closeEliminarPacienteModal() {
-    const modal = document.getElementById('modalEliminarPaciente');
+function closeArchivarPacienteModal() {
+    const modal = document.getElementById('modalArchivarPaciente');
     modal.classList.remove('show');
     setTimeout(() => {
         modal.classList.add('hide');
@@ -579,8 +601,8 @@ document.addEventListener('DOMContentLoaded', function() {
         fechaInput.addEventListener('input', mostrarEdadCalculada);
     }
     
-    // ===== MODAL ELIMINAR PACIENTE =====
-    const btnConfirmar = document.getElementById('btnConfirmarEliminarPaciente');
+    // ===== MODAL ARCHIVAR/RESTAURAR PACIENTE =====
+    const btnConfirmar = document.getElementById('btnConfirmarArchivarPaciente');
     if (btnConfirmar) {
         btnConfirmar.addEventListener('click', function() {
             const pacienteId = this.getAttribute('data-paciente-id');
@@ -590,7 +612,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            fetch(`/pacientes/eliminar/${pacienteId}/`, {
+            fetch(`/pacientes/archivar/${pacienteId}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -600,8 +622,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Paciente eliminado exitosamente');
-                    closeEliminarPacienteModal();
+                    alert(data.message);
+                    closeArchivarPacienteModal();
                     setTimeout(() => {
                         window.location.reload();
                     }, 400);
@@ -611,7 +633,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error al eliminar el paciente');
+                alert('Error al procesar la solicitud');
             });
         });
     }

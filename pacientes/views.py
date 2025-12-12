@@ -118,9 +118,19 @@ def validar_propietario_duplicado(nombre, apellido, telefono, email, propietario
 
 @login_required
 def pacientes_view(request):
-    """Vista para listar todos los pacientes"""
-    pacientes = Paciente.objects.select_related('propietario').filter(activo=True).order_by('-fecha_registro')
-    context = {'pacientes': pacientes}
+    """Vista para listar todos los pacientes (activos o archivados)"""
+    # Obtener el estado desde el parámetro GET (por defecto: activos)
+    estado = request.GET.get('estado', 'activos')
+    
+    if estado == 'archivados':
+        pacientes = Paciente.objects.select_related('propietario').filter(activo=False).order_by('-fecha_registro')
+    else:
+        pacientes = Paciente.objects.select_related('propietario').filter(activo=True).order_by('-fecha_registro')
+    
+    context = {
+        'pacientes': pacientes,
+        'estado_actual': estado
+    }
     return render(request, 'pacientes/pacientes.html', context)
 
 @login_required
@@ -487,15 +497,18 @@ def editar_paciente(request, paciente_id):
 
 @csrf_exempt
 @login_required
-def eliminar_paciente(request, paciente_id):
-    """Vista para eliminar (marcar como inactivo) un paciente"""
+def archivar_paciente(request, paciente_id):
+    """Vista para archivar/desarchivar un paciente"""
     paciente = get_object_or_404(Paciente, id=paciente_id)
     
     if request.method == 'POST':
         try:
-            paciente.activo = False
+            # Alternar el estado activo
+            paciente.activo = not paciente.activo
             paciente.save()
-            return JsonResponse({'success': True, 'message': 'Paciente eliminado exitosamente'})
+            
+            mensaje = 'Paciente archivado exitosamente' if not paciente.activo else 'Paciente restaurado exitosamente'
+            return JsonResponse({'success': True, 'message': mensaje})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
     
