@@ -45,6 +45,42 @@ let calendarioState = {
     feriados: [] // [{date: 'YYYY-MM-DD', title: '', irrenunciable: bool}]
 };
 
+// Helper para calcular hora final de un bloque (start_time + 15 min)
+function calcularHoraFinalBloque(horaInicio) {
+    const [hora, minuto] = horaInicio.split(':').map(Number);
+    let minutoFinal = minuto + 15;
+    let horaFinal = hora;
+    if (minutoFinal >= 60) {
+        minutoFinal -= 60;
+        horaFinal += 1;
+    }
+    return `${String(horaFinal).padStart(2, '0')}:${String(minutoFinal).padStart(2, '0')}`;
+}
+
+// Helper para verificar si un bloque está en el pasado
+function esBloqueEnPasado(fechaAgenda, horaBloque) {
+    const ahora = new Date();
+    const [year, month, day] = fechaAgenda.split('-');
+    const [hora, minuto] = horaBloque.split(':').map(Number);
+    const fechaBloque = new Date(year, month - 1, day, hora, minuto);
+    return fechaBloque < ahora;
+}
+
+// Helper para obtener el índice del bloque más cercano a la hora actual
+function obtenerIndiceBloqueActual(bloques, fechaAgenda) {
+    const ahora = new Date();
+    const [year, month, day] = fechaAgenda.split('-');
+    
+    for (let i = 0; i < bloques.length; i++) {
+        const [hora, minuto] = bloques[i].start_time.split(':').map(Number);
+        const fechaBloque = new Date(year, month - 1, day, hora, minuto);
+        if (fechaBloque >= ahora) {
+            return i;
+        }
+    }
+    return -1; // Todos los bloques están en el pasado
+}
+
 // Calcular fecha de Pascua (algoritmo de Meeus/Jones/Butcher)
 function calcularPascua(year) {
     const a = year % 19;
@@ -729,6 +765,10 @@ function renderizarBloquesVeterinario(vetId, data) {
     container.dataset.veterinarioId = vetId;
     container.dataset.veterinario = data.veterinario;
     
+    // Obtener fecha de la agenda
+    const fechaAgenda = agendaState.fecha || calendarioState.fechaSeleccionada;
+    let primerBloqueActual = null;
+    
     // Procesar cada rango laboral por separado
     if (data.trabaja && data.rangos && data.rangos.length > 0) {
         data.rangos.forEach((rango, rangoIndex) => {
@@ -796,11 +836,24 @@ function renderizarBloquesVeterinario(vetId, data) {
                         blockEl.dataset.horaFin = bloque.hora_fin || bloque.end_time || '';
                         blockEl.dataset.startTime = bloque.start_time;
                         blockEl.style.gridColumn = `span ${endQuarto - cuarto}`;
-                        blockEl.innerHTML = `
-                            <div class="agenda-block-time">${bloque.hora_inicio || bloque.start_time} - ${bloque.hora_fin || bloque.end_time}</div>
-                            <div class="agenda-block-label">${bloque.paciente_nombre || 'Sin paciente'} | ${bloque.propietario_nombre || 'Sin dueño'}</div>
-                            <div class="agenda-block-info">${bloque.servicio_nombre || 'Sin servicio'}</div>
-                        `;
+                        const duracionBloques = endQuarto - cuarto;
+                        if (duracionBloques === 1) {
+                            // Bloque individual: verificar si es el primer bloque de esta cita
+                            const esPrimerBloque = !bloque.hora_inicio || bloque.hora_inicio === bloque.start_time;
+                            const horaAMostrar = esPrimerBloque ? bloque.start_time : `-${calcularHoraFinalBloque(bloque.start_time)}`;
+                            blockEl.innerHTML = `
+                                <div class="agenda-block-time">${horaAMostrar}</div>
+                                <div class="agenda-block-label">${bloque.paciente_nombre || 'Sin paciente'}</div>
+                                <div class="agenda-block-info">...</div>
+                            `;
+                        } else {
+                            // Bloque múltiple: mostrar información completa
+                            blockEl.innerHTML = `
+                                <div class="agenda-block-time">${bloque.hora_inicio || bloque.start_time} - ${bloque.hora_fin || bloque.end_time}</div>
+                                <div class="agenda-block-label">${bloque.paciente_nombre || 'Sin paciente'} | ${bloque.propietario_nombre || 'Sin dueño'}</div>
+                                <div class="agenda-block-info">${bloque.servicio_nombre || 'Sin servicio'}</div>
+                            `;
+                        }
                         blockEl.style.cursor = 'pointer';
                         blockEl.addEventListener('click', () => mostrarDetalleCita(bloque));
                         blockEl.addEventListener('mouseenter', () => destacarCitaCompleta(bloque.cita_id));
@@ -827,15 +880,27 @@ function renderizarBloquesVeterinario(vetId, data) {
                         }
                         blockEl.dataset.startTime = bloque.start_time;
                         
+                        // Verificar si el bloque está en el pasado
+                        const esPasado = fechaAgenda && esBloqueEnPasado(fechaAgenda, bloque.start_time);
+                        if (esPasado && bloque.status === 'available') {
+                            blockEl.classList.remove('is-available');
+                            blockEl.classList.add('is-past');
+                        }
+                        
                         blockEl.innerHTML = `
                             <span class="agenda-block-time">${bloque.start_time}</span>
                             ${bloque.label ? `<span class="agenda-block-label">${bloque.label}</span>` : ''}
                         `;
                         
-                        if (bloque.status === 'available') {
+                        if (bloque.status === 'available' && !esPasado) {
                             blockEl.addEventListener('click', () => abrirModalAgendarDirecta(blockIndex, vetId, bloque.start_time, data.veterinario, data.blocks));
                             blockEl.addEventListener('mouseenter', () => previsualizarBloques(blockIndex, vetId, data.blocks));
                             blockEl.addEventListener('mouseleave', limpiarPrevisualizacion);
+                        }
+                        
+                        // Guardar referencia al primer bloque disponible actual/futuro
+                        if (!primerBloqueActual && !esPasado) {
+                            primerBloqueActual = blockEl;
                         }
                         
                         container.appendChild(blockEl);
@@ -844,6 +909,13 @@ function renderizarBloquesVeterinario(vetId, data) {
                 }
             }
         });
+    }
+    
+    // Hacer scroll automático al primer bloque actual/futuro
+    if (primerBloqueActual) {
+        setTimeout(() => {
+            primerBloqueActual.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
     }
 }
 
