@@ -596,7 +596,7 @@ const hospitalizacionesManager = {
                     </div>
                 </div>
                 
-                ${!hosp.tiene_alta ? `
+                ${!hosp.tiene_alta && window.userRol !== 'recepcion' ? `
                     <div style="display:flex; gap:4px; flex-wrap:wrap;">
                         <button onclick="hospitalizacionesManager.abrirModalCirugia(${hosp.id})" style="padding:4px 10px; font-size:12px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:6px; color:#374151; cursor:pointer;">
                             <i class="bi bi-tools"></i> ${hosp.tiene_cirugia ? 'Agregar/otra Cirugía' : 'Agregar Cirugía'}
@@ -869,6 +869,10 @@ const hospitalizacionesManager = {
     },
 
     abrirModalCirugia(hospId) {
+        if (window.userRol === 'recepcion') {
+            alert('No tienes permisos para registrar cirugías');
+            return;
+        }
         const modal = document.getElementById('cirugiaModal');
         if (modal) {
             modal.dataset.hospId = hospId;
@@ -878,6 +882,10 @@ const hospitalizacionesManager = {
     },
 
     abrirModalRegistro(hospId) {
+        if (window.userRol === 'recepcion') {
+            alert('No tienes permisos para crear registros diarios');
+            return;
+        }
         const modal = document.getElementById('registroDiarioModal');
         if (modal) {
             modal.dataset.hospId = hospId;
@@ -887,6 +895,10 @@ const hospitalizacionesManager = {
     },
 
     abrirModalAlta(hospId) {
+        if (window.userRol === 'recepcion') {
+            alert('No tienes permisos para dar de alta');
+            return;
+        }
         const modal = document.getElementById('altaMedicaModal');
         if (modal) {
             modal.dataset.hospId = hospId;
