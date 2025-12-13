@@ -670,6 +670,22 @@ async function cargarTodasLasAgendas() {
             paginacionVets.offset = Math.max(0, paginacionVets.todosLosVets.length - paginacionVets.limite);
         }
         
+        // Si hay 2 o menos veterinarios, mostrar todos y ocultar navegación
+        const btnNavIzq = document.getElementById('btnNavIzq');
+        const btnNavDer = document.getElementById('btnNavDer');
+        console.log('Total vets trabajando:', paginacionVets.todosLosVets.length, 'Limite:', paginacionVets.limite);
+        if (paginacionVets.todosLosVets.length <= paginacionVets.limite) {
+            console.log('Ocultando botones de navegación');
+            if (btnNavIzq) {
+                btnNavIzq.style.display = 'none';
+                btnNavIzq.style.setProperty('display', 'none', 'important');
+            }
+            if (btnNavDer) {
+                btnNavDer.style.display = 'none';
+                btnNavDer.style.setProperty('display', 'none', 'important');
+            }
+        }
+        
         // Determinar qué veterinarios mostrar (ventana deslizante de los que trabajan)
         const vetsAMostrar = paginacionVets.todosLosVets.slice(
             paginacionVets.offset, 
@@ -1599,12 +1615,17 @@ function navegarVets(direccion) {
 function actualizarControlesNavegacion() {
     const btnIzq = document.getElementById('btnNavIzq');
     const btnDer = document.getElementById('btnNavDer');
+    
+    if (!btnIzq || !btnDer) return;
+    
     const totalVets = paginacionVets.todosLosVets.length;
     
     // Mostrar botones solo si hay más de 2 vets
     if (totalVets <= paginacionVets.limite) {
         btnIzq.style.display = 'none';
+        btnIzq.style.setProperty('display', 'none', 'important');
         btnDer.style.display = 'none';
+        btnDer.style.setProperty('display', 'none', 'important');
         return;
     }
     

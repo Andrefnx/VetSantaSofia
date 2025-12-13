@@ -42,23 +42,24 @@
                 <h3 class="mb-2">Filtros</h3>
                 <div class="mb-3">
                     <label class="form-label"><strong>Fecha:</strong></label>
-                    <div id="calendarioCustom" class="calendario-custom">
-                        <div class="calendario-top">
-                            <button type="button" id="calHoy" class="btn-cal-hoy">
-                                <i class="fas fa-calendar-day"></i> Hoy
-                            </button>
-                        </div>
-                        <div class="calendario-header">
+                    <div class="calendario-top">
                             <button type="button" id="calPrevMes" class="btn-cal-nav">
                                 <i class="fas fa-chevron-left"></i>
                             </button>
+                            <button type="button" id="calHoy" class="btn-cal-hoy">
+                                <i class="fas fa-calendar-day"></i> Hoy
+                            </button>
+                            <button type="button" id="calNextMes" class="btn-cal-nav">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    <div id="calendarioCustom" class="calendario-custom">
+                        
+                        <div class="calendario-header">
                             <div class="calendario-titulo">
                                 <select id="calMes" class="form-select form-select-sm"></select>
                                 <select id="calAnio" class="form-select form-select-sm"></select>
                             </div>
-                            <button type="button" id="calNextMes" class="btn-cal-nav">
-                                <i class="fas fa-chevron-right"></i>
-                            </button>
                         </div>
                         <div class="calendario-dias-semana">
                             <div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div>
