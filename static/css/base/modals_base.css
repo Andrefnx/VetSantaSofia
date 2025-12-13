@@ -156,6 +156,27 @@
     color: white !important;
 }
 
+.vet-btn-grey:hover {
+    background: #888888 !important;
+    color: white !important;
+}
+
+.vet-btn-primary {
+    background: #afe1af !important;
+    color: white !important;
+    border: none !important;
+    padding: 10px 16px !important;
+    border-radius: 6px !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s ease !important;
+}
+
+.vet-btn-primary:hover {
+    background: #89c57c !important;
+    color: #fff !important;
+}
+
 .vet-btn-grey.error,
 .vet-btn-delete {
     background: #dc3545 !important;

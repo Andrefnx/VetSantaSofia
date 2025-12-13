@@ -12,6 +12,8 @@ let agendaState = {
     bloqueSeleccionado: null
 };
 
+let citaActualEnDetalle = null; // Rastrear cita en modal de detalle
+
 function toggleModal(modalId, show = true) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
@@ -691,7 +693,7 @@ let agendarState = {
 function abrirModalAgendarDirecta(blockIndex, vetId, startTime, veterinario, bloques) {
     agendarState.blockIndex = blockIndex;
     agendarState.vetId = vetId;
-    agendarState.startTime = startTime;
+    agendarState.startTime = startTime;  // Guardar la hora del bloque clickeado
     agendarState.veterinario = veterinario;
     agendarState.bloques = bloques;
     agendarState.servicioId = null;
@@ -712,6 +714,9 @@ function abrirModalAgendarDirecta(blockIndex, vetId, startTime, veterinario, blo
     document.querySelectorAll('#pacienteSelectDirecto option').forEach(opt => opt.style.display = '');
     document.querySelectorAll('#servicioSelectDirecto optgroup').forEach(group => group.style.display = '');
     
+    // Inicializar horas disponibles
+    inicializarHorasDisponibles();
+    
     toggleModal('agendarCitaDirectaModal', true);
 }
 
@@ -726,6 +731,43 @@ function cerrarModalAgendarDirecta() {
         servicioId: null,
         pacienteId: null
     };
+}
+
+function inicializarHorasDisponibles() {
+    const horaSelect = document.getElementById('agendarHora');
+    const bloques = agendarState.bloques;
+    
+    // Encontrar todas las horas disponibles (sin filtro de servicio)
+    const horasDisponibles = new Set();
+    
+    bloques.forEach((bloque, index) => {
+        if (bloque.status === 'available') {
+            horasDisponibles.add(bloque.start_time);
+        }
+    });
+    
+    // Llenar el select
+    horaSelect.innerHTML = '<option value="">Selecciona una hora</option>';
+    
+    if (horasDisponibles.size === 0) {
+        const option = document.createElement('option');
+        option.disabled = true;
+        option.textContent = 'No hay horas disponibles';
+        horaSelect.appendChild(option);
+    } else {
+        const horasOrdenadas = Array.from(horasDisponibles).sort();
+        horasOrdenadas.forEach(hora => {
+            const option = document.createElement('option');
+            option.value = hora;
+            option.textContent = hora;
+            horaSelect.appendChild(option);
+        });
+        
+        // Seleccionar la hora del bloque clickeado por defecto
+        if (horasDisponibles.has(agendarState.startTime)) {
+            horaSelect.value = agendarState.startTime;
+        }
+    }
 }
 
 function actualizarHorasDisponibles() {
@@ -780,8 +822,13 @@ function actualizarHorasDisponibles() {
             horaSelect.appendChild(option);
         });
         
-        // Seleccionar la primera hora disponible por defecto
-        horaSelect.value = horasOrdenadas[0];
+        // Seleccionar la hora del bloque clickeado si está disponible
+        if (horasDisponibles.has(agendarState.startTime)) {
+            horaSelect.value = agendarState.startTime;
+        } else {
+            // Si no está disponible, seleccionar la primera hora disponible
+            horaSelect.value = horasOrdenadas[0];
+        }
     }
     
     agendarState.servicioId = servicioId;
@@ -905,6 +952,15 @@ function mostrarDetalleCita(bloque) {
         return;
     }
     
+    // Guardar la cita actual en detalle
+    citaActualEnDetalle = {
+        citaId: bloque.cita_id,
+        pacienteNombre: bloque.paciente_nombre,
+        servicioNombre: bloque.servicio_nombre,
+        horaInicio: bloque.hora_inicio,
+        horaFin: bloque.hora_fin
+    };
+    
     // Actualizar título con servicio y horario
     const titulo = `${bloque.servicio_nombre} | ${bloque.hora_inicio} - ${bloque.hora_fin}`;
     document.getElementById('detalleCitaTitulo').innerHTML = `<i class="fas fa-stethoscope"></i> ${titulo}`;
@@ -912,6 +968,8 @@ function mostrarDetalleCita(bloque) {
     // Llenar los datos del modal
     document.getElementById('detallePaciente').textContent = bloque.paciente_nombre || '-';
     document.getElementById('detallePropietario').textContent = bloque.propietario_nombre || '-';
+    document.getElementById('detalleServicio').textContent = bloque.servicio_nombre || '-';
+    document.getElementById('detalleHorario').textContent = `${bloque.hora_inicio} - ${bloque.hora_fin}` || '-';
     
     // Teléfono como enlace WhatsApp
     const btnTelefono = document.getElementById('detalleTelefonoPropietario');
@@ -947,6 +1005,64 @@ function mostrarDetalleCita(bloque) {
 
 function cerrarModalDetalleCita() {
     toggleModal('detalleCitaModal', false);
+    citaActualEnDetalle = null;
+}
+
+function abrirModalConfirmarCancelacion() {
+    if (!citaActualEnDetalle) {
+        alert('Error: No se pudo identificar la cita a cancelar.');
+        return;
+    }
+    
+    const mensaje = `¿Estás seguro que deseas cancelar la cita de <strong>${citaActualEnDetalle.pacienteNombre}</strong> (${citaActualEnDetalle.servicioNombre}) a las ${citaActualEnDetalle.horaInicio}?`;
+    document.getElementById('confirmarCancelacionMensaje').innerHTML = mensaje;
+    toggleModal('modalConfirmarCancelacionCita', true);
+}
+
+function cerrarModalConfirmarCancelacion() {
+    toggleModal('modalConfirmarCancelacionCita', false);
+}
+
+function confirmarCancelacionCita() {
+    if (!citaActualEnDetalle) {
+        alert('Error: No se pudo identificar la cita a cancelar.');
+        return;
+    }
+    
+    cancelarCita(citaActualEnDetalle.citaId);
+}
+
+function cancelarCita(citaId) {
+    const csrfToken = getCookie('csrftoken');
+    
+    fetch(`/agenda/citas/eliminar/${citaId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        }
+        throw new Error('Error al cancelar la cita');
+    })
+    .then(data => {
+        // Cerrar modales
+        cerrarModalConfirmarCancelacion();
+        cerrarModalDetalleCita();
+        
+        // Mostrar mensaje de éxito
+        alert('Cita cancelada exitosamente');
+        
+        // Recargar la agenda
+        cargarTodasLasAgendas();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al cancelar la cita. Por favor, intenta nuevamente.');
+    });
 }
 
 function destacarCitaCompleta(citaId) {

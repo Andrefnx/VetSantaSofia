@@ -145,7 +145,7 @@
                         <input type="text" id="buscarServicioDirecto" placeholder="Buscar servicio..." />
                     </div>
                     <select id="servicioSelectDirecto" class="form-control modal-select-tall" size="12" onchange="actualizarHorasDisponibles()">
-                        <option value="">Seleccione servicio</option>
+                        <option value="" disabled selected>Seleccione servicio</option>
                         {% regroup servicios by categoria as servicios_agrupados %}
                         {% for grupo in servicios_agrupados %}
                         <optgroup label="{{ grupo.grouper }}">
@@ -171,7 +171,7 @@
                         <input type="text" id="buscarPacienteDirecto" placeholder="Buscar paciente..." />
                     </div>
                     <select id="pacienteSelectDirecto" class="form-control modal-select-tall" size="12">
-                        <option value="">Seleccione paciente</option>
+                        <option value="" disabled selected>Seleccione paciente</option>
                         {% for paciente in pacientes %}
                         <option value="{{ paciente.id }}" 
                                 data-nombre="{{ paciente.nombre|lower }}"
@@ -261,6 +261,14 @@
                     <p class="mb-0 fs-6" id="detallePropietario">-</p>
                 </div>
                 <div>
+                    <small class="text-muted d-block mb-1"><strong>Servicio</strong></small>
+                    <p class="mb-0 fs-6" id="detalleServicio">-</p>
+                </div>
+                <div>
+                    <small class="text-muted d-block mb-1"><strong>Horario</strong></small>
+                    <p class="mb-0 fs-6" id="detalleHorario">-</p>
+                </div>
+                <div>
                     <small class="text-muted d-block mb-1"><strong>Contacto</strong></small>
                     <p class="mb-0 fs-6">
                         <a id="detalleTelefonoPropietario" href="#" class="text-decoration-none">-</a>
@@ -270,10 +278,36 @@
                 </div>
             </div>
         </div>
-        <div class="vet-modal-footer d-flex justify-content-end align-items-center gap-2">
+        <div class="vet-modal-footer d-flex justify-content-between align-items-center gap-2">
             <a id="enlaceFixa" href="#" class="btn btn-primary btn-sm" target="_blank">
                 <i class="fas fa-file-medical"></i> Ver Ficha
             </a>
+            <button class="btn btn-cancel" type="button" onclick="abrirModalConfirmarCancelacion()">
+                <i class="bi bi-trash3-fill"></i> Cancelar Cita
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Confirmar Cancelación de Cita -->
+<div class="vet-modal-overlay hide" id="modalConfirmarCancelacionCita">
+    <div class="vet-modal-compact">
+        <div class="vet-modal-content">
+            <div class="vet-custom-modal-title" style="background: #b71c1c;">
+                <h3><i class="bi bi-trash3-fill"></i> Cancelar Cita</h3>
+                <i class="bi bi-x" onclick="cerrarModalConfirmarCancelacion()"></i>
+            </div>
+            <div class="vet-modal-body">
+                <p id="confirmarCancelacionMensaje" class="text-center mb-4">¿Estás seguro que deseas cancelar esta cita?</p>
+                <div class="vet-modal-footer">
+                    <button type="button" class="btn btn-cancel" onclick="cerrarModalConfirmarCancelacion()">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="button" class="vet-btn vet-btn-primary" id="btnConfirmarCancelacionCita" onclick="confirmarCancelacionCita()">
+                        <i class="bi bi-trash3-fill"></i> Eliminar
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>

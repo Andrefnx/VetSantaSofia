@@ -644,6 +644,16 @@ body {
     color: #103012;
 }
 
+.modal-select-tall option[value=""] {
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.modal-select-tall option:checked {
+    background-color: #9fcf9f !important;
+    color: #103012 !important;
+}
+
 .modal-select-tall option:hover,
 .modal-select-tall option:focus {
     background-color: #9fcf9f;

@@ -637,13 +637,21 @@ body {
     padding: 8px 10px !important;
     font-size: 0.95rem !important;
     line-height: 1.6 !important;
-    background: #f9fafb !important;
 }
 
 .modal-select-tall option {
     padding: 6px 4px;
-    background-color: #ffffff;
     color: #103012;
+}
+
+.modal-select-tall option[value=""] {
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.modal-select-tall option:checked {
+    background-color: #9fcf9f !important;
+    color: #103012 !important;
 }
 
 .modal-select-tall option:hover,
@@ -655,6 +663,5 @@ body {
 .modal-select-tall optgroup {
     font-weight: 700;
     color: #103012;
-    background-color: #f0f4f1;
     padding: 4px 0;
 }
