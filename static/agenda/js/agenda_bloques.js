@@ -96,6 +96,7 @@ function inicializarTabs() {
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.style.display = 'none';
+                content.classList.remove('active');
             });
             
             // Activar seleccionado
@@ -103,9 +104,21 @@ function inicializarTabs() {
             const tabContent = document.getElementById(tabId);
             if (tabContent) {
                 tabContent.style.display = 'block';
+                tabContent.classList.add('active');
             }
         });
     });
+    
+    // Mostrar el primer tab por defecto
+    const primerTab = document.querySelector('.tab-button.active');
+    if (primerTab) {
+        const tabId = primerTab.getAttribute('data-tab');
+        const tabContent = document.getElementById(tabId);
+        if (tabContent) {
+            tabContent.style.display = 'block';
+            tabContent.classList.add('active');
+        }
+    }
 }
 
 async function cargarAgendaBloques() {

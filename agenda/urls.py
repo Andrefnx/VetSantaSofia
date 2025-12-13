@@ -29,6 +29,10 @@ urlpatterns = [
     path('bloques/<int:veterinario_id>/<int:year>/<int:month>/<int:day>/', views.agenda_bloques_dia, name='agenda_bloques_dia'),
     path('citas/agendar-por-bloques/', views.agendar_cita_por_bloques, name='agendar_cita_por_bloques'),
     
+    # Horario semanal del veterinario
+    path('horario-semanal/<int:veterinario_id>/', views.obtener_horario_semanal, name='obtener_horario_semanal'),
+    path('horario-semanal/guardar/', views.guardar_horario_semanal, name='guardar_horario_semanal'),
+    
     # Horarios fijos
     path('horarios-fijos/<int:veterinario_id>/', views.horarios_fijos, name='horarios_fijos'),
     path('horarios-fijos/crear/', views.crear_horario_fijo, name='crear_horario_fijo'),

@@ -43,8 +43,6 @@
     --shadow-xl: 0 4px 24px rgba(0, 0, 0, 0.18), 0 6px 20px rgba(0, 0, 0, 0.19);
     
     /* Z-INDEX */
-    --z-sidebar: 200;
-    --z-navbar: 100;
     --z-modal-backdrop: 999998;
     --z-modal: 999999;
     --z-popover: 10;
@@ -1409,57 +1407,6 @@ table tbody td {
 .responsable-section .info-row strong {
     color: var(--text-dark);
     font-weight: 600;
-}
-
-/* NAVBAR DE NAVEGACIÓN (SIDEBAR) */
-.navbar-secciones {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 260px;
-    height: 100vh;
-    background: white;
-    border-right: 2px solid var(--primary-color);
-    padding: 1.5rem 0;
-    box-shadow: var(--shadow-md);
-    z-index: 100;
-    overflow-y: auto;
-}
-
-.navbar-secciones-content {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    padding: 0;
-}
-
-.nav-section-btn {
-    padding: 1rem 1.5rem;
-    background: transparent;
-    border: none;
-    border-left: 3px solid transparent;
-    color: #666;
-    font-weight: 600;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-    text-decoration: none;
-    text-align: left;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.nav-section-btn:hover {
-    color: var(--primary-color);
-    background: var(--bg-light);
-}
-
-.nav-section-btn.active {
-    color: var(--primary-color);
-    border-left-color: var(--primary-color);
-    background: var(--bg-light);
 }
 
 /* TOOLTIPS */

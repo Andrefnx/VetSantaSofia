@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/agenda/agenda_bloques.css' %}">
+
 {% endblock %}
 
 {% block content %}
@@ -33,7 +34,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label"><strong>Veterinario:</strong></label>
-                    <select id="veterinarioSelect" class="form-select">
+                    <select id="veterinarioSelect" class="form-control">
                         <option value="">Seleccione veterinario</option>
                         {% for vet in veterinarios %}
                         <option value="{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</option>
@@ -42,7 +43,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label"><strong>Servicio:</strong></label>
-                    <select id="servicioSelect" class="form-select">
+                    <select id="servicioSelect" class="form-control">
                         <option value="">Seleccione servicio</option>
                         {% regroup servicios by categoria as servicios_agrupados %}
                         {% for grupo in servicios_agrupados %}
@@ -65,7 +66,7 @@
                         <i class="fas fa-search"></i>
                         <input type="text" id="buscarPaciente" placeholder="Buscar paciente..." />
                     </div>
-                    <select id="pacienteSelect" class="form-select" size="8">
+                    <select id="pacienteSelect" class="form-control" size="8">
                         <option value="">Seleccione paciente</option>
                         {% for paciente in pacientes %}
                         <option value="{{ paciente.id }}" 
@@ -160,12 +161,12 @@
                 
                 <div class="form-group">
                     <label><strong>Motivo de la consulta:</strong></label>
-                    <textarea id="confirmMotivo" rows="3" placeholder="Describa el motivo..."></textarea>
+                    <textarea id="confirmMotivo" class="form-control" rows="3" placeholder="Describa el motivo..."></textarea>
                 </div>
                 
                 <div class="form-group">
                     <label><strong>Notas adicionales:</strong></label>
-                    <textarea id="confirmNotas" rows="2" placeholder="Notas opcionales..."></textarea>
+                    <textarea id="confirmNotas" class="form-control" rows="2" placeholder="Notas opcionales..."></textarea>
                 </div>
             </div>
         </div>
@@ -192,70 +193,33 @@
             </button>
         </div>
         <div class="modal-body">
-            <!-- Tabs del proyecto -->
-            <div class="tabs-group">
-                <button class="tab-button active" data-tab="tab-disponibilidad-dia">
-                    <i class="fas fa-calendar-day"></i>
-                    Disponibilidad Diaria
-                </button>
-                <button class="tab-button" data-tab="tab-horario-semanal">
-                    <i class="fas fa-calendar-week"></i>
-                    Horario Semanal
-                </button>
-            </div>
-
-            <!-- Disponibilidad Diaria por Bloques -->
-            <div class="tab-content tab-content-box" id="tab-disponibilidad-dia">
-                <h4 style="margin-bottom: 1.5rem;">Configurar Disponibilidad del Día</h4>
-                <form id="disponibilidadDiaForm">
+            <!-- Configurar Horario Semanal del Veterinario -->
+            <div id="configHorarioSemanal">
+                <h4 style="margin-bottom: 1.5rem;">Configurar Horario Semanal</h4>
+                <form id="horarioSemanalForm">
                     <div class="form-group">
                         <label><strong>Veterinario *</strong></label>
-                        <select id="dispVeterinario" required>
+                        <select id="dispVeterinario" class="form-control" required>
                             <option value="">Seleccione un veterinario</option>
                             {% for vet in veterinarios %}
                             <option value="{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    
-                    <div class="form-group">
-                        <label><strong>Fecha *</strong></label>
-                        <input type="date" id="dispFecha" required>
-                    </div>
-                    
-                    <div class="checkbox-container">
-                        <input type="checkbox" id="dispTrabaja" checked>
-                        <label for="dispTrabaja"><strong>¿Trabaja este día?</strong></label>
-                    </div>
-                    
-                    <div id="rangosContainer" style="margin-top: 1.5rem;">
-                        <label style="margin-bottom: 0.5rem; display: block; font-weight: 600;">Rangos de disponibilidad</label>
-                        <div class="rangos-container" id="rangosList"></div>
-                        <button type="button" class="vet-btn" onclick="agregarRango()" style="margin-top: 10px;">
-                            <i class="fas fa-plus"></i>
-                            Añadir Rango
-                        </button>
-                    </div>
-                    
-                    <div class="modal-actions">
-                        <button type="button" class="vet-btn vet-btn-primary" onclick="guardarDisponibilidadDia()">
-                            <i class="fas fa-save"></i>
-                            Guardar Disponibilidad
-                        </button>
+
+                    <div style="margin-top: 2rem;">
+                        <label style="margin-bottom: 1rem; display: block; font-weight: 600;">Horarios por día de la semana</label>
+                        <div id="diasSemana" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            <!-- Los días de la semana se generan aquí -->
+                        </div>
                     </div>
                 </form>
             </div>
-
-            <!-- Horario Semanal (legacy) -->
-            <div class="tab-content tab-content-box d-none-toggle" id="tab-horario-semanal">
-                <h4>Horario Fijo Semanal</h4>
-                <p class="text-muted">En desarrollo: permite definir horarios recurrentes por día de la semana.</p>
-            </div>
         </div>
         <div class="modal-footer">
-            <button class="vet-btn vet-btn-grey" onclick="cerrarModalDisponibilidad()">
-                <i class="fas fa-times"></i>
-                Cerrar
+            <button type="button" class="vet-btn vet-btn-primary" onclick="guardarHorarioSemanal()">
+                <i class="fas fa-save"></i>
+                Guardar Horario
             </button>
         </div>
     </div>
@@ -269,4 +233,5 @@
     const SERVICIOS = {{ servicios_json|safe }};
 </script>
 <script src="{% static 'agenda/js/agenda_bloques.js' %}"></script>
+<script src="{% static 'agenda/js/horario_semanal.js' %}"></script>
 {% endblock %}
