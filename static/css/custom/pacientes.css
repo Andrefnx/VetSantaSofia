@@ -640,6 +640,34 @@ textarea.is-invalid:focus {
     color: var(--primary-color);
 }
 
+.timeline-item-meta {
+    margin-top: 6px;
+}
+
+.cita-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    border: 1px solid transparent;
+}
+
+.cita-status-pill.estado-pendiente {
+    background: #fff8e1;
+    color: #b26a00;
+    border-color: #ffe4a3;
+}
+
+.cita-status-pill.estado-realizada {
+    background: #e6f4ea;
+    color: #1b5e20;
+    border-color: #c6e3cd;
+}
+
 .timeline-btn {
     margin-top: 0;
     background: none;
@@ -1456,6 +1484,11 @@ td[colspan][style*="text-align: center"] {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+}
+
+/* Ocultar botón Agendar Cita en la ficha */
+#btnAgendarCitaModal {
+    display: none !important;
 }
 
 .sidebar-actions .vet-btn {

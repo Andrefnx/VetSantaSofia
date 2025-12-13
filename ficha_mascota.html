@@ -285,9 +285,8 @@
                                 <form method="get" class="d-flex align-items-center gap-2">
                                     <label class="mb-0 small text-muted">Orden</label>
                                     <select name="orden_timeline" class="form-select form-select-sm" onchange="this.form.submit()" style="width: auto;">
-                                        <option value="desc" {% if orden_timeline != 'asc' %}selected{% endif %}>Descendente</option>
                                         <option value="asc" {% if orden_timeline == 'asc' %}selected{% endif %}>Ascendente</option>
-                                        
+                                        <option value="desc" {% if orden_timeline != 'asc' %}selected{% endif %}>Descendente</option>
                                     </select>
                                     {% for key, value in request.GET.items %}
                                         {% if key != 'orden_timeline' %}

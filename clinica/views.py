@@ -98,7 +98,12 @@ def ficha_paciente(request, paciente_id):
     for c in todas_citas:
         print(f"   - Cita {c.id}: fecha={c.fecha} (tipo:{type(c.fecha)}) >= {hoy}? {c.fecha >= hoy}", file=sys.stderr)
     
-    citas_agendadas = Cita.objects.filter(paciente=paciente, fecha__gte=hoy).select_related('veterinario', 'servicio').order_by('fecha', 'hora_inicio')
+    citas_agendadas = (
+        Cita.objects.filter(paciente=paciente, fecha__gte=hoy)
+        .exclude(estado__in=['completada', 'realizada'])
+        .select_related('veterinario', 'servicio')
+        .order_by('fecha', 'hora_inicio')
+    )
     print(f"\n📊 Citas filtradas (fecha__gte={hoy}): {citas_agendadas.count()}", file=sys.stderr)
     
     if citas_agendadas.exists():
@@ -116,9 +121,9 @@ def ficha_paciente(request, paciente_id):
     
     print(f"{'='*80}\n", file=sys.stderr)
 
-    orden_timeline = request.GET.get('orden_timeline', 'asc').lower()
+    orden_timeline = request.GET.get('orden_timeline', 'desc').lower()
     if orden_timeline not in ['asc', 'desc']:
-        orden_timeline = 'asc'
+        orden_timeline = 'desc'
 
     timeline_items = []
     for cita in citas_agendadas:
@@ -327,6 +332,17 @@ def crear_consulta(request, paciente_id):
                 print(f'  ✅ Medicamento guardado: {med["nombre"]} - Dosis: {med.get("dosis", "Sin dosis")}')
             except Exception as e:
                 print(f'  ❌ Error al guardar medicamento {med.get("nombre")}: {str(e)}')
+
+        # Si la consulta proviene de una cita, marcarla como completada
+        cita_id = data.get('cita_id')
+        if cita_id:
+            try:
+                cita_relacionada = Cita.objects.get(id=cita_id, paciente=paciente)
+                cita_relacionada.estado = 'completada'
+                cita_relacionada.save(update_fields=['estado', 'fecha_modificacion'])
+                print(f'  ✅ Cita {cita_id} marcada como completada')
+            except Cita.DoesNotExist:
+                print(f'  ⚠️ Cita {cita_id} no encontrada para este paciente; no se actualiza estado')
         
         print('=' * 50)
         print(f'✅ CONSULTA CREADA EXITOSAMENTE')
@@ -449,6 +465,16 @@ def guardar_consulta(request, paciente_id):
                     paciente.save()
                 except (ValueError, TypeError):
                     pass  # Si no se puede convertir, simplemente ignorar
+
+            # Marcar la cita como completada si la consulta proviene de una cita
+            cita_id = data.get('cita_id')
+            if cita_id:
+                try:
+                    cita_relacionada = Cita.objects.get(id=cita_id, paciente=paciente)
+                    cita_relacionada.estado = 'completada'
+                    cita_relacionada.save(update_fields=['estado', 'fecha_modificacion'])
+                except Cita.DoesNotExist:
+                    pass
             
             return JsonResponse({
                 'success': True,
@@ -514,7 +540,12 @@ def ficha_mascota(request, pk):
     
     # ⭐ AGREGAR CITAS AGENDADAS
     hoy = timezone.localdate()
-    citas_agendadas = Cita.objects.filter(paciente=paciente, fecha__gte=hoy).select_related('veterinario', 'servicio').order_by('fecha', 'hora_inicio')
+    citas_agendadas = (
+        Cita.objects.filter(paciente=paciente, fecha__gte=hoy)
+        .exclude(estado__in=['completada', 'realizada'])
+        .select_related('veterinario', 'servicio')
+        .order_by('fecha', 'hora_inicio')
+    )
     
     print(f"\n### CITAS AGENDADAS - Fecha hoy: {hoy}")
     print(f"### Total citas encontradas: {citas_agendadas.count()}")
@@ -522,9 +553,9 @@ def ficha_mascota(request, pk):
         print(f"###   Cita ID {cita.id}: {cita.fecha} {cita.hora_inicio} - Vet: {cita.veterinario.nombre}")
     print("###" + "="*77 + "\n", flush=True)
     
-    orden_timeline = request.GET.get('orden_timeline', 'asc').lower()
+    orden_timeline = request.GET.get('orden_timeline', 'desc').lower()
     if orden_timeline not in ['asc', 'desc']:
-        orden_timeline = 'asc'
+        orden_timeline = 'desc'
 
     timeline_items = []
     for cita in citas_agendadas:

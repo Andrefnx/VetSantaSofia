@@ -374,7 +374,8 @@ if (formNuevaConsulta) {
         diagnostico: formData.get('diagnostico') || '',
         tratamiento: formData.get('tratamiento') || '',
         notas: formData.get('notas') || '',
-        medicamentos: medicamentosSeleccionados
+        medicamentos: medicamentosSeleccionados,
+        cita_id: form.dataset.citaId || null
     };
     
     console.log('📤 Enviando consulta:', data);

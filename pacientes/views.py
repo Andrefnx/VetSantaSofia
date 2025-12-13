@@ -163,10 +163,12 @@ def ficha_mascota_view(request, paciente_id):
     
     # ⭐ OBTENER CITAS AGENDADAS (futuras o hoy)
     hoy = timezone.localdate()
-    citas_agendadas = Cita.objects.filter(
-        paciente=paciente,
-        fecha__gte=hoy
-    ).select_related('veterinario', 'servicio').order_by('fecha', 'hora_inicio')
+    citas_agendadas = (
+        Cita.objects.filter(paciente=paciente, fecha__gte=hoy)
+        .exclude(estado__in=['completada', 'realizada'])
+        .select_related('veterinario', 'servicio')
+        .order_by('fecha', 'hora_inicio')
+    )
     
     print(f"📅 Fecha hoy: {hoy}")
     print(f"📋 Total citas agendadas encontradas: {citas_agendadas.count()}")
