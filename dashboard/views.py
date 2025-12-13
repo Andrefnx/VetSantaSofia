@@ -36,9 +36,11 @@ def dashboard(request):
     # Cargar datos según rol (priorizar override de testing)
     if rol_test == 'administracion':
         context.update(_datos_administrador(hoy))
+        context['vista_como'] = 'administracion'
         template = 'dashboard/admin.html'
     elif rol_test == 'recepcion':
         context.update(_datos_recepcion(hoy, usuario))
+        context['vista_como'] = 'recepcion'
         template = 'dashboard/recepcion.html'
     elif rol_test == 'veterinario':
         try:
@@ -51,12 +53,15 @@ def dashboard(request):
         template = 'dashboard/veterinario.html'
     elif usuario.rol == 'administracion' or usuario.is_superuser:
         context.update(_datos_administrador(hoy))
+        context['vista_como'] = 'administracion'
         template = 'dashboard/admin.html'
     elif usuario.rol == 'recepcion':
         context.update(_datos_recepcion(hoy, usuario))
+        context['vista_como'] = 'recepcion'
         template = 'dashboard/recepcion.html'
     elif usuario.rol == 'veterinario':
         context.update(_datos_veterinario(hoy, usuario))
+        context['vista_como'] = 'veterinario'
         template = 'dashboard/veterinario.html'
     
     else:
@@ -123,7 +128,7 @@ def _datos_administrador(hoy):
     
     # 1. AGENDA - Resumen del día
     citas_hoy = Cita.objects.filter(fecha=hoy).select_related(
-        'paciente', 'veterinario', 'servicio'
+        'paciente__propietario', 'veterinario', 'servicio'
     ).order_by('hora_inicio')
     
     citas_stats = {
@@ -232,7 +237,7 @@ def _datos_recepcion(hoy, usuario):
     
     # 1. AGENDA - Citas del día (mis_citas para compatible con partials)
     citas_hoy = Cita.objects.filter(fecha=hoy).select_related(
-        'paciente', 'veterinario', 'servicio'
+        'paciente__propietario', 'veterinario', 'servicio'
     ).order_by('hora_inicio').distinct()
     
     mis_citas = citas_hoy
@@ -308,7 +313,7 @@ def _datos_veterinario(hoy, usuario):
     citas_del_dia = Cita.objects.filter(
         veterinario=usuario,
         fecha=hoy
-    ).select_related('paciente', 'servicio').order_by('hora_inicio')
+    ).select_related('paciente__propietario', 'servicio').order_by('hora_inicio')
     
     proximas_citas = citas_del_dia.filter(
         estado__in=['pendiente', 'confirmada']

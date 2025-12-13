@@ -99,7 +99,7 @@
 {% block dashboard_main %}
 <!-- VETERINARIO LAYOUT -->
 <div class="row mb-3">
-    <div class="col-md-8 d-flex flex-column gap-3">
+    <div class="col-md-9 d-flex flex-column gap-3">
         {% if cita_actual %}
         <div class="card card-round mb-0 border-warning">
             <div class="card-body bg-warning-subtle">
@@ -133,7 +133,7 @@
         {% include 'partials/dashboard/agenda.html' %}
         {% include 'partials/dashboard/pacientes.html' %}
     </div>
-    <div class="col-md-4 d-flex flex-column gap-3">
+    <div class="col-md-3 d-flex flex-column gap-3">
         {% include 'partials/dashboard/acciones.html' %}
 
         {% if proxima_cita %}
