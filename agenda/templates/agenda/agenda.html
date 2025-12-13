@@ -118,33 +118,35 @@
             <h3><i class="fas fa-calendar-plus"></i> Agendar Cita</h3>
             <i class="bi bi-x" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalAgendarDirecta()"></i>
         </div>
-        <div class="vet-modal-body">
-            <!-- Información automática -->
-            <div class="modal-detail-card mb-3">
-                <div class="d-flex flex-column gap-2">
-                    <div><strong>Veterinario:</strong> <span id="agendarVeterinario">-</span></div>
-                    <div><strong>Fecha:</strong> <span id="agendarFecha">-</span></div>
-                    <div>
-                        <strong>Hora:</strong> 
-                        <div class="d-flex align-items-center gap-2 mt-1">
-                            <select id="agendarHora" class="form-control">
-                                <option value="">Selecciona una hora</option>
-                            </select>
-                        </div>
-                    </div>
+        <div class="vet-modal-body" style="padding: 1rem;">
+            <!-- Primera fila: Vet | Fecha | Hora -->
+            <div class="row g-2 mb-3">
+                <div class="col-4">
+                    <label class="form-label small mb-1"><strong>Veterinario</strong></label>
+                    <p class="mb-0 fs-6" id="agendarVeterinario">-</p>
+                </div>
+                <div class="col-4">
+                    <label class="form-label small mb-1"><strong>Fecha</strong></label>
+                    <p class="mb-0 fs-6" id="agendarFecha">-</p>
+                </div>
+                <div class="col-4">
+                    <label class="form-label small mb-1"><strong>Hora</strong></label>
+                    <select id="agendarHora" class="form-control form-control-sm">
+                        <option value="">Selecciona una hora</option>
+                    </select>
                 </div>
             </div>
 
-            <!-- Servicio y Paciente lado a lado -->
-            <div class="form-grid-2">
-                <!-- Búsqueda de Servicio -->
-                <div class="form-group mb-0">
-                    <label class="form-label"><strong>Servicio *</strong></label>
+            <!-- Segunda fila: Servicio | Paciente -->
+            <div class="row g-2 mb-2">
+                <!-- Servicio -->
+                <div class="col-6">
+                    <label class="form-label small mb-1"><strong>Servicio *</strong></label>
                     <div class="vet-search mb-2">
                         <i class="fas fa-search"></i>
                         <input type="text" id="buscarServicioDirecto" placeholder="Buscar servicio..." />
                     </div>
-                    <select id="servicioSelectDirecto" class="form-control modal-select-tall" size="12" onchange="actualizarHorasDisponibles()">
+                    <select id="servicioSelectDirecto" class="form-control modal-select-tall" size="9" onchange="actualizarHorasDisponibles()">
                         <option value="" disabled selected>Seleccione servicio</option>
                         {% regroup servicios by categoria as servicios_agrupados %}
                         {% for grupo in servicios_agrupados %}
@@ -160,17 +162,16 @@
                         </optgroup>
                         {% endfor %}
                     </select>
-                    <small class="text-muted d-block mt-2" id="bloquesRequeridosDirecto" style="min-height: 20px;"></small>
                 </div>
 
-                <!-- Búsqueda de Paciente -->
-                <div class="form-group mb-0">
-                    <label class="form-label"><strong>Paciente *</strong></label>
+                <!-- Paciente -->
+                <div class="col-6">
+                    <label class="form-label small mb-1"><strong>Paciente *</strong></label>
                     <div class="vet-search mb-2">
                         <i class="fas fa-search"></i>
                         <input type="text" id="buscarPacienteDirecto" placeholder="Buscar paciente..." />
                     </div>
-                    <select id="pacienteSelectDirecto" class="form-control modal-select-tall" size="12">
+                    <select id="pacienteSelectDirecto" class="form-control modal-select-tall" size="9">
                         <option value="" disabled selected>Seleccione paciente</option>
                         {% for paciente in pacientes %}
                         <option value="{{ paciente.id }}" 
@@ -181,6 +182,11 @@
                         {% endfor %}
                     </select>
                 </div>
+            </div>
+
+            <!-- Alerta de bloques requeridos -->
+            <div class="mb-2">
+                <small class="text-muted d-block" id="bloquesRequeridosDirecto" style="min-height: 18px; font-size: 0.8rem;"></small>
             </div>
         </div>
         <div class="vet-modal-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
