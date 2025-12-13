@@ -38,6 +38,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setear fecha actual
     const hoy = new Date().toISOString().split('T')[0];
     document.getElementById('fechaAgenda').value = hoy;
+    
+    // Cargar automáticamente la agenda del día con el primer veterinario disponible
+    const veterinarioSelect = document.getElementById('veterinarioSelect');
+    if (veterinarioSelect.options.length > 1) {
+        // Seleccionar el primer veterinario disponible
+        veterinarioSelect.selectedIndex = 1;
+        agendaState.veterinarioId = veterinarioSelect.value;
+        agendaState.fecha = hoy;
+        
+        // Cargar automáticamente la agenda
+        setTimeout(() => cargarAgendaBloques(), 300);
+    }
 });
 
 function inicializarControles() {
@@ -45,12 +57,20 @@ function inicializarControles() {
     document.getElementById('veterinarioSelect').addEventListener('change', function() {
         agendaState.veterinarioId = this.value;
         validarYHabilitarCargar();
+        // Cargar automáticamente cuando cambia el veterinario
+        if (agendaState.veterinarioId && agendaState.fecha) {
+            cargarAgendaBloques();
+        }
     });
     
     // Fecha
     document.getElementById('fechaAgenda').addEventListener('change', function() {
         agendaState.fecha = this.value;
         validarYHabilitarCargar();
+        // Cargar automáticamente cuando cambia la fecha
+        if (agendaState.veterinarioId && agendaState.fecha) {
+            cargarAgendaBloques();
+        }
     });
     
     // Servicio
@@ -75,11 +95,8 @@ function inicializarControles() {
 
 function validarYHabilitarCargar() {
     const btn = document.getElementById('btnCargarBloques');
-    if (agendaState.veterinarioId && agendaState.fecha) {
-        btn.disabled = false;
-    } else {
-        btn.disabled = true;
-    }
+    // El botón siempre debe estar habilitado para recargar
+    btn.disabled = false;
 }
 
 function inicializarBuscadorPacientes() {

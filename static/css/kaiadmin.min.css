@@ -6162,13 +6162,7 @@ label.error {
    background: #f25961
 }
 
-.btn {
-   padding: .65rem 1.4rem;
-   font-size: 1rem;
-   font-weight: 500;
-   opacity: 1;
-   border-radius: 3px
-}
+
 
 .btn:focus,
 .btn:hover {
@@ -6214,10 +6208,7 @@ label.error {
    margin-right: 0 !important
 }
 
-.btn-sm {
-   font-size: 11px;
-   padding: 7px 13px
-}
+
 
 .btn-xs {
    font-size: 10px;
@@ -6299,18 +6290,6 @@ label.error {
    border-color: #1572e8
 }
 
-.btn-secondary {
-   background: #6861ce;
-   border-color: #6861ce
-}
-
-.btn-secondary:disabled,
-.btn-secondary:focus,
-.btn-secondary:hover {
-   color: #fff !important;
-   background: #6861ce !important;
-   border-color: #6861ce !important
-}
 
 .btn-info {
    background: #48abf7 !important;

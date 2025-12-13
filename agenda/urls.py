@@ -32,6 +32,7 @@ urlpatterns = [
     # Horario semanal del veterinario
     path('horario-semanal/<int:veterinario_id>/', views.obtener_horario_semanal, name='obtener_horario_semanal'),
     path('horario-semanal/guardar/', views.guardar_horario_semanal, name='guardar_horario_semanal'),
+    path('horario-semanal/regenerar/<int:veterinario_id>/', views.regenerar_disponibilidades_veterinario, name='regenerar_disponibilidades_veterinario'),
     
     # Horarios fijos
     path('horarios-fijos/<int:veterinario_id>/', views.horarios_fijos, name='horarios_fijos'),

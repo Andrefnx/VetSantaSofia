@@ -32,8 +32,8 @@
     --border-light: #f0f0f0;
     
     /* GRISES */
-    --grey-dark: #666666;
-    --grey: #999999;
+    --grey-dark: #8d8d8d;
+    --grey: rgb(209, 212, 212);
     --grey-light: #cccccc;
     
     /* SOMBRAS */
@@ -151,7 +151,6 @@ label {
     align-items: center !important;
     justify-content: center !important;
     gap: var(--spacing-sm) !important;
-    padding: 10px 18px !important;
     border-radius: var(--radius-md) !important;
     font-size: 0.9rem !important;
     font-weight: 500 !important;
@@ -164,6 +163,7 @@ label {
     white-space: nowrap !important;
     text-decoration: none !important;
     display: inline-flex !important;
+    padding: 0.37rem 1rem !important;
 }
 
 .btn i,
@@ -238,21 +238,22 @@ label {
 .btn-secondary,
 .vet-btn-grey,
 .btn-grey-custom {
-    background: var(--grey) !important;
-    color: var(--bg-white) !important;
-    border: none !important;
+    background: none !important;
+    color: var(--grey-dark) !important;
+    border: solid transparent 3px !important;
 }
 
 .btn-secondary i,
 .vet-btn-grey i,
 .btn-grey-custom i {
-    color: var(--bg-white) !important;
+    color: var(--grey-dark) !important;
 }
 
 .btn-secondary:hover,
 .vet-btn-grey:hover,
 .btn-grey-custom:hover {
     background: #606060 !important;
+    border: 3px solid transparent !important;
     color: var(--bg-white) !important;
     box-shadow: none !important;
 }

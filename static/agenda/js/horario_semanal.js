@@ -46,7 +46,7 @@ function crearDiaWidget(dia) {
     
     const btnCopiar = document.createElement('button');
     btnCopiar.type = 'button';
-    btnCopiar.className = 'btn btn-primary btn-sm';
+    btnCopiar.className = 'btn btn-secondary btn-sm';
     btnCopiar.style.cssText = 'padding: 6px 10px !important; font-size: 0.8rem !important;';
     btnCopiar.innerHTML = '<i class="fas fa-copy"></i> Copiar';
     btnCopiar.onclick = function(e) { 
@@ -62,14 +62,14 @@ function crearDiaWidget(dia) {
     const rangosDiv = document.createElement('div');
     rangosDiv.className = 'rangos-dia';
     rangosDiv.dataset.dia = dia.id;
-    rangosDiv.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem;';
+    rangosDiv.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.8rem;';
     
     diaDiv.appendChild(rangosDiv);
     
     // Botón para agregar rango
     const btnAgregar = document.createElement('button');
     btnAgregar.type = 'button';
-    btnAgregar.className = 'btn btn-primary btn-sm';
+    btnAgregar.className = 'btn btn-secondary btn-sm';
     btnAgregar.style.cssText = 'align-self: flex-start; margin-top: 0.5rem;';
     btnAgregar.innerHTML = '<i class="fas fa-plus"></i> Agregar rango';
     btnAgregar.onclick = function() { agregarRangoDia(dia.id); };

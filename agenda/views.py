@@ -736,6 +736,107 @@ def eliminar_horario_fijo(request, horario_id):
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
+def _generar_disponibilidades_desde_horario_semanal(veterinario, semanas=8):
+    """
+    Genera DisponibilidadBloquesDia para un veterinario basándose en su HorarioFijoVeterinario.
+    Genera disponibilidades para las próximas 'semanas' semanas desde hoy.
+    """
+    from datetime import date, timedelta
+    
+    # Obtener todos los horarios fijos activos del veterinario
+    horarios_fijos = HorarioFijoVeterinario.objects.filter(
+        veterinario=veterinario,
+        activo=True
+    ).order_by('dia_semana', 'hora_inicio')
+    
+    if not horarios_fijos.exists():
+        return
+    
+    # Agrupar horarios por día de la semana
+    horarios_por_dia = {}
+    for h in horarios_fijos:
+        if h.dia_semana not in horarios_por_dia:
+            horarios_por_dia[h.dia_semana] = []
+        horarios_por_dia[h.dia_semana].append(h)
+    
+    # Generar disponibilidades para las próximas semanas
+    fecha_inicio = date.today()
+    fecha_fin = fecha_inicio + timedelta(weeks=semanas)
+    
+    fecha_actual = fecha_inicio
+    while fecha_actual <= fecha_fin:
+        # Obtener el día de la semana (0=lunes, 6=domingo)
+        dia_semana = fecha_actual.weekday()
+        
+        # Si hay horarios para este día, crear/actualizar disponibilidad
+        if dia_semana in horarios_por_dia:
+            horarios = horarios_por_dia[dia_semana]
+            
+            # Convertir horarios a bloques
+            rangos_bloques = []
+            for h in horarios:
+                start_block = time_to_block_index(h.hora_inicio)
+                end_block = time_to_block_index(h.hora_fin)
+                rangos_bloques.append({
+                    'start_block': start_block,
+                    'end_block': end_block
+                })
+            
+            # Crear o actualizar disponibilidad
+            disp, created = DisponibilidadBloquesDia.objects.get_or_create(
+                veterinario=veterinario,
+                fecha=fecha_actual,
+                defaults={
+                    'trabaja': True,
+                    'rangos': rangos_bloques,
+                    'notas': 'Generado automáticamente desde horario semanal'
+                }
+            )
+            
+            # Si ya existía, actualizar solo si fue generado automáticamente
+            if not created and (disp.notas == 'Generado automáticamente desde horario semanal' or disp.notas == 'No trabaja este día'):
+                disp.trabaja = True
+                disp.rangos = rangos_bloques
+                disp.notas = 'Generado automáticamente desde horario semanal'
+                disp.save()
+        else:
+            # Si no hay horarios para este día, marcar como no trabaja
+            disp, created = DisponibilidadBloquesDia.objects.get_or_create(
+                veterinario=veterinario,
+                fecha=fecha_actual,
+                defaults={
+                    'trabaja': False,
+                    'rangos': [],
+                    'notas': 'No trabaja este día'
+                }
+            )
+            
+            # Si ya existía, actualizar solo si no tiene notas personalizadas
+            if not created and (disp.notas == 'No trabaja este día' or disp.notas == 'Generado automáticamente desde horario semanal'):
+                disp.trabaja = False
+                disp.rangos = []
+                disp.save()
+        
+        fecha_actual += timedelta(days=1)
+
+
+@login_required
+@require_http_methods(["POST"])
+def regenerar_disponibilidades_veterinario(request, veterinario_id):
+    """Regenera las disponibilidades diarias para un veterinario desde su horario semanal"""
+    try:
+        veterinario = get_object_or_404(CustomUser, pk=veterinario_id, rol='veterinario')
+        _generar_disponibilidades_desde_horario_semanal(veterinario, semanas=8)
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Disponibilidades regeneradas correctamente'
+        })
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
 @login_required
 @require_http_methods(["GET"])
 def obtener_horario_semanal(request, veterinario_id):
@@ -772,7 +873,7 @@ def obtener_horario_semanal(request, veterinario_id):
 @login_required
 @require_http_methods(["POST"])
 def guardar_horario_semanal(request):
-    """Guardar el horario semanal completo de un veterinario"""
+    """Guardar el horario semanal completo de un veterinario y generar disponibilidades diarias"""
     try:
         data = json.loads(request.body)
         veterinario_id = data.get('veterinario_id')
@@ -804,6 +905,9 @@ def guardar_horario_semanal(request):
                 )
                 h.full_clean()
                 h.save()
+        
+        # Generar disponibilidades diarias para las próximas 8 semanas
+        _generar_disponibilidades_desde_horario_semanal(veterinario, semanas=8)
         
         return JsonResponse({
             'success': True,
