@@ -166,8 +166,8 @@ function inicializarCalendario() {
     const anioActual = hoy.getFullYear();
     
     // Poblar select de meses
-    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 
+                   'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     const selectMes = document.getElementById('calMes');
     meses.forEach((mes, idx) => {
         const opt = document.createElement('option');
