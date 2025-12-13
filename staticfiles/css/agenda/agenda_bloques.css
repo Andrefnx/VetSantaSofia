@@ -280,25 +280,17 @@ body {
 }
 
 .agenda-block.is-occupied {
-    background: #e5e7eb;
-    border-color: #9ca3af;
-    color: #6b7280;
-    cursor: not-allowed;
+    background: linear-gradient(135deg, #ffebee, #ffcdd2);
+    border-color: #ef5350;
+    color: #c62828;
+    cursor: pointer;
+    font-weight: 600;
 }
 
 .agenda-block.is-occupied:hover {
-    transform: none;
-}
-
-.agenda-block.is-unavailable {
-    background: rgba(229, 57, 53, 0.08);
-    border-color: #f5c6cb;
-    color: #999;
-    cursor: not-allowed;
-}
-
-.agenda-block.is-unavailable:hover {
-    transform: none;
+    background: linear-gradient(135deg, #ffcdd2, #ef9a9a);
+    border-color: #e53935;
+    box-shadow: 0 4px 12px rgba(239, 83, 80, 0.3);
 }
 
 .agenda-block.is-hover-fit {
@@ -346,18 +338,13 @@ body {
 }
 
 .agenda-block-legend.is-available {
-    background: rgba(67, 160, 71, 0.1);
+    background: linear-gradient(135deg, #e8f5e9, #f1f8f4);
     border-color: var(--success-color);
 }
 
 .agenda-block-legend.is-occupied {
-    background: #e5e7eb;
-    border-color: #9ca3af;
-}
-
-.agenda-block-legend.is-unavailable {
-    background: rgba(229, 57, 53, 0.08);
-    border-color: #f5c6cb;
+    background: linear-gradient(135deg, #ffebee, #ffcdd2);
+    border-color: #ef5350;
 }
 
 /* Responsivo */

@@ -323,16 +323,36 @@ async function cargarAgendaBloques() {
     cargarTodasLasAgendas();
 }
 
+async function cargarBloquesParaFecha(vetId, fecha) {
+    try {
+        const [year, month, day] = fecha.split('-');
+        const response = await fetch(`/agenda/bloques/${vetId}/${year}/${month}/${day}/`);
+        const data = await response.json();
+        if (data && data.blocks) {
+            agendarState.bloques = data.blocks;
+        }
+    } catch (err) {
+        console.error('Error cargando bloques para fecha:', err);
+    }
+}
+
 function renderizarBloquesVeterinario(vetId, data) {
     const container = document.getElementById(`agendaBloques${vetId}`);
     const estadoVet = document.getElementById(`estadoVet${vetId}`);
+    const seccionVeterinario = container.closest('.flex-fill');
     
     if (!data.trabaja) {
-        estadoVet.style.display = 'block';
-        container.style.display = 'none';
+        // Ocultar toda la sección del veterinario que no trabaja
+        if (seccionVeterinario) {
+            seccionVeterinario.style.display = 'none';
+        }
         return;
     }
     
+    // Mostrar la sección del veterinario que sí trabaja
+    if (seccionVeterinario) {
+        seccionVeterinario.style.display = 'block';
+    }
     estadoVet.style.display = 'none';
     container.style.display = 'grid';
     container.innerHTML = '';
@@ -375,6 +395,12 @@ function renderizarBloquesVeterinario(vetId, data) {
                     }
                     
                     const bloque = data.blocks[blockIndex];
+                    
+                    // Saltar bloques no disponibles (no se renderizan)
+                    if (bloque.status === 'unavailable') {
+                        cuarto++;
+                        continue;
+                    }
                     
                     // Si es una cita ocupada, agrupar bloques consecutivos EN ESTA HORA
                     if (bloque.status === 'occupied' && bloque.cita_id) {
@@ -701,7 +727,20 @@ function abrirModalAgendarDirecta(blockIndex, vetId, startTime, veterinario, blo
     
     // Llenar datos automáticos
     document.getElementById('agendarVeterinario').textContent = veterinario;
-    document.getElementById('agendarFecha').textContent = formatearFecha(agendaState.fecha);
+    const fechaInput = document.getElementById('agendarFechaInput');
+    fechaInput.value = agendaState.fecha;
+    fechaInput.onchange = async (e) => {
+        const nuevaFecha = e.target.value;
+        if (!nuevaFecha) return;
+        agendaState.fecha = nuevaFecha;
+        await cargarBloquesParaFecha(agendarState.vetId, nuevaFecha);
+        inicializarHorasDisponibles();
+        // Si hay servicio seleccionado, aplicar filtro
+        const servicioSelect = document.getElementById('servicioSelectDirecto');
+        if (servicioSelect.value) {
+            actualizarHorasDisponibles();
+        }
+    };
     
     // Limpiar selectores
     document.getElementById('servicioSelectDirecto').value = '';

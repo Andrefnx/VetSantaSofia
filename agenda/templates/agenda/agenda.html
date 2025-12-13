@@ -30,8 +30,15 @@
         <div class="row">
         <!-- Panel de Filtros -->
         <div class="col-md-3">
+            <!-- Leyenda compacta arriba -->
+            <div id="agendaLeyenda" class="section py-2" style="display: none;">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="d-flex align-items-center gap-2"><span class="agenda-block-legend is-available"></span><small>Disponible</small></span>
+                    <span class="d-flex align-items-center gap-2"><span class="agenda-block-legend is-occupied"></span><small>Ocupado</small></span>
+                </div>
+            </div>
             <div class="section">
-                <h3>Filtros</h3>
+                <h3 class="mb-2">Filtros</h3>
                 <div class="mb-3">
                     <label class="form-label"><strong>Fecha:</strong></label>
                     <input type="date" id="fechaAgenda" class="form-control" />
@@ -81,26 +88,7 @@
                 </div>
                 {% endfor %}
                 
-                <!-- Leyenda -->
-                <div style="flex: 0 0 200px;">
-                    <div class="section" id="agendaLeyenda" style="display: none; padding: 1rem;">
-                        <h5 class="mb-3">Leyenda</h5>
-                        <div class="d-flex flex-column gap-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="agenda-block-legend is-available"></span>
-                                <small>Disponible</small>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="agenda-block-legend is-occupied"></span>
-                                <small>Ocupado</small>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="agenda-block-legend is-unavailable"></span>
-                                <small>No disponible</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                
             </div>
         </div>
     </div>
@@ -127,7 +115,7 @@
                 </div>
                 <div class="col-4">
                     <label class="form-label small mb-1"><strong>Fecha</strong></label>
-                    <p class="mb-0 fs-6" id="agendarFecha">-</p>
+                    <input type="date" id="agendarFechaInput" class="form-control form-control-sm" />
                 </div>
                 <div class="col-4">
                     <label class="form-label small mb-1"><strong>Hora</strong></label>
@@ -332,7 +320,12 @@
                     </div>
 
                     <div class="mb-2">
-                        <label class="d-block mb-2" style="font-weight: 700;">Horarios por día de la semana</label>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="m-0" style="font-weight: 700;">Horarios por día de la semana</label>
+                            <button type="button" id="btnAplicarTodo" class="btn btn-success btn-sm" onclick="aplicarHorariosATodo()">
+                                <i class="fas fa-clipboard-check"></i> Aplicar a todo
+                            </button>
+                        </div>
                         <div id="diasSemana" class="dias-semana-container">
                             <!-- Los días de la semana se generan aquí -->
                         </div>

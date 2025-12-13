@@ -16,6 +16,24 @@ let horarioState = {
     horarios: {} // { 0: [{start: '08:00', end: '12:00'}, ...], 1: [...], ... }
 };
 
+function crearSelectHora(valorInicial) {
+    const select = document.createElement('select');
+    select.className = 'form-select form-select-sm';
+    select.style.cssText = 'flex: 1;';
+    const inicioMin = 6 * 60; // 06:00
+    const finMin = 22 * 60; // 22:00
+    for (let m = inicioMin; m <= finMin; m += 15) {
+        const hh = String(Math.floor(m / 60)).padStart(2, '0');
+        const mm = String(m % 60).padStart(2, '0');
+        const opt = document.createElement('option');
+        opt.value = `${hh}:${mm}`;
+        opt.textContent = `${hh}:${mm}`;
+        select.appendChild(opt);
+    }
+    if (valorInicial) select.value = valorInicial;
+    return select;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     inicializarHorarioSemanal();
     document.getElementById('dispVeterinario').addEventListener('change', cargarHorarioSemanal);
@@ -51,7 +69,7 @@ function crearDiaWidget(dia) {
     btnCopiar.innerHTML = '<i class="fas fa-copy"></i> Copiar';
     btnCopiar.onclick = function(e) { 
         e.preventDefault();
-        abrirSelectorCopiar(dia.id); 
+        togglePanelCopiar(diaDiv, dia.id);
     };
     
     header.appendChild(titulo);
@@ -64,7 +82,61 @@ function crearDiaWidget(dia) {
     rangosDiv.dataset.dia = dia.id;
     rangosDiv.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.8rem;';
     
-    diaDiv.appendChild(rangosDiv);
+    // Panel copiar inline (oculto por defecto)
+    const panelCopiar = document.createElement('div');
+    panelCopiar.className = 'panel-copiar';
+    panelCopiar.style.cssText = 'display: none; width: 100%; background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 0.75rem;';
+
+    const tituloCopiar = document.createElement('h6');
+    tituloCopiar.textContent = `Copiar rangos de ${dia.nombre} a:`;
+    tituloCopiar.style.cssText = 'margin: 0 0 0.5rem 0; font-weight: 600;';
+    panelCopiar.appendChild(tituloCopiar);
+
+    const checkboxesDiv = document.createElement('div');
+    checkboxesDiv.style.cssText = 'display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.75rem;';
+
+    DIAS_SEMANA.forEach(d => {
+        if (d.id === dia.id) return;
+        const label = document.createElement('label');
+        label.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; cursor: pointer;';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'destino-checkbox';
+        checkbox.dataset.dia = d.id;
+        const labelText = document.createElement('span');
+        labelText.textContent = d.nombre;
+        label.appendChild(checkbox);
+        label.appendChild(labelText);
+        checkboxesDiv.appendChild(label);
+    });
+
+    panelCopiar.appendChild(checkboxesDiv);
+
+    const acciones = document.createElement('div');
+    acciones.style.cssText = 'display: flex; gap: 0.5rem; justify-content: flex-end;';
+    const btnCancelar = document.createElement('button');
+    btnCancelar.type = 'button';
+    btnCancelar.className = 'btn btn-secondary btn-sm';
+    btnCancelar.textContent = 'Cancelar';
+    btnCancelar.onclick = function() { panelCopiar.style.display = 'none'; };
+
+    const btnAplicar = document.createElement('button');
+    btnAplicar.type = 'button';
+    btnAplicar.className = 'btn btn-primary btn-sm';
+    btnAplicar.innerHTML = '<i class="fas fa-copy"></i> Copiar';
+    btnAplicar.onclick = function() { copiarRangos(dia.id, panelCopiar); panelCopiar.style.display = 'none'; };
+
+    acciones.appendChild(btnCancelar);
+    acciones.appendChild(btnAplicar);
+    panelCopiar.appendChild(acciones);
+
+    // Estructura en columna: encabezado (ya creado) -> panel copiar -> rangos
+    const contenidoCol = document.createElement('div');
+    contenidoCol.style.cssText = 'display: flex; flex-direction: column;';
+    contenidoCol.appendChild(panelCopiar);
+    contenidoCol.appendChild(rangosDiv);
+
+    diaDiv.appendChild(contenidoCol);
     
     // Botón para agregar rango
     const btnAgregar = document.createElement('button');
@@ -79,77 +151,16 @@ function crearDiaWidget(dia) {
     return diaDiv;
 }
 
-function abrirSelectorCopiar(diaOrigen) {
-    // Verificar que el día origen tenga rangos
-    const rangosDiv = document.querySelector(`.rangos-dia[data-dia="${diaOrigen}"]`);
+function togglePanelCopiar(diaDiv, diaOrigen) {
+    // Verificar rangos del día origen
+    const rangosDiv = diaDiv.querySelector(`.rangos-dia[data-dia="${diaOrigen}"]`);
     const rangos = rangosDiv.querySelectorAll('.rango-horario');
-    
     if (rangos.length === 0) {
         alert('El día no tiene rangos para copiar');
         return;
     }
-    
-    // Crear overlay con selector
-    const overlay = document.createElement('div');
-    overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 10000; display: flex; align-items: center; justify-content: center;';
-    
-    const selectorDiv = document.createElement('div');
-    selectorDiv.style.cssText = 'background: white; padding: 1.5rem; border-radius: 8px; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);';
-    
-    const titulo = document.createElement('h4');
-    titulo.textContent = `Copiar rangos de ${DIAS_SEMANA[diaOrigen].nombre} a:`;
-    titulo.style.cssText = 'margin: 0 0 1rem 0;';
-    selectorDiv.appendChild(titulo);
-    
-    const checkboxesDiv = document.createElement('div');
-    checkboxesDiv.style.cssText = 'display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;';
-    
-    DIAS_SEMANA.forEach(dia => {
-        if (dia.id === diaOrigen) return; // No copiar a sí mismo
-        
-        const label = document.createElement('label');
-        label.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; cursor: pointer;';
-        
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'destino-checkbox';
-        checkbox.dataset.dia = dia.id;
-        
-        const labelText = document.createElement('span');
-        labelText.textContent = dia.nombre;
-        
-        label.appendChild(checkbox);
-        label.appendChild(labelText);
-        checkboxesDiv.appendChild(label);
-    });
-    
-    selectorDiv.appendChild(checkboxesDiv);
-    
-    // Botones de acción
-    const botonesDiv = document.createElement('div');
-    botonesDiv.style.cssText = 'display: flex; gap: 0.75rem; justify-content: flex-end;';
-    
-    const btnCancelar = document.createElement('button');
-    btnCancelar.type = 'button';
-    btnCancelar.className = 'btn btn-secondary btn-sm';
-    btnCancelar.textContent = 'Cancelar';
-    btnCancelar.onclick = function() { overlay.remove(); };
-    
-    const btnCopiar = document.createElement('button');
-    btnCopiar.type = 'button';
-    btnCopiar.className = 'btn btn-primary btn-sm';
-    btnCopiar.innerHTML = '<i class="fas fa-copy"></i> Copiar';
-    btnCopiar.onclick = function() { 
-        copiarRangos(diaOrigen, selectorDiv);
-        overlay.remove();
-    };
-    
-    botonesDiv.appendChild(btnCancelar);
-    botonesDiv.appendChild(btnCopiar);
-    selectorDiv.appendChild(botonesDiv);
-    
-    overlay.appendChild(selectorDiv);
-    document.body.appendChild(overlay);
+    const panel = diaDiv.querySelector('.panel-copiar');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 }
 
 function copiarRangos(diaOrigen, selectorDiv) {
@@ -177,17 +188,11 @@ function copiarRangos(diaOrigen, selectorDiv) {
             rangoDiv.className = 'rango-horario';
             rangoDiv.style.cssText = 'display: flex; gap: 0.75rem; align-items: center;';
             
-            const inputInicio = document.createElement('input');
-            inputInicio.type = 'time';
-            inputInicio.className = 'form-control rango-inicio';
-            inputInicio.value = inicio;
-            inputInicio.style.cssText = 'flex: 1;';
+            const inputInicio = crearSelectHora(inicio);
+            inputInicio.classList.add('rango-inicio');
             
-            const inputFin = document.createElement('input');
-            inputFin.type = 'time';
-            inputFin.className = 'form-control rango-fin';
-            inputFin.value = fin;
-            inputFin.style.cssText = 'flex: 1;';
+            const inputFin = crearSelectHora(fin);
+            inputFin.classList.add('rango-fin');
             
             const btnEliminar = document.createElement('button');
             btnEliminar.type = 'button';
@@ -204,21 +209,56 @@ function copiarRangos(diaOrigen, selectorDiv) {
     });
 }
 
+function aplicarHorariosATodo() {
+    // Copia los rangos configurados en Lunes (0) al resto de días
+    const origen = 0;
+    const rangosDivOrigen = document.querySelector(`.rangos-dia[data-dia="${origen}"]`);
+    if (!rangosDivOrigen) return;
+    const rangosOrigen = rangosDivOrigen.querySelectorAll('.rango-horario');
+    if (rangosOrigen.length === 0) {
+        alert('Configure rangos en Lunes para aplicar a todos');
+        return;
+    }
+    DIAS_SEMANA.forEach(d => {
+        if (d.id === origen) return;
+        const rangosDest = document.querySelector(`.rangos-dia[data-dia="${d.id}"]`);
+        if (!rangosDest) return;
+        rangosDest.querySelectorAll('.rango-horario').forEach(el => el.remove());
+        rangosOrigen.forEach(rangoEl => {
+            const inicio = rangoEl.querySelector('.rango-inicio').value;
+            const fin = rangoEl.querySelector('.rango-fin').value;
+            const rangoDiv = document.createElement('div');
+            rangoDiv.className = 'rango-horario';
+            rangoDiv.style.cssText = 'display: flex; gap: 0.75rem; align-items: center;';
+            const inputInicio = crearSelectHora(inicio);
+            inputInicio.classList.add('rango-inicio');
+            const inputFin = crearSelectHora(fin);
+            inputFin.classList.add('rango-fin');
+            const btnEliminar = document.createElement('button');
+            btnEliminar.type = 'button';
+            btnEliminar.className = 'btn btn-danger btn-sm';
+            btnEliminar.innerHTML = '<i class="fas fa-trash"></i>';
+            btnEliminar.onclick = function() { rangoDiv.remove(); };
+            rangoDiv.appendChild(inputInicio);
+            rangoDiv.appendChild(inputFin);
+            rangoDiv.appendChild(btnEliminar);
+            rangosDest.insertBefore(rangoDiv, rangosDest.lastElementChild);
+        });
+    });
+    alert('Horarios de Lunes aplicados a todos los días');
+}
+
 function agregarRangoDia(diaId) {
     const rangosDiv = document.querySelector(`.rangos-dia[data-dia="${diaId}"]`);
     const rangoDiv = document.createElement('div');
     rangoDiv.className = 'rango-horario';
     rangoDiv.style.cssText = 'display: flex; gap: 0.75rem; align-items: center;';
     
-    const inputInicio = document.createElement('input');
-    inputInicio.type = 'time';
-    inputInicio.className = 'form-control rango-inicio';
-    inputInicio.style.cssText = 'flex: 1;';
+    const inputInicio = crearSelectHora();
+    inputInicio.classList.add('rango-inicio');
     
-    const inputFin = document.createElement('input');
-    inputFin.type = 'time';
-    inputFin.className = 'form-control rango-fin';
-    inputFin.style.cssText = 'flex: 1;';
+    const inputFin = crearSelectHora();
+    inputFin.classList.add('rango-fin');
     
     const btnEliminar = document.createElement('button');
     btnEliminar.type = 'button';
@@ -258,17 +298,11 @@ function cargarHorarioSemanal() {
                         rangoDiv.className = 'rango-horario';
                         rangoDiv.style.cssText = 'display: flex; gap: 0.75rem; align-items: center;';
                         
-                        const inputInicio = document.createElement('input');
-                        inputInicio.type = 'time';
-                        inputInicio.className = 'form-control rango-inicio';
-                        inputInicio.value = rango.start;
-                        inputInicio.style.cssText = 'flex: 1;';
+                        const inputInicio = crearSelectHora(rango.start);
+                        inputInicio.classList.add('rango-inicio');
                         
-                        const inputFin = document.createElement('input');
-                        inputFin.type = 'time';
-                        inputFin.className = 'form-control rango-fin';
-                        inputFin.value = rango.end;
-                        inputFin.style.cssText = 'flex: 1;';
+                        const inputFin = crearSelectHora(rango.end);
+                        inputFin.classList.add('rango-fin');
                         
                         const btnEliminar = document.createElement('button');
                         btnEliminar.type = 'button';
