@@ -1,3 +1,17 @@
+let sidebarWidthTimer;
+
+const updateSidebarWidthVar = () => {
+    const sidebar = document.getElementById('vetSidebar');
+    if (!sidebar) return;
+    const width = sidebar.getBoundingClientRect().width;
+    document.documentElement.style.setProperty('--sidebar-width', `${width}px`);
+};
+
+const scheduleSidebarWidthUpdate = () => {
+    clearTimeout(sidebarWidthTimer);
+    sidebarWidthTimer = setTimeout(updateSidebarWidthVar, 50);
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     // Inicializar búsqueda
     const searchInput = document.getElementById('searchInput');
@@ -31,7 +45,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    
+    // Ajustar ancho del modal al borde real del sidebar
+    updateSidebarWidthVar();
+    window.addEventListener('resize', scheduleSidebarWidthUpdate);
+
+    const sidebar = document.getElementById('vetSidebar');
+    if (sidebar) {
+        const observer = new MutationObserver(scheduleSidebarWidthUpdate);
+        observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+    if (sidebarToggleBtn) {
+        sidebarToggleBtn.addEventListener('click', () => {
+            requestAnimationFrame(scheduleSidebarWidthUpdate);
+        });
+    }
 });
 
 import { initManageWheel } from './wheel_base.js';

@@ -46,6 +46,10 @@
     --z-modal-backdrop: 999998;
     --z-modal: 999999;
     --z-popover: 10;
+
+    /* LAYOUT */
+    --sidebar-width: 260px;
+    --sidebar-width-collapsed: 70px;
     
     /* ESPACIOS */
     --spacing-xs: 4px;
@@ -723,10 +727,10 @@ table tbody td {
 .vet-modal-overlay {
     position: fixed !important;
     top: 0 !important;
-    left: 0 !important;
+    left: var(--sidebar-width, 260px) !important;
     right: 0 !important;
     bottom: 0 !important;
-    width: 100vw !important;
+    width: calc(100% - var(--sidebar-width, 260px)) !important;
     height: 100vh !important;
     background: rgba(0, 0, 0, 0.5) !important;
     display: flex !important;
@@ -751,6 +755,13 @@ table tbody td {
     visibility: hidden !important;
     pointer-events: none !important;
     display: none !important;
+}
+
+@media (max-width: 900px) {
+    .vet-modal-overlay {
+        left: 0 !important;
+        width: 100% !important;
+    }
 }
 
 .vet-custom-modal {
