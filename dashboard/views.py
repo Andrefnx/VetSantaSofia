@@ -148,9 +148,21 @@ def _datos_administrador(hoy):
     ).select_related('paciente__propietario', 'veterinario')
     
     # Agregar cálculo de días de hospitalización
+    from clinica.models import RegistroDiario
     for hosp in hospitalizaciones_activas:
         fecha_ingreso = hosp.fecha_ingreso.date() if hasattr(hosp.fecha_ingreso, 'date') else hosp.fecha_ingreso
         hosp.dias_hospitalizacion = (hoy - fecha_ingreso).days
+        
+        # Calcular si necesita actualización (más de 12 horas sin registro)
+        hosp.ultimo_registro = RegistroDiario.objects.filter(
+            hospitalizacion=hosp
+        ).order_by('-fecha_registro').first()
+        
+        if hosp.ultimo_registro:
+            horas_desde_registro = (timezone.now() - hosp.ultimo_registro.fecha_registro).total_seconds() / 3600
+            hosp.necesita_actualizacion = horas_desde_registro >= 12
+        else:
+            hosp.necesita_actualizacion = True
     
     mis_hospitalizaciones = list(hospitalizaciones_activas)
     
@@ -257,9 +269,21 @@ def _datos_recepcion(hoy, usuario):
     ).select_related('paciente__propietario', 'veterinario')
     
     # Agregar cálculo de días de hospitalización
+    from clinica.models import RegistroDiario
     for hosp in hospitalizaciones_activas:
         fecha_ingreso = hosp.fecha_ingreso.date() if hasattr(hosp.fecha_ingreso, 'date') else hosp.fecha_ingreso
         hosp.dias_hospitalizacion = (hoy - fecha_ingreso).days
+        
+        # Calcular si necesita actualización (más de 12 horas sin registro)
+        hosp.ultimo_registro = RegistroDiario.objects.filter(
+            hospitalizacion=hosp
+        ).order_by('-fecha_registro').first()
+        
+        if hosp.ultimo_registro:
+            horas_desde_registro = (timezone.now() - hosp.ultimo_registro.fecha_registro).total_seconds() / 3600
+            hosp.necesita_actualizacion = horas_desde_registro >= 12
+        else:
+            hosp.necesita_actualizacion = True
     
     mis_hospitalizaciones = list(hospitalizaciones_activas)
     
