@@ -66,6 +66,15 @@
                     </div>
                     <input type="hidden" id="fechaAgenda" />
                 </div>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Veterinario:</strong></label>
+                    <select id="filtroVeterinario" class="form-select form-select-sm">
+                        <option value="">Todos los veterinarios</option>
+                        {% for vet in veterinarios %}
+                        <option value="{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -101,10 +110,10 @@
             </div>
 
             <!-- Contenedor de agendas de veterinarios -->
-            <div id="contenedorAgendas" class="d-flex gap-3" style="display: none;">
+            <div id="contenedorAgendas" class="agendas-container" style="display: none;">
                 {% for vet in veterinarios %}
                 <!-- Agenda Veterinario {{ vet.id }} -->
-                <div class="flex-fill" style="min-width: 0;">
+                <div class="agenda-vet-col">
                     <div class="section">
                         <h4 class="mb-3">
                             <i class="fas fa-user-md"></i> 

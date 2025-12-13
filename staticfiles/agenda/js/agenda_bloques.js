@@ -153,6 +153,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('fechaAgenda').value = hoy;
     calendarioState.fechaSeleccionada = hoy;
     
+    // Event listener para filtro de veterinario
+    document.getElementById('filtroVeterinario').addEventListener('change', function() {
+        cargarTodasLasAgendas();
+    });
+    
     // Cargar automáticamente las agendas de todos los veterinarios
     agendaState.fecha = hoy;
     setTimeout(() => cargarTodasLasAgendas(), 300);
@@ -549,15 +554,19 @@ async function cargarTodasLasAgendas() {
         return match ? match[1] : null;
     }).filter(id => id !== null);
     
+    // Aplicar filtro de veterinario si está seleccionado
+    const filtroVet = document.getElementById('filtroVeterinario').value;
+    const vetsACargar = filtroVet ? [filtroVet] : todosVets;
+    
     // Ocultar todos los vets primero
     todosVets.forEach(vetId => {
-        const seccion = document.getElementById(`agendaBloques${vetId}`).closest('.flex-fill');
+        const seccion = document.getElementById(`agendaBloques${vetId}`).closest('.agenda-vet-col');
         if (seccion) seccion.style.display = 'none';
     });
     
     try {
         // Cargar TODAS las agendas primero para saber quién trabaja
-        const promesasTodos = todosVets.map(vetId => 
+        const promesasTodos = vetsACargar.map(vetId => 
             fetch(`/agenda/bloques/${vetId}/${year}/${month}/${day}/`)
                 .then(response => response.json())
                 .then(data => ({ vetId, data }))
@@ -601,7 +610,7 @@ async function cargarTodasLasAgendas() {
         // Ocultar estado de carga y mostrar agendas
         document.getElementById('agendaEstado').style.display = 'none';
         document.getElementById('agendaSinVets').style.display = 'none';
-        document.getElementById('contenedorAgendas').style.display = 'flex';
+        document.getElementById('contenedorAgendas').style.display = 'grid';
         document.getElementById('agendaLeyenda').style.display = 'block';
         
         // Actualizar controles de navegación
@@ -634,7 +643,7 @@ async function cargarBloquesParaFecha(vetId, fecha) {
 function renderizarBloquesVeterinario(vetId, data) {
     const container = document.getElementById(`agendaBloques${vetId}`);
     const estadoVet = document.getElementById(`estadoVet${vetId}`);
-    const seccionVeterinario = container.closest('.flex-fill');
+    const seccionVeterinario = container.closest('.agenda-vet-col');
     
     if (!data.trabaja) {
         // Ocultar toda la sección del veterinario que no trabaja
@@ -715,8 +724,9 @@ function renderizarBloquesVeterinario(vetId, data) {
                         blockEl.dataset.startTime = bloque.start_time;
                         blockEl.style.gridColumn = `span ${endQuarto - cuarto}`;
                         blockEl.innerHTML = `
-                            <span class="agenda-block-time">${bloque.start_time}</span>
-                            ${bloque.label ? `<span class="agenda-block-label">${bloque.label}</span>` : ''}
+                            <div class="agenda-block-time">${bloque.hora_inicio || bloque.start_time} - ${bloque.hora_fin || bloque.end_time}</div>
+                            <div class="agenda-block-label">${bloque.paciente_nombre || 'Sin paciente'} | ${bloque.propietario_nombre || 'Sin dueño'}</div>
+                            <div class="agenda-block-info">${bloque.servicio_nombre || 'Sin servicio'}</div>
                         `;
                         blockEl.style.cursor = 'pointer';
                         blockEl.addEventListener('click', () => mostrarDetalleCita(bloque));
