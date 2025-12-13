@@ -968,8 +968,6 @@ function mostrarDetalleCita(bloque) {
     // Llenar los datos del modal
     document.getElementById('detallePaciente').textContent = bloque.paciente_nombre || '-';
     document.getElementById('detallePropietario').textContent = bloque.propietario_nombre || '-';
-    document.getElementById('detalleServicio').textContent = bloque.servicio_nombre || '-';
-    document.getElementById('detalleHorario').textContent = `${bloque.hora_inicio} - ${bloque.hora_fin}` || '-';
     
     // Teléfono como enlace WhatsApp
     const btnTelefono = document.getElementById('detalleTelefonoPropietario');
