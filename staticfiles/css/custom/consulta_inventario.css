@@ -1,0 +1,513 @@
+/* ============================================================
+   SELECTOR DE INVENTARIO EN CONSULTA - VERSIÓN COMPACTA
+============================================================ */
+
+/* Contenedor principal del tratamiento */
+.tratamiento-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.tratamiento-container textarea[name="tratamiento"] {
+    min-height: 180px;
+    resize: vertical;
+}
+
+/* ============================================================
+   DATOS FISIOLÓGICOS - ULTRA COMPACTOS
+============================================================ */
+
+.col-md-3 .detail-section {
+    margin-bottom: 0.5rem !important;
+    padding: 0.4rem 0.6rem !important;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.col-md-3 .detail-section-title {
+    font-size: 0.7rem !important;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 0.25rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.col-md-3 .detail-section-title i {
+    font-size: 0.75rem;
+    margin-right: 0.25rem;
+    color: var(--primary-color);
+}
+
+.col-md-3 .detail-section p {
+    margin: 0 !important;
+    font-size: 0.85rem;
+    color: #2c3e50;
+}
+
+.col-md-3 .detail-section input.form-control {
+    padding: 0.35rem 0.5rem !important;
+    font-size: 0.85rem !important;
+    height: auto !important;
+    border: 1px solid #dee2e6;
+}
+
+.col-md-3 hr {
+    margin: 0.5rem 0 !important;
+    border-top: 1px solid #dee2e6;
+}
+
+/* ============================================================
+   INVENTARIO SELECTOR COMPACT
+============================================================ */
+
+.inventario-selector-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.inventario-selector-compact input[type="text"] {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+
+/* Lista de inventario */
+.inventario-list-compact {
+    max-height: 180px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: #fafafa;
+    padding: 0.25rem;
+}
+
+.inventario-empty {
+    text-align: center;
+    padding: 1.5rem;
+    color: #999;
+}
+
+.inventario-empty i {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+/* ============================================================
+   ITEM DE INVENTARIO - ULTRA COMPACTO
+============================================================ */
+
+.inventario-item {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 0.4rem 0.5rem;
+    margin-bottom: 0.25rem;
+    transition: all 0.2s;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.inventario-item:hover {
+    border-color: var(--primary-color);
+    background: #f8fdf8;
+    box-shadow: 0 1px 4px rgba(76, 175, 80, 0.15);
+}
+
+.inventario-item.agregado {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.inventario-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.producto-nombre-compact {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.producto-detalles {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.badge-compact {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    gap: 0.2rem;
+}
+
+.badge-compact i {
+    font-size: 0.7rem;
+}
+
+.badge-especie {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.badge-stock {
+    background: #f1f8e9;
+    color: #558b2f;
+}
+
+.badge-stock.bajo {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.badge-dosis {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+/* ⭐ Botón agregar compacto - IMPORTANTE */
+.btn-agregar-compact {
+    background: var(--primary-color) !important;
+    border: none !important;
+    color: white !important;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    font-weight: bold;
+}
+
+.btn-agregar-compact:hover {
+    background: var(--primary-dark) !important;
+    transform: translateY(-2px) !important;
+}
+
+.btn-agregar-compact:active {
+    transform: translateY(0) !important;
+}
+
+.btn-agregar-compact i {
+    font-size: 1.1rem;
+}
+
+/* ============================================================
+   INSUMOS UTILIZADOS - ESTILO MEJORADO
+============================================================ */
+
+.insumos-utilizados {
+    margin-top: 0.75rem;
+}
+
+.insumos-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.insumos-title i {
+    color: var(--primary-color);
+}
+
+#insumosSeleccionados {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-height: 40px;
+}
+
+/* ⭐ Tags de medicamentos - Estilo actualizado */
+.medicamento-tag {
+    background: white;
+    color: var(--text-dark);
+    padding: 0.5rem 0.7rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    transition: all 0.2s;
+    border: 1px solid #e0e0e0;
+}
+
+.medicamento-tag:hover {
+    transform: translateY(-1px);
+    border-color: var(--primary-color);
+}
+
+.medicamento-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.medicamento-nombre {
+    font-weight: 600;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ⭐ Dosis con icono y formato mejorado */
+.medicamento-dosis {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    background: rgba(76, 175, 80, 0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    font-weight: 500;
+    width: fit-content;
+    color: #2e7d32;
+}
+
+.medicamento-dosis i {
+    font-size: 0.7rem;
+    color: var(--primary-color);
+}
+
+.medicamento-dosis span {
+    color: #2e7d32;
+}
+
+/* ⭐ Botón remover - IMPORTANTE */
+.btn-remover {
+    border: none !important;
+    background: var(--danger-color) !important;
+    color: white !important;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    font-weight: bold;
+}
+
+.btn-remover:hover {
+    background: var(--danger-hover) !important;
+    transform: translateY(-2px) !important;
+}
+
+.btn-remover:active {
+    transform: translateY(0) !important;
+}
+
+.btn-remover i {
+    font-size: 1.1rem;
+}
+
+/* ============================================================
+   ALERTAS DENTRO DEL MODAL
+============================================================ */
+
+.modal-alert-container {
+    position: sticky;
+    top: 0;
+    z-index: 1050;
+    margin: -1rem -1rem 1rem -1rem;
+    padding: 0;
+}
+
+.modal-alert {
+    background: white;
+    padding: 0.85rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    transform: translateY(-100%);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    position: relative;
+    overflow: hidden;
+}
+
+.modal-alert::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+}
+
+.modal-alert.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.modal-alert i:first-child {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.modal-alert span {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.modal-alert-close {
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 0.35rem;
+    border-radius: 4px;
+    opacity: 0.6;
+    transition: all 0.2s;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+}
+
+.modal-alert-close:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.1);
+    transform: rotate(90deg);
+}
+
+/* Tipos de alerta */
+.modal-alert-success {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    color: #2e7d32;
+}
+
+.modal-alert-success::before {
+    background: var(--primary-color);
+}
+
+.modal-alert-success i:first-child {
+    color: var(--primary-color);
+}
+
+.modal-alert-warning {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    color: #e65100;
+}
+
+.modal-alert-warning::before {
+    background: #ff9800;
+}
+
+.modal-alert-warning i:first-child {
+    color: #ff9800;
+    animation: pulse-warning 1.5s infinite;
+}
+
+.modal-alert-error {
+    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+    color: #c62828;
+}
+
+.modal-alert-error::before {
+    background: var(--danger-color);
+}
+
+.modal-alert-error i:first-child {
+    color: var(--danger-color);
+}
+
+.modal-alert-info {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    color: #1565c0;
+}
+
+.modal-alert-info::before {
+    background: #2196F3;
+}
+
+.modal-alert-info i:first-child {
+    color: #2196F3;
+}
+
+@keyframes pulse-warning {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.15);
+    }
+}
+
+/* ============================================================
+   SCROLLBAR PERSONALIZADO
+============================================================ */
+
+.inventario-list-compact::-webkit-scrollbar {
+    width: 6px;
+}
+
+.inventario-list-compact::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.inventario-list-compact::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.inventario-list-compact::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+
+@media (max-width: 768px) {
+    .tratamiento-container {
+        grid-template-columns: 1fr;
+    }
+    
+    #insumosSeleccionados {
+        min-height: 60px;
+    }
+    
+    .inventario-list-compact {
+        max-height: 150px;
+    }
+}

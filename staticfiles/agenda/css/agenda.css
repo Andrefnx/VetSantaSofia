@@ -1,0 +1,347 @@
+/* =============================
+   VARIABLES GLOBALES
+============================= */
+:root {
+    --primary-color: #9fcf9f;
+    --primary-hover: #75b167;
+    --text-dark: #103012;
+    --bg-light: #f8f9fa;
+    --border-color: #e0e0e0;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* =============================
+   LAYOUT GENERAL
+============================= */
+.general-container {
+    display: grid;
+    grid-template-columns: 1fr 4.3fr;
+    gap: 2rem;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.section,
+.agenda-sidebar,
+.agenda-main,
+.agenda-sidebar-right {
+    background: white;
+    border-radius: 14px;
+    box-shadow: var(--shadow-sm);
+    padding: 20px;
+    margin-bottom: 1rem;
+}
+
+.section {
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+}
+
+.agenda-main,
+.agenda-sidebar-right {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.agenda-title {
+    font-size: 1.4rem;
+    margin-bottom: 18px;
+}
+
+/* =============================
+   INFO ROWS
+============================= */
+.info-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+    gap: 15px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+.resumen-clinico .info-row,
+.responsable .info-row {
+    grid-template-columns: 1fr;
+}
+
+/* =============================
+   AGENDA DAILY GRID
+============================= */
+.agenda-daily {
+    display: grid !important;
+    grid-template-columns: 260px 1fr 300px !important;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* =============================
+   MINI CALENDARIO
+============================= */
+.mini-calendar {
+    margin-bottom: 30px;
+}
+
+.mini-cal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.mini-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+}
+
+.mini-cal-day {
+    padding: 8px;
+    text-align: center;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.mini-cal-day:hover {
+    background: var(--primary-color);
+    color: var(--text-dark);
+}
+
+/* =============================
+   CATEGORÍAS
+============================= */
+.agenda-categories h4 {
+    margin-bottom: 10px;
+}
+
+.agenda-categories label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+}
+
+/* =============================
+   PANEL PRINCIPAL
+============================= */
+.agenda-main-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+.day-nav {
+    background: #f1f4f1;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* =============================
+   DAILY GRID
+============================= */
+.daily-grid {
+    margin-top: 25px;
+    border-left: 2px solid #e3e3e3;
+}
+
+.hour-block {
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    padding: 15px 0;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.hour-label {
+    text-align: right;
+    font-weight: 600;
+    color: #888;
+    padding-right: 15px;
+}
+
+.hour-slot {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Mostrar citas lado a lado si hay más de una en el mismo bloque horario */
+.hour-slot .quarter-block-group {
+    display: flex;
+    gap: 4px;
+    width: 100%;
+}
+
+.hour-slot .quarter-block-group .quarter-block {
+    flex: 1 1 0;
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.hour-slot .quarter-block:not(.in-group) {
+    width: 100%;
+}
+
+/* =============================
+   APPOINTMENTS
+============================= */
+.appointment {
+    padding: 12px 15px;
+    border-radius: 12px;
+    color: white;
+    cursor: pointer;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+    animation: fadeIn 0.3s;
+}
+
+.card-blue { background: #62b3ff; }
+.card-purple { background: #a77cff; }
+.card-orange { background: #ffa562; }
+
+.appt-time {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.appt-title {
+    margin: 5px 0 0 0;
+}
+
+.appt-type {
+    font-size: 0.8rem;
+    opacity: 0.85;
+}
+
+/* =============================
+   SIDEBAR DERECHO (DETALLE)
+============================= */
+.appt-detail-empty {
+    margin-top: 20px;
+    color: #999;
+    text-align: center;
+}
+
+.appt-section {
+    margin-bottom: 15px;
+}
+
+/* =============================
+   ANIMACIÓN
+============================= */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =============================
+   DAILY GRID SCROLLABLE
+============================= */
+.scrollable-daily-grid {
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* =============================
+   BLOQUES DE 15 MINUTOS
+============================= */
+.quarter-block {
+    position: relative;
+    height: auto;
+    padding: 6px 10px;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.quarter-block:hover {
+    background: var(--bg-light);
+}
+
+.quarter-block .add-icon {
+    opacity: 0;
+    transition: opacity 0.2s;
+    color: #6c757d;
+    font-size: 1rem;
+    margin-left: 8px;
+}
+
+.quarter-block:hover .add-icon {
+    opacity: 1;
+}
+
+.quarter-label {
+    font-size: 0.80rem;
+    color: #777;
+}
+
+.quarter-block .add-icon:hover {
+    color: var(--primary-hover);
+}
+
+/* =============================
+   CITA INFO
+============================= */
+.cita-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.97em;
+    padding: 2px 0 2px 2px;
+}
+.cita-tipo {
+    font-weight: 700;
+    font-size: 1em;
+    color: #1976d2;
+}
+.cita-mascota {
+    font-weight: 600;
+    color: #388e3c;
+}
+.cita-especie {
+    color: #5e35b1;
+    font-size: 0.96em;
+}
+.cita-vet {
+    color: #d84315;
+    font-size: 0.95em;
+}
+.cita-consulta {
+    background: #e3f2fd;
+    border-left: 4px solid #1976d2;
+}
+.cita-vacunacion {
+    background: #e8f5e9;
+    border-left: 4px solid #388e3c;
+}
+.cita-control {
+    background: #ede7f6;
+    border-left: 4px solid #5e35b1;
+}
+.has-appointment {
+    cursor: pointer;
+    position: relative;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-start;
+}

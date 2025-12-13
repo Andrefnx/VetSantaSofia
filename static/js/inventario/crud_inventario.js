@@ -1,12 +1,172 @@
 /* ============================================================
+   CONFIGURAR NIVELES DE STOCK
+============================================================ */
+function openConfigNivelesModal(btn) {
+    // Buscar el TR de manera robusta (misma lógica que abrirModalProducto)
+    let tr = btn.closest("tr");
+    
+    // Si no se encuentra con closest, intentar desde el botón padre
+    if (!tr) {
+        const manageWheel = btn.closest('.manage-wheel');
+        if (manageWheel) {
+            tr = manageWheel.closest('tr');
+        }
+    }
+    
+    // Si el botón tiene referencia al row original (del wheel clonado)
+    if (!tr && btn.__originalRow) {
+        tr = btn.__originalRow;
+    }
+    
+    // Si aún no se encuentra, buscar el TR que contiene el manage-wheel
+    if (!tr) {
+        const allRows = document.querySelectorAll('tbody tr[data-id]');
+        for (const row of allRows) {
+            if (row.contains(btn) || row.querySelector('.manage-wheel') === btn.closest('.manage-wheel')) {
+                tr = row;
+                break;
+            }
+        }
+    }
+    
+    if (!tr) {
+        console.error('No se encontró la fila de la tabla para el botón');
+        return;
+    }
+
+    const idInventario = tr.getAttribute("data-id");
+    const nombreProducto = tr.querySelector("td:nth-child(1)")?.textContent.trim() || "Producto";
+    
+    // Obtener datos actuales del producto
+    fetch(`/inventario/${idInventario}/detalle/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.insumo) {
+                // Poblar el modal con los datos actuales
+                document.getElementById('idProductoNiveles').value = idInventario;
+                document.getElementById('productoNombreNiveles').textContent = nombreProducto;
+                document.getElementById('inputStockMinimo').value = data.insumo.stock_minimo || 10;
+                document.getElementById('inputStockMedio').value = data.insumo.stock_medio || 20;
+                
+                // Abrir el modal
+                const modal = document.getElementById('modalConfigNiveles');
+                if (modal) {
+                    modal.classList.remove('hide');
+                    modal.classList.add('show');
+                }
+            } else {
+                alert("Error al cargar datos del producto");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Error al cargar el producto: " + error.message);
+        });
+}
+
+function guardarNivelesStock() {
+    const idProducto = document.getElementById('idProductoNiveles').value;
+    const stockMinimo = parseFloat(document.getElementById('inputStockMinimo').value);
+    const stockMedio = parseFloat(document.getElementById('inputStockMedio').value);
+    
+    // Validación básica
+    if (!stockMinimo || !stockMedio) {
+        alert("Por favor, ingresa ambos valores");
+        return;
+    }
+    
+    if (stockMinimo >= stockMedio) {
+        alert("El stock mínimo debe ser menor al stock medio");
+        return;
+    }
+    
+    // Enviar datos al servidor
+    fetch(`/inventario/${idProducto}/actualizar-niveles/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            stock_minimo: stockMinimo,
+            stock_medio: stockMedio
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Mostrar notificación de éxito
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #10b981;
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 999999;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            `;
+            notification.innerHTML = '<i class="fas fa-check-circle"></i> Niveles de stock actualizados correctamente';
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transition = 'opacity 0.3s';
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 2500);
+            
+            closeVetModal('modalConfigNiveles');
+            setTimeout(() => location.reload(), 600); // Recargar para ver cambios de color
+        } else {
+            alert("Error al guardar: " + (data.error || "Error desconocido"));
+        }
+    })
+    .catch(error => {
+        console.error("❌ Error:", error);
+        alert("Error al guardar niveles: " + error.message);
+    });
+}
+
+function closeVetModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('show');
+        modal.classList.add('hide');
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+/* ============================================================
    CREAR PRODUCTO
 ============================================================ */
 function abrirModalNuevoProducto() {
     const data = {
         nombre_comercial: "",
+        marca: "",
         categoria: "",
         sku: "",
         tipo: "",
+        formato: "",
         codigo_barra: "",
         presentacion: "",
         especie: "",
@@ -20,9 +180,22 @@ function abrirModalNuevoProducto() {
         precauciones: "",
         contraindicaciones: "",
         efectos_adversos: "",
+        
+        // Dosis líquidos
         dosis_ml: "",
-        peso_kg: "",
         ml_contenedor: "",
+        
+        // Dosis pastillas
+        cantidad_pastillas: "",
+        
+        // Dosis pipetas
+        unidades_pipeta: "",
+        
+        // Peso
+        peso_kg: "",
+        tiene_rango_peso: false,
+        peso_min_kg: "",
+        peso_max_kg: "",
     };
 
     openProductoModal("nuevo", data);
@@ -44,19 +217,45 @@ function parseNumeroSeguro(valor) {
 }
 
 /* ============================================================
-   VER / EDITAR PRODUCTO (CORREGIDO)
+   VER / EDITAR PRODUCTO
 ============================================================ */
 function abrirModalProducto(btn, mode) {
-    const tr = btn.closest("tr");
+    // Buscar el TR de manera robusta
+    let tr = btn.closest("tr");
+    
+    // Si no se encuentra con closest, intentar desde el botón padre
     if (!tr) {
-        console.error('No se encontró la fila de la tabla');
+        const manageWheel = btn.closest('.manage-wheel');
+        if (manageWheel) {
+            tr = manageWheel.closest('tr');
+        }
+    }
+    
+    // Si el botón tiene referencia al row original (del wheel clonado)
+    if (!tr && btn.__originalRow) {
+        tr = btn.__originalRow;
+    }
+    
+    // Si aún no se encuentra, buscar el TR que contiene el manage-wheel
+    if (!tr) {
+        const allRows = document.querySelectorAll('tbody tr[data-id]');
+        for (const row of allRows) {
+            if (row.contains(btn) || row.querySelector('.manage-wheel') === btn.closest('.manage-wheel')) {
+                tr = row;
+                break;
+            }
+        }
+    }
+    
+    if (!tr) {
+        console.error('❌ No se encontró la fila de la tabla para el botón:', btn);
+        console.error('❌ Este error no debería ocurrir. Verifica gestion_wheel.js');
         return;
     }
 
     const idInventario = tr.getAttribute("data-id");
     console.log('📦 Cargando producto ID:', idInventario);
 
-    // ⭐ URL CORREGIDA
     fetch(`/inventario/${idInventario}/detalle/`)
         .then(response => {
             console.log('📡 Response status:', response.status);
@@ -68,7 +267,6 @@ function abrirModalProducto(btn, mode) {
         .then(data => {
             console.log('📊 Datos recibidos:', data);
             
-            // ⭐ La API devuelve {success: true, insumo: {...}}
             if (data.success && data.insumo) {
                 openProductoModal(mode, data.insumo);
             } else {
@@ -82,7 +280,7 @@ function abrirModalProducto(btn, mode) {
 }
 
 /* ============================================================
-   ABRIR MODAL PRINCIPAL (CORREGIDO)
+   ABRIR MODAL PRINCIPAL
 ============================================================ */
 function openProductoModal(mode, data = {}) {
     console.log('🔧 Abriendo modal en modo:', mode);
@@ -96,53 +294,79 @@ function openProductoModal(mode, data = {}) {
         return;
     }
     
-    // ⭐ MAPEO CORRECTO: ahora 'data' ya es el objeto 'insumo'
+    // Mapear datos
     const mappedData = {
         idInventario: data.idInventario,
         nombre_comercial: data.medicamento || data.nombre_comercial || "",
+        marca: data.marca || "",
         sku: data.sku || "",
         tipo: data.tipo || "",
+        formato: data.formato || "",
         descripcion: data.descripcion || "",
         especie: data.especie || "",
         precio_venta: data.precio_venta || "",
         stock_actual: data.stock_actual || 0,
+        
+        // Dosis líquidos
         dosis_ml: data.dosis_ml || "",
-        peso_kg: data.peso_kg || "",
         ml_contenedor: data.ml_contenedor || "",
+        
+        // Dosis pastillas
+        cantidad_pastillas: data.cantidad_pastillas || "",
+        
+        // Dosis pipetas
+        unidades_pipeta: data.unidades_pipeta || "",
+        
+        // Peso
+        peso_kg: data.peso_kg || "",
+        tiene_rango_peso: data.tiene_rango_peso || false,
+        peso_min_kg: data.peso_min_kg || "",
+        peso_max_kg: data.peso_max_kg || "",
+        
         precauciones: data.precauciones || "",
         contraindicaciones: data.contraindicaciones || "",
         efectos_adversos: data.efectos_adversos || "",
+        
         fecha_creacion_formatted: data.fecha_creacion_formatted || "",
         ultimo_ingreso_formatted: data.ultimo_ingreso_formatted || "",
         ultimo_movimiento_formatted: data.ultimo_movimiento_formatted || "",
         tipo_ultimo_movimiento_display: data.tipo_ultimo_movimiento_display || "",
-        usuario_ultimo_movimiento: data.usuario_ultimo_movimiento || ""
+        usuario_ultimo_movimiento: data.usuario_ultimo_movimiento || "",
+        
+        dosis_display: data.dosis_display || "-",
+        categoria: data.categoria || "",
+        codigo_barra: data.codigo_barra || "",
+        presentacion: data.presentacion || "",
+        unidad_medida: data.unidad_medida || "",
+        almacenamiento: data.almacenamiento || "",
+        stock_minimo: data.stock_minimo || "",
+        stock_maximo: data.stock_maximo || "",
+        precio_compra: data.precio_compra || "",
+        stock: data.stock || "",
+        proveedor: data.proveedor || "",
+        especie: data.especie || "todos",
     };
     
     console.log('🗺️ Datos mapeados:', mappedData);
     
-    // ⭐ CAMPOS DE VISTA ESPECIALES PARA DOSIS
-    // Dosis fórmula (combinada)
+    // ⭐ ACTUALIZAR VISTA DE DOSIS (usando la función del dosis_calculator.js)
     const dosisFormulaView = modal.querySelector('[data-field="dosis_formula_view"]');
     if (dosisFormulaView) {
-        if (mappedData.dosis_ml && mappedData.peso_kg) {
-            dosisFormulaView.textContent = `${mappedData.dosis_ml} ml cada ${mappedData.peso_kg} kg`;
-            console.log('✅ dosis_formula_view:', `${mappedData.dosis_ml} ml cada ${mappedData.peso_kg} kg`);
-        } else {
-            dosisFormulaView.textContent = "-";
-            console.log('⚠️ dosis_formula_view: -');
-        }
+        dosisFormulaView.textContent = mappedData.dosis_display;
+        console.log('✅ dosis_formula_view:', mappedData.dosis_display);
     }
 
-    // ML Contenedor vista
+    // ML Contenedor vista (solo para líquidos)
     const mlContenedorView = modal.querySelector('[data-field="ml_contenedor_view"]');
     if (mlContenedorView) {
-        if (mappedData.ml_contenedor) {
-            mlContenedorView.textContent = `${mappedData.ml_contenedor} ml`;
-            console.log('✅ ml_contenedor_view:', `${mappedData.ml_contenedor} ml`);
+        if (mappedData.formato === 'liquido' || mappedData.formato === 'inyectable') {
+            if (mappedData.ml_contenedor) {
+                mlContenedorView.textContent = `${mappedData.ml_contenedor} ml`;
+            } else {
+                mlContenedorView.textContent = "-";
+            }
         } else {
-            mlContenedorView.textContent = "-";
-            console.log('⚠️ ml_contenedor_view: -');
+            mlContenedorView.textContent = "N/A";
         }
     }
 
@@ -150,19 +374,27 @@ function openProductoModal(mode, data = {}) {
         modal.dataset.originalData = JSON.stringify(mappedData);
     }
 
+    // Títulos y botones
     const titulo = document.getElementById("modalProductoTitulo");
     if (titulo) {
         titulo.textContent = mode === "nuevo" ? "Nuevo Producto" : mode === "edit" ? "Editar Producto" : "Detalles del Producto";
     }
 
-    const btnGuardar = document.getElementById("btnGuardarProductoModal");
+    // ⭐ CONFIGURAR BOTONES SEGÚN MODO
     const btnEditar = document.getElementById("btnEditarProducto");
-    const btnEliminar = document.getElementById("btnEliminarProducto");
+    const btnGuardar = document.getElementById("btnGuardarProductoModal");
     
-    if (btnGuardar) btnGuardar.classList.toggle("d-none", mode === "view");
-    if (btnEditar) btnEditar.classList.toggle("d-none", mode !== "view");
-    if (btnEliminar) btnEliminar.classList.toggle("d-none", mode === "nuevo");
+    if (mode === "view") {
+        // Modo vista: mostrar botón editar
+        if (btnEditar) btnEditar.classList.remove("d-none");
+        if (btnGuardar) btnGuardar.classList.add("d-none");
+    } else if (mode === "edit" || mode === "nuevo") {
+        // Modo edición: mostrar botón guardar
+        if (btnEditar) btnEditar.classList.add("d-none");
+        if (btnGuardar) btnGuardar.classList.remove("d-none");
+    }
 
+    // Mostrar/ocultar campos según modo
     modal.querySelectorAll(".field-view").forEach((f) => {
         if (!f.classList.contains('field-readonly')) {
             f.classList.toggle("d-none", mode === "edit" || mode === "nuevo");
@@ -173,50 +405,48 @@ function openProductoModal(mode, data = {}) {
         f.classList.toggle("d-none", mode === "view");
     });
 
-    // Rellenar todos los campos normales
+    // Rellenar campos normales
     Object.keys(mappedData).forEach((key) => {
         const value = mappedData[key];
         
-        // Campos de vista (no readonly y no los especiales)
-        if (key !== 'dosis_ml' && key !== 'peso_kg' && key !== 'ml_contenedor') {
+        // Campos de vista
+        if (!['dosis_ml', 'peso_kg', 'ml_contenedor', 'cantidad_pastillas', 'unidades_pipeta', 
+              'peso_min_kg', 'peso_max_kg', 'tiene_rango_peso'].includes(key)) {
             const viewEl = modal.querySelector(`.field-view[data-field="${key}"]`);
             if (viewEl && !viewEl.classList.contains('field-readonly')) {
                 viewEl.textContent = value || "-";
-                console.log(`✅ Vista ${key}:`, value);
             }
         }
 
         // Campos editables
-        const editEl = modal.querySelector(`.field-edit[data-field="${key}"], .field-edit [data-field="${key}"]`);
+        const editEl = modal.querySelector(`input[data-field="${key}"], select[data-field="${key}"], textarea[data-field="${key}"]`);
         if (editEl) {
-            if (editEl.tagName === "SELECT") {
+            if (editEl.type === 'checkbox') {
+                editEl.checked = Boolean(value);
+            } else if (editEl.tagName === "SELECT") {
                 editEl.value = value || "";
             } else {
                 editEl.value = value || "";
             }
-            console.log(`✅ Edit ${key}:`, value);
+        }
+        
+        // También buscar dentro de .field-edit
+        const fieldEditDiv = modal.querySelector(`.field-edit[data-field="${key}"]`);
+        if (fieldEditDiv) {
+            const input = fieldEditDiv.querySelector('input, select, textarea');
+            if (input) {
+                if (input.type === 'checkbox') {
+                    input.checked = Boolean(value);
+                } else if (input.tagName === "SELECT") {
+                    input.value = value || "";
+                } else {
+                    input.value = value || "";
+                }
+            }
         }
     });
     
-    // ⭐ ASEGURAR INPUTS DE DOSIS (en los inputs de edición)
-    const dosisMlInput = modal.querySelector('input[data-field="dosis_ml"]');
-    const pesoKgInput = modal.querySelector('input[data-field="peso_kg"]');
-    const mlContenedorInput = modal.querySelector('input[data-field="ml_contenedor"]');
-    
-    if (dosisMlInput) {
-        dosisMlInput.value = mappedData.dosis_ml || "";
-        console.log("✅ dosis_ml input:", dosisMlInput.value);
-    }
-    if (pesoKgInput) {
-        pesoKgInput.value = mappedData.peso_kg || "";
-        console.log("✅ peso_kg input:", pesoKgInput.value);
-    }
-    if (mlContenedorInput) {
-        mlContenedorInput.value = mappedData.ml_contenedor || "";
-        console.log("✅ ml_contenedor input:", mlContenedorInput.value);
-    }
-    
-    // ⭐ Campos de solo lectura (metadata)
+    // Campos de solo lectura (metadata)
     const camposSoloLectura = [
         'fecha_creacion_formatted',
         'ultimo_ingreso_formatted',
@@ -229,15 +459,24 @@ function openProductoModal(mode, data = {}) {
         const readonlyEl = modal.querySelector(`.field-readonly[data-field="${key}"]`);
         if (readonlyEl) {
             readonlyEl.textContent = mappedData[key] || "-";
-            console.log(`✅ Readonly ${key}:`, mappedData[key]);
         }
     });
 
+    // Guardar ID
     if (mappedData.idInventario) {
         modal.dataset.idinventario = mappedData.idInventario;
-        console.log("✅ ID guardado en modal:", mappedData.idInventario);
     } else {
         delete modal.dataset.idinventario;
+    }
+    
+    // ⭐ Inicializar eventos de formato (dosis_calculator.js)
+    if (typeof inicializarEventosFormato === 'function') {
+        inicializarEventosFormato(modal);
+    }
+    
+    // ⭐ Actualizar campos de dosis según formato actual
+    if (mappedData.formato && typeof actualizarCamposDosis === 'function') {
+        actualizarCamposDosis(mappedData.formato, modal);
     }
 
     console.log('🎉 Abriendo modal...');
@@ -250,12 +489,14 @@ function openProductoModal(mode, data = {}) {
 function switchToEditModeProducto() {
     const modal = document.getElementById('modalProducto');
     const data = JSON.parse(modal.dataset.originalData || '{}');
+    
+    console.log('✏️ Cambiando a modo edición con datos:', data);
 
     if (data.idInventario) {
         modal.dataset.idinventario = data.idInventario;
     }
 
-    // Ocultar campos de vista (excepto readonly)
+    // Ocultar campos de vista
     modal.querySelectorAll(".field-view").forEach((f) => {
         if (!f.classList.contains('field-readonly')) {
             f.classList.add("d-none");
@@ -267,20 +508,21 @@ function switchToEditModeProducto() {
         f.classList.remove("d-none");
     });
 
-    // ⭐ RELLENAR TODOS LOS CAMPOS EDITABLES
+    // Rellenar campos editables
     Object.keys(data).forEach((key) => {
-        const value = data[key] || '';
+        const value = data[key];
         
-        // Buscar input/select/textarea directo
+        // Buscar input directo
         let element = modal.querySelector(`input[data-field="${key}"], select[data-field="${key}"], textarea[data-field="${key}"]`);
         
         if (element) {
-            if (element.tagName === "SELECT") {
-                element.value = value;
+            if (element.type === 'checkbox') {
+                element.checked = Boolean(value);
+            } else if (element.tagName === "SELECT") {
+                element.value = value || "";
             } else {
-                element.value = value;
+                element.value = value || "";
             }
-            console.log(`✅ Rellenado ${key}:`, value);
             return;
         }
         
@@ -289,12 +531,13 @@ function switchToEditModeProducto() {
         if (fieldEditDiv) {
             const input = fieldEditDiv.querySelector('input, select, textarea');
             if (input) {
-                if (input.tagName === "SELECT") {
-                    input.value = value;
+                if (input.type === 'checkbox') {
+                    input.checked = Boolean(value);
+                } else if (input.tagName === "SELECT") {
+                    input.value = value || "";
                 } else {
-                    input.value = value;
+                    input.value = value || "";
                 }
-                console.log(`✅ Rellenado ${key} en div:`, value);
             }
         }
     });
@@ -312,198 +555,12 @@ function switchToEditModeProducto() {
         titulo.textContent = "Editar Producto";
     }
     
-    console.log('✅ Modo edición activado');
-}
-
-/* ============================================================
-   GUARDAR PRODUCTO (CORREGIDO CON BÚSQUEDA MEJORADA)
-============================================================ */
-function guardarProducto() {
-    const modal = document.getElementById('modalProducto');
-    const currentProductId = modal.dataset.idinventario;
-    
-    console.log('💾 Intentando guardar producto ID:', currentProductId);
-    
-    // ⭐ FUNCIÓN MEJORADA PARA OBTENER DATOS
-    const getData = (field) => {
-        // 1. Buscar input/select/textarea directo con data-field
-        let element = modal.querySelector(`input[data-field="${field}"], select[data-field="${field}"], textarea[data-field="${field}"]`);
-        
-        if (element) {
-            console.log(`✅ Encontrado ${field}:`, element.value);
-            return element.value;
-        }
-        
-        // 2. Buscar dentro de .field-edit (para campos con input-group)
-        const fieldEditDiv = modal.querySelector(`.field-edit[data-field="${field}"]`);
-        if (fieldEditDiv) {
-            const input = fieldEditDiv.querySelector('input, select, textarea');
-            if (input) {
-                console.log(`✅ Encontrado ${field} en div:`, input.value);
-                return input.value;
-            }
-        }
-        
-        // 3. Buscar por ID como último recurso
-        element = document.getElementById(field);
-        if (element) {
-            console.log(`✅ Encontrado ${field} por ID:`, element.value);
-            return element.value;
-        }
-        
-        console.log(`⚠️ No encontrado: ${field}`);
-        return '';
-    };
-    
-    const data = {
-        nombre_comercial: getData('nombre_comercial'),
-        sku: getData('sku'),
-        tipo: getData('tipo'),
-        descripcion: getData('descripcion'),
-        especie: getData('especie'),
-        precio_venta: getData('precio_venta'),
-        stock_actual: getData('stock_actual'),
-        dosis_ml: getData('dosis_ml') || null,
-        peso_kg: getData('peso_kg') || null,
-        ml_contenedor: getData('ml_contenedor') || null,
-        precauciones: getData('precauciones'),
-        contraindicaciones: getData('contraindicaciones'),
-        efectos_adversos: getData('efectos_adversos')
-    };
-    
-    console.log('📤 Datos completos a enviar:', data);
-
-    // Validación básica
-    if (!data.nombre_comercial) {
-        alert('El nombre comercial es obligatorio');
-        return;
+    // ⭐ Actualizar campos de dosis según formato
+    if (data.formato && typeof actualizarCamposDosis === 'function') {
+        actualizarCamposDosis(data.formato, modal);
     }
-
-    // ⭐ URL CORREGIDA
-    const url = currentProductId 
-        ? `/inventario/${currentProductId}/editar/`
-        : '/inventario/crear/';
     
-    console.log('🌐 URL:', url);
-
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => {
-        console.log('📡 Response status:', response.status);
-        return response.json();
-    })
-    .then(result => {
-        console.log('📊 Resultado completo:', result);
-        
-        if (result.success) {
-            alert(result.message);
-            
-            // ⭐ ACTUALIZAR DATOS EN EL MODAL SIN RECARGAR
-            if (currentProductId) {
-                // Actualizar datos guardados
-                const updatedData = {
-                    idInventario: currentProductId,
-                    nombre_comercial: data.nombre_comercial,
-                    sku: data.sku,
-                    tipo: data.tipo,
-                    descripcion: data.descripcion,
-                    especie: data.especie,
-                    precio_venta: data.precio_venta,
-                    stock_actual: data.stock_actual,
-                    dosis_ml: data.dosis_ml,
-                    peso_kg: data.peso_kg,
-                    ml_contenedor: data.ml_contenedor,
-                    precauciones: data.precauciones,
-                    contraindicaciones: data.contraindicaciones,
-                    efectos_adversos: data.efectos_adversos
-                };
-                
-                // Actualizar metadata si viene en la respuesta
-                if (result.debug) {
-                    updatedData.ultimo_ingreso_formatted = result.debug.ultimo_ingreso;
-                    updatedData.ultimo_movimiento_formatted = result.debug.ultimo_movimiento;
-                    updatedData.tipo_ultimo_movimiento_display = result.debug.tipo_movimiento_display;
-                    updatedData.usuario_ultimo_movimiento = result.debug.usuario;
-                }
-                
-                // Guardar en dataset
-                modal.dataset.originalData = JSON.stringify(updatedData);
-                
-                // ⭐ ACTUALIZAR CAMPOS DE VISTA
-                Object.keys(updatedData).forEach(key => {
-                    const value = updatedData[key];
-                    
-                    // Actualizar campos de vista normales
-                    if (key !== 'dosis_ml' && key !== 'peso_kg' && key !== 'ml_contenedor') {
-                        const viewEl = modal.querySelector(`.field-view[data-field="${key}"]`);
-                        if (viewEl && !viewEl.classList.contains('field-readonly')) {
-                            viewEl.textContent = value || "-";
-                        }
-                    }
-                });
-                
-                // Actualizar campos de vista especiales (dosis)
-                const dosisFormulaView = modal.querySelector('[data-field="dosis_formula_view"]');
-                if (dosisFormulaView) {
-                    if (updatedData.dosis_ml && updatedData.peso_kg) {
-                        dosisFormulaView.textContent = `${updatedData.dosis_ml} ml cada ${updatedData.peso_kg} kg`;
-                    } else {
-                        dosisFormulaView.textContent = "-";
-                    }
-                }
-                
-                const mlContenedorView = modal.querySelector('[data-field="ml_contenedor_view"]');
-                if (mlContenedorView) {
-                    if (updatedData.ml_contenedor) {
-                        mlContenedorView.textContent = `${updatedData.ml_contenedor} ml`;
-                    } else {
-                        mlContenedorView.textContent = "-";
-                    }
-                }
-                
-                // Actualizar campos de solo lectura (metadata)
-                if (result.debug) {
-                    const metadataFields = {
-                        'ultimo_ingreso_formatted': result.debug.ultimo_ingreso,
-                        'ultimo_movimiento_formatted': result.debug.ultimo_movimiento,
-                        'tipo_ultimo_movimiento_display': result.debug.tipo_movimiento_display,
-                        'usuario_ultimo_movimiento': result.debug.usuario
-                    };
-                    
-                    Object.entries(metadataFields).forEach(([key, value]) => {
-                        const el = modal.querySelector(`.field-readonly[data-field="${key}"]`);
-                        if (el) {
-                            el.textContent = value || '-';
-                            console.log(`✅ Metadata actualizada ${key}:`, value);
-                        }
-                    });
-                }
-                
-                // ⭐ CAMBIAR A MODO VISTA
-                switchToViewModeProducto();
-                
-                // Actualizar tabla (solo la fila correspondiente)
-                actualizarFilaTabla(currentProductId, updatedData);
-                
-            } else {
-                // Si es nuevo producto, recargar para mostrarlo en la tabla
-                location.reload();
-            }
-            
-        } else {
-            alert('Error: ' + result.error);
-        }
-    })
-    .catch(error => {
-        console.error('❌ Error completo:', error);
-        alert('Error al guardar el producto: ' + error.message);
-    });
+    console.log('✅ Modo edición activado');
 }
 
 /* ============================================================
@@ -514,32 +571,211 @@ function switchToViewModeProducto() {
     
     console.log('👁️ Cambiando a modo vista');
     
-    // Mostrar campos de vista (excepto readonly que siempre están visibles)
-    modal.querySelectorAll(".field-view").forEach((f) => {
-        if (!f.classList.contains('field-readonly')) {
-            f.classList.remove("d-none");
-        }
-    });
-
     // Ocultar campos de edición
     modal.querySelectorAll(".field-edit").forEach((f) => {
         f.classList.add("d-none");
     });
 
-    // Cambiar botones
+    // Mostrar campos de vista
+    modal.querySelectorAll(".field-view").forEach((f) => {
+        if (!f.classList.contains('field-readonly')) {
+            f.classList.remove("d-none");
+        }
+    });
+    
+    // ⭐ CAMBIAR BOTONES
     const btnGuardar = document.getElementById("btnGuardarProductoModal");
     const btnEditar = document.getElementById("btnEditarProducto");
 
     if (btnGuardar) btnGuardar.classList.add("d-none");
     if (btnEditar) btnEditar.classList.remove("d-none");
+}
+
+/* ============================================================
+   GUARDAR PRODUCTO
+============================================================ */
+async function guardarProducto() {
+    console.log('💾 Intentando guardar producto...');
     
-    // Cambiar título
-    const titulo = document.getElementById("modalProductoTitulo");
-    if (titulo) {
-        titulo.textContent = "Detalles del Producto";
+    const modal = document.getElementById('modalProducto');
+    const idInventario = modal?.dataset?.idinventario;
+    
+    // ⭐ URL CORREGIDA - Según tus rutas en urls.py
+    const url = idInventario 
+        ? `/inventario/${idInventario}/editar/` 
+        : '/inventario/crear/';
+    
+    console.log('💾 Modo:', idInventario ? 'Editar' : 'Crear');
+    console.log('🆔 ID:', idInventario);
+    
+    // Función para buscar campos por data-field o ID
+    const getFieldValue = (fieldName, defaultValue = '') => {
+        let element = document.getElementById(fieldName);
+        
+        if (!element) {
+            element = modal.querySelector(`input[data-field="${fieldName}"], select[data-field="${fieldName}"], textarea[data-field="${fieldName}"]`);
+        }
+        
+        if (!element) {
+            const fieldEdit = modal.querySelector(`.field-edit[data-field="${fieldName}"]`);
+            if (fieldEdit) {
+                element = fieldEdit.querySelector('input, select, textarea');
+            }
+        }
+        
+        if (!element) {
+            const camposOpcionales = ['precio_compra', 'stock_minimo', 'stock_maximo', 'proveedor', 
+                                     'categoria', 'codigo_barra', 'presentacion', 'unidad_medida', 
+                                     'almacenamiento', 'precauciones', 'contraindicaciones', 'efectos_adversos'];
+            
+            if (!camposOpcionales.includes(fieldName)) {
+                console.warn(`⚠️ Campo no encontrado: ${fieldName}`);
+            }
+            return defaultValue;
+        }
+        
+        return element.value?.trim() || defaultValue;
+    };
+    
+    const getNumberValue = (fieldName, defaultValue = null) => {
+        const value = getFieldValue(fieldName);
+        if (!value && value !== 0) return defaultValue;
+        const num = parseFloat(value);
+        return isNaN(num) ? defaultValue : num;
+    };
+    
+    const getIntValue = (fieldName, defaultValue = null) => {
+        const value = getFieldValue(fieldName);
+        if (!value && value !== 0) return defaultValue;
+        const num = parseInt(value);
+        return isNaN(num) ? defaultValue : num;
+    };
+    
+    const getCheckboxValue = (fieldName) => {
+        let element = document.getElementById(fieldName);
+        
+        if (!element) {
+            element = modal.querySelector(`input[data-field="${fieldName}"][type="checkbox"]`);
+        }
+        
+        if (!element) {
+            const fieldEdit = modal.querySelector(`.field-edit[data-field="${fieldName}"]`);
+            if (fieldEdit) {
+                element = fieldEdit.querySelector('input[type="checkbox"]');
+            }
+        }
+        
+        return element ? element.checked : false;
+    };
+    
+    // Recopilar datos
+    const formData = {
+        medicamento: getFieldValue('nombre_comercial'),
+        nombre_comercial: getFieldValue('nombre_comercial'),
+        marca: getFieldValue('marca'),
+        sku: getFieldValue('sku'),
+        tipo: getFieldValue('tipo'),
+        formato: getFieldValue('formato'),
+        descripcion: getFieldValue('descripcion'),
+        especie: getFieldValue('especie', 'todos'),
+        precio_venta: getNumberValue('precio_venta', 0),
+        stock_actual: getIntValue('stock_actual', 0),
+        peso_kg: getNumberValue('peso_kg'),
+        tiene_rango_peso: getCheckboxValue('tiene_rango_peso'),
+        peso_min_kg: getNumberValue('peso_min_kg'),
+        peso_max_kg: getNumberValue('peso_max_kg'),
+    };
+    
+    // Campos opcionales
+    const camposOpcionales = {
+        precio_compra: getNumberValue('precio_compra'),
+        stock_minimo: getIntValue('stock_minimo'),
+        stock_maximo: getIntValue('stock_maximo'),
+        proveedor: getFieldValue('proveedor'),
+        categoria: getFieldValue('categoria'),
+        codigo_barra: getFieldValue('codigo_barra'),
+        presentacion: getFieldValue('presentacion'),
+        unidad_medida: getFieldValue('unidad_medida'),
+        almacenamiento: getFieldValue('almacenamiento'),
+        precauciones: getFieldValue('precauciones'),
+        contraindicaciones: getFieldValue('contraindicaciones'),
+        efectos_adversos: getFieldValue('efectos_adversos'),
+    };
+    
+    Object.keys(camposOpcionales).forEach(key => {
+        if (camposOpcionales[key] !== null && camposOpcionales[key] !== '') {
+            formData[key] = camposOpcionales[key];
+        }
+    });
+    
+    // Campos según formato
+    const formato = formData.formato?.toLowerCase() || '';
+    console.log('📦 Formato detectado:', formato);
+    
+    if (formato === 'liquido' || formato === 'inyectable') {
+        formData.dosis_ml = getNumberValue('dosis_ml');
+        formData.ml_contenedor = getNumberValue('ml_contenedor');
+        console.log('💧 Dosis líquido:', formData.dosis_ml, 'ml');
+    } else if (formato === 'pastilla' || formato === 'comprimido' || formato === 'tableta') {
+        formData.cantidad_pastillas = getIntValue('cantidad_pastillas');
+        console.log('💊 Cantidad pastillas:', formData.cantidad_pastillas);
+    } else if (formato === 'pipeta') {
+        formData.unidades_pipeta = getIntValue('unidades_pipeta');
+        console.log('💉 Unidades pipeta:', formData.unidades_pipeta);
+    } else if (formato === 'polvo' || formato === 'crema' || formato === 'gel') {
+        formData.dosis_ml = getNumberValue('dosis_ml');
+        console.log('🧪 Dosis:', formData.dosis_ml, 'gr');
     }
     
-    console.log('✅ Modo vista activado');
+    console.log('📤 Datos completos a enviar:', formData);
+    
+    // Validación
+    if (!formData.nombre_comercial) {
+        alert('⚠️ El nombre del medicamento es obligatorio');
+        return;
+    }
+    
+    if (!formData.formato) {
+        alert('⚠️ Debe seleccionar un formato');
+        return;
+    }
+    
+    console.log('🌐 URL:', url);
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        console.log('📡 Response status:', response.status);
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const textResponse = await response.text();
+            console.error('❌ Respuesta no es JSON:', textResponse.substring(0, 500));
+            throw new Error('La URL no devuelve JSON. Verifica la ruta en Django.');
+        }
+        
+        const result = await response.json();
+        console.log('📊 Resultado:', result);
+        
+        if (result.success) {
+            alert('✅ Producto guardado correctamente');
+            closeVetModal('modalProducto');
+            location.reload();
+        } else {
+            alert(`❌ Error: ${result.error || 'No se pudo guardar'}`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        alert(`Error: ${error.message}`);
+    }
 }
 
 /* ============================================================
@@ -551,36 +787,19 @@ function actualizarFilaTabla(insumoId, data) {
     
     console.log('🔄 Actualizando fila de la tabla para ID:', insumoId);
     
-    // Actualizar nombre del producto (celda 0)
-    if (fila.cells[0]) {
-        fila.cells[0].textContent = data.nombre_comercial;
-    }
-    
-    // Actualizar especie (celda 1)
-    if (fila.cells[1]) {
-        fila.cells[1].textContent = data.especie || '-';
-    }
-    
-    // Actualizar precio (celda 2)
+    if (fila.cells[0]) fila.cells[0].textContent = data.nombre_comercial;
+    if (fila.cells[1]) fila.cells[1].textContent = data.especie || '-';
     if (fila.cells[2]) {
         const precio = parseFloat(data.precio_venta) || 0;
         fila.cells[2].textContent = `$${precio.toLocaleString('es-CL')}`;
     }
-    
-    // Actualizar stock (celda 3)
     if (fila.cells[3]) {
         const stockBadge = fila.cells[3].querySelector('.vet-badge');
-        if (stockBadge) {
-            stockBadge.textContent = data.stock_actual || 0;
-        }
+        if (stockBadge) stockBadge.textContent = data.stock_actual || 0;
     }
-    
-    // Actualizar último movimiento (celda 4)
     if (fila.cells[4] && data.ultimo_movimiento_formatted) {
         fila.cells[4].textContent = data.ultimo_movimiento_formatted;
     }
-    
-    // Actualizar tipo de movimiento (celda 5)
     if (fila.cells[5] && data.tipo_ultimo_movimiento_display) {
         fila.cells[5].textContent = data.tipo_ultimo_movimiento_display;
     }
@@ -591,10 +810,27 @@ function actualizarFilaTabla(insumoId, data) {
 /* ============================================================
    ELIMINAR PRODUCTO
 ============================================================ */
-let productoAEliminarId = null;
-
 function abrirModalEliminarProducto(btn) {
-    const tr = btn.closest("tr");
+    // Buscar el TR de manera más robusta
+    let tr = btn.closest("tr");
+    
+    if (!tr) {
+        const manageWheel = btn.closest('.manage-wheel');
+        if (manageWheel) {
+            tr = manageWheel.closest('tr');
+        }
+    }
+    
+    if (!tr) {
+        const allRows = document.querySelectorAll('tbody tr[data-id]');
+        for (const row of allRows) {
+            if (row.contains(btn) || row.querySelector('.manage-wheel') === btn.closest('.manage-wheel')) {
+                tr = row;
+                break;
+            }
+        }
+    }
+    
     const modal = document.getElementById("modalProducto");
 
     productoAEliminarId = tr
@@ -603,7 +839,7 @@ function abrirModalEliminarProducto(btn) {
 
     const nombre = tr
         ? tr.cells[0].textContent.trim()
-        : modal.querySelector('[data-field="nombre_comercial"]').textContent.trim();
+        : modal.querySelector('[data-field="nombre_comercial"]')?.textContent.trim() || 'este producto';
 
     document.getElementById("eliminarProductoMensaje").textContent =
         `¿Seguro que deseas eliminar "${nombre}"?`;
@@ -612,9 +848,13 @@ function abrirModalEliminarProducto(btn) {
 }
 
 function eliminarProductoConfirmado() {
-    if (!productoAEliminarId) return;
+    if (!productoAEliminarId) {
+        console.error('No hay producto seleccionado para eliminar');
+        return;
+    }
 
-    // ⭐ URL CORREGIDA
+    console.log('Eliminando producto ID:', productoAEliminarId);
+    
     fetch(`/inventario/${productoAEliminarId}/eliminar/`, {
         method: "POST",
         headers: { 
@@ -622,15 +862,33 @@ function eliminarProductoConfirmado() {
             'X-CSRFToken': getCookie('csrftoken')
         },
     })
-        .then((r) => r.json())
-        .then((resp) => {
-            if (resp.success) location.reload();
-            else alert('Error: ' + (resp.error || 'No se pudo eliminar'));
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al eliminar el producto');
-        });
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        
+        if (data.success) {
+            // Mostrar mensaje de éxito
+            alert(data.message || 'Producto eliminado exitosamente');
+            
+            // Cerrar modal
+            closeEliminarProductoModal();
+            
+            // Recargar página para actualizar la tabla
+            location.reload();
+        } else {
+            // Mostrar error específico
+            alert('Error: ' + (data.error || 'No se pudo eliminar el producto'));
+            closeEliminarProductoModal();
+        }
+    })
+    .catch(error => {
+        console.error('Error en la petición:', error);
+        alert('Error de conexión al intentar eliminar el producto');
+        closeEliminarProductoModal();
+    });
 }
 
 /* ============================================================
@@ -641,8 +899,31 @@ let stockOriginal = 0;
 let productoIdStock = null;
 
 function openModificarStockModal(btn) {
+    // Buscar el TR de manera más robusta
     let tr = btn.closest("tr");
-    if (!tr) return;
+    
+    if (!tr) {
+        const manageWheel = btn.closest('.manage-wheel');
+        if (manageWheel) {
+            tr = manageWheel.closest('tr');
+        }
+    }
+    
+    if (!tr) {
+        const allRows = document.querySelectorAll('tbody tr[data-id]');
+        for (const row of allRows) {
+            if (row.contains(btn) || row.querySelector('.manage-wheel') === btn.closest('.manage-wheel')) {
+                tr = row;
+                break;
+            }
+        }
+    }
+    
+    if (!tr) {
+        console.error('❌ No se encontró la fila para modificar stock');
+        console.error('❌ Este error no debería ocurrir. Verifica gestion_wheel.js');
+        return;
+    }
 
     productoIdStock = tr.getAttribute("data-id");
     stockActualTemp = parseInt(tr.cells[3].textContent.replace(/\D/g, "")) || 0;
@@ -760,3 +1041,88 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+
+/* ============================================================
+   CAMBIAR ESTADO DE PESTAÑAS (ACTIVOS/ARCHIVADOS)
+============================================================ */
+function cambiarEstadoProductos(estado) {
+    window.location.href = `/inventario/?estado=${estado}`;
+}
+
+/* ============================================================
+   MODAL ARCHIVAR/RESTAURAR PRODUCTO
+============================================================ */
+function abrirModalArchivarProducto(button, productoId, esRestaurar = false) {
+    const modal = document.getElementById('modalArchivarProducto');
+    const titulo = document.getElementById('tituloArchivar');
+    const mensaje = document.getElementById('archivarProductoMensaje');
+    const btnTexto = document.getElementById('btnTextoArchivar');
+    const modalTitle = modal.querySelector('.vet-custom-modal-title');
+    
+    if (esRestaurar) {
+        titulo.textContent = 'Restaurar Producto';
+        mensaje.textContent = '¿Estás seguro que deseas restaurar este producto? Volverá a aparecer en la lista de activos.';
+        btnTexto.textContent = 'Restaurar';
+        modalTitle.style.background = '#2e7d32';
+    } else {
+        titulo.textContent = 'Archivar Producto';
+        mensaje.textContent = '¿Estás seguro que deseas archivar este producto? Podrás restaurarlo desde la pestaña de archivados.';
+        btnTexto.textContent = 'Archivar';
+        modalTitle.style.background = '#f57c00';
+    }
+    
+    modal.classList.remove('hide');
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
+    document.getElementById('btnConfirmarArchivarProducto').setAttribute('data-producto-id', productoId);
+}
+
+function closeArchivarProductoModal() {
+    const modal = document.getElementById('modalArchivarProducto');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.classList.add('hide');
+    }, 350);
+}
+
+/* ============================================================
+   EVENT LISTENER PARA CONFIRMAR ARCHIVAR/RESTAURAR
+============================================================ */
+document.addEventListener('DOMContentLoaded', function() {
+    const btnConfirmar = document.getElementById('btnConfirmarArchivarProducto');
+    if (btnConfirmar) {
+        btnConfirmar.addEventListener('click', function() {
+            const productoId = this.getAttribute('data-producto-id');
+            
+            if (!productoId) {
+                alert('Error: No se encontró el ID del producto');
+                return;
+            }
+            
+            fetch(`/inventario/restaurar/${productoId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    closeArchivarProductoModal();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 400);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al procesar la solicitud');
+            });
+        });
+    }
+});

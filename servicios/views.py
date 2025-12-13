@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from django.db import connection
 import json
 import traceback
 from .models import Servicio, ServicioInsumo
@@ -16,7 +16,6 @@ def servicios(request):
     }
     return render(request, 'servicios/servicios.html', context)
 
-@csrf_exempt
 @login_required
 def crear_servicio(request):
     """Vista para crear un nuevo servicio"""
@@ -55,7 +54,6 @@ def crear_servicio(request):
     
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
-@csrf_exempt
 @login_required
 def editar_servicio(request, servicio_id):
     """Vista para editar un servicio existente"""
@@ -94,14 +92,16 @@ def editar_servicio(request, servicio_id):
     
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
-@csrf_exempt
 @login_required
 def eliminar_servicio(request, servicio_id):
     """Vista para eliminar un servicio"""
     if request.method == 'POST':
         try:
             servicio = get_object_or_404(Servicio, idServicio=servicio_id)
-            servicio.delete()
+            
+            # Eliminar directamente usando SQL raw para evitar verificación de relaciones
+            with connection.cursor() as cursor:
+                cursor.execute("DELETE FROM Servicio WHERE idServicio = %s", [servicio_id])
             
             return JsonResponse({
                 'success': True,

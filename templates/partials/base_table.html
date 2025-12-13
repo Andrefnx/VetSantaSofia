@@ -2,7 +2,6 @@
 {% load static %}
 {% block styles %}
 <link rel="stylesheet" href="{% static 'css/base/tables_base.css' %}?v=4" type="text/css" media="all">
-
 {% endblock %}
 {% block content %}
 <div class="table-page-content">
@@ -30,6 +29,10 @@
                 </div>
             </div>
         </div>
+
+        <!-- Pestañas/Tabs -->
+        {% block table_tabs %}
+        {% endblock %}
 
         <!-- Tabla de Datos -->
         <div class="vet-table">

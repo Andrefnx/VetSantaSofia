@@ -3,11 +3,6 @@
 
 {% block title %}Agenda{% endblock %}
 
-{% block styles %}
-<link rel="stylesheet" href="{% static 'css/base/vet-custom.css' %}">
-<link rel="stylesheet" href="{% static 'agenda/css/agenda.css' %}">
-{% endblock %}
-
 {% block content %}
 <div class="header">
     <h1>
@@ -90,7 +85,7 @@
                                 <div class="hour-slot">
                                     {% for q in minutos %}
                                         {% if hour == "09" and q == "00" %}
-                                            <div class="quarter-block has-appointment cita-consulta" style="height:66px;" title="Consulta general">
+                                            <div class="quarter-block has-appointment cita-consulta" title="Consulta general">
                                                 <div class="cita-info">
                                                     <span class="cita-tipo">Consulta</span>
                                                     <span class="cita-mascota">Rocky</span>
@@ -101,7 +96,7 @@
                                         {% elif hour == "09" and q == "15" %}
                                             {# Bloque ocupado por la cita anterior (Consulta 30min) #}
                                         {% elif hour == "10" and q == "00" %}
-                                            <div class="quarter-block has-appointment cita-vacunacion" style="width:50%;" title="Vacunación">
+                                            <div class="quarter-block has-appointment cita-vacunacion" title="Vacunación">
                                                 <div class="cita-info">
                                                     <span class="cita-tipo">Vacunación</span>
                                                     <span class="cita-mascota">Luna</span>
@@ -219,7 +214,7 @@
 <div id="detalleConsultaModal" class="vet-modal-overlay hide">
     <div class="vet-custom-modal">
         <div class="vet-custom-modal-title">
-            <h3 id="detalleTitulo" style="margin:0;"><i class="bi bi-clipboard2-pulse"></i> Detalle de Consulta</h3>
+            <h3 id="detalleTitulo"><i class="bi bi-clipboard2-pulse"></i> Detalle de Consulta</h3>
             <i class="bi bi-x" id="closeDetalleModal" tabindex="0" role="button" aria-label="Cerrar"></i>
         </div>
         <div class="vet-modal-body">
@@ -268,7 +263,7 @@
 <div id="nuevaConsultaModal" class="vet-modal-overlay hide">
     <div class="vet-custom-modal">
         <div class="vet-custom-modal-title">
-            <h3 style="margin:0;"><i class="bi bi-clipboard2-plus"></i> Nueva Consulta</h3>
+            <h3><i class="bi bi-clipboard2-plus"></i> Nueva Consulta</h3>
             <i class="bi bi-x" id="closeNuevaConsultaModal" tabindex="0" role="button" aria-label="Cerrar"></i>
         </div>
         <form id="formNuevaConsulta">
@@ -302,12 +297,11 @@
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-person-badge"></i> Médico Tratante</div>
                             <input type="text" class="form-control" name="medico"
-                                value="{{ user.nombre }} {{ user.apellido }}" readonly style="background:#f3f3f3;">
+                                value="{{ user.nombre }} {{ user.apellido }}" readonly>
                         </div>
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-calendar-event"></i> Fecha</div>
-                            <input type="text" class="form-control" name="fecha" value="{% now 'd/m/Y' %}" readonly
-                                style="background:#f3f3f3;">
+                            <input type="text" class="form-control" name="fecha" value="{% now 'd/m/Y' %}" readonly>
                         </div>
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-clipboard2-check"></i> Diagnóstico</div>
@@ -318,7 +312,7 @@
                             <input type="text" class="form-control" name="tratamiento">
                         </div>
                         <!-- Exámenes oculto -->
-                        <div class="detail-section" style="display:none;">
+                        <div class="detail-section d-none">
                             <div class="detail-section-title"><i class="bi bi-file-earmark-medical"></i> Exámenes</div>
                             <input type="text" class="form-control" name="examenes" placeholder="Separar por coma">
                         </div>
@@ -347,7 +341,7 @@
 <div id="agendarCitaModal" class="vet-modal-overlay hide">
     <div class="vet-custom-modal">
         <div class="vet-custom-modal-title">
-            <h3 style="margin:0;"><i class="bi bi-calendar-plus"></i> Agendar Cita</h3>
+            <h3><i class="bi bi-calendar-plus"></i> Agendar Cita</h3>
             <i class="bi bi-x" id="closeAgendarCitaModal" tabindex="0" role="button" aria-label="Cerrar"></i>
         </div>
         <form id="formAgendarCita">

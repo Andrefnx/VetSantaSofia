@@ -18,10 +18,10 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from veteriaria.views_ui import ui_preview
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('login.urls')),  
+    path('admin/', admin.site.urls),  # ← PRIMERO
     path('dashboard/', include('dashboard.urls')),
     path('pacientes/', include('pacientes.urls')),
     path('inventario/', include('inventario.urls')),
@@ -31,6 +31,8 @@ urlpatterns = [
     path('agenda/', include('agenda.urls')),
     path('caja/', include('caja.urls')),
     path('gestion/', include('gestion.urls')),
+    path('ui/preview/', ui_preview, name='ui_preview'),
+    path('', include('login.urls')),  # ← ÚLTIMO (porque tiene catch-all)
 ]
 
 if settings.DEBUG:

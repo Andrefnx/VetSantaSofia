@@ -1,283 +1,401 @@
 {% extends 'partials/base.html' %}
 {% load static %}
 
-{% block title %}Agenda{% endblock %}
+{% block title %}Agenda Veterinaria{% endblock %}
 
-{% block styles %}
-<link rel="stylesheet" href="{% static 'agenda/css/agenda.css' %}">
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/agenda/agenda_bloques.css' %}">
 
-<style>
-.agenda-container {
-    padding: 32px 24px;
-    background: #f7fafc;
-    min-height: 90vh;
-    border-radius: 18px;
-    box-shadow: 0 2px 16px #0001;
-    max-width: 900px;
-    margin: 30px auto;
-}
-
-.agenda-header {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    margin-bottom: 32px;
-    justify-content: center;
-}
-
-.agenda-header h2 {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #0096d6;
-    letter-spacing: 1px;
-}
-
-.day-nav {
-    padding: 8px 18px;
-    font-size: 22px;
-    background: #e3f2fd;
-    border-radius: 8px;
-    border: none;
-    color: #0096d6;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.day-nav:hover {
-    background: #b7e5ff;
-}
-
-.daily-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-
-.hour-block {
-    display: flex;
-    gap: 18px;
-    align-items: center;
-}
-
-.hour-label {
-    width: 90px;
-    font-weight: bold;
-    color: #444;
-    font-size: 1.1rem;
-    text-align: right;
-}
-
-.hour-slots {
-    display: flex;
-    gap: 10px;
-}
-
-.slot {
-    width: 100px;
-    height: 54px;
-    border-radius: 8px;
-    border: 1.5px solid #d0e3f1;
-    background: #fff;
-    position: relative;
-    cursor: pointer;
-    padding: 6px;
-    box-shadow: 0 1px 4px #0001;
-    transition: border 0.2s, box-shadow 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.slot:hover {
-    border: 1.5px solid #0096d6;
-    box-shadow: 0 2px 8px #0096d622;
-}
-.slot.has-cita {
-    background: linear-gradient(135deg, #b7e5ff 60%, #e3f2fd 100%);
-    border-color: #0096d6;
-    color: #0a3a5a;
-    font-weight: 600;
-}
-
-.slot-time {
-    font-size: 1.1rem;
-    color: #0096d6;
-    font-weight: 500;
-}
-
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: #00000055;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.hide {
-    display: none !important;
-}
-
-.modal-card {
-    background: white;
-    padding: 32px 28px;
-    border-radius: 14px;
-    width: 400px;
-    box-shadow: 0 4px 24px #0002;
-}
-
-.modal-card h3 {
-    margin-bottom: 18px;
-    color: #0096d6;
-    font-size: 1.3rem;
-    font-weight: 700;
-}
-
-.modal-card form {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-.modal-card label {
-    font-weight: 500;
-    color: #444;
-}
-
-.modal-card input,
-.modal-card select,
-.modal-card textarea {
-    border: 1.2px solid #d0e3f1;
-    border-radius: 6px;
-    padding: 7px 10px;
-    font-size: 1rem;
-    background: #f7fafc;
-    transition: border 0.2s;
-}
-.modal-card input:focus,
-.modal-card select:focus,
-.modal-card textarea:focus {
-    border-color: #0096d6;
-    outline: none;
-}
-
-.btn-primary {
-    background: #0096d6;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    padding: 9px 0;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.btn-primary:hover {
-    background: #007bb3;
-}
-
-.btn-secondary {
-    background: #e3f2fd;
-    color: #0096d6;
-    border: none;
-    border-radius: 6px;
-    padding: 9px 0;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    margin-top: 4px;
-    transition: background 0.2s;
-}
-.btn-secondary:hover {
-    background: #b7e5ff;
-}
-</style>
 {% endblock %}
 
 {% block content %}
-
-<div class="agenda-container">
-
-    <div class="agenda-header">
-        <button id="dayPrev" class="day-nav"><</button>
-        <h2 id="currentDay">Cargando...</h2>
-        <button id="dayNext" class="day-nav">></button>
-    </div>
-
-    <div class="daily-grid">
-        {% for h in horas %}
-
-        <div class="hour-block">
-            <div class="hour-label">{{ h }}:00</div>
-            <div class="hour-slots">
-
-                {% for m in minutos %}
-
-                <div class="slot"
-                     data-hour="{{ h }}"
-                     data-minute="{{ m }}">
-                    <span class="slot-time">{{ h }}:{{ m }}</span>
-                </div>
-                {% endfor %}
-
+<div class="container-fluid p-0">
+    <!-- Encabezado -->
+    <div class="p-1-5">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+                <h1 class="page-title"><i class="fas fa-calendar-alt"></i> Agenda Veterinaria</h1>
+              
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalDisponibilidad()">
+                    <i class="fas fa-cog"></i> Configurar disponibilidad
+                </button>
             </div>
         </div>
-        {% endfor %}
     </div>
 
+    <!-- Layout: Selector + Bloques de Agenda -->
+    <div class="p-1-5">
+        <div class="row">
+        <!-- Panel de Filtros -->
+        <div class="col-md-3">
+            <!-- Leyenda compacta arriba -->
+            <div id="agendaLeyenda" class="section py-2" style="display: none;">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="d-flex align-items-center gap-2"><span class="agenda-block-legend is-available"></span><small>Disponible</small></span>
+                    <span class="d-flex align-items-center gap-2"><span class="agenda-block-legend is-occupied"></span><small>Ocupado</small></span>
+                </div>
+            </div>
+            <div class="section">
+                <h3 class="mb-2">Filtros</h3>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Fecha:</strong></label>
+                    <div id="calendarioCustom" class="calendario-custom">
+                        <div class="calendario-top">
+                            <button type="button" id="calHoy" class="btn-cal-hoy">
+                                <i class="fas fa-calendar-day"></i> Hoy
+                            </button>
+                        </div>
+                        <div class="calendario-header">
+                            <button type="button" id="calPrevMes" class="btn-cal-nav">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div class="calendario-titulo">
+                                <select id="calMes" class="form-select form-select-sm"></select>
+                                <select id="calAnio" class="form-select form-select-sm"></select>
+                            </div>
+                            <button type="button" id="calNextMes" class="btn-cal-nav">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="calendario-dias-semana">
+                            <div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div>
+                        </div>
+                        <div id="calendarioDias" class="calendario-dias"></div>
+                    </div>
+                    <input type="hidden" id="fechaAgenda" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Veterinario:</strong></label>
+                    <select id="filtroVeterinario" class="form-select form-select-sm">
+                        <option value="">Todos los veterinarios</option>
+                        {% for vet in veterinarios %}
+                        <option value="{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bloques de Agenda -->
+        <div class="col-md-9">
+            <!-- Título y botón recargar -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3><i class="fas fa-calendar-alt"></i> <span id="fechaTitulo">Agenda del día</span></h3>
+                <div class="d-flex gap-2 align-items-center">
+                    <button class="btn btn-secondary btn-sm" id="btnNavIzq" style="display: none;">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="btn btn-secondary btn-sm" id="btnNavDer" style="display: none;">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button class="btn btn-primary btn-sm" id="btnCargarBloques">
+                        <i class="fas fa-sync"></i>
+                        Recargar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Estado de carga global -->
+            <div id="agendaEstado" class="text-center py-5">
+                <i class="fas fa-spinner fa-spin fa-3x mb-3 text-muted"></i>
+                <p class="text-muted">Cargando agendas...</p>
+            </div>
+
+            <!-- Mensaje cuando no hay vets disponibles -->
+            <div id="agendaSinVets" class="text-center py-5" style="display: none;">
+                <i class="fas fa-calendar-times fa-3x mb-3 text-muted"></i>
+                <p class="text-muted">No hay veterinarios disponibles este día</p>
+            </div>
+
+            <!-- Contenedor de agendas de veterinarios -->
+            <div id="contenedorAgendas" class="agendas-container" style="display: none;">
+                {% for vet in veterinarios %}
+                <!-- Agenda Veterinario {{ vet.id }} -->
+                <div class="agenda-vet-col">
+                    <div class="section">
+                        <h4 class="mb-3">
+                            <i class="fas fa-user-md"></i> 
+                            <span id="tituloVet{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</span>
+                        </h4>
+                        
+                        <!-- Estado individual -->
+                        <div id="estadoVet{{ vet.id }}" style="display: none;" class="text-center py-3">
+                            <i class="fas fa-calendar-times fa-2x mb-2 text-danger"></i>
+                            <p class="text-danger"><small>No trabaja este día</small></p>
+                        </div>
+                        
+                        <!-- Grid de bloques -->
+                        <div id="agendaBloques{{ vet.id }}" class="agenda-bloques-grid" style="display: none;">
+                            <!-- Se llena dinámicamente con JS -->
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                
+            </div>
+        </div>
+    </div>
+    </div>
 </div>
 
 {% endblock %}
-
 
 {% block modals %}
 
-<!-- Modal Nueva Cita -->
-<div class="modal-overlay hide" id="modalNuevaCita">
-    <div class="modal-card">
-        <h3>Nueva Cita</h3>
+<!-- Modal de agendamiento directo -->
+<div id="agendarCitaDirectaModal" class="vet-modal-overlay hide" onclick="cerrarModalAgendarDirecta()">
+    <div class="vet-modal-panel" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
+        <div class="vet-custom-modal-title">
+            <h3><i class="fas fa-calendar-plus"></i> Agendar Cita</h3>
+            <i class="bi bi-x" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalAgendarDirecta()"></i>
+        </div>
+        <div class="vet-modal-body" style="padding: 1rem;">
+            <!-- Primera fila: Vet | Fecha | Hora -->
+            <div class="row g-2 mb-3">
+                <div class="col-4">
+                    <label class="form-label small mb-1"><strong>Veterinario</strong></label>
+                    <p class="mb-0 fs-6" id="agendarVeterinario">-</p>
+                </div>
+                <div class="col-4">
+                    <label class="form-label small mb-1"><strong>Fecha</strong></label>
+                    <input type="date" id="agendarFechaInput" class="form-control form-control-sm" />
+                </div>
+                <div class="col-4">
+                    <label class="form-label small mb-1"><strong>Hora</strong></label>
+                    <select id="agendarHora" class="form-control form-control-sm">
+                        <option value="">Selecciona una hora</option>
+                    </select>
+                </div>
+            </div>
 
-        <form id="formNuevaCita">
-            <input type="hidden" name="hora">
+            <!-- Segunda fila: Servicio | Paciente -->
+            <div class="row g-2 mb-2">
+                <!-- Servicio -->
+                <div class="col-6">
+                    <label class="form-label small mb-1"><strong>Servicio *</strong></label>
+                    <div class="vet-search mb-2">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="buscarServicioDirecto" placeholder="Buscar servicio..." />
+                    </div>
+                    <select id="servicioSelectDirecto" class="form-control modal-select-tall" size="9" onchange="actualizarHorasDisponibles()">
+                        <option value="" disabled selected>Seleccione servicio</option>
+                        {% regroup servicios by categoria as servicios_agrupados %}
+                        {% for grupo in servicios_agrupados %}
+                        <optgroup label="{{ grupo.grouper }}">
+                            {% for servicio in grupo.list %}
+                            <option value="{{ servicio.idServicio }}" 
+                                    data-duracion="{{ servicio.duracion }}"
+                                    data-nombre="{{ servicio.nombre|lower }}"
+                                    data-categoria="{{ grupo.grouper|lower }}">
+                                {{ servicio.nombre }} ({{ servicio.duracion }} min)
+                            </option>
+                            {% endfor %}
+                        </optgroup>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <label>Mascota</label>
-            <select name="mascota" required>
-                <option value="">Seleccione</option>
-                {% for m in mascotas %}
-                <option value="{{ m.id }}">{{ m.nombre }} ({{ m.especie }})</option>
-                {% endfor %}
-            </select>
-<label>Veterinario</label>
-<select name="veterinario" required>
-    <option value="">Seleccione</option>
-    {% for v in veterinarios %}
-        <option value="{{ v.id }}">{{ v.nombre }} {{ v.apellido }}</option>
-    {% endfor %}
-</select>
-            <label>Tipo</label>
-            <select name="tipo" required>
-                <option value="">Seleccione</option>
-                <option value="consulta">Consulta</option>
-                <option value="vacunacion">Vacunación</option>
-                <option value="control">Control</option>
-                <option value="procedimiento">Procedimiento</option>
-            </select>
+                <!-- Paciente -->
+                <div class="col-6">
+                    <label class="form-label small mb-1"><strong>Paciente *</strong></label>
+                    <div class="vet-search mb-2">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="buscarPacienteDirecto" placeholder="Buscar paciente..." />
+                    </div>
+                    <select id="pacienteSelectDirecto" class="form-control modal-select-tall" size="9">
+                        <option value="" disabled selected>Seleccione paciente</option>
+                        {% for paciente in pacientes %}
+                        <option value="{{ paciente.id }}" 
+                                data-nombre="{{ paciente.nombre|lower }}"
+                                data-propietario="{{ paciente.propietario.nombre_completo|lower }}">
+                            {{ paciente.nombre }} - {{ paciente.propietario.nombre_completo }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
 
-            <label>Duración (min)</label>
-            <input type="number" name="duracion" value="30">
+            <!-- Alerta de bloques requeridos -->
+            <div class="mb-2">
+                <small class="text-muted d-block" id="bloquesRequeridosDirecto" style="min-height: 18px; font-size: 0.8rem;"></small>
+            </div>
+        </div>
+        <div class="vet-modal-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="modal-helper"><i class="bi bi-info-circle"></i>Selecciona servicio y paciente.</span>
+            <div class="d-flex gap-2">
+                <button class="vet-btn vet-btn-grey" type="button" onclick="cerrarModalAgendarDirecta()">
+                    <i class="bi bi-x-lg"></i>
+                    Cancelar
+                </button>
+                <button class="vet-btn vet-btn-primary" type="button" onclick="confirmarAgendarCitaDirecta()">
+                    <i class="bi bi-check2-circle"></i>
+                    Confirmar Cita
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-            <label>Notas</label>
-            <textarea name="notas"></textarea>
+<!-- Modal de confirmación antigua (mantener por compatibilidad) -->
+<div id="confirmarCitaModal" class="vet-modal-overlay hide" onclick="cerrarModalConfirmarCita()">
+    <div class="vet-modal-compact" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
+        <div class="vet-custom-modal-title">
+            <h3><i class="bi bi-calendar-check"></i> Confirmar Cita</h3>
+            <i class="bi bi-x" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalConfirmarCita()"></i>
+        </div>
+        <div class="vet-modal-body">
+            <div class="modal-detail-card">
+                <div class="d-flex flex-column gap-2">
+                    <div><strong>Paciente:</strong> <span id="confirmPaciente">-</span></div>
+                    <div><strong>Veterinario:</strong> <span id="confirmVeterinario">-</span></div>
+                    <div><strong>Servicio:</strong> <span id="confirmServicio">-</span></div>
+                    <div><strong>Fecha:</strong> <span id="confirmFecha">-</span></div>
+                    <div><strong>Horario:</strong> <span id="confirmHorario">-</span></div>
+                </div>
+            </div>
+            <div class="form-grid-2">
+                <div class="form-group mb-0">
+                    <label><strong>Motivo de la consulta *</strong></label>
+                    <textarea id="confirmMotivo" class="form-control" rows="3" placeholder="Describe el motivo de la cita"></textarea>
+                </div>
+                <div class="form-group mb-0">
+                    <label><strong>Notas adicionales</strong></label>
+                    <textarea id="confirmNotas" class="form-control" rows="3" placeholder="Notas opcionales para el equipo"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="vet-modal-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="modal-helper"><i class="bi bi-info-circle"></i>Verifica bloques seleccionados antes de confirmar.</span>
+            <div class="d-flex gap-2">
+                <button class="vet-btn vet-btn-grey" type="button" onclick="cerrarModalConfirmarCita()">
+                    <i class="bi bi-x-lg"></i>
+                    Cancelar
+                </button>
+                <button class="vet-btn vet-btn-primary" type="button" onclick="confirmarAgendarCita()">
+                    <i class="bi bi-check2-circle"></i>
+                    Confirmar Cita
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-            <button type="submit" class="btn-primary">Guardar</button>
-            <button type="button" class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
-        </form>
+<!-- Modal para ver detalle de cita agendada -->
+<div id="detalleCitaModal" class="vet-modal-overlay hide" onclick="cerrarModalDetalleCita()">
+    <div class="vet-modal-compact" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
+        <div class="vet-custom-modal-title">
+            <h3 id="detalleCitaTitulo"><i class="fas fa-stethoscope"></i> Cita Agendada</h3>
+            <i class="bi bi-x" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalDetalleCita()"></i>
+        </div>
+        <div class="vet-modal-body" style="padding: 1rem;">
+            <div class="d-flex flex-column gap-2">
+                <div>
+                    <small class="text-muted d-block mb-1"><strong>Paciente</strong></small>
+                    <p class="mb-0 fs-6" id="detallePaciente">-</p>
+                </div>
+                <div>
+                    <small class="text-muted d-block mb-1"><strong>Propietario</strong></small>
+                    <p class="mb-0 fs-6" id="detallePropietario">-</p>
+                </div>
+                <div>
+                    <small class="text-muted d-block mb-1"><strong>Contacto</strong></small>
+                    <p class="mb-0 fs-6">
+                        <a id="detalleTelefonoPropietario" href="#" class="text-decoration-none">-</a>
+                        <br>
+                        <a id="detalleEmailPropietario" href="#" class="text-decoration-none">-</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="vet-modal-footer d-flex justify-content-between align-items-center gap-2">
+            <a id="enlaceFixa" href="#" class="btn btn-primary btn-sm" target="_blank">
+                <i class="fas fa-file-medical"></i> Ver Ficha
+            </a>
+            <button class="btn btn-cancel" type="button" onclick="abrirModalConfirmarCancelacion()">
+                <i class="bi bi-trash3-fill"></i> Cancelar Cita
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Confirmar Cancelación de Cita -->
+<div class="vet-modal-overlay hide" id="modalConfirmarCancelacionCita">
+    <div class="vet-modal-compact">
+        <div class="vet-modal-content">
+            <div class="vet-custom-modal-title" style="background: #b71c1c;">
+                <h3><i class="bi bi-trash3-fill"></i> Cancelar Cita</h3>
+                <i class="bi bi-x" onclick="cerrarModalConfirmarCancelacion()"></i>
+            </div>
+            <div class="vet-modal-body">
+                <p id="confirmarCancelacionMensaje" class="text-center mb-4">¿Estás seguro que deseas cancelar esta cita?</p>
+                <div class="vet-modal-footer">
+                    <button type="button" class="btn btn-cancel" onclick="cerrarModalConfirmarCancelacion()">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="button" class="vet-btn vet-btn-primary" id="btnConfirmarCancelacionCita" onclick="confirmarCancelacionCita()">
+                        <i class="bi bi-trash3-fill"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para disponibilidad diaria por bloques -->
+<div id="disponibilidadModal" class="vet-modal-overlay hide" onclick="cerrarModalDisponibilidad()">
+    <div class="vet-modal-panel" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
+        <div class="vet-custom-modal-title">
+            <h3><i class="bi bi-cog"></i> Configurar Disponibilidad</h3>
+            <i class="bi bi-x" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalDisponibilidad()"></i>
+        </div>
+        <div class="vet-modal-body">
+      
+            <div id="configHorarioSemanal">
+                <form id="horarioSemanalForm">
+                    <div class="form-group mb-3">
+                        <label><strong>Veterinario *</strong></label>
+                        <select id="dispVeterinario" class="form-control" required>
+                            <option value="">Seleccione un veterinario</option>
+                            {% for vet in veterinarios %}
+                            <option value="{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-2">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="m-0" style="font-weight: 700;">Horarios por día de la semana</label>
+                            <button type="button" id="btnAplicarTodo" class="btn btn-success btn-sm" onclick="aplicarHorariosATodo()">
+                                <i class="fas fa-clipboard-check"></i> Aplicar a todo
+                            </button>
+                        </div>
+                        <div id="diasSemana" class="dias-semana-container">
+                            <!-- Los días de la semana se generan aquí -->
+                        </div>
+                    </div>
+                </form>
+                <div id="rangosList" class="d-none"></div>
+            </div>
+        </div>
+        <div class="vet-modal-footer d-flex justify-content-end align-items-center">
+            <button type="button" class="vet-btn vet-btn-primary" onclick="guardarHorarioSemanal()">
+                <i class="bi bi-save"></i>
+                Guardar Horario
+            </button>
+        </div>
     </div>
 </div>
 
 {% endblock %}
 
-
 {% block extra_js %}
-<script src="{% static 'agenda/js/agenda.js' %}"></script>
+<script>
+    const VETERINARIOS = {{ veterinarios_json|safe }};
+    const SERVICIOS = {{ servicios_json|safe }};
+</script>
+<script src="{% static 'agenda/js/agenda_bloques.js' %}"></script>
+<script src="{% static 'agenda/js/horario_semanal.js' %}"></script>
 {% endblock %}

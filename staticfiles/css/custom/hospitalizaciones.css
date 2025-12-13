@@ -1,0 +1,377 @@
+/* ============================================
+   ESTILOS PARA HOSPITALIZACIONES
+   ============================================ */
+
+/* Contenedores de selección */
+.equipo-container,
+.insumos-container {
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+.insumos-container {
+    max-height: 200px;
+}
+
+/* Items de lista clickeable */
+.selectable-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    border-bottom: 1px solid #e5e7eb;
+    gap: 8px;
+    background: #fff;
+}
+
+.selectable-item.selected {
+    background: #f3f4f6;
+}
+
+.selectable-item-text {
+    font-size: 13px;
+    color: #2d2f33;
+}
+
+.selectable-item-subtext {
+    color: #6b7280;
+}
+
+/* Botones de agregar/remover */
+.btn-add,
+.btn-remove-inline {
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    line-height: 1;
+}
+
+.btn-add {
+    background: #10b981;
+}
+
+.btn-remove-inline {
+    background: #dc3545;
+}
+
+/* Chips de items seleccionados */
+.chip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 13px;
+}
+
+.chip-remove-btn {
+    background: #9ca3af;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 10px;
+    padding: 0;
+    line-height: 1;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.chip-remove-btn:hover {
+    background: #6b7280;
+}
+
+/* Contenedor de chips */
+.chips-container {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.chips-empty {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+/* Separador horizontal */
+.section-divider {
+    margin: 16px 0;
+    border-color: #e5e7eb;
+}
+
+.section-divider-sm {
+    margin: 12px 0;
+    border-color: #e5e7eb;
+}
+
+/* Lista vacía mensaje */
+.empty-list-message {
+    padding: 8px;
+    text-align: center;
+    color: #6b7280;
+}
+
+/* Descripción automática readonly */
+.descripcion-auto {
+    background: #f9fafb;
+}
+
+/* Hidden inputs */
+.hidden-input {
+    /* Los inputs type="hidden" ya son invisibles por defecto */
+}
+
+/* Nota informativa */
+.info-note {
+    color: #6c757d;
+    display: block;
+    margin-top: 6px;
+    font-size: 13px;
+}
+
+/* Detalle de hospitalización - Columnas */
+.hosp-detail-left {
+    flex: 1;
+    padding: 20px;
+    border-right: 1px solid #e0e0e0;
+    overflow-y: auto;
+}
+
+.hosp-detail-right {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* Bloques de información */
+.info-block {
+    background-color: #f8f9fb;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+.info-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.info-block-title {
+    margin: 0;
+    font-size: 16px;
+    color: #2d2f33;
+}
+
+.info-block-status {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+}
+
+.status-activa {
+    background-color: #e5f4ed;
+    color: #1b7f4f;
+}
+
+.status-alta {
+    background-color: #f4e8e8;
+    color: #8a4b4b;
+}
+
+.info-block-text {
+    margin: 0 0 4px 0;
+    color: #444;
+}
+
+.info-block-content {
+    background-color: white;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 8px;
+}
+
+.info-block-label {
+    display: block;
+    color: #666;
+    margin-bottom: 4px;
+    font-size: 13px;
+}
+
+.info-block-value {
+    color: #2d2f33;
+    line-height: 1.4;
+}
+
+/* Chips de insumos en detalle */
+.insumo-chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.insumo-chip-detail {
+    background: #f3f4f6;
+    color: #2d2f33;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+/* Grid de insumos en detalle */
+.insumos-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+}
+
+.insumo-detail-card {
+    padding: 8px 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.insumo-detail-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: center;
+}
+
+.insumo-detail-name {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.insumo-detail-code {
+    font-size: 11px;
+    color: #6b7280;
+}
+
+.insumo-detail-dosis {
+    font-size: 12px;
+    color: #374151;
+}
+
+/* Bloques especiales de cirugía, alta */
+.cirugia-block {
+    background-color: #fdfaf3;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #f0e6ce;
+    margin-bottom: 12px;
+}
+
+.cirugia-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.alta-block {
+    background-color: #f6fbf6;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #dce9dc;
+}
+
+/* Registros diarios */
+.registro-item {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.registro-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.registro-fecha {
+    color: #2d2f33;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.registro-veterinario {
+    font-size: 12px;
+    color: #4b5563;
+    background-color: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 999px;
+}
+
+.registro-datos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 8px;
+    color: #2d2f33;
+    font-size: 13px;
+}
+
+.registro-observaciones {
+    margin-top: 6px;
+    color: #4b5563;
+    font-size: 12.5px;
+}
+
+/* Hospitalizaciones - lista */
+.hosp-item {
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.hosp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.hosp-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hosp-fecha,
+.hosp-motivo {
+    font-size: 13px;
+}
+
+.hosp-estado {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.hosp-acciones {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
