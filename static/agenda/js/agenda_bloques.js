@@ -248,49 +248,96 @@ function renderizarBloques(data) {
         maxBlock = Math.max(...data.rangos.map(r => r.end_block));
     }
     
-    // Renderizar por hora (solo las horas dentro del rango de trabajo)
-    const startHour = Math.floor(minBlock / 4);
-    const endHour = Math.ceil(maxBlock / 4);
-    
-    for (let hora = startHour; hora < endHour; hora++) {
-        // Label de hora
-        const hourLabel = document.createElement('div');
-        hourLabel.className = 'agenda-hour-label';
-        hourLabel.textContent = `${String(hora).padStart(2, '0')}:00`;
-        container.appendChild(hourLabel);
-        
-        // 4 bloques de 15 min
-        for (let cuarto = 0; cuarto < 4; cuarto++) {
-            const blockIndex = hora * 4 + cuarto;
-            
-            // Solo mostrar bloques dentro del rango de trabajo
-            if (blockIndex < minBlock || blockIndex >= maxBlock) {
-                continue;
+    // Procesar cada rango laboral por separado
+    if (data.trabaja && data.rangos && data.rangos.length > 0) {
+        data.rangos.forEach((rango, rangoIndex) => {
+            // Agregar separador visual entre rangos
+            if (rangoIndex > 0) {
+                const separador = document.createElement('div');
+                separador.style.gridColumn = '1 / -1';
+                separador.style.height = '8px';
+                separador.style.background = 'transparent';
+                container.appendChild(separador);
             }
             
-            const bloque = data.blocks[blockIndex];
+            const startHour = Math.floor(rango.start_block / 4);
+            const endHour = Math.ceil(rango.end_block / 4);
             
-            const blockEl = document.createElement('div');
-            blockEl.className = `agenda-block is-${bloque.status}`;
-            blockEl.dataset.blockIndex = blockIndex;
-            blockEl.dataset.startTime = bloque.start_time;
-            
-            blockEl.innerHTML = `
-                <span class="agenda-block-time">${bloque.start_time}</span>
-                ${bloque.label ? `<span class="agenda-block-label">${bloque.label}</span>` : ''}
-            `;
-            
-            if (bloque.status === 'available') {
-                blockEl.addEventListener('click', () => seleccionarBloque(blockIndex));
-                blockEl.addEventListener('mouseenter', () => previsualizarBloques(blockIndex));
-                blockEl.addEventListener('mouseleave', limpiarPrevisualizacion);
-            } else if (bloque.status === 'occupied') {
-                blockEl.style.cursor = 'pointer';
-                blockEl.addEventListener('click', () => mostrarDetalleCita(bloque));
+            for (let hora = startHour; hora < endHour; hora++) {
+                // Label de hora
+                const hourLabel = document.createElement('div');
+                hourLabel.className = 'agenda-hour-label';
+                hourLabel.textContent = `${String(hora).padStart(2, '0')}:00`;
+                container.appendChild(hourLabel);
+                
+                // Procesar bloques de esta hora
+                let cuarto = 0;
+                while (cuarto < 4) {
+                    const blockIndex = hora * 4 + cuarto;
+                    
+                    // Solo mostrar bloques dentro de ESTE rango
+                    if (blockIndex < rango.start_block || blockIndex >= rango.end_block) {
+                        cuarto++;
+                        continue;
+                    }
+                    
+                    const bloque = data.blocks[blockIndex];
+                    
+                    // Si es una cita ocupada, agrupar bloques consecutivos EN ESTA HORA
+                    if (bloque.status === 'occupied' && bloque.cita_id) {
+                        let endQuarto = cuarto + 1;
+                        while (endQuarto < 4 && 
+                               hora * 4 + endQuarto < rango.end_block &&
+                               data.blocks[hora * 4 + endQuarto].status === 'occupied' && 
+                               data.blocks[hora * 4 + endQuarto].cita_id === bloque.cita_id) {
+                            endQuarto++;
+                        }
+                        
+                        // Crear bloque unificado
+                        const blockEl = document.createElement('div');
+                        blockEl.className = `agenda-block is-occupied`;
+                        blockEl.dataset.blockIndex = blockIndex;
+                        blockEl.dataset.citaId = bloque.cita_id;
+                        blockEl.dataset.startTime = bloque.start_time;
+                        blockEl.style.gridColumn = `span ${endQuarto - cuarto}`;
+                        blockEl.innerHTML = `
+                            <span class="agenda-block-time">${bloque.start_time}</span>
+                            ${bloque.label ? `<span class="agenda-block-label">${bloque.label}</span>` : ''}
+                        `;
+                        blockEl.style.cursor = 'pointer';
+                        blockEl.addEventListener('click', () => mostrarDetalleCita(bloque));
+                        blockEl.addEventListener('mouseenter', () => destacarCitaCompleta(bloque.cita_id));
+                        blockEl.addEventListener('mouseleave', () => limpiarDestacadoCita());
+                        
+                        container.appendChild(blockEl);
+                        cuarto = endQuarto;
+                    } else {
+                        // Bloque individual
+                        const blockEl = document.createElement('div');
+                        blockEl.className = `agenda-block is-${bloque.status}`;
+                        blockEl.dataset.blockIndex = blockIndex;
+                        if (bloque.cita_id) {
+                            blockEl.dataset.citaId = bloque.cita_id;
+                        }
+                        blockEl.dataset.startTime = bloque.start_time;
+                        
+                        blockEl.innerHTML = `
+                            <span class="agenda-block-time">${bloque.start_time}</span>
+                            ${bloque.label ? `<span class="agenda-block-label">${bloque.label}</span>` : ''}
+                        `;
+                        
+                        if (bloque.status === 'available') {
+                            blockEl.addEventListener('click', () => seleccionarBloque(blockIndex));
+                            blockEl.addEventListener('mouseenter', () => previsualizarBloques(blockIndex));
+                            blockEl.addEventListener('mouseleave', limpiarPrevisualizacion);
+                        }
+                        
+                        container.appendChild(blockEl);
+                        cuarto++;
+                    }
+                }
             }
-            
-            container.appendChild(blockEl);
-        }
+        });
     }
 }
 
@@ -628,4 +675,20 @@ function mostrarDetalleCita(bloque) {
 
 function cerrarModalDetalleCita() {
     toggleModal('detalleCitaModal', false);
+}
+
+function destacarCitaCompleta(citaId) {
+    // Destacar todos los bloques con esta cita_id
+    document.querySelectorAll(`[data-cita-id="${citaId}"]`).forEach(el => {
+        el.style.opacity = '0.7';
+        el.style.boxShadow = '0 0 8px rgba(0, 0, 0, 0.3)';
+    });
+}
+
+function limpiarDestacadoCita() {
+    // Remover destacado de todos los bloques
+    document.querySelectorAll('[data-cita-id]').forEach(el => {
+        el.style.opacity = '1';
+        el.style.boxShadow = '';
+    });
 }
