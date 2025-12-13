@@ -8,8 +8,7 @@ const DIAS_SEMANA = [
     { id: 2, nombre: 'Miércoles' },
     { id: 3, nombre: 'Jueves' },
     { id: 4, nombre: 'Viernes' },
-    { id: 5, nombre: 'Sábado' },
-    { id: 6, nombre: 'Domingo' }
+    { id: 5, nombre: 'Sábado' }
 ];
 
 let horarioState = {
