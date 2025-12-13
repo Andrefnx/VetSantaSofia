@@ -52,13 +52,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('vetSidebar');
     if (sidebar) {
         const observer = new MutationObserver(scheduleSidebarWidthUpdate);
-        observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+        observer.observe(sidebar, { attributes: true, attributeFilter: ['class', 'style'] });
+        sidebar.addEventListener('transitionend', scheduleSidebarWidthUpdate);
     }
+
+    const mainPanel = document.querySelector('.main-panel');
+    if (mainPanel) {
+        const observerMain = new MutationObserver(scheduleSidebarWidthUpdate);
+        observerMain.observe(mainPanel, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    const htmlEl = document.documentElement;
+    const observerHtml = new MutationObserver(scheduleSidebarWidthUpdate);
+    observerHtml.observe(htmlEl, { attributes: true, attributeFilter: ['class'] });
 
     const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
     if (sidebarToggleBtn) {
         sidebarToggleBtn.addEventListener('click', () => {
             requestAnimationFrame(scheduleSidebarWidthUpdate);
+            setTimeout(scheduleSidebarWidthUpdate, 200);
         });
     }
 });

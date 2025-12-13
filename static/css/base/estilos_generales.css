@@ -51,6 +51,11 @@
     --sidebar-width: 260px;
     --sidebar-width-collapsed: 70px;
     
+
+html.sidebar-is-collapsed,
+.sidebar-collapsed {
+    --sidebar-width: var(--sidebar-width-collapsed, 70px);
+}
     /* ESPACIOS */
     --spacing-xs: 4px;
     --spacing-sm: 8px;
