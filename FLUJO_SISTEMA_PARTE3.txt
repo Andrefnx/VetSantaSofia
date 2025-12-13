@@ -1,0 +1,232 @@
+================================================================================
+    SISTEMA VETERINARIA SANTA SOFÍA - FLUJO DE TRABAJO DEL USUARIO
+================================================================================
+
+Fecha: 13 de diciembre de 2025
+Parte 3: Hospitalización, Inventario y Caja
+
+================================================================================
+1. MÓDULO DE HOSPITALIZACIÓN
+================================================================================
+
+1.1 CREAR HOSPITALIZACIÓN
+--------------------
+Cuando un paciente requiere hospitalización, el veterinario:
+
+PASO 1: Desde la ficha del paciente, selecciona "Nueva Hospitalización"
+PASO 2: Completa el formulario con:
+        - Fecha y hora de ingreso
+        - Motivo de hospitalización
+        - Diagnóstico inicial
+        - Plan de tratamiento
+PASO 3: El paciente queda registrado como "Hospitalizado"
+
+La hospitalización aparece inmediatamente en:
+- Dashboard del veterinario (pacientes hospitalizados)
+- Dashboard de hospital
+- Ficha del paciente
+
+
+1.2 REGISTRAR EVOLUCIONES DIARIAS
+--------------------
+Durante la hospitalización, el personal médico puede:
+
+- Crear registros diarios con fecha y hora
+- Documentar evolución del paciente
+- Registrar signos vitales del día
+- Añadir observaciones importantes
+- Actualizar plan de tratamiento
+
+Cada registro queda guardado en el historial de la hospitalización.
+
+
+1.3 REGISTRAR INSUMOS Y MEDICAMENTOS
+--------------------
+Durante la estancia hospitalaria, se pueden:
+
+- Seleccionar medicamentos del inventario
+- Especificar dosis administradas
+- Indicar frecuencia de administración
+- El stock se descuenta automáticamente
+- Todos los insumos quedan vinculados para facturación posterior
+
+
+1.4 DAR DE ALTA
+--------------------
+Cuando el paciente se recupera, el veterinario:
+
+PASO 1: Accede a la hospitalización activa
+PASO 2: Selecciona "Dar de Alta"
+PASO 3: Completa:
+        - Fecha y hora de alta
+        - Estado de salida (mejorado, estable, etc.)
+        - Indicaciones post-alta
+        - Receta y cuidados en casa
+PASO 4: Confirma el alta
+
+El estado cambia a "Alta" y el paciente sale del listado de hospitalizados.
+
+
+1.5 VISTA EN DASHBOARD
+--------------------
+Los veterinarios ven en su dashboard:
+- Número de pacientes hospitalizados actualmente
+- Lista con nombres y tiempo de hospitalización
+- Alertas de pacientes que requieren atención inmediata
+- Acceso rápido a cada ficha de hospitalización
+
+
+================================================================================
+2. MÓDULO DE INVENTARIO
+================================================================================
+
+2.1 VISUALIZAR PRODUCTOS
+--------------------
+Al acceder al inventario, el usuario ve:
+
+- Listado completo de insumos y medicamentos
+- Información clave: nombre, marca, stock actual, precio
+- Filtros por tipo (medicamento, insumo, alimento)
+- Filtros por especie (perro, gato, general)
+- Búsqueda rápida por nombre
+- Alertas de productos con stock bajo o crítico
+
+
+2.2 EDITAR PRODUCTOS
+--------------------
+El usuario puede hacer clic en cualquier producto para:
+
+- Modificar información básica (nombre, marca, descripción)
+- Actualizar precio de venta
+- Cambiar niveles de stock (mínimo, óptimo)
+- Editar dosis y presentación
+- Actualizar precauciones y contraindicaciones
+- Modificar categorización
+
+Los cambios se guardan inmediatamente.
+
+
+2.3 AGREGAR NUEVOS INSUMOS
+--------------------
+Para crear un nuevo producto:
+
+PASO 1: Click en "Nuevo Insumo"
+PASO 2: Completar formulario con:
+        - Nombre comercial
+        - Marca y SKU
+        - Tipo (medicamento, insumo, alimento)
+        - Formato (inyectable, pastillas, etc.)
+        - Precio de venta
+        - Stock inicial
+        - Niveles de alerta
+PASO 3: Guardar
+
+El producto queda disponible inmediatamente para uso en consultas.
+
+
+2.4 MODIFICAR STOCK
+--------------------
+El usuario puede ajustar el stock de dos formas:
+
+MANUAL:
+- Ingresos por compras (sumar stock)
+- Salidas por desecho o vencimiento (restar stock)
+- Ajustes de inventario
+
+AUTOMÁTICO:
+- El sistema descuenta automáticamente cuando se usan en consultas
+- El sistema registra movimientos con fecha y responsable
+
+
+================================================================================
+3. MÓDULO DE CAJA
+================================================================================
+
+3.1 GENERACIÓN DE COBROS PENDIENTES
+--------------------
+Los cobros se generan automáticamente cuando:
+
+- Se completa una consulta con servicios
+- Se registran insumos utilizados
+- Se da de alta una hospitalización
+
+Cada servicio e insumo tiene su precio definido que suma al total a cobrar.
+
+
+3.2 ACCESO A CAJA
+--------------------
+El usuario (recepción o administración) accede al módulo de caja donde ve:
+
+- Lista de servicios disponibles
+- Lista de productos del inventario
+- Calculadora para generar el total
+- Métodos de pago disponibles
+
+
+3.3 PROCESAR PAGOS
+--------------------
+Para procesar un cobro:
+
+PASO 1: Buscar al paciente o agregar servicios manualmente
+PASO 2: Revisar el detalle (servicios, insumos, precios)
+PASO 3: Aplicar descuentos si corresponde
+PASO 4: Seleccionar método de pago:
+        - Efectivo
+        - Tarjeta débito
+        - Tarjeta crédito
+        - Transferencia
+PASO 5: Confirmar pago
+
+El sistema:
+- Genera comprobante de pago
+- Descuenta stock si hay productos físicos
+- Marca los servicios como pagados
+- Registra el movimiento en caja
+
+
+3.4 CIERRE DE CAJA
+--------------------
+Al final del turno, el usuario:
+
+PASO 1: Selecciona "Cerrar Caja"
+PASO 2: El sistema muestra:
+        - Monto inicial de apertura
+        - Total de ingresos del día
+        - Total de egresos
+        - Saldo esperado
+PASO 3: Usuario cuenta el efectivo físico
+PASO 4: Ingresa monto real contado
+PASO 5: Sistema calcula diferencia (cuadre/faltante)
+PASO 6: Se genera reporte de cierre
+
+La sesión de caja queda cerrada y archivada.
+
+
+3.5 REPORTES Y CONSULTAS
+--------------------
+El módulo de caja permite generar:
+
+- Reporte diario de ventas
+- Reporte por período (semanal, mensual)
+- Detalle de servicios más vendidos
+- Análisis de métodos de pago
+- Histórico de cierres de caja
+- Totales por usuario cajero
+
+
+================================================================================
+FLUJO INTEGRADO COMPLETO: CASO TÍPICO
+================================================================================
+
+1. Paciente llega → Recepción agenda cita
+2. Veterinario atiende → Registra consulta con servicios e insumos
+3. Si requiere → Hospitaliza al paciente
+4. Durante hospitalización → Registra evoluciones y medicamentos diarios
+5. Al recuperarse → Da de alta con indicaciones
+6. Recepción → Procesa pago total en caja
+7. Al final del día → Cierra caja con reporte completo
+
+
+================================================================================
+FIN DE LA PARTE 3
+================================================================================

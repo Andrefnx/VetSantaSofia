@@ -1,0 +1,158 @@
+================================================================================
+    SISTEMA VETERINARIA SANTA SOFÍA - FLUJO DE TRABAJO DEL USUARIO
+================================================================================
+
+Fecha: 13 de diciembre de 2025
+Parte 2: Módulo de Agenda y Consultas Clínicas
+
+================================================================================
+1. MÓDULO DE AGENDA
+================================================================================
+
+1.1 ACCESO A LA AGENDA
+--------------------
+El usuario accede a la agenda desde el menú principal o desde el dashboard.
+Se presenta un calendario mensual que muestra:
+- Todos los días del mes actual
+- Citas programadas por día
+- Disponibilidad de los veterinarios
+
+
+1.2 VISUALIZACIÓN DE DISPONIBILIDAD
+--------------------
+Al hacer clic en un día específico, el usuario ve:
+- Timeline dividida en bloques de 15 minutos (desde las 00:00 hasta las 23:45)
+- Columnas por cada veterinario disponible ese día
+- Bloques verdes: horarios disponibles
+- Bloques ocupados: citas ya agendadas con información del paciente
+- Bloques grises: veterinario no disponible
+
+La disponibilidad se define mediante horarios fijos semanales que cada
+veterinario tiene configurados (ej: Lunes 9:00-13:00 y 15:00-19:00).
+
+
+1.3 CREAR UNA CITA
+--------------------
+Para agendar una nueva cita, el usuario:
+
+PASO 1: Selecciona el día en el calendario
+PASO 2: Elige el veterinario y horario disponible en el timeline
+PASO 3: Completa el formulario de cita con:
+        - Paciente (buscar existente o crear nuevo)
+        - Servicio a realizar
+        - Motivo de consulta
+        - Notas adicionales
+PASO 4: Confirma la cita
+
+El sistema valida automáticamente que:
+- El horario esté disponible
+- No haya conflictos con otras citas
+- El veterinario tenga disponibilidad en ese bloque
+
+
+1.4 EDITAR UNA CITA
+--------------------
+El usuario puede hacer clic sobre una cita existente para:
+- Modificar el horario (si hay disponibilidad)
+- Cambiar el servicio
+- Actualizar el motivo
+- Agregar o editar notas
+
+Los cambios se guardan inmediatamente tras confirmar.
+
+
+1.5 CANCELAR UNA CITA
+--------------------
+Desde la vista de detalle de la cita, el usuario puede:
+- Eliminar la cita del sistema
+- El horario queda nuevamente disponible para otros pacientes
+
+
+================================================================================
+2. INICIO DE CONSULTA DESDE LA AGENDA
+================================================================================
+
+2.1 ABRIR CONSULTA
+--------------------
+Cuando llega la hora de atención, el usuario puede:
+
+OPCIÓN A: Hacer clic en la cita desde el timeline
+OPCIÓN B: Hacer clic en "Iniciar Consulta" o "Atender" en la cita
+
+El sistema abre la ficha clínica del paciente con:
+- Información básica (nombre, edad, especie, propietario)
+- Antecedentes médicos previos (alergias, enfermedades crónicas)
+- Historial de consultas anteriores
+- Hospitalizaciones previas
+
+
+2.2 REGISTRAR CONSULTA
+--------------------
+El veterinario completa la consulta registrando:
+
+SIGNOS VITALES:
+- Temperatura
+- Peso actual
+- Frecuencia cardíaca
+- Frecuencia respiratoria
+
+DIAGNÓSTICO:
+- Descripción del problema o enfermedad detectada
+- Tipo de consulta (general, urgencia, vacuna, control, etc.)
+
+TRATAMIENTO:
+- Indicaciones y prescripciones
+- Plan de acción
+
+
+2.3 AGREGAR SERVICIOS E INSUMOS
+--------------------
+Durante la consulta, el usuario puede:
+
+SERVICIOS:
+- Seleccionar de la lista de servicios disponibles
+- Cada servicio tiene su precio definido
+- Pueden agregarse múltiples servicios a una misma consulta
+
+MEDICAMENTOS/INSUMOS:
+- Buscar y seleccionar productos del inventario
+- Especificar dosis y frecuencia
+- El sistema descuenta automáticamente del stock
+
+
+2.4 CERRAR CONSULTA
+--------------------
+Al finalizar, el usuario:
+- Revisa toda la información ingresada
+- Guarda la consulta
+- La consulta queda registrada en el historial del paciente
+- Los servicios e insumos quedan vinculados para facturación
+- El estado de la cita cambia a "Atendida" o "Completada"
+
+
+2.5 POST-CONSULTA
+--------------------
+Después de cerrar la consulta, el usuario puede:
+- Ver el resumen completo en la ficha del paciente
+- Imprimir receta o indicaciones
+- Procesar el pago en caja
+- Agendar próxima cita de control si es necesario
+
+
+================================================================================
+FLUJO INTEGRADO: AGENDA → CONSULTA → CAJA
+================================================================================
+
+El flujo completo típico es:
+
+1. Paciente llama → Recepción agenda cita
+2. Llega el día → Veterinario ve la cita en su timeline
+3. Veterinario inicia consulta desde la cita
+4. Registra diagnóstico, tratamiento, servicios e insumos
+5. Cierra consulta
+6. Recepción procesa pago en caja con los servicios registrados
+
+
+================================================================================
+FIN DE LA PARTE 2
+================================================================================

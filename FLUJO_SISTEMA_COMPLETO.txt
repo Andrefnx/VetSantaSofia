@@ -1,0 +1,491 @@
+================================================================================
+    SISTEMA VETERINARIA SANTA SOFÍA
+    DOCUMENTACIÓN COMPLETA DE FLUJO DE TRABAJO DEL USUARIO
+================================================================================
+
+Fecha: 13 de diciembre de 2025
+Versión: 1.0
+
+Este documento describe el funcionamiento completo del sistema desde la
+perspectiva del usuario final, cubriendo todos los módulos principales y
+el flujo de trabajo integrado.
+
+
+================================================================================
+PARTE 1: ACCESO AL SISTEMA Y DASHBOARD PRINCIPAL
+================================================================================
+
+1. ACCESO AL SISTEMA (LOGIN)
+--------------------------------------------------------------------------------
+
+El usuario accede al sistema a través de la página principal (localhost:8000).
+
+Se presenta una pantalla de login donde debe ingresar:
+- RUT (con o sin puntos, con o sin guión)
+- Contraseña
+
+El sistema normaliza automáticamente el formato del RUT ingresado, permitiendo
+flexibilidad en cómo el usuario lo escribe.
+
+Si las credenciales son correctas, el usuario es autenticado y redirigido al
+dashboard correspondiente según su rol.
+
+Si las credenciales son incorrectas, se muestra un mensaje de error y el
+usuario puede intentar nuevamente.
+
+
+2. ROLES Y TIPOS DE DASHBOARD
+--------------------------------------------------------------------------------
+
+El sistema reconoce tres roles de usuario:
+
+1. ADMINISTRACIÓN
+   - Acceso total al sistema
+   - Dashboard con vista general de toda la operación
+   
+2. VETERINARIO
+   - Dashboard enfocado en atención de pacientes
+   - Vista de su agenda personal y citas del día
+   
+3. RECEPCIÓN
+   - Dashboard orientado a gestión de citas y atención al público
+   - Acceso a agenda general y pacientes
+
+
+3. FUNCIONES DESDE EL DASHBOARD
+--------------------------------------------------------------------------------
+
+Una vez autenticado, el usuario ve su dashboard personalizado con acceso a:
+
+3.1 AGENDA
+    - Ver calendario mensual con todas las citas programadas
+    - Visualizar disponibilidad de veterinarios
+    - Crear nuevas citas para los pacientes
+    - Editar o cancelar citas existentes
+    - Ver timeline del día con bloques de 15 minutos
+    - Gestionar horarios fijos de los veterinarios
+
+3.2 PACIENTES
+    - Buscar pacientes registrados
+    - Ver listado de todas las mascotas
+    - Acceder a fichas individuales de cada paciente
+    - Crear nuevos registros de pacientes y propietarios
+    - Editar información de mascotas existentes
+    - Consultar historial médico completo
+
+3.3 ATENCIÓN CLÍNICA
+    - Abrir ficha del paciente para consulta
+    - Registrar signos vitales (temperatura, peso, frecuencia cardiaca)
+    - Crear consultas con diagnóstico y tratamiento
+    - Asociar servicios realizados
+    - Registrar medicamentos utilizados
+    - Gestionar hospitalizaciones activas
+
+3.4 INVENTARIO
+    - Ver stock de medicamentos e insumos
+    - Consultar alertas de productos con bajo stock
+    - Registrar entradas y salidas de productos
+    - Crear nuevos productos en el inventario
+    - Editar información de productos existentes
+
+3.5 SERVICIOS
+    - Ver catálogo de servicios disponibles
+    - Consultar precios y duraciones
+    - Crear nuevos servicios
+    - Editar servicios existentes
+
+3.6 CAJA (Para roles autorizados)
+    - Procesar ventas de servicios y productos
+    - Generar reportes de ingresos
+    - Controlar sesiones de caja
+
+3.7 HOSPITALIZACIONES
+    - Ver pacientes hospitalizados actualmente
+    - Consultar detalles de cada hospitalización
+    - Registrar evolución diaria
+    - Gestionar altas médicas
+
+
+4. NAVEGACIÓN GENERAL
+--------------------------------------------------------------------------------
+
+Desde cualquier módulo, el usuario puede:
+- Volver al dashboard usando el menú principal
+- Acceder a otros módulos a través del menú lateral
+- Cerrar sesión en cualquier momento
+- Ver su información de perfil (nombre, rol)
+
+El menú de navegación se mantiene visible en todo momento, permitiendo
+moverse ágilmente entre las diferentes secciones del sistema.
+
+
+================================================================================
+PARTE 2: MÓDULO DE AGENDA Y CONSULTAS CLÍNICAS
+================================================================================
+
+1. MÓDULO DE AGENDA
+--------------------------------------------------------------------------------
+
+1.1 ACCESO A LA AGENDA
+    El usuario accede a la agenda desde el menú principal o desde el dashboard.
+    Se presenta un calendario mensual que muestra:
+    - Todos los días del mes actual
+    - Citas programadas por día
+    - Disponibilidad de los veterinarios
+
+1.2 VISUALIZACIÓN DE DISPONIBILIDAD
+    Al hacer clic en un día específico, el usuario ve:
+    - Timeline dividida en bloques de 15 minutos (desde las 00:00 hasta las 23:45)
+    - Columnas por cada veterinario disponible ese día
+    - Bloques verdes: horarios disponibles
+    - Bloques ocupados: citas ya agendadas con información del paciente
+    - Bloques grises: veterinario no disponible
+    
+    La disponibilidad se define mediante horarios fijos semanales que cada
+    veterinario tiene configurados (ej: Lunes 9:00-13:00 y 15:00-19:00).
+
+1.3 CREAR UNA CITA
+    Para agendar una nueva cita, el usuario:
+    
+    PASO 1: Selecciona el día en el calendario
+    PASO 2: Elige el veterinario y horario disponible en el timeline
+    PASO 3: Completa el formulario de cita con:
+            - Paciente (buscar existente o crear nuevo)
+            - Servicio a realizar
+            - Motivo de consulta
+            - Notas adicionales
+    PASO 4: Confirma la cita
+    
+    El sistema valida automáticamente que:
+    - El horario esté disponible
+    - No haya conflictos con otras citas
+    - El veterinario tenga disponibilidad en ese bloque
+
+1.4 EDITAR UNA CITA
+    El usuario puede hacer clic sobre una cita existente para:
+    - Modificar el horario (si hay disponibilidad)
+    - Cambiar el servicio
+    - Actualizar el motivo
+    - Agregar o editar notas
+    
+    Los cambios se guardan inmediatamente tras confirmar.
+
+1.5 CANCELAR UNA CITA
+    Desde la vista de detalle de la cita, el usuario puede:
+    - Eliminar la cita del sistema
+    - El horario queda nuevamente disponible para otros pacientes
+
+
+2. INICIO DE CONSULTA DESDE LA AGENDA
+--------------------------------------------------------------------------------
+
+2.1 ABRIR CONSULTA
+    Cuando llega la hora de atención, el usuario puede:
+    
+    OPCIÓN A: Hacer clic en la cita desde el timeline
+    OPCIÓN B: Hacer clic en "Iniciar Consulta" o "Atender" en la cita
+    
+    El sistema abre la ficha clínica del paciente con:
+    - Información básica (nombre, edad, especie, propietario)
+    - Antecedentes médicos previos (alergias, enfermedades crónicas)
+    - Historial de consultas anteriores
+    - Hospitalizaciones previas
+
+2.2 REGISTRAR CONSULTA
+    El veterinario completa la consulta registrando:
+    
+    SIGNOS VITALES:
+    - Temperatura
+    - Peso actual
+    - Frecuencia cardíaca
+    - Frecuencia respiratoria
+    
+    DIAGNÓSTICO:
+    - Descripción del problema o enfermedad detectada
+    - Tipo de consulta (general, urgencia, vacuna, control, etc.)
+    
+    TRATAMIENTO:
+    - Indicaciones y prescripciones
+    - Plan de acción
+
+2.3 AGREGAR SERVICIOS E INSUMOS
+    Durante la consulta, el usuario puede:
+    
+    SERVICIOS:
+    - Seleccionar de la lista de servicios disponibles
+    - Cada servicio tiene su precio definido
+    - Pueden agregarse múltiples servicios a una misma consulta
+    
+    MEDICAMENTOS/INSUMOS:
+    - Buscar y seleccionar productos del inventario
+    - Especificar dosis y frecuencia
+    - El sistema descuenta automáticamente del stock
+
+2.4 CERRAR CONSULTA
+    Al finalizar, el usuario:
+    - Revisa toda la información ingresada
+    - Guarda la consulta
+    - La consulta queda registrada en el historial del paciente
+    - Los servicios e insumos quedan vinculados para facturación
+    - El estado de la cita cambia a "Atendida" o "Completada"
+
+2.5 POST-CONSULTA
+    Después de cerrar la consulta, el usuario puede:
+    - Ver el resumen completo en la ficha del paciente
+    - Imprimir receta o indicaciones
+    - Procesar el pago en caja
+    - Agendar próxima cita de control si es necesario
+
+
+================================================================================
+PARTE 3: HOSPITALIZACIÓN, INVENTARIO Y CAJA
+================================================================================
+
+1. MÓDULO DE HOSPITALIZACIÓN
+--------------------------------------------------------------------------------
+
+1.1 CREAR HOSPITALIZACIÓN
+    Cuando un paciente requiere hospitalización, el veterinario:
+    
+    PASO 1: Desde la ficha del paciente, selecciona "Nueva Hospitalización"
+    PASO 2: Completa el formulario con:
+            - Fecha y hora de ingreso
+            - Motivo de hospitalización
+            - Diagnóstico inicial
+            - Plan de tratamiento
+    PASO 3: El paciente queda registrado como "Hospitalizado"
+    
+    La hospitalización aparece inmediatamente en:
+    - Dashboard del veterinario (pacientes hospitalizados)
+    - Dashboard de hospital
+    - Ficha del paciente
+
+1.2 REGISTRAR EVOLUCIONES DIARIAS
+    Durante la hospitalización, el personal médico puede:
+    - Crear registros diarios con fecha y hora
+    - Documentar evolución del paciente
+    - Registrar signos vitales del día
+    - Añadir observaciones importantes
+    - Actualizar plan de tratamiento
+    
+    Cada registro queda guardado en el historial de la hospitalización.
+
+1.3 REGISTRAR INSUMOS Y MEDICAMENTOS
+    Durante la estancia hospitalaria, se pueden:
+    - Seleccionar medicamentos del inventario
+    - Especificar dosis administradas
+    - Indicar frecuencia de administración
+    - El stock se descuenta automáticamente
+    - Todos los insumos quedan vinculados para facturación posterior
+
+1.4 DAR DE ALTA
+    Cuando el paciente se recupera, el veterinario:
+    
+    PASO 1: Accede a la hospitalización activa
+    PASO 2: Selecciona "Dar de Alta"
+    PASO 3: Completa:
+            - Fecha y hora de alta
+            - Estado de salida (mejorado, estable, etc.)
+            - Indicaciones post-alta
+            - Receta y cuidados en casa
+    PASO 4: Confirma el alta
+    
+    El estado cambia a "Alta" y el paciente sale del listado de hospitalizados.
+
+1.5 VISTA EN DASHBOARD
+    Los veterinarios ven en su dashboard:
+    - Número de pacientes hospitalizados actualmente
+    - Lista con nombres y tiempo de hospitalización
+    - Alertas de pacientes que requieren atención inmediata
+    - Acceso rápido a cada ficha de hospitalización
+
+
+2. MÓDULO DE INVENTARIO
+--------------------------------------------------------------------------------
+
+2.1 VISUALIZAR PRODUCTOS
+    Al acceder al inventario, el usuario ve:
+    - Listado completo de insumos y medicamentos
+    - Información clave: nombre, marca, stock actual, precio
+    - Filtros por tipo (medicamento, insumo, alimento)
+    - Filtros por especie (perro, gato, general)
+    - Búsqueda rápida por nombre
+    - Alertas de productos con stock bajo o crítico
+
+2.2 EDITAR PRODUCTOS
+    El usuario puede hacer clic en cualquier producto para:
+    - Modificar información básica (nombre, marca, descripción)
+    - Actualizar precio de venta
+    - Cambiar niveles de stock (mínimo, óptimo)
+    - Editar dosis y presentación
+    - Actualizar precauciones y contraindicaciones
+    - Modificar categorización
+    
+    Los cambios se guardan inmediatamente.
+
+2.3 AGREGAR NUEVOS INSUMOS
+    Para crear un nuevo producto:
+    
+    PASO 1: Click en "Nuevo Insumo"
+    PASO 2: Completar formulario con:
+            - Nombre comercial
+            - Marca y SKU
+            - Tipo (medicamento, insumo, alimento)
+            - Formato (inyectable, pastillas, etc.)
+            - Precio de venta
+            - Stock inicial
+            - Niveles de alerta
+    PASO 3: Guardar
+    
+    El producto queda disponible inmediatamente para uso en consultas.
+
+2.4 MODIFICAR STOCK
+    El usuario puede ajustar el stock de dos formas:
+    
+    MANUAL:
+    - Ingresos por compras (sumar stock)
+    - Salidas por desecho o vencimiento (restar stock)
+    - Ajustes de inventario
+    
+    AUTOMÁTICO:
+    - El sistema descuenta automáticamente cuando se usan en consultas
+    - El sistema registra movimientos con fecha y responsable
+
+
+3. MÓDULO DE CAJA
+--------------------------------------------------------------------------------
+
+3.1 GENERACIÓN DE COBROS PENDIENTES
+    Los cobros se generan automáticamente cuando:
+    - Se completa una consulta con servicios
+    - Se registran insumos utilizados
+    - Se da de alta una hospitalización
+    
+    Cada servicio e insumo tiene su precio definido que suma al total a cobrar.
+
+3.2 ACCESO A CAJA
+    El usuario (recepción o administración) accede al módulo de caja donde ve:
+    - Lista de servicios disponibles
+    - Lista de productos del inventario
+    - Calculadora para generar el total
+    - Métodos de pago disponibles
+
+3.3 PROCESAR PAGOS
+    Para procesar un cobro:
+    
+    PASO 1: Buscar al paciente o agregar servicios manualmente
+    PASO 2: Revisar el detalle (servicios, insumos, precios)
+    PASO 3: Aplicar descuentos si corresponde
+    PASO 4: Seleccionar método de pago:
+            - Efectivo
+            - Tarjeta débito
+            - Tarjeta crédito
+            - Transferencia
+    PASO 5: Confirmar pago
+    
+    El sistema:
+    - Genera comprobante de pago
+    - Descuenta stock si hay productos físicos
+    - Marca los servicios como pagados
+    - Registra el movimiento en caja
+
+3.4 CIERRE DE CAJA
+    Al final del turno, el usuario:
+    
+    PASO 1: Selecciona "Cerrar Caja"
+    PASO 2: El sistema muestra:
+            - Monto inicial de apertura
+            - Total de ingresos del día
+            - Total de egresos
+            - Saldo esperado
+    PASO 3: Usuario cuenta el efectivo físico
+    PASO 4: Ingresa monto real contado
+    PASO 5: Sistema calcula diferencia (cuadre/faltante)
+    PASO 6: Se genera reporte de cierre
+    
+    La sesión de caja queda cerrada y archivada.
+
+3.5 REPORTES Y CONSULTAS
+    El módulo de caja permite generar:
+    - Reporte diario de ventas
+    - Reporte por período (semanal, mensual)
+    - Detalle de servicios más vendidos
+    - Análisis de métodos de pago
+    - Histórico de cierres de caja
+    - Totales por usuario cajero
+
+
+================================================================================
+FLUJO INTEGRADO COMPLETO: CASO TÍPICO DE USO
+================================================================================
+
+ESCENARIO: Atención completa de un paciente desde la cita hasta el pago
+
+PASO 1: AGENDAMIENTO
+        - Propietario llama a la clínica
+        - Recepcionista accede a la agenda
+        - Selecciona día y hora disponible con veterinario
+        - Crea cita asociada al paciente
+        - Sistema guarda cita y reserva el horario
+
+PASO 2: DÍA DE LA CONSULTA
+        - Veterinario ve en su dashboard las citas del día
+        - Cuando llega el paciente, hace clic en "Iniciar Consulta"
+        - Se abre la ficha con historial completo del paciente
+
+PASO 3: ATENCIÓN MÉDICA
+        - Veterinario registra signos vitales
+        - Examina al paciente
+        - Ingresa diagnóstico y tratamiento
+        - Selecciona servicios realizados (ej: consulta general, vacuna)
+        - Selecciona medicamentos administrados del inventario
+        - Guarda y cierra la consulta
+
+PASO 4: HOSPITALIZACIÓN (Si aplica)
+        - Si el paciente requiere internación
+        - Veterinario crea hospitalización desde la ficha
+        - Durante los días siguientes:
+          * Registra evoluciones diarias
+          * Administra medicamentos (se descuentan del inventario)
+          * Actualiza tratamiento según evolución
+        - Cuando se recupera, da de alta con indicaciones
+
+PASO 5: PAGO EN CAJA
+        - Recepcionista accede al módulo de caja
+        - Busca al paciente o consulta del día
+        - Revisa el detalle de servicios e insumos utilizados
+        - Sistema calcula total automáticamente
+        - Selecciona método de pago
+        - Confirma y genera comprobante
+        - Stock de productos se descuenta automáticamente
+
+PASO 6: CIERRE DEL DÍA
+        - Al terminar la jornada, recepcionista cierra caja
+        - Sistema muestra resumen de ventas del día
+        - Verifica el efectivo físico contra el registro
+        - Genera reporte de cierre
+        - Caja queda cerrada para auditoría
+
+
+================================================================================
+CONCLUSIÓN
+================================================================================
+
+El Sistema Veterinaria Santa Sofía integra todos los procesos de una clínica
+veterinaria en un solo lugar:
+
+✓ Gestión de citas y disponibilidad de veterinarios
+✓ Historias clínicas completas y centralizadas
+✓ Control de inventario con descuentos automáticos
+✓ Facturación integrada con atención médica
+✓ Seguimiento de hospitalizaciones
+✓ Control de caja y reportes financieros
+
+Todo el flujo está diseñado para ser intuitivo, minimizando la carga
+administrativa y permitiendo al personal enfocarse en la atención de calidad
+a los pacientes.
+
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================

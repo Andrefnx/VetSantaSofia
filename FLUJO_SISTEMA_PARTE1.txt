@@ -1,0 +1,132 @@
+================================================================================
+    SISTEMA VETERINARIA SANTA SOFÍA - FLUJO DE TRABAJO DEL USUARIO
+================================================================================
+
+Fecha: 13 de diciembre de 2025
+Parte 1: Acceso al Sistema y Dashboard Principal
+
+================================================================================
+1. ACCESO AL SISTEMA (LOGIN)
+================================================================================
+
+El usuario accede al sistema a través de la página principal (localhost:8000).
+
+Se presenta una pantalla de login donde debe ingresar:
+- RUT (con o sin puntos, con o sin guión)
+- Contraseña
+
+El sistema normaliza automáticamente el formato del RUT ingresado, permitiendo
+flexibilidad en cómo el usuario lo escribe.
+
+Si las credenciales son correctas, el usuario es autenticado y redirigido al
+dashboard correspondiente según su rol.
+
+Si las credenciales son incorrectas, se muestra un mensaje de error y el
+usuario puede intentar nuevamente.
+
+
+================================================================================
+2. ROLES Y TIPOS DE DASHBOARD
+================================================================================
+
+El sistema reconoce tres roles de usuario:
+
+1. ADMINISTRACIÓN
+   - Acceso total al sistema
+   - Dashboard con vista general de toda la operación
+   
+2. VETERINARIO
+   - Dashboard enfocado en atención de pacientes
+   - Vista de su agenda personal y citas del día
+   
+3. RECEPCIÓN
+   - Dashboard orientado a gestión de citas y atención al público
+   - Acceso a agenda general y pacientes
+
+
+================================================================================
+3. FUNCIONES DESDE EL DASHBOARD
+================================================================================
+
+Una vez autenticado, el usuario ve su dashboard personalizado con acceso a:
+
+
+3.1 AGENDA
+--------------------
+- Ver calendario mensual con todas las citas programadas
+- Visualizar disponibilidad de veterinarios
+- Crear nuevas citas para los pacientes
+- Editar o cancelar citas existentes
+- Ver timeline del día con bloques de 15 minutos
+- Gestionar horarios fijos de los veterinarios
+
+
+3.2 PACIENTES
+--------------------
+- Buscar pacientes registrados
+- Ver listado de todas las mascotas
+- Acceder a fichas individuales de cada paciente
+- Crear nuevos registros de pacientes y propietarios
+- Editar información de mascotas existentes
+- Consultar historial médico completo
+
+
+3.3 ATENCIÓN CLÍNICA
+--------------------
+- Abrir ficha del paciente para consulta
+- Registrar signos vitales (temperatura, peso, frecuencia cardiaca)
+- Crear consultas con diagnóstico y tratamiento
+- Asociar servicios realizados
+- Registrar medicamentos utilizados
+- Gestionar hospitalizaciones activas
+
+
+3.4 INVENTARIO
+--------------------
+- Ver stock de medicamentos e insumos
+- Consultar alertas de productos con bajo stock
+- Registrar entradas y salidas de productos
+- Crear nuevos productos en el inventario
+- Editar información de productos existentes
+
+
+3.5 SERVICIOS
+--------------------
+- Ver catálogo de servicios disponibles
+- Consultar precios y duraciones
+- Crear nuevos servicios
+- Editar servicios existentes
+
+
+3.6 CAJA (Para roles autorizados)
+--------------------
+- Procesar ventas de servicios y productos
+- Generar reportes de ingresos
+- Controlar sesiones de caja
+
+
+3.7 HOSPITALIZACIONES
+--------------------
+- Ver pacientes hospitalizados actualmente
+- Consultar detalles de cada hospitalización
+- Registrar evolución diaria
+- Gestionar altas médicas
+
+
+================================================================================
+NAVEGACIÓN GENERAL
+================================================================================
+
+Desde cualquier módulo, el usuario puede:
+- Volver al dashboard usando el menú principal
+- Acceder a otros módulos a través del menú lateral
+- Cerrar sesión en cualquier momento
+- Ver su información de perfil (nombre, rol)
+
+El menú de navegación se mantiene visible en todo momento, permitiendo
+moverse ágilmente entre las diferentes secciones del sistema.
+
+
+================================================================================
+FIN DE LA PARTE 1
+================================================================================
