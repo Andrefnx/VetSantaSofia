@@ -11,53 +11,125 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
+.calendario-top {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.75rem;
+}
+
 .calendario-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #f0f0f0;
 }
 
 .calendario-titulo {
     display: flex;
     gap: 0.5rem;
+    align-items: center;
+    flex: 1;
+    justify-content: center;
 }
 
 .calendario-titulo select {
-    font-size: 0.9rem;
-    padding: 0.25rem 0.5rem;
+    font-size: 0.95rem;
+    padding: 0.35rem 0.75rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background: white;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: fit-content;
+}
+
+.calendario-titulo select:first-child {
+    min-width: 120px;
+}
+
+.calendario-titulo select:hover {
+    border-color: #55aa55;
+    box-shadow: 0 0 0 2px rgba(85, 170, 85, 0.1);
+}
+
+.calendario-titulo select:focus {
+    outline: none;
+    border-color: #55aa55;
+    box-shadow: 0 0 0 3px rgba(85, 170, 85, 0.15);
 }
 
 .btn-cal-nav {
-    background: none;
-    border: none;
+    background: white;
+    border: 1px solid #e0e0e0;
     color: #55aa55;
     cursor: pointer;
-    padding: 0.25rem 0.5rem;
-    font-size: 1rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 1.1rem;
     transition: all 0.2s;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-cal-nav:hover {
-    background: rgba(85, 170, 85, 0.1);
-    border-radius: 4px;
+    background: #55aa55;
+    color: white;
+    border-color: #55aa55;
+    transform: scale(1.05);
+}
+
+.btn-cal-nav:active {
+    transform: scale(0.98);
+}
+
+.btn-cal-hoy {
+    background: #55aa55;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: 0 2px 4px rgba(85, 170, 85, 0.2);
+}
+
+.btn-cal-hoy:hover {
+    background: #4a9a4a;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(85, 170, 85, 0.3);
+}
+
+.btn-cal-hoy:active {
+    transform: translateY(0);
 }
 
 .calendario-dias-semana {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-    margin-bottom: 0.5rem;
+    gap: 6px;
+    margin-bottom: 0.75rem;
     text-align: center;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 0.85rem;
-    color: #666;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .calendario-dias {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
+    gap: 6px;
 }
 
 .dia-cal {
@@ -102,6 +174,35 @@
     background: #55aa55 !important;
     color: white !important;
     font-weight: 600;
+}
+
+.dia-cal.feriado {
+    background: rgba(255, 230, 230, 0.6);
+    border-color: rgba(220, 53, 69, 0.2);
+}
+
+.dia-cal.feriado:hover:not(.disabled):not(.vacio) {
+    background: rgba(255, 210, 210, 0.7);
+    border-color: rgba(220, 53, 69, 0.3);
+}
+
+.dia-cal.irrenunciable {
+    background: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+    cursor: not-allowed;
+    font-weight: 600;
+    position: relative;
+}
+
+.dia-cal.irrenunciable::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: #dc3545;
+    transform: translateY(-50%);
 }
 
 :root {

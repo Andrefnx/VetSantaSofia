@@ -41,8 +41,103 @@ function toggleModal(modalId, show = true) {
 let calendarioState = {
     fechaSeleccionada: null,
     mesActual: new Date().getMonth(),
-    anioActual: new Date().getFullYear()
+    anioActual: new Date().getFullYear(),
+    feriados: [] // [{date: 'YYYY-MM-DD', title: '', irrenunciable: bool}]
 };
+
+// Calcular fecha de Pascua (algoritmo de Meeus/Jones/Butcher)
+function calcularPascua(year) {
+    const a = year % 19;
+    const b = Math.floor(year / 100);
+    const c = year % 100;
+    const d = Math.floor(b / 4);
+    const e = b % 4;
+    const f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4);
+    const k = c % 4;
+    const l = (32 + 2 * e + 2 * i - h - k) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * m + 114) / 31);
+    const day = ((h + l - 7 * m + 114) % 31) + 1;
+    return new Date(year, month - 1, day);
+}
+
+function generarFeriadosChile(year) {
+    const feriados = [];
+    
+    // Función auxiliar para formatear fecha
+    const formatFecha = (date) => date.toISOString().split('T')[0];
+    
+    // Función para mover al lunes más cercano
+    const moverALunes = (date) => {
+        const dia = date.getDay();
+        if (dia === 0) { // Domingo
+            date.setDate(date.getDate() + 1);
+        } else if (dia === 6) { // Sábado
+            date.setDate(date.getDate() + 2);
+        }
+        return date;
+    };
+    
+    // Feriados fijos
+    feriados.push({ date: formatFecha(new Date(year, 0, 1)), title: 'Año Nuevo', irrenunciable: true });
+    feriados.push({ date: formatFecha(new Date(year, 4, 1)), title: 'Día del Trabajo', irrenunciable: true });
+    feriados.push({ date: formatFecha(new Date(year, 4, 21)), title: 'Glorias Navales', irrenunciable: false });
+    feriados.push({ date: formatFecha(new Date(year, 6, 16)), title: 'Virgen del Carmen', irrenunciable: false });
+    feriados.push({ date: formatFecha(new Date(year, 7, 15)), title: 'Asunción de la Virgen', irrenunciable: false });
+    feriados.push({ date: formatFecha(new Date(year, 8, 18)), title: 'Independencia Nacional', irrenunciable: true });
+    feriados.push({ date: formatFecha(new Date(year, 8, 19)), title: 'Glorias del Ejército', irrenunciable: true });
+    feriados.push({ date: formatFecha(new Date(year, 10, 1)), title: 'Día de Todos los Santos', irrenunciable: false });
+    feriados.push({ date: formatFecha(new Date(year, 11, 8)), title: 'Inmaculada Concepción', irrenunciable: false });
+    feriados.push({ date: formatFecha(new Date(year, 11, 25)), title: 'Navidad', irrenunciable: true });
+    
+    // San Pedro y San Pablo (29 junio, se mueve al lunes)
+    const sanPedro = moverALunes(new Date(year, 5, 29));
+    feriados.push({ date: formatFecha(sanPedro), title: 'San Pedro y San Pablo', irrenunciable: false });
+    
+    // Día de la Raza (12 octubre, se mueve al lunes)
+    const diaRaza = moverALunes(new Date(year, 9, 12));
+    feriados.push({ date: formatFecha(diaRaza), title: 'Encuentro de Dos Mundos', irrenunciable: false });
+    
+    // Día de las Iglesias Evangélicas (31 octubre, si cae viernes se anticipa, si domingo/sábado se mueve)
+    const evangelical = new Date(year, 9, 31);
+    const diaEv = evangelical.getDay();
+    if (diaEv === 2 || diaEv === 3) { // Martes o miércoles
+        evangelical.setDate(evangelical.getDate() - (diaEv - 1)); // Mover al lunes anterior
+    } else if (diaEv === 0) { // Domingo
+        evangelical.setDate(evangelical.getDate() + 1); // Mover al lunes siguiente
+    } else if (diaEv === 6) { // Sábado
+        evangelical.setDate(evangelical.getDate() - 5); // Mover al lunes anterior
+    }
+    feriados.push({ date: formatFecha(evangelical), title: 'Día de las Iglesias Evangélicas', irrenunciable: false });
+    
+    // Semana Santa (Viernes Santo y Sábado Santo)
+    const pascua = calcularPascua(year);
+    const viernesSanto = new Date(pascua);
+    viernesSanto.setDate(pascua.getDate() - 2);
+    const sabadoSanto = new Date(pascua);
+    sabadoSanto.setDate(pascua.getDate() - 1);
+    
+    feriados.push({ date: formatFecha(viernesSanto), title: 'Viernes Santo', irrenunciable: false });
+    feriados.push({ date: formatFecha(sabadoSanto), title: 'Sábado Santo', irrenunciable: false });
+    
+    return feriados;
+}
+
+function cargarFeriados() {
+    // Generar feriados para el año actual y el siguiente
+    const anioActual = new Date().getFullYear();
+    calendarioState.feriados = [
+        ...generarFeriadosChile(anioActual),
+        ...generarFeriadosChile(anioActual + 1)
+    ];
+}
+
+function esFeriado(fechaStr) {
+    return calendarioState.feriados.find(f => f.date === fechaStr);
+}
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
@@ -64,6 +159,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function inicializarCalendario() {
+    // Generar feriados chilenos
+    cargarFeriados();
+    
     const hoy = new Date();
     const anioActual = hoy.getFullYear();
     
@@ -92,6 +190,7 @@ function inicializarCalendario() {
     // Event listeners
     document.getElementById('calPrevMes').addEventListener('click', () => cambiarMes(-1));
     document.getElementById('calNextMes').addEventListener('click', () => cambiarMes(1));
+    document.getElementById('calHoy').addEventListener('click', () => irAHoy());
     selectMes.addEventListener('change', (e) => {
         calendarioState.mesActual = parseInt(e.target.value);
         renderizarCalendario();
@@ -160,11 +259,21 @@ function renderizarCalendario() {
         div.textContent = dia;
         div.dataset.fecha = fechaStr;
         
-        // Verificar si es pasado
+        // Verificar feriado
+        const feriado = esFeriado(fechaStr);
+        
+        // Verificar si es pasado o irrenunciable
         if (fecha < hoy) {
             div.classList.add('disabled');
+        } else if (feriado && feriado.irrenunciable) {
+            div.classList.add('irrenunciable');
+            div.title = `Feriado irrenunciable: ${feriado.title}`;
         } else {
             div.addEventListener('click', () => seleccionarFecha(fechaStr));
+            if (feriado) {
+                div.classList.add('feriado');
+                div.title = `Feriado: ${feriado.title}`;
+            }
         }
         
         // Domingo en rojo
@@ -192,6 +301,17 @@ function seleccionarFecha(fechaStr) {
     agendaState.fecha = fechaStr;
     renderizarCalendario();
     cargarTodasLasAgendas();
+}
+
+function irAHoy() {
+    const hoy = new Date();
+    calendarioState.mesActual = hoy.getMonth();
+    calendarioState.anioActual = hoy.getFullYear();
+    document.getElementById('calMes').value = calendarioState.mesActual;
+    document.getElementById('calAnio').value = calendarioState.anioActual;
+    
+    const fechaHoy = hoy.toISOString().split('T')[0];
+    seleccionarFecha(fechaHoy);
 }
 
 function inicializarControles() {
