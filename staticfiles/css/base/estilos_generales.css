@@ -3,6 +3,41 @@
    Sistema de Diseño Vet Santa Sofía
    ============================= */
 
+/* Ocultar footer del tema completamente */
+.footer,
+footer,
+.main-panel .footer,
+.main-panel footer,
+div.footer,
+div[class*="footer"] {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    visibility: hidden !important;
+    overflow: hidden !important;
+    line-height: 0 !important;
+    position: static !important;
+    border: none !important;
+    background: transparent !important;
+    width: 0 !important;
+}
+
+/* Asegurar que main-panel ocupe todo el espacio */
+.main-panel {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.container,
+.container-fluid,
+.page-inner {
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+}
+
 /* =============================
    VARIABLES GLOBALES - DEFINICIÓN ÚNICA
 ============================= */
@@ -19,8 +54,9 @@
     --danger-hover: #ff0000;
     --warning-color: #ffc107;
     --warning-hover: #e0a800;
-    --info-color: #17a2b8;
-    --info-hover: #138496;
+    --info-color: #74bd74;
+    --info-hover: #6c8e6b;
+    --subtle: #f1fff3;
     
     /* COLORES NEUTRALES */
     --text-dark: #103012;
@@ -951,7 +987,6 @@ table tbody td {
 .container-fluid {
     padding: 2rem;
     background: var(--bg-light);
-    min-height: 100vh;
 }
 
 /* =============================
@@ -2345,7 +2380,6 @@ html.sidebar-is-collapsed .vet-sidebar {
     transition: margin-left 0.3s ease !important;
     width: calc(100% - 260px) !important;
     position: relative;
-    min-height: 100vh;
 }
 
 .main-panel.sidebar-collapsed,
@@ -2386,6 +2420,9 @@ html.sidebar-is-collapsed .main-panel {
     padding-bottom: 20px !important;
 }
 
+.bg-warning-subtle {
+    background-color: var(--subtle) !important;
+}
 
 /* Responsive */
 @media (max-width: 991px) {

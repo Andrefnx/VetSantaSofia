@@ -67,6 +67,41 @@ body {
     background: linear-gradient(180deg, #f7f9f8 0%, #eef2ef 100%);
 }
 
+/* Ocultar footer completamente */
+.footer,
+footer,
+.main-panel .footer,
+.main-panel footer,
+div.footer,
+div[class*="footer"] {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    visibility: hidden !important;
+    overflow: hidden !important;
+    line-height: 0 !important;
+    position: static !important;
+    border: none !important;
+    background: transparent !important;
+    width: 0 !important;
+}
+
+.main-panel {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    min-height: 100vh !important;
+}
+
+.container,
+.container-fluid,
+.page-inner {
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+}
+
 /* ===== CONTENEDORES PRINCIPALES ===== */
 .agendas-container {
     display: grid;

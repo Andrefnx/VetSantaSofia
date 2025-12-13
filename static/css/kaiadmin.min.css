@@ -360,7 +360,6 @@ label {
 }
 
 body {
-   min-height: 100vh;
    position: relative;
    background: #f5f7fd;
    background-size: cover;
@@ -379,6 +378,9 @@ body {
    left: 0
 }
 
+.container {
+      max-height: 100vh!important;
+}
 :focus {
    outline: 0 !important;
    -webkit-box-shadow: none !important;
@@ -484,15 +486,12 @@ body {
 
 .main-panel {
    position: relative;
-   width: calc(100% - 265px);
-   height: 100vh;
    min-height: 100%;
    float: right;
    transition: all .3s
 }
 
 .main-panel>.container {
-   min-height: calc(100% - 123px);
    overflow: hidden;
    width: 100%;
    max-width: unset;
@@ -500,7 +499,6 @@ body {
 
 .main-panel>.container-full {
    padding: 0 !important;
-   min-height: calc(100% - 123px);
    margin-top: 70px;
    overflow: hidden;
    width: 100%;
@@ -9321,7 +9319,7 @@ label.error {
 
    .container,
    .container-full {
-      padding: 0 !important
+      padding: 0 !important;
    }
 
    .main-panel>.container,
