@@ -159,7 +159,7 @@ def ficha_mascota_view(request, paciente_id):
     paciente = get_object_or_404(Paciente, id=paciente_id)
     
     # Obtener consultas con medicamentos (ahora funcionará)
-    consultas = paciente.consultas.prefetch_related('medicamentos').all()
+    consultas = paciente.consultas.select_related('veterinario').prefetch_related('medicamentos').all()
     
     # ⭐ OBTENER CITAS AGENDADAS (futuras o hoy)
     hoy = timezone.localdate()
@@ -205,16 +205,76 @@ def ficha_mascota_view(request, paciente_id):
         'propietario': paciente.propietario.nombre_completo,
     }
     
+    # ⭐ ORDEN DEL TIMELINE (ascendente por defecto)
+    orden_timeline = request.GET.get('orden_timeline', 'asc').lower()
+    if orden_timeline not in ['asc', 'desc']:
+        orden_timeline = 'asc'
+
+    # ⭐ Normalizador de fecha/hora para ordenar eventos (citas + consultas)
+    from datetime import time as _time
+    def _normalize_event_dt_local(obj):
+        try:
+            # Detectar Cita por atributo `hora_inicio`
+            if hasattr(obj, 'hora_inicio'):
+                base_date = obj.fecha
+                base_time = getattr(obj, 'hora_inicio', None) or _time.min
+                dt = datetime.combine(base_date, base_time)
+            else:
+                # Consulta: `fecha` puede ser datetime o date
+                dt_value = getattr(obj, 'fecha', None)
+                if isinstance(dt_value, datetime):
+                    dt = dt_value
+                else:
+                    dt = datetime.combine(dt_value, _time.min)
+
+            # Asegurar que sea timezone-aware
+            if timezone.is_naive(dt):
+                dt = timezone.make_aware(dt, timezone.get_current_timezone())
+            return dt
+        except Exception:
+            today = timezone.localdate()
+            fallback = datetime.combine(today, _time.min)
+            return timezone.make_aware(fallback, timezone.get_current_timezone())
+
+    # ⭐ Construir lista unificada y ordenada
+    timeline_items = []
+    for cita in citas_agendadas:
+        event_dt = _normalize_event_dt_local(cita)
+        timeline_items.append({
+            'tipo': 'cita',
+            'obj': cita,
+            'fecha': event_dt.date(),
+            'sort_key': (event_dt.date(), event_dt.time()),
+        })
+
+    for consulta in consultas:
+        event_dt = _normalize_event_dt_local(consulta)
+        timeline_items.append({
+            'tipo': 'consulta',
+            'obj': consulta,
+            'fecha': event_dt.date(),
+            'sort_key': (event_dt.date(), event_dt.time()),
+        })
+
+    timeline_items = sorted(
+        timeline_items,
+        key=lambda item: item['sort_key'],
+        reverse=(orden_timeline == 'desc')
+    )
+
+    # Contexto
     context = {
         'paciente': paciente,
         'paciente_data_json': paciente_data,
         'consultas': consultas,
-            'citas_agendadas': citas_agendadas,
+        'citas_agendadas': citas_agendadas,
         'hospitalizaciones': hospitalizaciones,
         'examenes': examenes,
         'documentos': documentos,
         'veterinarios': veterinarios,  # ⭐ AGREGAR VETERINARIOS
         'propietarios': propietarios,  # ⭐ AGREGAR PROPIETARIOS
+        'timeline_items': timeline_items,
+        'orden_timeline': orden_timeline,
     }
     
     return render(request, 'consulta/ficha_mascota.html', context)

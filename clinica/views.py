@@ -14,6 +14,37 @@ import json
 import sys
 import os
 
+# Helper: normalize event datetime for sorting
+def _normalize_event_dt(obj):
+    """Return a timezone-aware datetime for either Consulta or Cita.
+
+    - Consulta: uses its `fecha` (DateTimeField or Date) directly
+    - Cita: combines `fecha` (date) + `hora_inicio` (time)
+    """
+    try:
+        # Detect Cita by presence of `hora_inicio`
+        if hasattr(obj, 'hora_inicio'):
+            base_date = obj.fecha
+            base_time = obj.hora_inicio or time.min
+            dt = datetime.combine(base_date, base_time)
+        else:
+            # Consulta can have datetime or date in `fecha`
+            dt_value = getattr(obj, 'fecha', None)
+            if isinstance(dt_value, datetime):
+                dt = dt_value
+            else:
+                dt = datetime.combine(dt_value, time.min)
+
+        # Ensure timezone-aware
+        if timezone.is_naive(dt):
+            dt = timezone.make_aware(dt, timezone.get_current_timezone())
+        return dt
+    except Exception as e:
+        # Fallback to today at 00:00 if something goes wrong
+        today = timezone.localdate()
+        fallback = datetime.combine(today, time.min)
+        return timezone.make_aware(fallback, timezone.get_current_timezone())
+
 @login_required
 def consulta_view(request):
     """Vista para el módulo de consultas"""
@@ -91,24 +122,30 @@ def ficha_paciente(request, paciente_id):
 
     timeline_items = []
     for cita in citas_agendadas:
-        sort_key = datetime.combine(cita.fecha, cita.hora_inicio or time.min)
+        event_dt = _normalize_event_dt(cita)
         timeline_items.append({
             'tipo': 'cita',
             'obj': cita,
-            'fecha': cita.fecha,
-            'sort_key': sort_key,
+            'fecha': event_dt.date(),
+            'sort_key': (event_dt.date(), event_dt.time()),
         })
 
     for consulta in consultas:
-        consulta_dt = consulta.fecha if isinstance(consulta.fecha, datetime) else datetime.combine(consulta.fecha, time.min)
+        event_dt = _normalize_event_dt(consulta)
         timeline_items.append({
             'tipo': 'consulta',
             'obj': consulta,
-            'fecha': consulta_dt.date(),
-            'sort_key': consulta_dt,
+            'fecha': event_dt.date(),
+            'sort_key': (event_dt.date(), event_dt.time()),
         })
 
     timeline_items = sorted(timeline_items, key=lambda item: item['sort_key'], reverse=(orden_timeline == 'desc'))
+    try:
+        print(f"🔎 timeline_items count (ficha_paciente): {len(timeline_items)}", file=sys.stderr)
+        for i, it in enumerate(timeline_items[:5]):
+            print(f"   [{i}] tipo={it['tipo']} sort_key={it['sort_key'][0]} {it['sort_key'][1]}", file=sys.stderr)
+    except Exception:
+        pass
 
     context = {
         'paciente': paciente,
@@ -491,24 +528,30 @@ def ficha_mascota(request, pk):
 
     timeline_items = []
     for cita in citas_agendadas:
-        sort_key = datetime.combine(cita.fecha, cita.hora_inicio or time.min)
+        event_dt = _normalize_event_dt(cita)
         timeline_items.append({
             'tipo': 'cita',
             'obj': cita,
-            'fecha': cita.fecha,
-            'sort_key': sort_key,
+            'fecha': event_dt.date(),
+            'sort_key': (event_dt.date(), event_dt.time()),
         })
 
     for consulta in consultas:
-        consulta_dt = consulta.fecha if isinstance(consulta.fecha, datetime) else datetime.combine(consulta.fecha, time.min)
+        event_dt = _normalize_event_dt(consulta)
         timeline_items.append({
             'tipo': 'consulta',
             'obj': consulta,
-            'fecha': consulta_dt.date(),
-            'sort_key': consulta_dt,
+            'fecha': event_dt.date(),
+            'sort_key': (event_dt.date(), event_dt.time()),
         })
 
     timeline_items = sorted(timeline_items, key=lambda item: item['sort_key'], reverse=(orden_timeline == 'desc'))
+    try:
+        print(f"🔎 timeline_items count (ficha_mascota): {len(timeline_items)}", file=sys.stderr)
+        for i, it in enumerate(timeline_items[:5]):
+            print(f"   [{i}] tipo={it['tipo']} sort_key={it['sort_key'][0]} {it['sort_key'][1]}", file=sys.stderr)
+    except Exception:
+        pass
 
     context = {
         'paciente': paciente,
