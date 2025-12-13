@@ -12,12 +12,16 @@
 <div class="container-fluid p-0">
     <!-- Encabezado -->
     <div class="p-1-5">
-        <div class="d-flex justify-content-between align-items-center">
-            <h1><i class="fas fa-calendar-alt"></i> Agenda Veterinaria</h1>
-            <button type="button" class="vet-btn vet-btn-success" onclick="abrirModalDisponibilidad()">
-                <i class="fa fa-cog"></i>
-                Configurar Disponibilidad
-            </button>
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+                <h1 class="page-title"><i class="fas fa-calendar-alt"></i> Agenda Veterinaria</h1>
+                <p class="subtitle-muted">Agenda diaria con el mismo look de pacientes y ficha de mascota.</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalDisponibilidad()">
+                    <i class="fas fa-cog"></i> Configurar disponibilidad
+                </button>
+            </div>
         </div>
     </div>
 
@@ -130,74 +134,62 @@
 
 {% block modals %}
 
-<!-- Modal confirmación de cita (usando estándares del proyecto) -->
-<div id="confirmarCitaModal" class="modal-overlay">
-    <div class="ui-modal ui-modal-sm" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <h3><i class="fas fa-calendar-check"></i> Confirmar Cita</h3>
-            <button class="modal-close" onclick="cerrarModalConfirmarCita()">
-                <i class="fas fa-times"></i>
-            </button>
+<!-- Modal confirmación de cita con estilo unificado -->
+<div id="confirmarCitaModal" class="vet-modal-overlay hide" onclick="cerrarModalConfirmarCita()">
+    <div class="vet-modal-compact" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
+        <div class="vet-custom-modal-title">
+            <h3><i class="bi bi-calendar-check"></i> Confirmar Cita</h3>
+            <i class="bi bi-x" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalConfirmarCita()"></i>
         </div>
-        <div class="modal-body">
-            <div class="modal-content">
-                <div class="info-section" style="background: var(--bg-light); padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
-                    <div style="margin-bottom: 0.5rem;">
-                        <strong>Paciente:</strong> <span id="confirmPaciente">-</span>
-                    </div>
-                    <div style="margin-bottom: 0.5rem;">
-                        <strong>Veterinario:</strong> <span id="confirmVeterinario">-</span>
-                    </div>
-                    <div style="margin-bottom: 0.5rem;">
-                        <strong>Servicio:</strong> <span id="confirmServicio">-</span>
-                    </div>
-                    <div style="margin-bottom: 0.5rem;">
-                        <strong>Fecha:</strong> <span id="confirmFecha">-</span>
-                    </div>
-                    <div>
-                        <strong>Horario:</strong> <span id="confirmHorario">-</span>
-                    </div>
+        <div class="vet-modal-body">
+            <div class="modal-detail-card">
+                <div class="d-flex flex-column gap-2">
+                    <div><strong>Paciente:</strong> <span id="confirmPaciente">-</span></div>
+                    <div><strong>Veterinario:</strong> <span id="confirmVeterinario">-</span></div>
+                    <div><strong>Servicio:</strong> <span id="confirmServicio">-</span></div>
+                    <div><strong>Fecha:</strong> <span id="confirmFecha">-</span></div>
+                    <div><strong>Horario:</strong> <span id="confirmHorario">-</span></div>
                 </div>
-                
-                <div class="form-group">
-                    <label><strong>Motivo de la consulta:</strong></label>
-                    <textarea id="confirmMotivo" class="form-control" rows="3" placeholder="Describa el motivo..."></textarea>
+            </div>
+            <div class="form-grid-2">
+                <div class="form-group mb-0">
+                    <label><strong>Motivo de la consulta *</strong></label>
+                    <textarea id="confirmMotivo" class="form-control" rows="3" placeholder="Describe el motivo de la cita"></textarea>
                 </div>
-                
-                <div class="form-group">
-                    <label><strong>Notas adicionales:</strong></label>
-                    <textarea id="confirmNotas" class="form-control" rows="2" placeholder="Notas opcionales..."></textarea>
+                <div class="form-group mb-0">
+                    <label><strong>Notas adicionales</strong></label>
+                    <textarea id="confirmNotas" class="form-control" rows="3" placeholder="Notas opcionales para el equipo"></textarea>
                 </div>
             </div>
         </div>
-        <div class="modal-footer">
-            <button class="vet-btn vet-btn-grey" onclick="cerrarModalConfirmarCita()">
-                <i class="fas fa-times"></i>
-                Cancelar
-            </button>
-            <button class="vet-btn vet-btn-primary" onclick="confirmarAgendarCita()">
-                <i class="fas fa-check"></i>
-                Confirmar Cita
-            </button>
+        <div class="vet-modal-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="modal-helper"><i class="bi bi-info-circle"></i>Verifica bloques seleccionados antes de confirmar.</span>
+            <div class="d-flex gap-2">
+                <button class="vet-btn vet-btn-grey" type="button" onclick="cerrarModalConfirmarCita()">
+                    <i class="bi bi-x-lg"></i>
+                    Cancelar
+                </button>
+                <button class="vet-btn vet-btn-primary" type="button" onclick="confirmarAgendarCita()">
+                    <i class="bi bi-check2-circle"></i>
+                    Confirmar Cita
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Modal para disponibilidad diaria por bloques -->
-<div id="disponibilidadModal" class="modal-overlay">
-    <div class="ui-modal ui-modal-lg" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <h3><i class="fas fa-cog"></i> Configurar Disponibilidad</h3>
-            <button class="modal-close" onclick="cerrarModalDisponibilidad()">
-                <i class="fas fa-times"></i>
-            </button>
+<div id="disponibilidadModal" class="vet-modal-overlay hide" onclick="cerrarModalDisponibilidad()">
+    <div class="vet-modal-panel" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
+        <div class="vet-custom-modal-title">
+            <h3><i class="bi bi-cog"></i> Configurar Disponibilidad</h3>
+            <i class="bi bi-x" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalDisponibilidad()"></i>
         </div>
-        <div class="modal-body">
-            <!-- Configurar Horario Semanal del Veterinario -->
+        <div class="vet-modal-body">
+      
             <div id="configHorarioSemanal">
-                <h4 style="margin-bottom: 1.5rem;">Configurar Horario Semanal</h4>
                 <form id="horarioSemanalForm">
-                    <div class="form-group">
+                    <div class="form-group mb-3">
                         <label><strong>Veterinario *</strong></label>
                         <select id="dispVeterinario" class="form-control" required>
                             <option value="">Seleccione un veterinario</option>
@@ -207,18 +199,19 @@
                         </select>
                     </div>
 
-                    <div style="margin-top: 2rem;">
-                        <label style="margin-bottom: 1rem; display: block; font-weight: 600;">Horarios por día de la semana</label>
-                        <div id="diasSemana" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div class="mb-2">
+                        <label class="d-block mb-2" style="font-weight: 700;">Horarios por día de la semana</label>
+                        <div id="diasSemana" class="d-flex flex-column gap-3">
                             <!-- Los días de la semana se generan aquí -->
                         </div>
                     </div>
                 </form>
+                <div id="rangosList" class="d-none"></div>
             </div>
         </div>
-        <div class="modal-footer">
+        <div class="vet-modal-footer d-flex justify-content-end align-items-center">
             <button type="button" class="vet-btn vet-btn-primary" onclick="guardarHorarioSemanal()">
-                <i class="fas fa-save"></i>
+                <i class="bi bi-save"></i>
                 Guardar Horario
             </button>
         </div>

@@ -47,7 +47,7 @@ function crearDiaWidget(dia) {
     
     const btnCopiar = document.createElement('button');
     btnCopiar.type = 'button';
-    btnCopiar.className = 'vet-btn';
+    btnCopiar.className = 'btn btn-primary btn-sm';
     btnCopiar.style.cssText = 'padding: 6px 10px !important; font-size: 0.8rem !important;';
     btnCopiar.innerHTML = '<i class="fas fa-copy"></i> Copiar';
     btnCopiar.onclick = function(e) { 
@@ -70,7 +70,7 @@ function crearDiaWidget(dia) {
     // Botón para agregar rango
     const btnAgregar = document.createElement('button');
     btnAgregar.type = 'button';
-    btnAgregar.className = 'vet-btn';
+    btnAgregar.className = 'btn btn-primary btn-sm';
     btnAgregar.style.cssText = 'align-self: flex-start; margin-top: 0.5rem;';
     btnAgregar.innerHTML = '<i class="fas fa-plus"></i> Agregar rango';
     btnAgregar.onclick = function() { agregarRangoDia(dia.id); };
@@ -132,13 +132,13 @@ function abrirSelectorCopiar(diaOrigen) {
     
     const btnCancelar = document.createElement('button');
     btnCancelar.type = 'button';
-    btnCancelar.className = 'vet-btn vet-btn-grey';
+    btnCancelar.className = 'btn btn-secondary btn-sm';
     btnCancelar.textContent = 'Cancelar';
     btnCancelar.onclick = function() { overlay.remove(); };
     
     const btnCopiar = document.createElement('button');
     btnCopiar.type = 'button';
-    btnCopiar.className = 'vet-btn vet-btn-primary';
+    btnCopiar.className = 'btn btn-primary btn-sm';
     btnCopiar.innerHTML = '<i class="fas fa-copy"></i> Copiar';
     btnCopiar.onclick = function() { 
         copiarRangos(diaOrigen, selectorDiv);
@@ -192,7 +192,7 @@ function copiarRangos(diaOrigen, selectorDiv) {
             
             const btnEliminar = document.createElement('button');
             btnEliminar.type = 'button';
-            btnEliminar.className = 'vet-btn vet-btn-danger';
+            btnEliminar.className = 'btn btn-danger btn-sm';
             btnEliminar.innerHTML = '<i class="fas fa-trash"></i>';
             btnEliminar.onclick = function() { rangoDiv.remove(); };
             
@@ -223,8 +223,7 @@ function agregarRangoDia(diaId) {
     
     const btnEliminar = document.createElement('button');
     btnEliminar.type = 'button';
-    btnEliminar.className = 'vet-btn';
-    btnEliminar.style.cssText = 'padding: 8px 12px !important; background: #dc3545 !important; color: white !important; border: none !important;';
+    btnEliminar.className = 'btn btn-danger btn-sm';
     btnEliminar.innerHTML = '<i class="fas fa-trash"></i>';
     btnEliminar.onclick = function() { rangoDiv.remove(); };
     
@@ -274,8 +273,7 @@ function cargarHorarioSemanal() {
                         
                         const btnEliminar = document.createElement('button');
                         btnEliminar.type = 'button';
-                        btnEliminar.className = 'vet-btn';
-                        btnEliminar.style.cssText = 'padding: 8px 12px !important; background: #dc3545 !important; color: white !important; border: none !important;';
+                        btnEliminar.className = 'btn btn-danger btn-sm';
                         btnEliminar.innerHTML = '<i class="fas fa-trash"></i>';
                         btnEliminar.onclick = function() { rangoDiv.remove(); };
                         

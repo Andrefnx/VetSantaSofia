@@ -12,6 +12,23 @@ let agendaState = {
     bloqueSeleccionado: null
 };
 
+function toggleModal(modalId, show = true) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    modal.classList.remove(show ? 'hide' : 'show');
+    modal.classList.add(show ? 'show' : 'hide');
+
+    if (show) {
+        document.body.classList.add('modal-open');
+    } else {
+        const anyOpen = document.querySelector('.vet-modal-overlay.show');
+        if (!anyOpen) {
+            document.body.classList.remove('modal-open');
+        }
+    }
+}
+
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
     inicializarControles();
@@ -273,8 +290,6 @@ function seleccionarBloque(startIndex) {
 }
 
 function abrirModalConfirmarCita(startBlock, endBlock) {
-    const modal = document.getElementById('confirmarCitaModal');
-    
     const startBloque = agendaState.bloques[startBlock];
     const endBloque = agendaState.bloques[endBlock - 1];
     
@@ -293,12 +308,11 @@ function abrirModalConfirmarCita(startBlock, endBlock) {
     document.getElementById('confirmFecha').textContent = formatearFecha(agendaState.fecha);
     document.getElementById('confirmHorario').textContent = `${startBloque.start_time} - ${endBloque.end_time}`;
     
-    modal.classList.add('active');
+    toggleModal('confirmarCitaModal', true);
 }
 
 function cerrarModalConfirmarCita() {
-    const modal = document.getElementById('confirmarCitaModal');
-    modal.classList.remove('active');
+    toggleModal('confirmarCitaModal', false);
     
     // Limpiar selección
     document.querySelectorAll('.is-selected').forEach(el => el.classList.remove('is-selected'));
@@ -353,14 +367,15 @@ async function confirmarAgendarCita() {
 
 // Modal de disponibilidad
 function abrirModalDisponibilidad() {
-    const modal = document.getElementById('disponibilidadModal');
-    modal.classList.add('active');
-    document.getElementById('rangosList').innerHTML = '';
+    const rangosList = document.getElementById('rangosList');
+    if (rangosList) {
+        rangosList.innerHTML = '';
+    }
+    toggleModal('disponibilidadModal', true);
 }
 
 function cerrarModalDisponibilidad() {
-    const modal = document.getElementById('disponibilidadModal');
-    modal.classList.remove('active');
+    toggleModal('disponibilidadModal', false);
 }
 
 let rangoCounter = 0;
@@ -375,7 +390,7 @@ function agregarRango() {
         <input type="time" class="form-control rango-inicio" step="900" required>
         <span>→</span>
         <input type="time" class="form-control rango-fin" step="900" required>
-        <button type="button" class="vet-btn vet-btn-danger" onclick="eliminarRango(this)">
+        <button type="button" class="btn btn-danger btn-sm" onclick="eliminarRango(this)">
             <i class="fas fa-trash"></i>
         </button>
     `;
@@ -388,9 +403,13 @@ function eliminarRango(btn) {
 }
 
 async function guardarDisponibilidadDia() {
-    const veterinarioId = document.getElementById('dispVeterinario').value;
-    const fecha = document.getElementById('dispFecha').value;
-    const trabaja = document.getElementById('dispTrabaja').checked;
+    const veterinarioSelect = document.getElementById('dispVeterinario');
+    const fechaInput = document.getElementById('dispFecha');
+    const trabajaInput = document.getElementById('dispTrabaja');
+    
+    const veterinarioId = veterinarioSelect ? veterinarioSelect.value : '';
+    const fecha = fechaInput ? fechaInput.value : '';
+    const trabaja = trabajaInput ? trabajaInput.checked : true;
     
     if (!veterinarioId || !fecha) {
         mostrarMensaje('Complete veterinario y fecha', 'warning');
@@ -398,8 +417,8 @@ async function guardarDisponibilidadDia() {
     }
     
     const rangos = [];
-    if (trabaja) {
-        const rangoItems = document.querySelectorAll('.rango-item');
+    const rangoItems = document.querySelectorAll('.rango-item');
+    if (trabaja && rangoItems.length) {
         for (const item of rangoItems) {
             const inicio = item.querySelector('.rango-inicio').value;
             const fin = item.querySelector('.rango-fin').value;
