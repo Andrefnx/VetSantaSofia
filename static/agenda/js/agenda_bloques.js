@@ -1127,11 +1127,23 @@ async function confirmarAgendarCita() {
 }
 
 // Modal de disponibilidad
-function abrirModalDisponibilidad() {
+function abrirModalDisponibilidad(veterinarioId = null) {
     const rangosList = document.getElementById('rangosList');
     if (rangosList) {
         rangosList.innerHTML = '';
     }
+    
+    // Si se proporciona un veterinarioId, pre-seleccionarlo y cargar su disponibilidad
+    if (veterinarioId) {
+        const selectVet = document.getElementById('dispVeterinario');
+        if (selectVet) {
+            selectVet.value = veterinarioId;
+            // Disparar el evento change para cargar la disponibilidad del veterinario
+            const event = new Event('change', { bubbles: true });
+            selectVet.dispatchEvent(event);
+        }
+    }
+    
     toggleModal('disponibilidadModal', true);
 }
 

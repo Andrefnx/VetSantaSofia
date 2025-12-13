@@ -18,11 +18,6 @@
                 <h1 class="page-title"><i class="fas fa-calendar-alt"></i> Agenda Veterinaria</h1>
               
             </div>
-            <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalDisponibilidad()">
-                    <i class="fas fa-cog"></i> Configurar disponibilidad
-                </button>
-            </div>
         </div>
     </div>
 
@@ -118,10 +113,15 @@
                 <!-- Agenda Veterinario {{ vet.id }} -->
                 <div class="agenda-vet-col">
                     <div class="section">
-                        <h4 class="mb-3">
-                            <i class="fas fa-user-md"></i> 
-                            <span id="tituloVet{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</span>
-                        </h4>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="mb-0">
+                                <i class="fas fa-user-md"></i> 
+                                <span id="tituloVet{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</span>
+                            </h4>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalDisponibilidad({{ vet.id }})">
+                                <i class="fas fa-cog"></i> Configurar disponibilidad
+                            </button>
+                        </div>
                         
                         <!-- Estado individual -->
                         <div id="estadoVet{{ vet.id }}" style="display: none;" class="text-center py-3">

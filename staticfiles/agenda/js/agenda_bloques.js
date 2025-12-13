@@ -177,6 +177,18 @@ function esFeriado(fechaStr) {
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+    const hoy = new Date().toISOString().split('T')[0];
+    const fechaParam = params.get('fecha');
+    const initialDate = fechaParam || hoy;
+    const initialDateObj = new Date(initialDate);
+
+    // Ajustar estado del calendario a la fecha solicitada (deep-link)
+    if (!Number.isNaN(initialDateObj.getTime())) {
+        calendarioState.mesActual = initialDateObj.getMonth();
+        calendarioState.anioActual = initialDateObj.getFullYear();
+    }
+
     inicializarCalendario();
     inicializarControles();
     inicializarBuscadorPacientes();
@@ -184,25 +196,33 @@ document.addEventListener('DOMContentLoaded', function() {
     inicializarBuscadoresModalDirecto();
     inicializarTabs();
     
-    // Setear fecha actual
-    const hoy = new Date().toISOString().split('T')[0];
-    document.getElementById('fechaAgenda').value = hoy;
-    calendarioState.fechaSeleccionada = hoy;
+    // Setear fecha inicial (hoy o la recibida por querystring)
+    document.getElementById('fechaAgenda').value = initialDate;
+    calendarioState.fechaSeleccionada = initialDate;
     
     // Event listener para filtro de veterinario
     document.getElementById('filtroVeterinario').addEventListener('change', function() {
+        agendaState.veterinarioId = this.value || null;
         cargarTodasLasAgendas();
     });
     
-    // Cargar automáticamente las agendas de todos los veterinarios
-    agendaState.fecha = hoy;
+    // Si viene un veterinario preseleccionado en la URL, aplicarlo antes de cargar
+    const vetParam = params.get('veterinario');
+    if (vetParam) {
+        const filtroVet = document.getElementById('filtroVeterinario');
+        if (filtroVet) filtroVet.value = vetParam;
+        agendaState.veterinarioId = vetParam;
+    }
+
+    // Cargar automáticamente las agendas
+    agendaState.fecha = initialDate;
     setTimeout(() => cargarTodasLasAgendas(), 300);
 
     // Deep-link: abrir detalle de cita desde dashboard
     try {
-        const params = new URLSearchParams(window.location.search);
         const detalleId = params.get('detalle_cita');
         if (detalleId) {
+            if (window.showConsultaLoader) window.showConsultaLoader();
             // Dar tiempo adicional para que las agendas se rendericen
             setTimeout(() => {
                 let attempts = 0;
@@ -218,6 +238,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             paciente_id: blockEl.dataset.pacienteId || null,
                             paciente_nombre: blockEl.querySelector('.bloque-paciente')?.textContent || (blockEl.dataset.pacienteNombre || ''),
                             propietario_nombre: blockEl.dataset.propietarioNombre || '',
+                            propietario_telefono: blockEl.dataset.propietarioTelefono || '',
+                            propietario_email: blockEl.dataset.propietarioEmail || '',
                             servicio_nombre: blockEl.dataset.servicioNombre || '',
                             fecha: blockEl.dataset.fecha || calendarioState.fechaSeleccionada,
                             hora_inicio: blockEl.dataset.horaInicio || '',
@@ -225,17 +247,19 @@ document.addEventListener('DOMContentLoaded', function() {
                             veterinario_id: blockEl.dataset.veterinarioId || null,
                             status: 'occupied'
                         };
-                        try { mostrarDetalleCita(bloque); } catch (e) { console.warn('Deep-link detalle_cita error:', e); }
+                        try { mostrarDetalleCita(bloque); } catch (e) { console.warn('Deep-link detalle_cita error:', e); if (window.hideConsultaLoader) window.hideConsultaLoader(); }
                         clearInterval(timer);
                     } else if (attempts++ > 100 || rendered) {
                         // Si ya se renderizó y no encontramos el bloque, dejar de intentar
                         clearInterval(timer);
+                        if (window.hideConsultaLoader) window.hideConsultaLoader();
                     }
                 }, 200);
             }, 800);
         }
     } catch (e) {
         console.warn('Deep-link detalle_cita falló:', e);
+        if (window.hideConsultaLoader) window.hideConsultaLoader();
     }
 });
 
@@ -817,13 +841,22 @@ function renderizarBloquesVeterinario(vetId, data) {
                         blockEl.className = `agenda-block is-occupied`;
                         blockEl.dataset.blockIndex = blockIndex;
                         blockEl.dataset.citaId = bloque.cita_id;
+                        blockEl.dataset.pacienteId = bloque.paciente_id || '';
+                        blockEl.dataset.pacienteNombre = bloque.paciente_nombre || '';
+                        blockEl.dataset.propietarioNombre = bloque.propietario_nombre || '';
+                        blockEl.dataset.propietarioTelefono = bloque.propietario_telefono || '';
+                        blockEl.dataset.propietarioEmail = bloque.propietario_email || '';
+                        blockEl.dataset.servicioNombre = bloque.servicio_nombre || '';
+                        blockEl.dataset.fecha = bloque.fecha || calendarioState.fechaSeleccionada || '';
+                        blockEl.dataset.horaInicio = bloque.hora_inicio || bloque.start_time || '';
+                        blockEl.dataset.horaFin = bloque.hora_fin || bloque.end_time || '';
                         blockEl.dataset.startTime = bloque.start_time;
                         blockEl.style.gridColumn = `span ${endQuarto - cuarto}`;
                         const duracionBloques = endQuarto - cuarto;
                         if (duracionBloques === 1) {
                             // Bloque individual: verificar si es el primer bloque de esta cita
                             const esPrimerBloque = !bloque.hora_inicio || bloque.hora_inicio === bloque.start_time;
-                            const horaAMostrar = esPrimerBloque ? bloque.start_time : `-${calcularHoraFinalBloque(bloque.start_time)}`;
+                            const horaAMostrar = esPrimerBloque ? bloque.start_time : `- ${calcularHoraFinalBloque(bloque.start_time)}`;
                             blockEl.innerHTML = `
                                 <div class="agenda-block-time">${horaAMostrar}</div>
                                 <div class="agenda-block-label">${bloque.paciente_nombre || 'Sin paciente'}</div>
@@ -851,6 +884,15 @@ function renderizarBloquesVeterinario(vetId, data) {
                         blockEl.dataset.blockIndex = blockIndex;
                         if (bloque.cita_id) {
                             blockEl.dataset.citaId = bloque.cita_id;
+                            blockEl.dataset.pacienteId = bloque.paciente_id || '';
+                            blockEl.dataset.pacienteNombre = bloque.paciente_nombre || '';
+                            blockEl.dataset.propietarioNombre = bloque.propietario_nombre || '';
+                            blockEl.dataset.propietarioTelefono = bloque.propietario_telefono || '';
+                            blockEl.dataset.propietarioEmail = bloque.propietario_email || '';
+                            blockEl.dataset.servicioNombre = bloque.servicio_nombre || '';
+                            blockEl.dataset.fecha = bloque.fecha || calendarioState.fechaSeleccionada || '';
+                            blockEl.dataset.horaInicio = bloque.hora_inicio || bloque.start_time || '';
+                            blockEl.dataset.horaFin = bloque.hora_fin || bloque.end_time || '';
                         }
                         blockEl.dataset.startTime = bloque.start_time;
                         
@@ -1085,11 +1127,23 @@ async function confirmarAgendarCita() {
 }
 
 // Modal de disponibilidad
-function abrirModalDisponibilidad() {
+function abrirModalDisponibilidad(veterinarioId = null) {
     const rangosList = document.getElementById('rangosList');
     if (rangosList) {
         rangosList.innerHTML = '';
     }
+    
+    // Si se proporciona un veterinarioId, pre-seleccionarlo y cargar su disponibilidad
+    if (veterinarioId) {
+        const selectVet = document.getElementById('dispVeterinario');
+        if (selectVet) {
+            selectVet.value = veterinarioId;
+            // Disparar el evento change para cargar la disponibilidad del veterinario
+            const event = new Event('change', { bubbles: true });
+            selectVet.dispatchEvent(event);
+        }
+    }
+    
     toggleModal('disponibilidadModal', true);
 }
 
@@ -1470,6 +1524,7 @@ function getCookie(name) {
 }
 
 function mostrarDetalleCita(bloque) {
+    if (window.hideConsultaLoader) window.hideConsultaLoader();
     if (!bloque.cita_id || !bloque.paciente_id) {
         return;
     }

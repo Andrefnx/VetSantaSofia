@@ -1620,7 +1620,6 @@ table tbody td {
 ============================= */
 
 /* Padding utilities adicionales */
-.p-1-5 { padding: 1.5rem !important; }
 .px-0 { padding-left: 0 !important; padding-right: 0 !important; }
 .py-0 { padding-top: 0 !important; padding-bottom: 0 !important; }
 .pb-0 { padding-bottom: 0 !important; }
