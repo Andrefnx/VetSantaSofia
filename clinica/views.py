@@ -546,6 +546,10 @@ def ficha_mascota(request, pk):
         .select_related('veterinario', 'servicio')
         .order_by('fecha', 'hora_inicio')
     )
+
+    # Si el usuario es veterinario (y no administrador), solo mostrar sus citas agendadas
+    if request.user.rol == 'veterinario' and not request.user.is_superuser and not request.user.is_staff:
+        citas_agendadas = citas_agendadas.filter(veterinario=request.user)
     
     print(f"\n### CITAS AGENDADAS - Fecha hoy: {hoy}")
     print(f"### Total citas encontradas: {citas_agendadas.count()}")

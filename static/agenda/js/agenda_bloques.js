@@ -161,6 +161,46 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cargar automáticamente las agendas de todos los veterinarios
     agendaState.fecha = hoy;
     setTimeout(() => cargarTodasLasAgendas(), 300);
+
+    // Deep-link: abrir detalle de cita desde dashboard
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const detalleId = params.get('detalle_cita');
+        if (detalleId) {
+            // Dar tiempo adicional para que las agendas se rendericen
+            setTimeout(() => {
+                let attempts = 0;
+                const timer = setInterval(() => {
+                    // Buscar en todo el documento cualquier elemento con data-cita-id
+                    const blockEl = document.querySelector(`[data-cita-id="${detalleId}"]`);
+                    const contenedor = document.getElementById('contenedorAgendas');
+                    const rendered = contenedor && contenedor.style.display !== 'none' && contenedor.children.length > 0;
+
+                    if (blockEl && blockEl.dataset) {
+                        const bloque = {
+                            cita_id: blockEl.dataset.citaId || detalleId,
+                            paciente_id: blockEl.dataset.pacienteId || null,
+                            paciente_nombre: blockEl.querySelector('.bloque-paciente')?.textContent || (blockEl.dataset.pacienteNombre || ''),
+                            propietario_nombre: blockEl.dataset.propietarioNombre || '',
+                            servicio_nombre: blockEl.dataset.servicioNombre || '',
+                            fecha: blockEl.dataset.fecha || calendarioState.fechaSeleccionada,
+                            hora_inicio: blockEl.dataset.horaInicio || '',
+                            hora_fin: blockEl.dataset.horaFin || '',
+                            veterinario_id: blockEl.dataset.veterinarioId || null,
+                            status: 'occupied'
+                        };
+                        try { mostrarDetalleCita(bloque); } catch (e) { console.warn('Deep-link detalle_cita error:', e); }
+                        clearInterval(timer);
+                    } else if (attempts++ > 100 || rendered) {
+                        // Si ya se renderizó y no encontramos el bloque, dejar de intentar
+                        clearInterval(timer);
+                    }
+                }, 200);
+            }, 800);
+        }
+    } catch (e) {
+        console.warn('Deep-link detalle_cita falló:', e);
+    }
 });
 
 function inicializarCalendario() {

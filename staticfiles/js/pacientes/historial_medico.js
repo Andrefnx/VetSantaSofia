@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
+    const urlParams = new URLSearchParams(window.location.search);
+
     // Función para activar una tab
     function activateTab(tabName) {
         tabButtons.forEach(btn => btn.classList.remove('active'));
@@ -20,26 +22,118 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Detectar hash en la URL para abrir tab específica
+    // Detectar hash o query tab en la URL para abrir tab específica
     setTimeout(() => {
-        if (window.location.hash) {
-            const hash = window.location.hash.substring(1);
-            console.log('🔗 Hash detectado en URL:', hash);
-            
-            if (hash === 'hospitalizaciones' || hash === 'hosp') {
-                console.log('➡️ Activando tab de hospitalizaciones');
+        const tabParam = (urlParams.get('tab') || '').toLowerCase();
+        const hash = (window.location.hash || '').substring(1).toLowerCase();
+        const target = tabParam || hash;
+
+        if (target) {
+            console.log('🔗 Tab solicitada:', target);
+            if (target === 'hospitalizaciones' || target === 'hosp') {
                 activateTab('hosp');
-            } else if (hash === 'documentos' || hash === 'docs') {
-                console.log('➡️ Activando tab de documentos');
+            } else if (target === 'documentos' || target === 'docs') {
                 activateTab('docs');
-            } else if (hash === 'historial') {
-                console.log('➡️ Activando tab de historial');
+            } else if (target === 'historial') {
                 activateTab('historial');
             }
-        } else {
-            console.log('ℹ️ No hay hash en la URL');
         }
     }, 100);
+
+    // Estilos y helpers para resaltar elementos cuando llegan via deep-link
+    const helperStyle = document.createElement('style');
+    helperStyle.textContent = `
+        .jump-highlight {
+            outline: 2px solid #2563eb;
+            border-radius: 10px;
+            animation: jumpPulse 1.6s ease-in-out 2;
+        }
+        @keyframes jumpPulse {
+            0% { box-shadow: 0 0 0 0 rgba(37,99,235,0.35); }
+            50% { box-shadow: 0 0 0 10px rgba(37,99,235,0); }
+            100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+        }
+    `;
+    document.head.appendChild(helperStyle);
+
+    function focusTimelineItemByCita(citaId) {
+        if (!citaId) return null;
+        const item = document.querySelector(`.timeline-item[data-cita-id="${citaId}"]`);
+        if (item) {
+            item.classList.add('jump-highlight');
+            item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => item.classList.remove('jump-highlight'), 2500);
+        }
+        return item;
+    }
+
+    function focusHospitalizacionCard(hospId) {
+        if (!hospId) return null;
+        const card = document.querySelector(`.hospitalizacion-card[data-hosp-id="${hospId}"]`);
+        if (card) {
+            card.classList.add('jump-highlight');
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => card.classList.remove('jump-highlight'), 2500);
+        }
+        return card;
+    }
+
+    function waitHospitalizacionesReady(callback, targetHospId = null) {
+        let attempts = 0;
+        const maxAttempts = 60;
+        const timer = setInterval(() => {
+            const managerReady = (typeof hospitalizacionesManager !== 'undefined');
+            const hasData = managerReady && Array.isArray(hospitalizacionesManager.hospitalizaciones) && hospitalizacionesManager.hospitalizaciones.length > 0;
+            const container = document.getElementById('hospitalizacionesContainer');
+            const rendered = container && container.children.length > 0;
+            const cardExists = targetHospId ? document.querySelector(`.hospitalizacion-card[data-hosp-id="${targetHospId}"]`) : null;
+
+            if (cardExists || hasData || rendered) {
+                clearInterval(timer);
+                callback();
+            } else if (attempts++ >= maxAttempts) {
+                clearInterval(timer);
+            }
+        }, 150);
+    }
+
+    // Deep links: citas, consultas y hospitalizaciones
+    const startCitaId = urlParams.get('start_cita');
+    const citaDetalleId = urlParams.get('cita');
+    const consultaDetalleId = urlParams.get('consulta_id') || urlParams.get('consulta');
+    const registroHospId = urlParams.get('registro_hosp');
+    const hospFocusId = urlParams.get('hosp_id');
+
+    if (citaDetalleId) {
+        setTimeout(() => focusTimelineItemByCita(citaDetalleId), 200);
+    }
+
+    if (startCitaId) {
+        setTimeout(() => {
+            const item = focusTimelineItemByCita(startCitaId);
+            const startBtn = item ? item.querySelector('.timeline-btn') : null;
+            if (startBtn && typeof iniciarCitaDesdeFicha === 'function') {
+                iniciarCitaDesdeFicha(startCitaId, startBtn);
+            }
+        }, 300);
+    }
+
+    if (consultaDetalleId && typeof verDetalleConsulta === 'function') {
+        setTimeout(() => verDetalleConsulta(consultaDetalleId), 350);
+    }
+
+    if (registroHospId) {
+        activateTab('hosp');
+        waitHospitalizacionesReady(() => {
+            focusHospitalizacionCard(registroHospId);
+            if (typeof hospitalizacionesManager !== 'undefined' && typeof hospitalizacionesManager.abrirModalRegistro === 'function') {
+                hospitalizacionesManager.abrirModalRegistro(registroHospId);
+            }
+        }, registroHospId);
+    } else if (hospFocusId) {
+        activateTab('hosp');
+        waitHospitalizacionesReady(() => focusHospitalizacionCard(hospFocusId), hospFocusId);
+    }
 
     tabButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -315,11 +409,6 @@ document.addEventListener('DOMContentLoaded', function() {
 const btnNuevaConsulta = document.getElementById('btnNuevaConsulta');
 if (btnNuevaConsulta) {
     btnNuevaConsulta.onclick = async function () {
-        // 🧹 Limpiar datos temporales antes de abrir
-        window.medicamentosSeleccionados = [];
-        window.serviciosSeleccionadosArray = [];
-        console.log('🧹 Datos temporales limpiados antes de abrir Nueva Consulta');
-        
         openVetModal('nuevaConsultaModal');
         await cargarInventario();
         // Cargar antecedentes médicos en el modal
@@ -332,27 +421,11 @@ if (btnNuevaConsulta) {
 const closeNuevaConsultaModal = document.getElementById('closeNuevaConsultaModal');
 if (closeNuevaConsultaModal) {
     closeNuevaConsultaModal.onclick = function () {
-        // 🧹 Limpiar datos temporales antes de cerrar
-        window.medicamentosSeleccionados = [];
-        window.serviciosSeleccionadosArray = [];
-        document.getElementById('serviciosSeleccionados').innerHTML = '';
-        document.getElementById('insumosSeleccionados').innerHTML = '<p class="text-muted" style="font-size: 0.8rem; margin: 0;"><i class="bi bi-info-circle"></i> No hay medicamentos seleccionados</p>';
-        console.log('🧹 Datos temporales del modal nueva consulta limpiados');
-        
         closeVetModal('nuevaConsultaModal');
     };
 
     closeNuevaConsultaModal.onkeydown = function (e) {
-        if (e.key === "Enter" || e.key === " ") {
-            // 🧹 Limpiar datos temporales antes de cerrar
-            window.medicamentosSeleccionados = [];
-            window.serviciosSeleccionadosArray = [];
-            document.getElementById('serviciosSeleccionados').innerHTML = '';
-            document.getElementById('insumosSeleccionados').innerHTML = '<p class="text-muted" style="font-size: 0.8rem; margin: 0;"><i class="bi bi-info-circle"></i> No hay medicamentos seleccionados</p>';
-            console.log('🧹 Datos temporales del modal nueva consulta limpiados');
-            
-            closeVetModal('nuevaConsultaModal');
-        }
+        if (e.key === "Enter" || e.key === " ") closeVetModal('nuevaConsultaModal');
     };
 }
 
@@ -395,7 +468,8 @@ if (formNuevaConsulta) {
         diagnostico: formData.get('diagnostico') || '',
         tratamiento: formData.get('tratamiento') || '',
         notas: formData.get('notas') || '',
-        medicamentos: medicamentosSeleccionados
+        medicamentos: medicamentosSeleccionados,
+        cita_id: form.dataset.citaId || null
     };
     
     console.log('📤 Enviando consulta:', data);
@@ -647,11 +721,6 @@ function verDetalleConsulta(consultaId) {
 // Función para abrir modal de consulta con datos precargados de una cita
 window.iniciarCitaDesdeFicha = async function(citaId, buttonElement) {
     console.log('🔵 iniciarCitaDesdeFicha llamado con citaId:', citaId);
-    
-    // 🧹 CRITICAL: Limpiar datos temporales de cualquier modal anterior
-    window.medicamentosSeleccionados = [];
-    window.serviciosSeleccionadosArray = [];
-    console.log('🧹 Datos temporales limpiados antes de abrir modal');
     
     // Obtener el elemento timeline-item que contiene esta cita
     const timelineItem = buttonElement.closest('.timeline-item');

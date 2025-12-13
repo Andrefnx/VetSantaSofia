@@ -1,3 +1,104 @@
+/* --- Minimal aesthetic fixes (non-breaking) for dashboard views --- */
+/* Keep original layout/colors; standardize spacing and alignment */
+
+/* Cards: consistent padding, title alignment, compact variants */
+.card.card-round .card-body {
+    padding: 16px; /* normalize inner spacing */
+}
+.card.card-round .card-head-row {
+    align-items: center; /* fix misaligned title/tools */
+}
+.card.card-round .card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* space icon and text */
+    margin: 0; /* remove inconsistent heading margins */
+}
+.card.card-round .card-tools {
+    display: flex;
+    gap: 8px; /* unify buttons spacing */
+}
+
+/* Badges: size + vertical rhythm */
+.badge,
+.badge.badge-lg {
+    line-height: 1.2;
+    padding: 4px 8px;
+    font-weight: 600;
+}
+
+/* Buttons inside cards: compact variant for sidebar column */
+.card.card-round .btn.btn-sm,
+.card.card-round .vet-btn.vet-btn-sm {
+    padding: 6px 10px;
+    line-height: 1.2;
+}
+.card.card-round .btn i,
+.card.card-round .vet-btn i {
+    margin-right: 6px; /* icon spacing */
+}
+
+/* Tables in cards: tighter rows without changing typography */
+.card.card-round table.table td,
+.card.card-round table.table th {
+    padding: 8px 10px;
+}
+
+/* Right column stack: unify gaps between cards */
+.col-md-4 > .card.card-round {
+    margin-bottom: 16px;
+}
+
+/* Agenda summary chips/badges inside dashboard */
+.table .badge {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Hospitalizaciones list items: ensure text wrap and spacing */
+.list-group .list-group-item {
+    padding: 10px 12px;
+}
+.list-group .list-group-item small {
+    color: #6b7280; /* keep neutral tone consistent with project */
+}
+
+/* Alerts blocks: refine spacing without altering colors */
+.alert {
+    padding: 12px 14px;
+}
+.alert .alert-heading {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Header breadcrumbs: align baseline */
+.page-header .breadcrumbs {
+    display: flex;
+    align-items: center;
+}
+
+/* Prevent card icon bubbles from stretching rows */
+.card-stats .row.align-items-center .col-icon {
+    display: flex;
+    align-items: center;
+}
+.card-stats .numbers p.card-category,
+.card-stats .numbers h4.card-title {
+    margin: 0; /* vertical compactness */
+}
+
+/* Compact info blocks inside Próxima Cita */
+.card.card-round .text-muted {
+    color: #6b7280 !important; /* standard muted */
+}
+
+/* Fix overflow clipping in card bodies with flex content */
+.card.card-round .card-body {
+    overflow: hidden; /* avoid unexpected overflow while preserving layout */
+}
 :root {
     --primary-color: #afe1af;
     --primary-hover: #89c57c;

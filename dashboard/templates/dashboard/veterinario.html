@@ -3,22 +3,14 @@
 
 {% block title %}Dashboard Veterinario{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/custom/dashboard_vet.css' %}">
+{% endblock %}
+
 {% block content %}
+<div class="vetdash-scope">
 <div class="page-header">
     <h3 class="fw-bold mb-3">Mi Dashboard</h3>
-    <ul class="breadcrumbs mb-3">
-        <li class="nav-home">
-            <a href="{% url 'dashboard:dashboard' %}">
-                <i class="icon-home"></i>
-            </a>
-        </li>
-        <li class="separator">
-            <i class="icon-arrow-right"></i>
-        </li>
-        <li class="nav-item">
-            <a href="#">Dashboard</a>
-        </li>
-    </ul>
 </div>
 
 <!-- Indicadores -->
@@ -126,41 +118,9 @@
                         </p>
                     </div>
                     <div class="col-md-4 text-end">
-                        <a href="/clinica/" class="btn btn-warning btn-lg">
+                        <a href="/pacientes/{{ cita_actual.paciente.id }}/?tab=historial&start_cita={{ cita_actual.id }}#historial" class="btn btn-warning btn-lg">
                             <i class="fas fa-notes-medical me-2"></i>
                             Continuar Consulta
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% elif proxima_cita %}
-        <div class="card card-round mb-3 border-info">
-            <div class="card-body bg-info-subtle">
-                <h5 class="mb-3">
-                    <i class="fas fa-clock me-2"></i>
-                    Próxima Cita
-                </h5>
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h4 class="mb-2">
-                            <i class="fas fa-paw me-2"></i>
-                            {{ proxima_cita.paciente.nombre }}
-                        </h4>
-                        <p class="mb-1">
-                            <strong>Propietario:</strong> {{ proxima_cita.paciente.propietario.nombre_completo }}<br>
-                            <strong>Tipo:</strong> {{ proxima_cita.get_tipo_display }}<br>
-                            <strong>Hora:</strong> {{ proxima_cita.hora_inicio|time:"H:i" }}
-                        </p>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <a href="/agenda/" class="btn btn-info">
-                            <i class="fas fa-eye me-2"></i>
-                            Ver Detalle
-                        </a>
-                        <a href="/clinica/" class="btn btn-info mt-2">
-                            <i class="fas fa-play me-2"></i>
-                            Iniciar Consulta
                         </a>
                     </div>
                 </div>
@@ -226,19 +186,22 @@
                                     </td>
                                     <td class="text-end">
                                         {% if cita.estado == 'en_curso' %}
-                                            <a href="/clinica/" class="btn btn-sm btn-warning" title="Continuar consulta">
+                                            <a href="/pacientes/{{ cita.paciente.id }}/?tab=historial&start_cita={{ cita.id }}#historial" class="btn btn-sm btn-warning" title="Continuar consulta">
                                                 <i class="fas fa-notes-medical"></i>
                                             </a>
+                                            <a href="/agenda/?detalle_cita={{ cita.id }}" class="btn btn-sm btn-info" title="Ver detalle">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
                                         {% elif cita.estado == 'completada' %}
-                                            <a href="/pacientes/{{ cita.paciente.id }}/" class="btn btn-sm btn-info" title="Ver ficha">
-                                                <i class="fas fa-file-medical"></i>
+                                            <a href="/agenda/?detalle_cita={{ cita.id }}" class="btn btn-sm btn-info" title="Ver detalle">
+                                                <i class="fas fa-eye"></i>
                                             </a>
                                         {% elif cita.estado != 'cancelada' %}
-                                            <a href="/clinica/" class="btn btn-sm btn-success" title="Iniciar consulta">
+                                            <a href="/pacientes/{{ cita.paciente.id }}/?tab=historial&start_cita={{ cita.id }}#historial" class="btn btn-sm btn-success" title="Iniciar consulta">
                                                 <i class="fas fa-play"></i>
                                             </a>
-                                            <a href="/pacientes/{{ cita.paciente.id }}/" class="btn btn-sm btn-info" title="Ver ficha">
-                                                <i class="fas fa-file-medical"></i>
+                                            <a href="/agenda/?detalle_cita={{ cita.id }}" class="btn btn-sm btn-info" title="Ver detalle">
+                                                <i class="fas fa-eye"></i>
                                             </a>
                                         {% endif %}
                                     </td>
@@ -258,8 +221,43 @@
         
     </div>
     
-    <!-- Columna Derecha: Hospitalizaciones y Alertas -->
+    <!-- Columna Derecha: Próxima Cita, Hospitalizaciones y Alertas -->
     <div class="col-md-4">
+        {% if proxima_cita %}
+        <div class="card card-round mb-3 border-info">
+            <div class="card-body bg-info-subtle">
+                <h5 class="mb-3">
+                    <i class="fas fa-clock me-2"></i>
+                    Próxima Cita
+                </h5>
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="mb-2 d-flex align-items-center gap-2" style="font-weight:600;">
+                            <i class="fas fa-paw"></i>
+                            {{ proxima_cita.paciente.nombre }}
+                        </h6>
+                        <small class="d-block text-muted vd-meta">
+                            <strong>Propietario:</strong> {{ proxima_cita.paciente.propietario.nombre_completo }}
+                        </small>
+                        <small class="d-block text-muted vd-meta">
+                            <strong>Tipo:</strong> {{ proxima_cita.get_tipo_display }}
+                        </small>
+                        <small class="d-block text-muted vd-meta">
+                            <strong>Hora:</strong> {{ proxima_cita.hora_inicio|time:"H:i" }}
+                        </small>
+                    </div>
+                    <div class="col-4 text-end vd-cta-column">
+                        <a href="/agenda/?detalle_cita={{ proxima_cita.id }}" class="btn btn-sm btn-info mb-2">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="/pacientes/{{ proxima_cita.paciente.id }}/?tab=historial&start_cita={{ proxima_cita.id }}#historial" class="btn btn-sm btn-info">
+                            <i class="fas fa-play"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
         
         <!-- Mis Hospitalizaciones -->
         <div class="card card-round mb-3">
@@ -282,21 +280,21 @@
                             <div class="d-flex justify-content-between align-items-start">
                                 <div class="flex-grow-1">
                                     <h6 class="mb-1">{{ hosp.paciente.nombre }}</h6>
-                                    <small class="text-muted d-block">
+                                    <small class="text-muted d-block vd-meta">
                                         {{ hosp.paciente.propietario.nombre_completo }}
                                     </small>
-                                    <small class="text-muted d-block">
+                                    <small class="text-muted d-block vd-meta">
                                         Ingreso: {{ hosp.fecha_ingreso|date:"d/m/Y" }}
                                         ({{ hosp.dias_hospitalizacion }} días)
                                     </small>
                                     {% if hosp.diagnostico %}
-                                        <small class="d-block mt-1">
+                                        <small class="d-block mt-1 vd-meta">
                                             <strong>Diagnóstico:</strong> {{ hosp.diagnostico|truncatewords:10 }}
                                         </small>
                                     {% endif %}
                                 </div>
                                 <div>
-                                    <a href="/hospital/" class="btn btn-sm btn-primary">
+                                    <a href="/pacientes/{{ hosp.paciente.id }}/?tab=hosp&hosp_id={{ hosp.id }}#hosp" class="btn btn-sm btn-primary" title="Ver hospitalización en ficha">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
@@ -304,7 +302,7 @@
                             
                             <!-- Último registro -->
                             {% if hosp.ultimo_registro %}
-                                <div class="mt-2 p-2 bg-light rounded">
+                                <div class="mt-2 vd-subtle-box">
                                     <small class="text-muted d-block">
                                         <i class="fas fa-notes-medical me-1"></i>
                                         Último registro: {{ hosp.ultimo_registro.fecha|date:"d/m H:i" }}
@@ -322,12 +320,7 @@
                         {% endfor %}
                     </div>
                     
-                    <div class="d-grid mt-3">
-                        <a href="/hospital/" class="btn btn-primary btn-round">
-                            <i class="fas fa-list me-2"></i>
-                            Ver Todas
-                        </a>
-                    </div>
+                    
                 {% else %}
                     <p class="text-muted text-center">No tienes pacientes hospitalizados</p>
                 {% endif %}
@@ -403,7 +396,7 @@
                         <li>
                             <strong>{{ hosp.paciente.nombre }}</strong> - 
                             <span class="text-danger">{{ hosp.horas_sin_registro }} hrs sin registro</span>
-                            <a href="/hospital/" class="btn btn-xs btn-danger ms-2">
+                            <a href="/pacientes/{{ hosp.paciente.id }}/?tab=hosp&registro_hosp={{ hosp.id }}#hosp" class="btn btn-xs btn-danger ms-2">
                                 <i class="fas fa-edit"></i> Actualizar
                             </a>
                         </li>

@@ -17,6 +17,10 @@ from .forms import AperturaCajaForm, CierreCajaForm
 @login_required
 def caja(request):
     # Traer todos los productos del inventario
+    # Restringir acceso a roles permitidos
+    if not (request.user.is_superuser or request.user.is_staff or request.user.rol in ['recepcion', 'administracion']):
+        return redirect('dashboard:dashboard')
+
     productos = Insumo.objects.all()
     # Traer todos los servicios veterinarios
     servicios = Servicio.objects.all()
@@ -50,6 +54,10 @@ def procesar_venta(request):
 @login_required
 def cashregister(request):
     """Vista principal de la caja registradora"""
+    # Restringir acceso a roles permitidos
+    if not (request.user.is_superuser or request.user.is_staff or request.user.rol in ['recepcion', 'administracion']):
+        return redirect('dashboard:dashboard')
+
     # Verificar si hay una caja abierta
     caja_abierta = Caja.objects.filter(usuario=request.user, fecha_cierre__isnull=True).first()
     

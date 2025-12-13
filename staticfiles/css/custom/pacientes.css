@@ -113,45 +113,31 @@
     margin-bottom: 0.6rem;
 }
 
-/* Compact Antecedentes section */
-.antecedentes-compact .antecedentes-list { list-style: none; padding: 0; margin: 0; }
-.antecedentes-compact .antecedentes-list li { display: grid; grid-template-columns: 20px 160px 1fr; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--border-color); }
-.antecedentes-compact .antecedentes-list li:first-child { border-top: 0; }
-.antecedentes-compact .icon i { color: #6b7280; }
-.antecedentes-compact .label { font-weight: 600; color: #374151; }
-.antecedentes-compact .value { color: #111827; }
-
-/* Antecedentes en modo edición */
-.antecedentes-compact .antecedentes-list li textarea.edit-mode {
-    display: block !important;
-    grid-column: 1 / -1;
-    margin-top: 8px;
-    margin-left: 28px;
+/* Antecedentes alineados al estilo de Información General */
+.antecedentes-compact .info-row { grid-template-columns: 1fr; gap: 12px; border-top: 1px solid var(--border-color); padding-top: 0.4rem; }
+.antecedentes-compact .info-row:first-of-type { border-top: none; padding-top: 0; }
+.antecedentes-compact .info-row p { margin-bottom: 0.4rem; font-size: 0.85rem; }
+.antecedentes-compact .info-row .view-mode { color: #111827; }
+.antecedentes-compact .info-row textarea.edit-mode {
+    display: none;
+    margin-top: 6px;
     padding: 10px 12px !important;
     font-family: inherit;
     font-size: 0.85rem !important;
     line-height: 1.5;
     border: 1.5px solid #d1d5db;
     border-radius: 6px;
-    background-color: #f9fafb;
+    background-color: #ffffff;
     resize: vertical;
     min-height: 80px;
     transition: all 0.2s ease;
-    width: calc(100% - 28px - 20px - 8px);
+    width: 100%;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.antecedentes-compact .antecedentes-list li textarea.edit-mode:hover {
-    border-color: #bfdbfe;
-    background-color: white;
-}
-
-.antecedentes-compact .antecedentes-list li textarea.edit-mode:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    background-color: white;
-    box-shadow: 0 0 0 3px rgba(159, 207, 159, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
-}
+/* Mostrar edición solo cuando se activa el modo */
+.antecedentes-compact #infoAntecedentes.edit-mode-active .info-row .view-mode { display: none; }
+.antecedentes-compact #infoAntecedentes.edit-mode-active .info-row textarea.edit-mode { display: block; }
 
 .edad-section > p {
     margin-bottom: 1rem;
@@ -347,6 +333,27 @@ textarea.is-invalid:focus {
 
 .vet-btn.vet-btn-grey i {
     color: var(--text-dark);
+}
+
+/* Edit header action icons */
+.section-header-with-edit .btn-edit-icon.btn-cancel,
+.section-header-with-edit .btn-edit-icon.btn-cancel i {
+    color: #dc3545 !important; /* rojo para cancelar */
+}
+
+.section-header-with-edit .btn-edit-icon.btn-cancel:hover,
+.section-header-with-edit .btn-edit-icon.btn-cancel:hover i {
+    color: #b02a37 !important; /* rojo más oscuro al hover */
+}
+
+.section-header-with-edit .btn-edit-icon.btn-save,
+.section-header-with-edit .btn-edit-icon.btn-save i {
+    color: #198754 !important; /* verde para guardar */
+}
+
+.section-header-with-edit .btn-edit-icon.btn-save:hover,
+.section-header-with-edit .btn-edit-icon.btn-save:hover i {
+    color: #146c43 !important; /* verde más oscuro al hover */
 }
 
 /* ===========================
@@ -631,6 +638,34 @@ textarea.is-invalid:focus {
 
 .timeline-item-subtitle i {
     color: var(--primary-color);
+}
+
+.timeline-item-meta {
+    margin-top: 6px;
+}
+
+.cita-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    border: 1px solid transparent;
+}
+
+.cita-status-pill.estado-pendiente {
+    background: #fff8e1;
+    color: #b26a00;
+    border-color: #ffe4a3;
+}
+
+.cita-status-pill.estado-realizada {
+    background: #e6f4ea;
+    color: #1b5e20;
+    border-color: #c6e3cd;
 }
 
 .timeline-btn {
@@ -1451,6 +1486,11 @@ td[colspan][style*="text-align: center"] {
     gap: 0.75rem;
 }
 
+/* Ocultar botón Agendar Cita en la ficha */
+#btnAgendarCitaModal {
+    display: none !important;
+}
+
 .sidebar-actions .vet-btn {
     width: 100%;
     justify-content: center;
@@ -1709,45 +1749,22 @@ td[colspan][style*="text-align: center"] {
 
 /* Estilos para antecedentes en modo edición */
 .antecedentes-compact #infoAntecedentes.edit-mode-active {
-    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-    border: 2px solid #e5e7eb;
     border-radius: 8px;
     padding: 16px;
     margin: -16px -16px 0 -16px;
     transition: all 0.3s ease;
 }
 
-.antecedentes-compact #infoAntecedentes.edit-mode-active .antecedentes-list {
+.antecedentes-compact #infoAntecedentes.edit-mode-active .info-row {
     background-color: transparent;
-}
-
-.antecedentes-compact #infoAntecedentes.edit-mode-active .antecedentes-list li {
-    display: block;
     padding: 12px 0;
-    border: none;
     border-bottom: 1px solid #e5e7eb;
-    transition: all 0.2s ease;
+    gap: 16px;
 }
 
-.antecedentes-compact #infoAntecedentes.edit-mode-active .antecedentes-list li:last-child {
+.antecedentes-compact #infoAntecedentes.edit-mode-active .info-row:last-child {
     border-bottom: none;
-}
-
-.antecedentes-compact #infoAntecedentes.edit-mode-active .antecedentes-list li .icon {
-    display: inline-block;
-    margin-right: 8px;
-    vertical-align: top;
-}
-
-.antecedentes-compact #infoAntecedentes.edit-mode-active .antecedentes-list li .label {
-    display: inline-block;
-    width: 160px;
-    vertical-align: top;
-    color: #374151;
-}
-
-.antecedentes-compact #infoAntecedentes.edit-mode-active .antecedentes-list li .value {
-    display: none;
+    padding-bottom: 0;
 }
 
 .paciente-nombre-display {

@@ -305,7 +305,7 @@ def _datos_veterinario(hoy, usuario):
     
     # Agregar cálculo de días de hospitalización y último registro
     for hosp in hospitalizaciones_asignadas:
-        hosp.dias_hospitalizacion = (hoy.date() - hosp.fecha_ingreso.date()).days
+        hosp.dias_hospitalizacion = (hoy - hosp.fecha_ingreso.date()).days
         hosp.ultimo_registro = RegistroDiario.objects.filter(
             hospitalizacion=hosp
         ).order_by('-fecha_registro').first()
@@ -348,7 +348,7 @@ def _datos_veterinario(hoy, usuario):
             consulta__veterinario=usuario,
             requiere_confirmacion=True,
             confirmado_por__isnull=True
-        ).select_related('consulta__cita__paciente')[:10]
+        ).select_related('consulta')[:10]
         
         if insumos_sin_confirmar:
             alertas.append({

@@ -1,0 +1,244 @@
+/* Scoped styling for the vet dashboard (non-overlapping) */
+.vetdash-scope {
+  --vd-gap: 16px;
+  --vd-border: #e6e8ec;
+  --vd-soft: #f9fafb;
+  --vd-muted: #6b7280;
+}
+
+
+
+.vetdash-scope .row {
+  row-gap: var(--vd-gap);
+}
+
+.vetdash-scope .page-header {
+  margin-bottom: 16px;
+}
+
+.vetdash-scope .page-header h3 {
+  margin-bottom: 6px;
+}
+
+.vetdash-scope .card.card-round {
+  border: 1px solid var(--vd-border) !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03) !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+}
+
+.vetdash-scope .card.card-round .card-header {
+  padding: 12px 16px !important;
+  background: #fbfcfd !important;
+  border-bottom: 1px solid #eef1f4 !important;
+}
+
+.vetdash-scope .card.card-round .card-body {
+  padding: 14px 16px !important;
+  background: #ffffff !important;
+  min-height: 50px;
+}
+
+/* Compact stat cards: enforce 50px height and align contents */
+.vetdash-scope .card.card-round.card-stats .card-body {
+  height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px;
+}
+.vetdash-scope .card.card-round.card-stats .row.align-items-center {
+  flex: 1;
+  align-items: center !important;
+  flex-wrap: nowrap;
+}
+.vetdash-scope .card.card-round.card-stats .col-icon {
+  display: flex !important;
+  align-items: center !important;
+}
+.vetdash-scope .card.card-round.card-stats .numbers {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vetdash-scope .card.card-round.card-stats .numbers p.card-category,
+.vetdash-scope .card.card-round.card-stats .numbers h4.card-title {
+  margin: 0 !important;
+  line-height: 1.2;
+}
+.vetdash-scope .card.card-round.card-stats .numbers h4.card-title {
+  font-size: 1.1rem;
+}
+
+.vetdash-scope .card.card-round .card-head-row {
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.vetdash-scope .card.card-round .card-title {
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-weight: 700 !important;
+}
+
+.vetdash-scope .card.card-round .card-tools {
+  display: flex !important;
+  gap: 8px !important;
+}
+
+.vetdash-scope .card.card-round .btn.btn-sm,
+.vetdash-scope .card.card-round .btn.btn-xs {
+  padding: 6px 10px !important;
+  line-height: 1.2 !important;
+}
+
+.vetdash-scope .card.card-round .btn i {
+  margin-right: 6px !important;
+}
+
+.vetdash-scope .badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 4px 9px !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+
+.vetdash-scope .card.card-round table.table thead th {
+  padding: 10px 12px !important;
+  font-weight: 600 !important;
+  color: #4b5563 !important;
+}
+.card-stats.icon-big.icon-warning {
+    background: white !important;
+}
+.vetdash-scope .card.card-round table.table tbody td {
+  padding: 9px 12px !important;
+  vertical-align: middle !important;
+}
+
+/* Action buttons in tables: wheel-style icon buttons */
+.vetdash-scope .card.card-round table.table td.text-end .btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
+  padding: 0 !important;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+.vetdash-scope .card.card-round table.table td.text-end .btn + .btn {
+  margin-left: 6px;
+}
+.vetdash-scope .card.card-round table.table td.text-end .btn i {
+  margin-right: 0 !important;
+  font-size: 1rem;
+}
+.vetdash-scope .card.card-round table.table td.text-end .btn:hover {
+  background: #eef2f7;
+  border-color: #d5d9e0;
+}
+.vetdash-scope .card.card-round table.table td.text-end .btn.btn-warning,
+.vetdash-scope .card.card-round table.table td.text-end .btn.btn-success,
+.vetdash-scope .card.card-round table.table td.text-end .btn.btn-info {
+  color: #1f2937;
+}
+
+.vetdash-scope .col-md-4 > .card.card-round {
+  margin-bottom: 16px !important;
+}
+
+.vetdash-scope .list-group .list-group-item {
+  padding: 10px 12px !important;
+  border-radius: 10px !important;
+  border: 1px solid #edf1f4 !important;
+}
+
+.vetdash-scope .list-group .list-group-item + .list-group-item {
+  margin-top: 10px !important;
+}
+
+.vetdash-scope .list-group .list-group-item small {
+  color: var(--vd-muted) !important;
+}
+
+.vetdash-scope .alert {
+  padding: 12px 14px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+.vetdash-scope .alert .alert-heading {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 8px !important;
+}
+
+.vetdash-scope .alert ul {
+  margin-bottom: 0 !important;
+  padding-left: 18px !important;
+}
+
+.vetdash-scope .vd-pill-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.vetdash-scope .vd-meta {
+  color: var(--vd-muted) !important;
+  font-size: 0.9rem !important;
+}
+
+.vetdash-scope .vd-subtle-box {
+  background: #f5f7fb !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 10px !important;
+  padding: 10px 12px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+
+.vetdash-scope .vd-cta-column {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  align-items: flex-end !important;
+}
+
+.vetdash-scope .vd-cta-column .btn {
+  width: 36px !important;
+  justify-content: center !important;
+  padding: 7px 0 !important;
+}
+
+.vetdash-scope .vd-stat-body {
+  padding: 12px 14px !important;
+}
+
+.vetdash-scope .card-stats .numbers p.card-category,
+.vetdash-scope .card-stats .numbers h4.card-title {
+  margin: 0 !important;
+}
+
+.vetdash-scope .card-stats .icon-big {
+  width: 46px !important;
+  height: 46px !important;
+  font-size: 1.35rem !important;
+}
+
+.vetdash-scope .vd-gap-sm {
+  margin-bottom: 12px !important;
+}
+
+.vetdash-scope .vd-gap-md {
+  margin-bottom: 16px !important;
+}

@@ -37,6 +37,7 @@
                     </a>
                 </li>
 
+                {% if user.is_superuser or user.is_staff or user.rol == 'recepcion' or user.rol == 'administracion' %}
                 <!-- CAJA -->
                 <li class="vet-nav-item {% if request.resolver_match.namespace == 'caja' %}active{% endif %}">
                     <a href="{% url 'caja:cashregister' %}" class="vet-nav-link">
@@ -44,10 +45,10 @@
                         <span>Caja</span>
                     </a>
                 </li>
+                {% endif %}
 
                 <li class="vet-nav-section">
-                   
-                    <h4 class="vet-nav-section-title">CLINICA</h4>
+                    <h4 class="vet-nav-section-title">Clínica</h4>
                 </li>
 
                 <!-- AGENDA -->
@@ -64,6 +65,10 @@
                         <i class="fas fa-paw"></i>
                         <span>Pacientes</span>
                     </a>
+                </li>
+
+                <li class="vet-nav-section">
+                    <h4 class="vet-nav-section-title">Administración</h4>
                 </li>
 
                 <!-- INVENTARIO -->

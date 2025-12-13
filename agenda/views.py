@@ -77,6 +77,10 @@ def agenda(request):
         rol='veterinario',
         is_active=True
     ).order_by('nombre', 'apellido')
+
+    # Si es veterinario (no admin/staff), solo puede ver su propia agenda
+    if request.user.rol == 'veterinario' and not request.user.is_superuser and not request.user.is_staff:
+        veterinarios = veterinarios.filter(id=request.user.id)
     
     # Obtener pacientes activos
     pacientes = Paciente.objects.filter(activo=True).select_related('propietario')
@@ -104,6 +108,10 @@ def citas_dia(request, year, month, day):
     """Vista para obtener citas de un día específico"""
     fecha = date(year, month, day)
     citas = Cita.objects.filter(fecha=fecha).select_related('paciente', 'veterinario')
+
+    # Veterinario solo ve sus citas
+    if request.user.rol == 'veterinario' and not request.user.is_superuser and not request.user.is_staff:
+        citas = citas.filter(veterinario=request.user)
     
     citas_data = [{
         'id': cita.id,
@@ -566,6 +574,11 @@ def slots_disponibles(request, veterinario_id, year, month, day):
 def agenda_bloques_dia(request, veterinario_id, year, month, day):
     """Devuelve los 96 bloques del día con estado available/occupied/unavailable."""
     try:
+        # Restringir a su propia agenda si es veterinario
+        if request.user.rol == 'veterinario' and not request.user.is_superuser and not request.user.is_staff:
+            if request.user.id != int(veterinario_id):
+                return JsonResponse({'success': False, 'error': 'No autorizado'}, status=403)
+
         fecha = date(year, month, day)
         veterinario = get_object_or_404(CustomUser, id=veterinario_id, rol='veterinario')
 

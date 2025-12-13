@@ -493,11 +493,9 @@ body {
 
 .main-panel>.container {
    min-height: calc(100% - 123px);
-   max-height: calc(100vh - 71px);
    overflow: hidden;
    width: 100%;
    max-width: unset;
-   padding: 0 !important
 }
 
 .main-panel>.container-full {
