@@ -16,9 +16,9 @@
                     Hospitalizaciones Activas
                 </div>
                 <div class="card-tools">
-                    <a href="{% url 'hospital:hospitalizaciones' %}" class="vet-btn vet-btn-sm">
+                    <a href="{% url 'pacientes:pacientes' %}" class="vet-btn vet-btn-sm">
                         <i class="fa fa-list me-1"></i>
-                        Ver Todas
+                        Ver Todos los Pacientes
                     </a>
                 </div>
             </div>
@@ -61,7 +61,7 @@
                             </div>
 
                             <div class="mt-2 pt-2 border-top">
-                                <a href="{% url 'hospital:detalle' hosp.id %}" class="vet-btn vet-btn-sm">
+                                <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hospital&hosp_id={{ hosp.id }}#hospital" class="vet-btn vet-btn-sm">
                                     <i class="fas fa-edit me-1"></i>
                                     Ver Detalles
                                 </a>
@@ -70,8 +70,8 @@
                     </div>
                     {% endfor %}
                     {% if mis_hospitalizaciones|length > 10 %}
-                        <a href="{% url 'hospital:hospitalizaciones' %}" class="vet-btn vet-btn-block">
-                            Ver las {{ mis_hospitalizaciones|length }} hospitalizaciones
+                        <a href="{% url 'pacientes:pacientes' %}" class="vet-btn vet-btn-block">
+                            Ver todos los pacientes
                         </a>
                     {% endif %}
                 </div>
@@ -95,9 +95,9 @@
                     Mis Hospitalizaciones
                 </div>
                 <div class="card-tools">
-                    <a href="{% url 'hospital:hospitalizaciones' %}" class="vet-btn vet-btn-sm">
+                    <a href="{% url 'pacientes:pacientes' %}" class="vet-btn vet-btn-sm">
                         <i class="fa fa-list me-1"></i>
-                        Ver Todas
+                        Ver Todos los Pacientes
                     </a>
                 </div>
             </div>
@@ -186,7 +186,7 @@
                             {% endif %}
 
                             <div class="mt-2 pt-2 border-top">
-                                <a href="{% url 'hospital:detalle' hosp.id %}" class="vet-btn vet-btn-sm">
+                                <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hospital&hosp_id={{ hosp.id }}#hospital" class="vet-btn vet-btn-sm">
                                     <i class="fas fa-edit me-1"></i>
                                     Actualizar
                                 </a>
@@ -215,9 +215,9 @@
                     Pacientes Hospitalizados
                 </div>
                 <div class="card-tools">
-                    <a href="{% url 'hospital:hospitalizaciones' %}" class="vet-btn vet-btn-sm">
+                    <a href="{% url 'pacientes:pacientes' %}" class="vet-btn vet-btn-sm">
                         <i class="fa fa-list me-1"></i>
-                        Ver Todos
+                        Ver Todos los Pacientes
                     </a>
                 </div>
             </div>

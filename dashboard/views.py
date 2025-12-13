@@ -145,7 +145,7 @@ def _datos_administrador(hoy):
     # 2. HOSPITALIZACIONES
     hospitalizaciones_activas = Hospitalizacion.objects.filter(
         estado='activa'
-    ).select_related('paciente', 'veterinario')
+    ).select_related('paciente__propietario', 'veterinario')
     
     # Agregar cálculo de días de hospitalización
     for hosp in hospitalizaciones_activas:
@@ -254,7 +254,7 @@ def _datos_recepcion(hoy, usuario):
     # 2. HOSPITALIZACIONES (mis_hospitalizaciones para compatible con partials)
     hospitalizaciones_activas = Hospitalizacion.objects.filter(
         estado='activa'
-    ).select_related('paciente', 'veterinario')
+    ).select_related('paciente__propietario', 'veterinario')
     
     # Agregar cálculo de días de hospitalización
     for hosp in hospitalizaciones_activas:
@@ -347,7 +347,7 @@ def _datos_veterinario(hoy, usuario):
     hospitalizaciones_asignadas = Hospitalizacion.objects.filter(
         veterinario=usuario,
         estado='activa'
-    ).select_related('paciente').order_by('fecha_ingreso')
+    ).select_related('paciente__propietario').order_by('fecha_ingreso')
     
     # Agregar cálculo de días de hospitalización y último registro
     for hosp in hospitalizaciones_asignadas:

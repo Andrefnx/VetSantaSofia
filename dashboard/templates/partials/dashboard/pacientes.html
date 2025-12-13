@@ -40,7 +40,7 @@
                         <td>{{ hosp.fecha_ingreso|date:"d/m/Y H:i" }}</td>
                         <td>{{ hosp.dias_hospitalizacion }}</td>
                         <td class="text-end">
-                            <a href="{% url 'hospital:detalle' hosp.id %}" class="vet-btn vet-btn-sm">
+                            <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hospital&hosp_id={{ hosp.id }}#hospital" class="vet-btn vet-btn-sm">
                                 <i class="fas fa-eye me-1"></i>
                                 Ver
                             </a>
@@ -68,9 +68,9 @@
                 Mis Hospitalizaciones Activas
             </div>
             <div class="card-tools">
-                <a href="{% url 'hospital:hospitalizaciones' %}" class="vet-btn vet-btn-sm">
+                <a href="{% url 'pacientes:pacientes' %}" class="vet-btn vet-btn-sm">
                     <i class="fa fa-list me-1"></i>
-                    Ver Todas
+                    Ver Todos los Pacientes
                 </a>
             </div>
         </div>
@@ -96,7 +96,7 @@
                         <td>{{ hosp.fecha_ingreso|date:"d/m/Y H:i" }}</td>
                         <td>{{ hosp.dias_hospitalizacion }}</td>
                         <td class="text-end">
-                            <a href="{% url 'hospital:detalle' hosp.id %}" class="vet-btn vet-btn-sm">
+                            <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hospital&hosp_id={{ hosp.id }}#hospital" class="vet-btn vet-btn-sm">
                                 <i class="fas fa-notes-medical me-1"></i>
                                 Actualizar
                             </a>
@@ -124,9 +124,9 @@
                 Hospitalizaciones Activas
             </div>
             <div class="card-tools">
-                <a href="{% url 'hospital:hospitalizaciones' %}" class="vet-btn vet-btn-sm">
+                <a href="{% url 'pacientes:pacientes' %}" class="vet-btn vet-btn-sm">
                     <i class="fa fa-list me-1"></i>
-                    Ver Todas
+                    Ver Todos los Pacientes
                 </a>
             </div>
         </div>

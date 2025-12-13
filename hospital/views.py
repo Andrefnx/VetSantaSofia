@@ -1,5 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 from .models import Hospitalizacion
 
 @login_required
@@ -18,25 +19,19 @@ def dashboard_pacientes(request):
 
 @login_required
 def hospitalizaciones(request):
-    """Vista de lista de hospitalizaciones activas"""
-    hospitalizaciones_activas = Hospitalizacion.objects.filter(
-        estado_hosp='ingresado'
-    ).select_related('paciente').order_by('-fecha_ingreso')
-    
-    context = {
-        'hospitalizaciones': hospitalizaciones_activas,
-    }
-    return render(request, 'hospital/hospitalizaciones.html', context)
+    """Redirige a la vista de pacientes del sistema actual"""
+    return redirect('pacientes:pacientes')
 
 @login_required
 def detalle(request, hosp_id):
-    """Vista de detalle de una hospitalización"""
-    hospitalizacion = Hospitalizacion.objects.select_related('paciente').get(id=hosp_id)
-    
-    context = {
-        'hospitalizacion': hospitalizacion,
-    }
-    return render(request, 'hospital/detalle_hospitalizacion.html', context)
+    """Redirige a la ficha del paciente con la pestaña de hospital"""
+    try:
+        hospitalizacion = Hospitalizacion.objects.get(id=hosp_id)
+        # Redirigir a la ficha clínica del paciente con la pestaña de hospital
+        url = reverse('pacientes:ficha_mascota', args=[hospitalizacion.idMascota.id])
+        return redirect(f'{url}?tab=hospital&hosp_id={hosp_id}#hospital')
+    except Hospitalizacion.DoesNotExist:
+        return redirect('pacientes:pacientes')
 
 def test_view(request):
     """Vista de prueba"""
