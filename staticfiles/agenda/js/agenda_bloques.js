@@ -773,22 +773,21 @@ function inicializarHorasDisponibles() {
 function actualizarHorasDisponibles() {
     const servicioSelect = document.getElementById('servicioSelectDirecto');
     const horaSelect = document.getElementById('agendarHora');
+    const mensajeBloquesEl = document.getElementById('bloquesRequeridosDirecto');
     const servicioId = servicioSelect.value;
     
     // Limpiar select de horas
     horaSelect.innerHTML = '<option value="">Selecciona una hora</option>';
     
     if (!servicioId) {
-        document.getElementById('bloquesRequeridosDirecto').textContent = '';
+        mensajeBloquesEl.textContent = '';
+        mensajeBloquesEl.className = 'text-muted';
         return;
     }
     
     const option = servicioSelect.options[servicioSelect.selectedIndex];
     const duracion = parseInt(option.dataset.duracion) || 15;
     const bloquesRequeridos = Math.ceil(duracion / 15);
-    
-    document.getElementById('bloquesRequeridosDirecto').textContent = 
-        `Requiere ${bloquesRequeridos} bloques (${duracion} min)`;
     
     // Encontrar todas las horas disponibles que tengan espacio para este servicio
     const horasDisponibles = new Set();
@@ -807,12 +806,18 @@ function actualizarHorasDisponibles() {
         }
     }
     
+    // Verificar si la hora del bloque clickeado tiene suficiente espacio
+    const horaInicialDisponible = horasDisponibles.has(agendarState.startTime);
+    
     // Llenar el select con horas disponibles
     if (horasDisponibles.size === 0) {
         const option = document.createElement('option');
         option.disabled = true;
         option.textContent = 'No hay horas disponibles para este servicio';
         horaSelect.appendChild(option);
+        
+        mensajeBloquesEl.textContent = `⚠️ Este servicio requiere ${duracion} minutos (${bloquesRequeridos} bloques consecutivos). No hay horarios disponibles.`;
+        mensajeBloquesEl.className = 'text-danger fw-bold';
     } else {
         const horasOrdenadas = Array.from(horasDisponibles).sort();
         horasOrdenadas.forEach(hora => {
@@ -822,12 +827,16 @@ function actualizarHorasDisponibles() {
             horaSelect.appendChild(option);
         });
         
-        // Seleccionar la hora del bloque clickeado si está disponible
-        if (horasDisponibles.has(agendarState.startTime)) {
-            horaSelect.value = agendarState.startTime;
+        // Mostrar mensaje según disponibilidad en el bloque original
+        if (!horaInicialDisponible) {
+            mensajeBloquesEl.textContent = `⚠️ La hora seleccionada (${agendarState.startTime}) no tiene ${duracion} minutos disponibles. Por favor, elige otra hora de las disponibles.`;
+            mensajeBloquesEl.className = 'text-warning fw-bold';
+            // NO seleccionar automáticamente ninguna hora, el usuario debe elegir
         } else {
-            // Si no está disponible, seleccionar la primera hora disponible
-            horaSelect.value = horasOrdenadas[0];
+            // La hora original sí tiene espacio, seleccionarla
+            horaSelect.value = agendarState.startTime;
+            mensajeBloquesEl.textContent = `✓ Requiere ${duracion} minutos (${bloquesRequeridos} bloques). Hora confirmada.`;
+            mensajeBloquesEl.className = 'text-success';
         }
     }
     
