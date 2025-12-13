@@ -381,9 +381,7 @@ input[type="password"],
 select,
 textarea {
     width: 100% !important;
-    padding: 8px 12px !important;
     font-size: 0.9rem !important;
-    border: 1.5px solid var(--border-color) !important;
     border-radius: var(--radius-md) !important;
     background-color: var(--bg-white) !important;
     color: var(--text-dark) !important;
@@ -583,27 +581,27 @@ textarea {
 
 .table-header,
 .table-header-grid {
-    display: grid !important;
-    grid-template-columns: 1fr 250px;
-    grid-template-rows: auto 1fr;
-    gap: 1.5rem 2rem;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 2rem !important;
     background: var(--bg-white) !important;
     padding: 1.5rem !important;
     border-radius: var(--radius-xl) !important;
     margin-bottom: 2rem !important;
-    align-items: start;
+    flex-wrap: wrap !important;
 }
 
 .table-header h4,
 .table-header-grid h4 {
-    grid-column: 1;
-    margin: 0 0 0.5rem 0 !important;
+    margin: 0 !important;
     font-weight: 700;
     color: var(--text-dark);
     font-size: 1.5rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-shrink: 0;
 }
 
 .table-header h4 i,
@@ -612,36 +610,31 @@ textarea {
 }
 
 .table-header-controls {
-    grid-column: 1 / 2;
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 1rem;
-    align-items: stretch;
+    flex: 1;
+    justify-content: center;
 }
 
 .table-actions {
-    grid-column: 2 / 3;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    min-width: 0;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
 }
 
 .table-action-buttons {
-    width: 100%;
     display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-end !important;
+    align-items: center !important;
     gap: 12px !important;
     padding: 0 !important;
     margin: 0 !important;
     border: none !important;
-    box-sizing: border-box !important;
 }
 
 .table-action-buttons button {
-    width: 100% !important;
-    justify-content: flex-end !important;
+    white-space: nowrap !important;
 }
 
 /* Tabla Base */
@@ -2343,18 +2336,32 @@ html.sidebar-is-collapsed .main-panel {
     max-width: 100% !important;
 }
 
-.page-inner {
-    padding: 20px;
-}
 
 /* Topbar fixed */
 .main-header {
     position: sticky !important;
     top: 0 !important;
     z-index: 999 !important;
-    background: #fff !important;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    padding: 0 20px !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
 }
+
+/* Navbar adjustments */
+.navbar-header {
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Container adjustments for reduced margin */
+.container {
+    padding-top: 20px !important;
+    padding-bottom: 20px !important;
+}
+
 
 /* Responsive */
 @media (max-width: 991px) {
