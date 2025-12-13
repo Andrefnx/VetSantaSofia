@@ -11,7 +11,50 @@ from datetime import date, datetime, timedelta, time
 from pacientes.models import Paciente
 from servicios.models import Servicio
 from cuentas.models import CustomUser
-from .models import Cita, DisponibilidadVeterinario, HorarioFijoVeterinario
+from .models import (
+    Cita,
+    DisponibilidadVeterinario,
+    HorarioFijoVeterinario,
+    DisponibilidadBloquesDia,
+    time_to_block_index,
+    block_index_to_time,
+    BLOCK_MINUTES,
+)
+
+
+def _build_day_blocks(availability: DisponibilidadBloquesDia, citas_qs):
+    """Construye la lista de 96 bloques con estado available/occupied/unavailable."""
+    blocks = []
+    for idx in range(96):
+        start_t = block_index_to_time(idx)
+        end_t = block_index_to_time(idx + 1)
+        blocks.append({
+            'block_index': idx,
+            'start_time': start_t.strftime('%H:%M'),
+            'end_time': end_t.strftime('%H:%M'),
+            'status': 'unavailable',
+            'label': '',
+        })
+
+    if availability and availability.trabaja:
+        for rng in availability.rangos:
+            for idx in range(rng['start_block'], rng['end_block']):
+                blocks[idx]['status'] = 'available'
+
+    # Marcar ocupados por citas
+    for cita in citas_qs:
+        try:
+            start_block = cita.start_block if cita.start_block is not None else time_to_block_index(cita.hora_inicio)
+            end_block = cita.end_block if cita.end_block is not None else time_to_block_index(cita.hora_fin)
+        except ValidationError:
+            continue
+
+        for idx in range(start_block, end_block):
+            if 0 <= idx < 96:
+                blocks[idx]['status'] = 'occupied'
+                blocks[idx]['label'] = cita.paciente.nombre if cita.paciente_id else 'Ocupado'
+
+    return blocks
 
 @login_required
 def agenda(request):
@@ -457,6 +500,129 @@ def slots_disponibles(request, veterinario_id, year, month, day):
             'slots': slots_disponibles
         })
     
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+# ============================================
+# NUEVAS VISTAS BASADAS EN BLOQUES DE 15 MIN
+# ============================================
+
+
+@login_required
+@require_http_methods(["GET"])
+def agenda_bloques_dia(request, veterinario_id, year, month, day):
+    """Devuelve los 96 bloques del día con estado available/occupied/unavailable."""
+    try:
+        fecha = date(year, month, day)
+        veterinario = get_object_or_404(CustomUser, id=veterinario_id, rol='veterinario')
+
+        disponibilidad = DisponibilidadBloquesDia.objects.filter(
+            veterinario=veterinario,
+            fecha=fecha
+        ).first()
+
+        citas = Cita.objects.filter(
+            veterinario=veterinario,
+            fecha=fecha,
+            estado__in=['pendiente', 'confirmada', 'en_curso']
+        ).select_related('paciente')
+
+        blocks = _build_day_blocks(disponibilidad, citas)
+
+        return JsonResponse({
+            'success': True,
+            'fecha': fecha.isoformat(),
+            'veterinario': f"{veterinario.nombre} {veterinario.apellido}",
+            'trabaja': bool(disponibilidad.trabaja) if disponibilidad else False,
+            'blocks': blocks,
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def agendar_cita_por_bloques(request):
+    """Crea una cita usando bloque_inicio + servicio (calcula bloques requeridos)."""
+    try:
+        data = json.loads(request.body)
+        paciente_id = data.get('paciente_id')
+        servicio_id = data.get('servicio_id')
+        veterinario_id = data.get('veterinario_id')
+        fecha_str = data.get('fecha')
+        hora_inicio_str = data.get('hora_inicio')
+
+        if not all([paciente_id, servicio_id, veterinario_id, fecha_str, hora_inicio_str]):
+            return JsonResponse({'success': False, 'error': 'Faltan datos requeridos.'}, status=400)
+
+        fecha_cita = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+        hora_inicio = datetime.strptime(hora_inicio_str, '%H:%M').time()
+        start_block = time_to_block_index(hora_inicio)
+
+        servicio = get_object_or_404(Servicio, pk=servicio_id)
+        blocks_required = servicio.blocks_required
+        end_block = start_block + blocks_required
+        if end_block > 96:
+            return JsonResponse({'success': False, 'error': 'El servicio no cabe al final del día.'}, status=400)
+
+        disponibilidad = DisponibilidadBloquesDia.objects.filter(
+            veterinario_id=veterinario_id,
+            fecha=fecha_cita
+        ).first()
+
+        if not disponibilidad or not disponibilidad.trabaja:
+            return JsonResponse({'success': False, 'error': 'El veterinario no trabaja este día.'}, status=400)
+
+        dentro = any(
+            rng['start_block'] <= start_block and end_block <= rng['end_block']
+            for rng in disponibilidad.rangos
+        )
+        if not dentro:
+            return JsonResponse({'success': False, 'error': 'Fuera de la disponibilidad configurada.'}, status=400)
+
+        citas = Cita.objects.filter(
+            veterinario_id=veterinario_id,
+            fecha=fecha_cita,
+            estado__in=['pendiente', 'confirmada', 'en_curso']
+        )
+
+        for cita in citas:
+            c_start = cita.start_block if cita.start_block is not None else time_to_block_index(cita.hora_inicio)
+            c_end = cita.end_block if cita.end_block is not None else time_to_block_index(cita.hora_fin)
+            if start_block < c_end and end_block > c_start:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Bloques ocupados por otra cita {cita.hora_inicio.strftime("%H:%M")} - {cita.hora_fin.strftime("%H:%M")}.',
+                }, status=400)
+
+        cita = Cita(
+            paciente_id=paciente_id,
+            veterinario_id=veterinario_id,
+            servicio_id=servicio_id,
+            fecha=fecha_cita,
+            hora_inicio=hora_inicio,
+            start_block=start_block,
+            end_block=end_block,
+            tipo=data.get('tipo', 'consulta'),
+            estado=data.get('estado', 'pendiente'),
+            motivo=data.get('motivo', ''),
+            notas=data.get('notas', ''),
+        )
+        cita.save()
+
+        return JsonResponse({
+            'success': True,
+            'cita_id': cita.id,
+            'hora_fin': cita.hora_fin.strftime('%H:%M') if cita.hora_fin else None,
+            'start_block': cita.start_block,
+            'end_block': cita.end_block,
+            'message': 'Cita creada exitosamente.'
+        })
+
+    except ValidationError as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 

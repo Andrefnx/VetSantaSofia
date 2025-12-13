@@ -1,0 +1,476 @@
+/* =============================
+   AGENDA POR BLOQUES - 15 MIN
+============================= */
+
+let agendaState = {
+    veterinarioId: null,
+    fecha: null,
+    servicioId: null,
+    pacienteId: null,
+    bloques: [],
+    bloquesRequeridos: 1,
+    bloqueSeleccionado: null
+};
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', function() {
+    inicializarControles();
+    inicializarBuscadorPacientes();
+    inicializarTabs();
+    
+    // Setear fecha actual
+    const hoy = new Date().toISOString().split('T')[0];
+    document.getElementById('fechaAgenda').value = hoy;
+});
+
+function inicializarControles() {
+    // Veterinario
+    document.getElementById('veterinarioSelect').addEventListener('change', function() {
+        agendaState.veterinarioId = this.value;
+        validarYHabilitarCargar();
+    });
+    
+    // Fecha
+    document.getElementById('fechaAgenda').addEventListener('change', function() {
+        agendaState.fecha = this.value;
+        validarYHabilitarCargar();
+    });
+    
+    // Servicio
+    document.getElementById('servicioSelect').addEventListener('change', function() {
+        agendaState.servicioId = this.value;
+        const option = this.options[this.selectedIndex];
+        const duracion = parseInt(option.dataset.duracion) || 15;
+        agendaState.bloquesRequeridos = Math.ceil(duracion / 15);
+        
+        document.getElementById('bloques-requeridos').textContent = 
+            `Requiere ${agendaState.bloquesRequeridos} bloques de 15 min`;
+    });
+    
+    // Paciente
+    document.getElementById('pacienteSelect').addEventListener('change', function() {
+        agendaState.pacienteId = this.value;
+    });
+    
+    // Botón cargar
+    document.getElementById('btnCargarBloques').addEventListener('click', cargarAgendaBloques);
+}
+
+function validarYHabilitarCargar() {
+    const btn = document.getElementById('btnCargarBloques');
+    if (agendaState.veterinarioId && agendaState.fecha) {
+        btn.disabled = false;
+    } else {
+        btn.disabled = true;
+    }
+}
+
+function inicializarBuscadorPacientes() {
+    const input = document.getElementById('buscarPaciente');
+    const select = document.getElementById('pacienteSelect');
+    
+    input.addEventListener('input', function() {
+        const busqueda = this.value.toLowerCase();
+        const opciones = select.querySelectorAll('option');
+        
+        opciones.forEach(opt => {
+            if (opt.value === '') return;
+            const nombre = opt.dataset.nombre || '';
+            const propietario = opt.dataset.propietario || '';
+            
+            if (nombre.includes(busqueda) || propietario.includes(busqueda)) {
+                opt.style.display = '';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+    });
+}
+
+function inicializarTabs() {
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const tabId = this.getAttribute('data-tab');
+            
+            // Remover active
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Activar seleccionado
+            this.classList.add('active');
+            const tabContent = document.getElementById(tabId);
+            if (tabContent) {
+                tabContent.style.display = 'block';
+            }
+        });
+    });
+}
+
+async function cargarAgendaBloques() {
+    if (!agendaState.veterinarioId || !agendaState.fecha) {
+        mostrarMensaje('Seleccione veterinario y fecha', 'warning');
+        return;
+    }
+    
+    const [year, month, day] = agendaState.fecha.split('-');
+    const url = `/agenda/bloques/${agendaState.veterinarioId}/${year}/${month}/${day}/`;
+    
+    mostrarEstadoCarga('Cargando agenda...');
+    
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.success) {
+            agendaState.bloques = data.blocks;
+            renderizarBloques(data);
+        } else {
+            mostrarMensajeError(data.error || 'Error al cargar agenda');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarMensajeError('Error de conexión al cargar agenda');
+    }
+}
+
+function renderizarBloques(data) {
+    const container = document.getElementById('agendaBloques');
+    const titulo = document.getElementById('agendaTitulo');
+    const estado = document.getElementById('agendaEstado');
+    
+    titulo.innerHTML = `<i class="fas fa-calendar-alt"></i> ${data.veterinario} - ${formatearFecha(agendaState.fecha)}`;
+    
+    if (!data.trabaja) {
+        estado.innerHTML = `
+            <i class="fas fa-calendar-times fa-3x mb-3 text-danger"></i>
+            <p class="text-danger"><strong>El veterinario no trabaja este día</strong></p>
+        `;
+        estado.style.display = 'block';
+        container.style.display = 'none';
+        return;
+    }
+    
+    estado.style.display = 'none';
+    container.style.display = 'grid';
+    container.innerHTML = '';
+    
+    // Renderizar por hora (24 horas x 4 bloques)
+    for (let hora = 0; hora < 24; hora++) {
+        // Label de hora
+        const hourLabel = document.createElement('div');
+        hourLabel.className = 'agenda-hour-label';
+        hourLabel.textContent = `${String(hora).padStart(2, '0')}:00`;
+        container.appendChild(hourLabel);
+        
+        // 4 bloques de 15 min
+        for (let cuarto = 0; cuarto < 4; cuarto++) {
+            const blockIndex = hora * 4 + cuarto;
+            const bloque = data.blocks[blockIndex];
+            
+            const blockEl = document.createElement('div');
+            blockEl.className = `agenda-block is-${bloque.status}`;
+            blockEl.dataset.blockIndex = blockIndex;
+            blockEl.dataset.startTime = bloque.start_time;
+            
+            blockEl.innerHTML = `
+                <span class="agenda-block-time">${bloque.start_time}</span>
+                ${bloque.label ? `<span class="agenda-block-label">${bloque.label}</span>` : ''}
+            `;
+            
+            if (bloque.status === 'available') {
+                blockEl.addEventListener('click', () => seleccionarBloque(blockIndex));
+                blockEl.addEventListener('mouseenter', () => previsualizarBloques(blockIndex));
+                blockEl.addEventListener('mouseleave', limpiarPrevisualizacion);
+            }
+            
+            container.appendChild(blockEl);
+        }
+    }
+}
+
+function previsualizarBloques(startIndex) {
+    if (!agendaState.servicioId) return;
+    
+    limpiarPrevisualizacion();
+    
+    const endIndex = startIndex + agendaState.bloquesRequeridos;
+    let todosDisponibles = true;
+    
+    for (let i = startIndex; i < endIndex && i < 96; i++) {
+        const bloque = agendaState.bloques[i];
+        if (bloque.status !== 'available') {
+            todosDisponibles = false;
+            break;
+        }
+    }
+    
+    if (todosDisponibles) {
+        for (let i = startIndex; i < endIndex && i < 96; i++) {
+            const blockEl = document.querySelector(`[data-block-index="${i}"]`);
+            if (blockEl) {
+                blockEl.classList.add('is-hover-fit');
+            }
+        }
+    }
+}
+
+function limpiarPrevisualizacion() {
+    document.querySelectorAll('.is-hover-fit').forEach(el => {
+        el.classList.remove('is-hover-fit');
+    });
+}
+
+function seleccionarBloque(startIndex) {
+    if (!agendaState.servicioId) {
+        mostrarMensaje('Seleccione un servicio primero', 'warning');
+        return;
+    }
+    
+    if (!agendaState.pacienteId) {
+        mostrarMensaje('Seleccione un paciente primero', 'warning');
+        return;
+    }
+    
+    const endIndex = startIndex + agendaState.bloquesRequeridos;
+    
+    // Validar que todos los bloques estén disponibles
+    for (let i = startIndex; i < endIndex && i < 96; i++) {
+        const bloque = agendaState.bloques[i];
+        if (bloque.status !== 'available') {
+            mostrarMensaje('No hay suficientes bloques disponibles consecutivos', 'danger');
+            return;
+        }
+    }
+    
+    agendaState.bloqueSeleccionado = startIndex;
+    
+    // Marcar seleccionados
+    document.querySelectorAll('.is-selected').forEach(el => el.classList.remove('is-selected'));
+    for (let i = startIndex; i < endIndex && i < 96; i++) {
+        const blockEl = document.querySelector(`[data-block-index="${i}"]`);
+        if (blockEl) {
+            blockEl.classList.add('is-selected');
+        }
+    }
+    
+    // Abrir modal de confirmación
+    abrirModalConfirmarCita(startIndex, endIndex);
+}
+
+function abrirModalConfirmarCita(startBlock, endBlock) {
+    const modal = document.getElementById('confirmarCitaModal');
+    
+    const startBloque = agendaState.bloques[startBlock];
+    const endBloque = agendaState.bloques[endBlock - 1];
+    
+    const pacienteSelect = document.getElementById('pacienteSelect');
+    const pacienteNombre = pacienteSelect.options[pacienteSelect.selectedIndex].text;
+    
+    const veterinarioSelect = document.getElementById('veterinarioSelect');
+    const veterinarioNombre = veterinarioSelect.options[veterinarioSelect.selectedIndex].text;
+    
+    const servicioSelect = document.getElementById('servicioSelect');
+    const servicioNombre = servicioSelect.options[servicioSelect.selectedIndex].text;
+    
+    document.getElementById('confirmPaciente').textContent = pacienteNombre;
+    document.getElementById('confirmVeterinario').textContent = veterinarioNombre;
+    document.getElementById('confirmServicio').textContent = servicioNombre;
+    document.getElementById('confirmFecha').textContent = formatearFecha(agendaState.fecha);
+    document.getElementById('confirmHorario').textContent = `${startBloque.start_time} - ${endBloque.end_time}`;
+    
+    modal.classList.add('active');
+}
+
+function cerrarModalConfirmarCita() {
+    const modal = document.getElementById('confirmarCitaModal');
+    modal.classList.remove('active');
+    
+    // Limpiar selección
+    document.querySelectorAll('.is-selected').forEach(el => el.classList.remove('is-selected'));
+    agendaState.bloqueSeleccionado = null;
+}
+
+async function confirmarAgendarCita() {
+    const motivo = document.getElementById('confirmMotivo').value.trim();
+    if (!motivo) {
+        mostrarMensaje('El motivo de la consulta es obligatorio', 'warning');
+        return;
+    }
+    
+    const startBloque = agendaState.bloques[agendaState.bloqueSeleccionado];
+    
+    const payload = {
+        paciente_id: parseInt(agendaState.pacienteId),
+        servicio_id: parseInt(agendaState.servicioId),
+        veterinario_id: parseInt(agendaState.veterinarioId),
+        fecha: agendaState.fecha,
+        hora_inicio: startBloque.start_time,
+        motivo: motivo,
+        notas: document.getElementById('confirmNotas').value.trim(),
+        tipo: 'consulta',
+        estado: 'pendiente'
+    };
+    
+    try {
+        const response = await fetch('/agenda/citas/agendar-por-bloques/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            mostrarMensaje('Cita agendada exitosamente', 'success');
+            cerrarModalConfirmarCita();
+            cargarAgendaBloques(); // Recargar
+        } else {
+            mostrarMensaje(data.error || 'Error al agendar cita', 'danger');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarMensaje('Error de conexión al agendar cita', 'danger');
+    }
+}
+
+// Modal de disponibilidad
+function abrirModalDisponibilidad() {
+    const modal = document.getElementById('disponibilidadModal');
+    modal.classList.add('active');
+    document.getElementById('rangosList').innerHTML = '';
+}
+
+function cerrarModalDisponibilidad() {
+    const modal = document.getElementById('disponibilidadModal');
+    modal.classList.remove('active');
+}
+
+let rangoCounter = 0;
+
+function agregarRango() {
+    const container = document.getElementById('rangosList');
+    const rangoDiv = document.createElement('div');
+    rangoDiv.className = 'rango-item';
+    rangoDiv.dataset.rangoId = rangoCounter++;
+    
+    rangoDiv.innerHTML = `
+        <input type="time" class="form-control rango-inicio" step="900" required>
+        <span>→</span>
+        <input type="time" class="form-control rango-fin" step="900" required>
+        <button type="button" class="vet-btn vet-btn-danger" onclick="eliminarRango(this)">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    
+    container.appendChild(rangoDiv);
+}
+
+function eliminarRango(btn) {
+    btn.closest('.rango-item').remove();
+}
+
+async function guardarDisponibilidadDia() {
+    const veterinarioId = document.getElementById('dispVeterinario').value;
+    const fecha = document.getElementById('dispFecha').value;
+    const trabaja = document.getElementById('dispTrabaja').checked;
+    
+    if (!veterinarioId || !fecha) {
+        mostrarMensaje('Complete veterinario y fecha', 'warning');
+        return;
+    }
+    
+    const rangos = [];
+    if (trabaja) {
+        const rangoItems = document.querySelectorAll('.rango-item');
+        for (const item of rangoItems) {
+            const inicio = item.querySelector('.rango-inicio').value;
+            const fin = item.querySelector('.rango-fin').value;
+            
+            if (!inicio || !fin) {
+                mostrarMensaje('Complete todos los rangos horarios', 'warning');
+                return;
+            }
+            
+            const startBlock = timeToBlock(inicio);
+            const endBlock = timeToBlock(fin);
+            
+            rangos.push({ start_block: startBlock, end_block: endBlock });
+        }
+    }
+    
+    const payload = {
+        veterinario_id: parseInt(veterinarioId),
+        fecha: fecha,
+        trabaja: trabaja,
+        rangos: rangos
+    };
+    
+    try {
+        // Aquí falta crear el endpoint para guardar DisponibilidadBloquesDia
+        // Por ahora mostramos mensaje
+        console.log('Guardar disponibilidad:', payload);
+        mostrarMensaje('Funcionalidad en desarrollo: guardar disponibilidad por bloques', 'info');
+        cerrarModalDisponibilidad();
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarMensaje('Error al guardar disponibilidad', 'danger');
+    }
+}
+
+function timeToBlock(timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return Math.floor((hours * 60 + minutes) / 15);
+}
+
+// Utilidades
+function formatearFecha(fechaStr) {
+    const [year, month, day] = fechaStr.split('-');
+    const fecha = new Date(year, month - 1, day);
+    const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    return fecha.toLocaleDateString('es-ES', opciones);
+}
+
+function mostrarEstadoCarga(mensaje) {
+    const estado = document.getElementById('agendaEstado');
+    estado.innerHTML = `
+        <i class="fas fa-spinner fa-spin fa-3x mb-3 text-primary"></i>
+        <p class="text-muted">${mensaje}</p>
+    `;
+    estado.style.display = 'block';
+    document.getElementById('agendaBloques').style.display = 'none';
+}
+
+function mostrarMensajeError(mensaje) {
+    const estado = document.getElementById('agendaEstado');
+    estado.innerHTML = `
+        <i class="fas fa-exclamation-triangle fa-3x mb-3 text-danger"></i>
+        <p class="text-danger"><strong>${mensaje}</strong></p>
+    `;
+    estado.style.display = 'block';
+    document.getElementById('agendaBloques').style.display = 'none';
+}
+
+function mostrarMensaje(mensaje, tipo) {
+    // Usar sistema de alertas del proyecto si existe, o alert simple
+    alert(mensaje);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}

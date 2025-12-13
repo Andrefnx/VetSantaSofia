@@ -24,6 +24,10 @@ urlpatterns = [
     
     # Slots disponibles para agendamiento
     path('slots/<int:veterinario_id>/<int:year>/<int:month>/<int:day>/', views.slots_disponibles, name='slots_disponibles'),
+
+    # Agenda por bloques y agendamiento rápido por bloque
+    path('bloques/<int:veterinario_id>/<int:year>/<int:month>/<int:day>/', views.agenda_bloques_dia, name='agenda_bloques_dia'),
+    path('citas/agendar-por-bloques/', views.agendar_cita_por_bloques, name='agendar_cita_por_bloques'),
     
     # Horarios fijos
     path('horarios-fijos/<int:veterinario_id>/', views.horarios_fijos, name='horarios_fijos'),

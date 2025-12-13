@@ -3,351 +3,260 @@
 
 {% block title %}Agenda Veterinaria{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/agenda/agenda_bloques.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="page-header">
-    <h3 class="fw-bold mb-3">Agenda Veterinaria</h3>
-    <ul class="breadcrumbs mb-3">
-        <li class="nav-home">
-            <a href="{% url 'dashboard:dashboard' %}">
-                <i class="icon-home"></i>
-            </a>
-        </li>
-        <li class="separator">
-            <i class="icon-arrow-right"></i>
-        </li>
-        <li class="nav-item">
-            <a href="#">Agenda</a>
-        </li>
-    </ul>
-</div>
-
-<!-- Alerta compacta de disponibilidad -->
-<!-- Botón de disponibilidad integrado -->
-<div class="row mb-3">
-    <div class="col-12">
-        <button type="button" class="btn btn-label-success btn-round btn-sm" onclick="abrirModalDisponibilidad()">
-            <span class="btn-label">
+<div class="container-fluid p-0">
+    <!-- Encabezado -->
+    <div class="p-1-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-calendar-alt"></i> Agenda Veterinaria</h1>
+            <button type="button" class="vet-btn vet-btn-success" onclick="abrirModalDisponibilidad()">
                 <i class="fa fa-cog"></i>
-            </span>
-            Configurar Disponibilidad
-        </button>
-    </div>
-</div>
-
-<!-- Layout: Calendario 50% + Agenda del Día 50% -->
-<div class="row">
-    <!-- CALENDARIO -->
-    <div class="col-lg-6">
-        <div class="card card-round">
-            <div class="card-header">
-                <div class="card-head-row">
-                    <div class="card-title">
-                        <i class="fas fa-calendar-alt me-2"></i>
-                        <span id="currentMonth"></span>
-                    </div>
-                    <div class="card-tools">
-                        <button id="prevMonth" class="btn btn-icon btn-round btn-sm me-1">
-                            <i class="fa fa-chevron-left"></i>
-                        </button>
-                        <button id="todayBtn" class="btn btn-sm btn-primary me-1">
-                            Hoy
-                        </button>
-                        <button id="nextMonth" class="btn btn-icon btn-round btn-sm">
-                            <i class="fa fa-chevron-right"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body p-0">
-                <div id="calendar" class="agenda-calendar vet-agenda-calendar"></div>
-            </div>
+                Configurar Disponibilidad
+            </button>
         </div>
     </div>
 
-    <!-- AGENDA DEL DÍA -->
-    <div class="col-lg-6">
-        <div class="card card-round">
-            <div class="card-header">
-                <div class="card-head-row">
-                    <div class="card-title">
-                        <i class="fas fa-calendar-check me-2"></i>
-                        Agenda del Día
+    <!-- Layout: Selector + Bloques de Agenda -->
+    <div class="p-1-5">
+        <div class="row">
+        <!-- Panel de Filtros -->
+        <div class="col-md-3">
+            <div class="section">
+                <h3>Filtros</h3>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Fecha:</strong></label>
+                    <input type="date" id="fechaAgenda" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Veterinario:</strong></label>
+                    <select id="veterinarioSelect" class="form-select">
+                        <option value="">Seleccione veterinario</option>
+                        {% for vet in veterinarios %}
+                        <option value="{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Servicio:</strong></label>
+                    <select id="servicioSelect" class="form-select">
+                        <option value="">Seleccione servicio</option>
+                        {% regroup servicios by categoria as servicios_agrupados %}
+                        {% for grupo in servicios_agrupados %}
+                        <optgroup label="{{ grupo.grouper }}">
+                            {% for servicio in grupo.list %}
+                            <option value="{{ servicio.idServicio }}" 
+                                    data-duracion="{{ servicio.duracion }}"
+                                    data-precio="{{ servicio.precio }}">
+                                {{ servicio.nombre }} ({{ servicio.duracion }} min)
+                            </option>
+                            {% endfor %}
+                        </optgroup>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted" id="bloques-requeridos"></small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Paciente:</strong></label>
+                    <div class="vet-search mb-2">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="buscarPaciente" placeholder="Buscar paciente..." />
                     </div>
-                    <div class="card-tools">
-                        <button class="btn btn-label-success btn-round btn-sm" onclick="abrirModalCita()">
-                            <span class="btn-label">
-                                <i class="fa fa-plus"></i>
-                            </span>
-                            Nueva Cita
-                        </button>
+                    <select id="pacienteSelect" class="form-select" size="8">
+                        <option value="">Seleccione paciente</option>
+                        {% for paciente in pacientes %}
+                        <option value="{{ paciente.id }}" 
+                                data-nombre="{{ paciente.nombre|lower }}"
+                                data-propietario="{{ paciente.propietario.nombre_completo|lower }}">
+                            {{ paciente.nombre }} - {{ paciente.propietario.nombre_completo }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Leyenda -->
+            <div class="section mt-3">
+                <h4>Leyenda</h4>
+                <div class="d-flex flex-column gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="agenda-block-legend is-available"></span>
+                        <small>Disponible</small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="agenda-block-legend is-occupied"></span>
+                        <small>Ocupado</small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="agenda-block-legend is-unavailable"></span>
+                        <small>No disponible</small>
                     </div>
                 </div>
             </div>
-            <div class="card-body">
-                <div id="dayDetails">
-                    <ul class="nav nav-pills nav-secondary mb-3" id="veterinariosTab" role="tablist"></ul>
-                    <div class="tab-content" id="veterinariosTabContent"></div>
+        </div>
+
+        <!-- Bloques de Agenda -->
+        <div class="col-md-9">
+            <div class="section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 id="agendaTitulo">Seleccione veterinario y fecha</h3>
+                    <button class="vet-btn vet-btn-primary" id="btnCargarBloques" disabled>
+                        <i class="fas fa-sync"></i>
+                        Cargar Agenda
+                    </button>
                 </div>
-                <div id="emptyDayMessage" class="text-center text-muted py-5">
-                    <i class="fas fa-calendar-day fa-3x mb-3"></i>
-                    <p class="mb-0">Selecciona un día en el calendario para ver las citas</p>
+                
+                <!-- Estado de carga -->
+                <div id="agendaEstado" class="text-center py-5">
+                    <i class="fas fa-info-circle fa-3x mb-3 text-muted"></i>
+                    <p class="text-muted">Seleccione un veterinario y una fecha para ver la agenda</p>
+                </div>
+
+                <!-- Grid de bloques -->
+                <div id="agendaBloques" class="agenda-bloques-grid" style="display: none;">
+                    <!-- Se llena dinámicamente con JS -->
                 </div>
             </div>
         </div>
     </div>
+    </div>
 </div>
-
-<!-- Datos para JavaScript -->
-<script>
-    const VETERINARIOS = JSON.parse('{{ veterinarios_json|escapejs }}');
-    const SERVICIOS = JSON.parse('{{ servicios_json|escapejs }}');
-</script>
 
 {% endblock %}
 
 {% block modals %}
 
-<!-- Modal para agendar/editar cita -->
-<div class="modal fade" id="citaModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="citaModalTitle">Nueva Cita</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<!-- Modal confirmación de cita (usando estándares del proyecto) -->
+<div id="confirmarCitaModal" class="modal-overlay">
+    <div class="ui-modal ui-modal-sm" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3><i class="fas fa-calendar-check"></i> Confirmar Cita</h3>
+            <button class="modal-close" onclick="cerrarModalConfirmarCita()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-content">
+                <div class="info-section" style="background: var(--bg-light); padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong>Paciente:</strong> <span id="confirmPaciente">-</span>
+                    </div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong>Veterinario:</strong> <span id="confirmVeterinario">-</span>
+                    </div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong>Servicio:</strong> <span id="confirmServicio">-</span>
+                    </div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong>Fecha:</strong> <span id="confirmFecha">-</span>
+                    </div>
+                    <div>
+                        <strong>Horario:</strong> <span id="confirmHorario">-</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label><strong>Motivo de la consulta:</strong></label>
+                    <textarea id="confirmMotivo" rows="3" placeholder="Describa el motivo..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label><strong>Notas adicionales:</strong></label>
+                    <textarea id="confirmNotas" rows="2" placeholder="Notas opcionales..."></textarea>
+                </div>
             </div>
-            <div class="modal-body">
-                <form id="citaForm">
-                    <input type="hidden" id="citaId">
-                    <input type="hidden" id="citaFecha">
-                    <input type="hidden" id="citaHora">
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Paciente *</label>
-                            <div class="input-group mb-2">
-                                <span class="input-group-text"><i class="fas fa-search"></i></span>
-                                <input type="text" id="buscarPaciente" class="form-control" 
-                                       placeholder="Buscar por nombre de mascota o propietario...">
-                            </div>
-                            <select id="citaPaciente" class="form-select" required size="6">
-                                <option value="">Seleccione un paciente</option>
-                                {% for paciente in pacientes %}
-                                <option value="{{ paciente.id }}" 
-                                        data-especie="{{ paciente.especie }}"
-                                        data-propietario="{{ paciente.propietario.nombre_completo }}"
-                                        data-nombre="{{ paciente.nombre|lower }}">
-                                    {{ paciente.nombre }} ({{ paciente.get_especie_display }}) - {{ paciente.propietario.nombre_completo }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Veterinario *</label>
-                            <select id="citaVeterinario" class="form-select" required>
-                                <option value="">Seleccione un veterinario</option>
-                                {% for vet in veterinarios %}
-                                <option value="{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Servicio *</label>
-                            <select id="citaServicio" class="form-select" required>
-                                <option value="">Seleccione un servicio</option>
-                                {% regroup servicios by categoria as servicios_agrupados %}
-                                {% for grupo in servicios_agrupados %}
-                                <optgroup label="{{ grupo.grouper }}">
-                                    {% for servicio in grupo.list %}
-                                    <option value="{{ servicio.idServicio }}" 
-                                            data-duracion="{{ servicio.duracion }}"
-                                            data-precio="{{ servicio.precio }}"
-                                            data-categoria="{{ servicio.categoria }}">
-                                        {{ servicio.nombre }} ({{ servicio.duracion }} min - ${{ servicio.precio }})
-                                    </option>
-                                    {% endfor %}
-                                </optgroup>
-                                {% endfor %}
-                            </select>
-                            <small class="text-muted" id="servicioDuracion"></small>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Tipo de Cita *</label>
-                            <select id="citaTipo" class="form-select" required>
-                                <option value="consulta">Consulta General</option>
-                                <option value="vacunacion">Vacunación</option>
-                                <option value="cirugia">Cirugía</option>
-                                <option value="control">Control</option>
-                                <option value="emergencia">Emergencia</option>
-                                <option value="peluqueria">Peluquería</option>
-                                <option value="otro">Otro</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Hora Inicio *</label>
-                            <input type="time" id="citaHoraInicio" class="form-control" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Hora Fin</label>
-                            <input type="time" id="citaHoraFin" class="form-control">
-                            <small class="text-muted">Se calcula automáticamente según el servicio</small>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Estado</label>
-                        <select id="citaEstado" class="form-select">
-                            <option value="pendiente">Pendiente</option>
-                            <option value="confirmada">Confirmada</option>
-                            <option value="en_curso">En Curso</option>
-                            <option value="completada">Completada</option>
-                            <option value="cancelada">Cancelada</option>
-                            <option value="no_asistio">No Asistió</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Motivo *</label>
-                        <textarea id="citaMotivo" class="form-control" rows="2" required></textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Notas</label>
-                        <textarea id="citaNotas" class="form-control" rows="2"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="guardarCita">Guardar</button>
-            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="vet-btn vet-btn-grey" onclick="cerrarModalConfirmarCita()">
+                <i class="fas fa-times"></i>
+                Cancelar
+            </button>
+            <button class="vet-btn vet-btn-primary" onclick="confirmarAgendarCita()">
+                <i class="fas fa-check"></i>
+                Confirmar Cita
+            </button>
         </div>
     </div>
 </div>
 
-<!-- Modal para disponibilidad -->
-<div class="modal fade" id="disponibilidadModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Configurar Disponibilidad</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<!-- Modal para disponibilidad diaria por bloques -->
+<div id="disponibilidadModal" class="modal-overlay">
+    <div class="ui-modal ui-modal-lg" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3><i class="fas fa-cog"></i> Configurar Disponibilidad</h3>
+            <button class="modal-close" onclick="cerrarModalDisponibilidad()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <!-- Tabs del proyecto -->
+            <div class="tabs-group">
+                <button class="tab-button active" data-tab="tab-disponibilidad-dia">
+                    <i class="fas fa-calendar-day"></i>
+                    Disponibilidad Diaria
+                </button>
+                <button class="tab-button" data-tab="tab-horario-semanal">
+                    <i class="fas fa-calendar-week"></i>
+                    Horario Semanal
+                </button>
             </div>
-            <div class="modal-body">
-                <ul class="nav nav-tabs mb-3" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="horarioFijoTab" data-bs-toggle="tab" 
-                                data-bs-target="#horarioFijo" type="button">
-                            <i class="fas fa-calendar-week"></i> Horario Fijo Semanal
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="excepcionTab" data-bs-toggle="tab" 
-                                data-bs-target="#excepcion" type="button">
-                            <i class="fas fa-calendar-times"></i> Excepciones
-                        </button>
-                    </li>
-                </ul>
-                
-                <div class="tab-content">
-                    <!-- Horario Fijo Semanal -->
-                    <div class="tab-pane fade show active" id="horarioFijo">
-                        <form id="horarioFijoForm">
-                            <input type="hidden" id="horarioFijoId">
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Veterinario *</label>
-                                <select id="horarioVeterinario" class="form-select" required>
-                                    {% for vet in veterinarios %}
-                                    <option value="{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Día de la Semana *</label>
-                                <select id="horarioDiaSemana" class="form-select" required>
-                                    <option value="0">Lunes</option>
-                                    <option value="1">Martes</option>
-                                    <option value="2">Miércoles</option>
-                                    <option value="3">Jueves</option>
-                                    <option value="4">Viernes</option>
-                                    <option value="5">Sábado</option>
-                                    <option value="6">Domingo</option>
-                                </select>
-                            </div>
-                            
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Hora Inicio *</label>
-                                    <input type="time" id="horarioHoraInicio" class="form-control" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Hora Fin *</label>
-                                    <input type="time" id="horarioHoraFin" class="form-control" required>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Notas</label>
-                                <textarea id="horarioNotas" class="form-control" rows="2"></textarea>
-                            </div>
-                            
-                            <button type="button" class="btn btn-success" id="guardarHorarioFijo">
-                                <i class="fas fa-save"></i> Guardar Horario Fijo
-                            </button>
-                        </form>
+
+            <!-- Disponibilidad Diaria por Bloques -->
+            <div class="tab-content tab-content-box" id="tab-disponibilidad-dia">
+                <h4 style="margin-bottom: 1.5rem;">Configurar Disponibilidad del Día</h4>
+                <form id="disponibilidadDiaForm">
+                    <div class="form-group">
+                        <label><strong>Veterinario *</strong></label>
+                        <select id="dispVeterinario" required>
+                            <option value="">Seleccione un veterinario</option>
+                            {% for vet in veterinarios %}
+                            <option value="{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     
-                    <!-- Excepciones -->
-                    <div class="tab-pane fade" id="excepcion">
-                        <form id="excepcionForm">
-                            <input type="hidden" id="excepcionId">
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Veterinario *</label>
-                                <select id="excepcionVeterinario" class="form-select" required>
-                                    {% for vet in veterinarios %}
-                                    <option value="{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Fecha *</label>
-                                <input type="date" id="excepcionFecha" class="form-control" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Tipo de Excepción *</label>
-                                <select id="excepcionTipo" class="form-select" required>
-                                    <option value="vacaciones">Vacaciones</option>
-                                    <option value="licencia">Licencia Médica</option>
-                                    <option value="ausencia">Ausencia</option>
-                                    <option value="disponible_extra">Disponibilidad Extra</option>
-                                </select>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Notas</label>
-                                <textarea id="excepcionNotas" class="form-control" rows="2"></textarea>
-                            </div>
-                            
-                            <button type="button" class="btn btn-warning" id="guardarExcepcion">
-                                <i class="fas fa-save"></i> Guardar Excepción
-                            </button>
-                        </form>
+                    <div class="form-group">
+                        <label><strong>Fecha *</strong></label>
+                        <input type="date" id="dispFecha" required>
                     </div>
-                </div>
+                    
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="dispTrabaja" checked>
+                        <label for="dispTrabaja"><strong>¿Trabaja este día?</strong></label>
+                    </div>
+                    
+                    <div id="rangosContainer" style="margin-top: 1.5rem;">
+                        <label style="margin-bottom: 0.5rem; display: block; font-weight: 600;">Rangos de disponibilidad</label>
+                        <div class="rangos-container" id="rangosList"></div>
+                        <button type="button" class="vet-btn" onclick="agregarRango()" style="margin-top: 10px;">
+                            <i class="fas fa-plus"></i>
+                            Añadir Rango
+                        </button>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="vet-btn vet-btn-primary" onclick="guardarDisponibilidadDia()">
+                            <i class="fas fa-save"></i>
+                            Guardar Disponibilidad
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+
+            <!-- Horario Semanal (legacy) -->
+            <div class="tab-content tab-content-box d-none-toggle" id="tab-horario-semanal">
+                <h4>Horario Fijo Semanal</h4>
+                <p class="text-muted">En desarrollo: permite definir horarios recurrentes por día de la semana.</p>
             </div>
+        </div>
+        <div class="modal-footer">
+            <button class="vet-btn vet-btn-grey" onclick="cerrarModalDisponibilidad()">
+                <i class="fas fa-times"></i>
+                Cerrar
+            </button>
         </div>
     </div>
 </div>
@@ -355,5 +264,9 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'agenda/js/agenda-sistema.js' %}"></script>
+<script>
+    const VETERINARIOS = {{ veterinarios_json|safe }};
+    const SERVICIOS = {{ servicios_json|safe }};
+</script>
+<script src="{% static 'agenda/js/agenda_bloques.js' %}"></script>
 {% endblock %}

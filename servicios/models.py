@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from inventario.models import Insumo
 
 # Create your models here.
@@ -54,6 +55,18 @@ class Servicio(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    def clean(self):
+        super().clean()
+        if self.duracion <= 0:
+            raise ValidationError('La duración debe ser mayor a 0 minutos.')
+        if self.duracion % 15 != 0:
+            raise ValidationError('La duración debe ser múltiplo de 15 minutos.')
+
+    @property
+    def blocks_required(self) -> int:
+        """Cantidad de bloques de 15 min necesarios para este servicio."""
+        return (self.duracion + 14) // 15 if self.duracion else 1
 
 
 class ServicioInsumo(models.Model):
