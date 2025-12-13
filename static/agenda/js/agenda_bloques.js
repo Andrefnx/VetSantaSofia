@@ -930,7 +930,11 @@ function renderizarBloquesVeterinario(vetId, data) {
     // Hacer scroll automático al primer bloque actual/futuro
     if (primerBloqueActual) {
         setTimeout(() => {
-            primerBloqueActual.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const bloqueTop = primerBloqueActual.offsetTop;
+            const containerHeight = container.clientHeight;
+            const bloqueHeight = primerBloqueActual.clientHeight;
+            const scrollPosition = bloqueTop - (containerHeight / 2) + (bloqueHeight / 2);
+            container.scrollTo({ top: scrollPosition, behavior: 'smooth' });
         }, 100);
     }
 }

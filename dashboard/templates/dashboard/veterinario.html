@@ -177,7 +177,7 @@
                                     <td>{{ cita.paciente.propietario.nombre_completo }}</td>
                                     <td>
                                         <span class="badge badge-secondary">
-                                            {{ cita.get_tipo_display }}
+                                            {% if cita.servicio %}{{ cita.servicio.nombre }}{% else %}{{ cita.get_tipo_display }}{% endif %}
                                         </span>
                                     </td>
                                     <td>
