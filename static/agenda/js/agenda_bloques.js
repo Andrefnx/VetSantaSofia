@@ -14,6 +14,12 @@ let agendaState = {
 
 let citaActualEnDetalle = null; // Rastrear cita en modal de detalle
 
+let paginacionVets = {
+    offset: 0,
+    limite: 2,
+    todosLosVets: []
+};
+
 function toggleModal(modalId, show = true) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
@@ -60,6 +66,10 @@ function inicializarControles() {
     
     // Botón cargar
     document.getElementById('btnCargarBloques').addEventListener('click', cargarTodasLasAgendas);
+    
+    // Botones de navegación entre veterinarios
+    document.getElementById('btnNavIzq').addEventListener('click', () => navegarVets(-1));
+    document.getElementById('btnNavDer').addEventListener('click', () => navegarVets(1));
 }
 
 function inicializarBuscadorPacientes() {
@@ -283,34 +293,68 @@ async function cargarTodasLasAgendas() {
     const gridsVeterinarios = contenedorAgendas.querySelectorAll('[id^="agendaBloques"]');
     
     // Extraer IDs de veterinarios de los atributos id
-    const veterinariosIds = Array.from(gridsVeterinarios).map(grid => {
+    const todosVets = Array.from(gridsVeterinarios).map(grid => {
         const match = grid.id.match(/agendaBloques(\d+)/);
         return match ? match[1] : null;
     }).filter(id => id !== null);
     
+    // Ocultar todos los vets primero
+    todosVets.forEach(vetId => {
+        const seccion = document.getElementById(`agendaBloques${vetId}`).closest('.flex-fill');
+        if (seccion) seccion.style.display = 'none';
+    });
+    
     try {
-        // Cargar todas las agendas en paralelo
-        const promesas = veterinariosIds.map(vetId => 
+        // Cargar TODAS las agendas primero para saber quién trabaja
+        const promesasTodos = todosVets.map(vetId => 
             fetch(`/agenda/bloques/${vetId}/${year}/${month}/${day}/`)
                 .then(response => response.json())
                 .then(data => ({ vetId, data }))
         );
         
-        const resultados = await Promise.all(promesas);
+        const todosDatos = await Promise.all(promesasTodos);
         
-        // Renderizar cada agenda en su contenedor
-        let algunoTrabaja = false;
-        resultados.forEach(({ vetId, data }) => {
-            renderizarBloquesVeterinario(vetId, data);
-            if (data.trabaja) algunoTrabaja = true;
+        // Filtrar solo los que trabajan
+        const vetsTrabajando = todosDatos.filter(({ data }) => data.trabaja);
+        
+        // Si nadie trabaja, mostrar mensaje
+        if (vetsTrabajando.length === 0) {
+            document.getElementById('agendaEstado').style.display = 'none';
+            document.getElementById('agendaSinVets').style.display = 'block';
+            document.getElementById('contenedorAgendas').style.display = 'none';
+            document.getElementById('agendaLeyenda').style.display = 'none';
+            document.getElementById('btnNavIzq').style.display = 'none';
+            document.getElementById('btnNavDer').style.display = 'none';
+            return;
+        }
+        
+        // Guardar los vets que trabajan e inicializar paginación
+        paginacionVets.todosLosVets = vetsTrabajando.map(v => v.vetId);
+        if (paginacionVets.offset >= paginacionVets.todosLosVets.length) {
+            paginacionVets.offset = Math.max(0, paginacionVets.todosLosVets.length - paginacionVets.limite);
+        }
+        
+        // Determinar qué veterinarios mostrar (ventana deslizante de los que trabajan)
+        const vetsAMostrar = paginacionVets.todosLosVets.slice(
+            paginacionVets.offset, 
+            paginacionVets.offset + paginacionVets.limite
+        );
+        
+        // Renderizar solo los vets a mostrar
+        vetsTrabajando.forEach(({ vetId, data }) => {
+            if (vetsAMostrar.includes(vetId)) {
+                renderizarBloquesVeterinario(vetId, data);
+            }
         });
         
         // Ocultar estado de carga y mostrar agendas
         document.getElementById('agendaEstado').style.display = 'none';
+        document.getElementById('agendaSinVets').style.display = 'none';
         document.getElementById('contenedorAgendas').style.display = 'flex';
+        document.getElementById('agendaLeyenda').style.display = 'block';
         
-        // Mostrar leyenda si al menos uno trabaja
-        document.getElementById('agendaLeyenda').style.display = algunoTrabaja ? 'block' : 'none';
+        // Actualizar controles de navegación
+        actualizarControlesNavegacion();
         
     } catch (error) {
         console.error('Error:', error);
@@ -1125,4 +1169,37 @@ function limpiarDestacadoCita() {
         el.style.opacity = '1';
         el.style.boxShadow = '';
     });
+}
+
+function navegarVets(direccion) {
+    const nuevoOffset = paginacionVets.offset + direccion;
+    const maxOffset = Math.max(0, paginacionVets.todosLosVets.length - paginacionVets.limite);
+    
+    if (nuevoOffset < 0 || nuevoOffset > maxOffset) return;
+    
+    paginacionVets.offset = nuevoOffset;
+    cargarTodasLasAgendas();
+}
+
+function actualizarControlesNavegacion() {
+    const btnIzq = document.getElementById('btnNavIzq');
+    const btnDer = document.getElementById('btnNavDer');
+    const totalVets = paginacionVets.todosLosVets.length;
+    
+    // Mostrar botones solo si hay más de 2 vets
+    if (totalVets <= paginacionVets.limite) {
+        btnIzq.style.display = 'none';
+        btnDer.style.display = 'none';
+        return;
+    }
+    
+    btnIzq.style.display = 'inline-block';
+    btnDer.style.display = 'inline-block';
+    
+    // Deshabilitar botón izquierdo si estamos en el inicio
+    btnIzq.disabled = paginacionVets.offset === 0;
+    
+    // Deshabilitar botón derecho si estamos en el final
+    const maxOffset = Math.max(0, totalVets - paginacionVets.limite);
+    btnDer.disabled = paginacionVets.offset >= maxOffset;
 }
