@@ -53,6 +53,16 @@ def _build_day_blocks(availability: DisponibilidadBloquesDia, citas_qs):
             if 0 <= idx < 96:
                 blocks[idx]['status'] = 'occupied'
                 blocks[idx]['label'] = cita.paciente.nombre if cita.paciente_id else 'Ocupado'
+                blocks[idx]['cita_id'] = cita.id
+                blocks[idx]['paciente_id'] = cita.paciente_id
+                blocks[idx]['paciente_nombre'] = cita.paciente.nombre if cita.paciente_id else 'Sin paciente'
+                blocks[idx]['propietario_nombre'] = cita.paciente.propietario.nombre_completo if cita.paciente_id else 'Sin propietario'
+                blocks[idx]['propietario_telefono'] = cita.paciente.propietario.telefono if cita.paciente_id else ''
+                blocks[idx]['propietario_email'] = cita.paciente.propietario.email if cita.paciente_id else ''
+                blocks[idx]['propietario_id'] = cita.paciente.propietario_id if cita.paciente_id else None
+                blocks[idx]['servicio_nombre'] = cita.servicio.nombre if cita.servicio_id else 'Sin servicio'
+                blocks[idx]['hora_inicio'] = cita.hora_inicio.strftime('%H:%M') if cita.hora_inicio else ''
+                blocks[idx]['hora_fin'] = cita.hora_fin.strftime('%H:%M') if cita.hora_fin else ''
 
     return blocks
 
@@ -535,6 +545,7 @@ def agenda_bloques_dia(request, veterinario_id, year, month, day):
             'fecha': fecha.isoformat(),
             'veterinario': f"{veterinario.nombre} {veterinario.apellido}",
             'trabaja': bool(disponibilidad.trabaja) if disponibilidad else False,
+            'rangos': disponibilidad.rangos if disponibilidad else [],
             'blocks': blocks,
         })
     except Exception as e:

@@ -33,6 +33,7 @@ function toggleModal(modalId, show = true) {
 document.addEventListener('DOMContentLoaded', function() {
     inicializarControles();
     inicializarBuscadorPacientes();
+    inicializarBuscadorServicios();
     inicializarTabs();
     
     // Setear fecha actual
@@ -121,6 +122,41 @@ function inicializarBuscadorPacientes() {
     });
 }
 
+function inicializarBuscadorServicios() {
+    const input = document.getElementById('buscarServicio');
+    const select = document.getElementById('servicioSelect');
+    
+    if (!input || !select) return;
+    
+    input.addEventListener('input', function() {
+        const busqueda = this.value.toLowerCase();
+        const opciones = select.querySelectorAll('option');
+        const optgroups = select.querySelectorAll('optgroup');
+        
+        let gruposVisibles = {};
+        
+        opciones.forEach(opt => {
+            if (opt.value === '') return;
+            const nombre = opt.dataset.nombre || '';
+            const categoria = opt.dataset.categoria || '';
+            
+            if (nombre.includes(busqueda) || categoria.includes(busqueda)) {
+                opt.style.display = '';
+                gruposVisibles[categoria] = true;
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+        
+        // Mostrar/ocultar optgroups según si tienen opciones visibles
+        optgroups.forEach(group => {
+            const label = group.getAttribute('label').toLowerCase();
+            const tieneVisibles = group.querySelectorAll('option:not([style*="display: none"])').length > 0;
+            group.style.display = tieneVisibles ? '' : 'none';
+        });
+    });
+}
+
 function inicializarTabs() {
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', function() {
@@ -203,8 +239,20 @@ function renderizarBloques(data) {
     container.style.display = 'grid';
     container.innerHTML = '';
     
-    // Renderizar por hora (24 horas x 4 bloques)
-    for (let hora = 0; hora < 24; hora++) {
+    // Determinar el rango de bloques a mostrar (solo dentro del horario de trabajo)
+    let minBlock = 0;
+    let maxBlock = 96;
+    
+    if (data.blocks && data.blocks.length > 0 && data.trabaja && data.rangos && data.rangos.length > 0) {
+        minBlock = Math.min(...data.rangos.map(r => r.start_block));
+        maxBlock = Math.max(...data.rangos.map(r => r.end_block));
+    }
+    
+    // Renderizar por hora (solo las horas dentro del rango de trabajo)
+    const startHour = Math.floor(minBlock / 4);
+    const endHour = Math.ceil(maxBlock / 4);
+    
+    for (let hora = startHour; hora < endHour; hora++) {
         // Label de hora
         const hourLabel = document.createElement('div');
         hourLabel.className = 'agenda-hour-label';
@@ -214,6 +262,12 @@ function renderizarBloques(data) {
         // 4 bloques de 15 min
         for (let cuarto = 0; cuarto < 4; cuarto++) {
             const blockIndex = hora * 4 + cuarto;
+            
+            // Solo mostrar bloques dentro del rango de trabajo
+            if (blockIndex < minBlock || blockIndex >= maxBlock) {
+                continue;
+            }
+            
             const bloque = data.blocks[blockIndex];
             
             const blockEl = document.createElement('div');
@@ -230,6 +284,9 @@ function renderizarBloques(data) {
                 blockEl.addEventListener('click', () => seleccionarBloque(blockIndex));
                 blockEl.addEventListener('mouseenter', () => previsualizarBloques(blockIndex));
                 blockEl.addEventListener('mouseleave', limpiarPrevisualizacion);
+            } else if (bloque.status === 'occupied') {
+                blockEl.style.cursor = 'pointer';
+                blockEl.addEventListener('click', () => mostrarDetalleCita(bloque));
             }
             
             container.appendChild(blockEl);
@@ -522,4 +579,53 @@ function getCookie(name) {
         }
     }
     return cookieValue;
+}
+
+function mostrarDetalleCita(bloque) {
+    if (!bloque.cita_id || !bloque.paciente_id) {
+        return;
+    }
+    
+    // Actualizar título con servicio y horario
+    const titulo = `${bloque.servicio_nombre} | ${bloque.hora_inicio} - ${bloque.hora_fin}`;
+    document.getElementById('detalleCitaTitulo').innerHTML = `<i class="fas fa-stethoscope"></i> ${titulo}`;
+    
+    // Llenar los datos del modal
+    document.getElementById('detallePaciente').textContent = bloque.paciente_nombre || '-';
+    document.getElementById('detallePropietario').textContent = bloque.propietario_nombre || '-';
+    
+    // Teléfono como enlace WhatsApp
+    const btnTelefono = document.getElementById('detalleTelefonoPropietario');
+    if (bloque.propietario_telefono) {
+        btnTelefono.href = `https://wa.me/${bloque.propietario_telefono.replace(/\D/g, '')}`;
+        btnTelefono.textContent = `📞 ${bloque.propietario_telefono}`;
+        btnTelefono.target = '_blank';
+    } else {
+        btnTelefono.textContent = '-';
+        btnTelefono.href = '#';
+    }
+    
+    // Email como enlace mailto
+    const btnEmail = document.getElementById('detalleEmailPropietario');
+    if (bloque.propietario_email) {
+        btnEmail.href = `mailto:${bloque.propietario_email}`;
+        btnEmail.textContent = `📧 ${bloque.propietario_email}`;
+    } else {
+        btnEmail.textContent = '-';
+        btnEmail.href = '#';
+    }
+    
+    // Configurar el enlace a la ficha
+    const enlaceFixa = document.getElementById('enlaceFixa');
+    if (bloque.paciente_id) {
+        // Enlace a la ficha de mascota (paciente)
+        enlaceFixa.href = `/pacientes/${bloque.paciente_id}/`;
+    }
+    
+    // Mostrar modal
+    toggleModal('detalleCitaModal', true);
+}
+
+function cerrarModalDetalleCita() {
+    toggleModal('detalleCitaModal', false);
 }

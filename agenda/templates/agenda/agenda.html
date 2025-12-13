@@ -47,7 +47,11 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label"><strong>Servicio:</strong></label>
-                    <select id="servicioSelect" class="form-control">
+                    <div class="vet-search mb-2">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="buscarServicio" placeholder="Buscar servicio..." />
+                    </div>
+                    <select id="servicioSelect" class="form-control" size="8">
                         <option value="">Seleccione servicio</option>
                         {% regroup servicios by categoria as servicios_agrupados %}
                         {% for grupo in servicios_agrupados %}
@@ -55,7 +59,9 @@
                             {% for servicio in grupo.list %}
                             <option value="{{ servicio.idServicio }}" 
                                     data-duracion="{{ servicio.duracion }}"
-                                    data-precio="{{ servicio.precio }}">
+                                    data-precio="{{ servicio.precio }}"
+                                    data-nombre="{{ servicio.nombre|lower }}"
+                                    data-categoria="{{ grupo.grouper|lower }}">
                                 {{ servicio.nombre }} ({{ servicio.duracion }} min)
                             </option>
                             {% endfor %}
@@ -174,6 +180,41 @@
                     Confirmar Cita
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver detalle de cita agendada -->
+<div id="detalleCitaModal" class="vet-modal-overlay hide" onclick="cerrarModalDetalleCita()">
+    <div class="vet-modal-compact" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
+        <div class="vet-custom-modal-title">
+            <h3 id="detalleCitaTitulo"><i class="fas fa-stethoscope"></i> Cita Agendada</h3>
+            <i class="bi bi-x" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalDetalleCita()"></i>
+        </div>
+        <div class="vet-modal-body" style="padding: 1rem;">
+            <div class="d-flex flex-column gap-2">
+                <div>
+                    <small class="text-muted d-block mb-1"><strong>Paciente</strong></small>
+                    <p class="mb-0 fs-6" id="detallePaciente">-</p>
+                </div>
+                <div>
+                    <small class="text-muted d-block mb-1"><strong>Propietario</strong></small>
+                    <p class="mb-0 fs-6" id="detallePropietario">-</p>
+                </div>
+                <div>
+                    <small class="text-muted d-block mb-1"><strong>Contacto</strong></small>
+                    <p class="mb-0 fs-6">
+                        <a id="detalleTelefonoPropietario" href="#" class="text-decoration-none">-</a>
+                        <br>
+                        <a id="detalleEmailPropietario" href="#" class="text-decoration-none">-</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="vet-modal-footer d-flex justify-content-end align-items-center gap-2">
+            <a id="enlaceFixa" href="#" class="btn btn-primary btn-sm" target="_blank">
+                <i class="fas fa-file-medical"></i> Ver Ficha
+            </a>
         </div>
     </div>
 </div>
