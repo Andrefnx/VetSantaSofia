@@ -718,7 +718,7 @@ function renderizarBloquesVeterinario(vetId, data) {
                         
                         // Crear bloque unificado
                         const blockEl = document.createElement('div');
-                        blockEl.className = `agenda-block is-occupied`;
+                        blockEl.className = `agenda-block is-occupied cita-agendada`;
                         blockEl.dataset.blockIndex = blockIndex;
                         blockEl.dataset.citaId = bloque.cita_id;
                         blockEl.dataset.startTime = bloque.start_time;
@@ -728,6 +728,16 @@ function renderizarBloquesVeterinario(vetId, data) {
                             <div class="agenda-block-label">${bloque.paciente_nombre || 'Sin paciente'} | ${bloque.propietario_nombre || 'Sin dueño'}</div>
                             <div class="agenda-block-info">${bloque.servicio_nombre || 'Sin servicio'}</div>
                         `;
+                        // Botón iniciar cita
+                        const btnIniciar = document.createElement('button');
+                        btnIniciar.className = 'btn-iniciar-cita';
+                        btnIniciar.textContent = 'Iniciar';
+                        btnIniciar.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            iniciarCita(bloque.cita_id, blockEl);
+                        });
+                        blockEl.appendChild(btnIniciar);
+
                         blockEl.style.cursor = 'pointer';
                         blockEl.addEventListener('click', () => mostrarDetalleCita(bloque));
                         blockEl.addEventListener('mouseenter', () => destacarCitaCompleta(bloque.cita_id));
@@ -796,6 +806,43 @@ function limpiarPrevisualizacion() {
     document.querySelectorAll('.is-hover-fit').forEach(el => {
         el.classList.remove('is-hover-fit');
     });
+}
+
+async function iniciarCita(citaId, blockElement) {
+    try {
+        const response = await fetch(`/agenda/citas/iniciar/${citaId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': obtenerCsrfToken(),
+            },
+            body: JSON.stringify({}),
+        });
+        const data = await response.json();
+        if (data.success) {
+            // Marcar visualmente como en curso
+            blockElement.classList.remove('cita-agendada');
+            blockElement.classList.add('is-selected');
+            const btn = blockElement.querySelector('.btn-iniciar-cita');
+            if (btn) btn.remove();
+            mostrarMensaje('Consulta iniciada', 'success');
+        } else {
+            mostrarMensaje(data.error || 'No se pudo iniciar la cita', 'danger');
+        }
+    } catch (e) {
+        console.error(e);
+        mostrarMensaje('Error de conexión al iniciar cita', 'danger');
+    }
+}
+
+function obtenerCsrfToken() {
+    const name = 'csrftoken=';
+    const parts = document.cookie.split(';');
+    for (let i = 0; i < parts.length; i++) {
+        let c = parts[i].trim();
+        if (c.startsWith(name)) return c.substring(name.length, c.length);
+    }
+    return '';
 }
 
 function seleccionarBloque(startIndex, vetId, bloques) {

@@ -738,15 +738,7 @@
     border: 1px solid #e6e6e6;
 }
 
-.vet-calendar-header,
-.calendar-header {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
-    color: var(--text-dark);
-    font-weight: 600;
-    text-align: center;
-}
+
 .vet-calendar-header-day,
 .calendar-header-day {
     padding: 0.75rem;

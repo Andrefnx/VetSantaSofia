@@ -14,6 +14,8 @@ urlpatterns = [
     path('citas/crear/', views.crear_cita, name='crear_cita'),
     path('citas/editar/<int:cita_id>/', views.editar_cita, name='editar_cita'),
     path('citas/eliminar/<int:cita_id>/', views.eliminar_cita, name='eliminar_cita'),
+    # Iniciar cita (marcar en curso)
+    path('citas/iniciar/<int:cita_id>/', views.iniciar_cita, name='iniciar_cita'),
     
     # Disponibilidad de veterinarios
     path('disponibilidad/mes/<int:year>/<int:month>/', views.disponibilidad_mes, name='disponibilidad_mes'),

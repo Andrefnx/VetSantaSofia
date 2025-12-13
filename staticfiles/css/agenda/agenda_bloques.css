@@ -5,16 +5,6 @@
 /* Prevenir scroll innecesario */
 body {
     overflow-x: hidden;
-    height: 100vh;
-    margin: 0;
-    padding: 0;
-}
-
-.container-fluid {
-    height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 0;
 }
 
 /* Contenedor de agendas */
@@ -667,6 +657,24 @@ body {
     font-weight: 600;
 }
 
+.agenda-block.is-occupied.cita-agendada {
+    border-style: dotted;
+    border-width: 2px;
+}
+
+.agenda-block .btn-iniciar-cita {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    background: #69c087;
+    color: #0b4d2d;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    box-shadow: 0 2px 8px rgba(105,192,135,0.25);
+}
+
 .agenda-block.is-occupied:hover {
     background: linear-gradient(135deg, #ffcdd2, #ef9a9a);
     border-color: #e53935;
@@ -744,7 +752,7 @@ body {
     
     .agenda-block {
         min-height: 45px;
-        font-size: 0.7rem;
+        font-size: 1.6rem;
         padding: 4px 2px;
     }
     

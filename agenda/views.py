@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
+from django.http import HttpResponseBadRequest
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -268,6 +269,45 @@ def eliminar_cita(request, cita_id):
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
     
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+
+@csrf_exempt
+@login_required
+def iniciar_cita(request, cita_id):
+    """Marcar la cita como 'en_curso' y reutilizar la misma para iniciar consulta."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+    try:
+        cita = get_object_or_404(Cita, id=cita_id)
+
+        # Permisos: el veterinario asignado o administración
+        if request.user.rol != 'administracion' and request.user != cita.veterinario:
+            return JsonResponse({'success': False, 'error': 'No autorizado para iniciar esta cita'}, status=403)
+
+        # Actualizar estado a en_curso
+        cita.estado = 'en_curso'
+        cita.save(update_fields=['estado', 'fecha_modificacion'])
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Cita iniciada',
+            'cita': {
+                'id': cita.id,
+                'paciente_id': cita.paciente_id,
+                'paciente_nombre': cita.paciente.nombre,
+                'propietario_nombre': getattr(cita.paciente.propietario, 'nombre_completo', ''),
+                'veterinario_id': cita.veterinario_id,
+                'veterinario_nombre': f"{cita.veterinario.nombre} {cita.veterinario.apellido}" if cita.veterinario_id else '',
+                'servicio_nombre': cita.servicio.nombre if cita.servicio_id else '',
+                'fecha': cita.fecha.isoformat(),
+                'hora_inicio': cita.hora_inicio.strftime('%H:%M') if cita.hora_inicio else '',
+                'hora_fin': cita.hora_fin.strftime('%H:%M') if cita.hora_fin else '',
+                'estado': cita.estado,
+                'tipo': cita.tipo,
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
 # ============================================
