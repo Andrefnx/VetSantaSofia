@@ -263,17 +263,12 @@
     border-radius: 16px !important;
     box-shadow: var(--shadow-md) !important;
     overflow: visible !important;
-    border: 1px solid var(--border-color) !important;
     position: relative !important;
     z-index: 1 !important;
     width: 100% !important;
     border-collapse: collapse !important;
 }
 
-.vet-table thead {
-    background: var(--primary-color) !important;
-    color: #fff !important;
-}
 
 .vet-table th {
     padding: 16px 20px !important;

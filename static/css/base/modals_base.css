@@ -9,9 +9,6 @@
     --grey: #afafaf;
     --grey-hover: #a8a8a8;
     
-    /* Z-index hierarchy - VALORES ALTOS PARA MODALES */
-    --z-sidebar: 200;
-    --z-navbar: 100;
     --z-modal-backdrop: 999998;
     --z-modal: 999999;
 }
