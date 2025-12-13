@@ -37,8 +37,16 @@ function toggleModal(modalId, show = true) {
     }
 }
 
+// Estado del calendario
+let calendarioState = {
+    fechaSeleccionada: null,
+    mesActual: new Date().getMonth(),
+    anioActual: new Date().getFullYear()
+};
+
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
+    inicializarCalendario();
     inicializarControles();
     inicializarBuscadorPacientes();
     inicializarBuscadorServicios();
@@ -48,22 +56,145 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setear fecha actual
     const hoy = new Date().toISOString().split('T')[0];
     document.getElementById('fechaAgenda').value = hoy;
+    calendarioState.fechaSeleccionada = hoy;
     
     // Cargar automáticamente las agendas de todos los veterinarios
     agendaState.fecha = hoy;
     setTimeout(() => cargarTodasLasAgendas(), 300);
 });
 
-function inicializarControles() {
-    // Fecha
-    document.getElementById('fechaAgenda').addEventListener('change', function() {
-        agendaState.fecha = this.value;
-        // Cargar automáticamente cuando cambia la fecha
-        if (agendaState.fecha) {
-            cargarTodasLasAgendas();
-        }
+function inicializarCalendario() {
+    const hoy = new Date();
+    const anioActual = hoy.getFullYear();
+    
+    // Poblar select de meses
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const selectMes = document.getElementById('calMes');
+    meses.forEach((mes, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = mes;
+        selectMes.appendChild(opt);
+    });
+    selectMes.value = calendarioState.mesActual;
+    
+    // Poblar select de años (actual y siguiente)
+    const selectAnio = document.getElementById('calAnio');
+    [anioActual, anioActual + 1].forEach(anio => {
+        const opt = document.createElement('option');
+        opt.value = anio;
+        opt.textContent = anio;
+        selectAnio.appendChild(opt);
+    });
+    selectAnio.value = calendarioState.anioActual;
+    
+    // Event listeners
+    document.getElementById('calPrevMes').addEventListener('click', () => cambiarMes(-1));
+    document.getElementById('calNextMes').addEventListener('click', () => cambiarMes(1));
+    selectMes.addEventListener('change', (e) => {
+        calendarioState.mesActual = parseInt(e.target.value);
+        renderizarCalendario();
+    });
+    selectAnio.addEventListener('change', (e) => {
+        calendarioState.anioActual = parseInt(e.target.value);
+        renderizarCalendario();
     });
     
+    renderizarCalendario();
+}
+
+function cambiarMes(delta) {
+    calendarioState.mesActual += delta;
+    if (calendarioState.mesActual < 0) {
+        calendarioState.mesActual = 11;
+        calendarioState.anioActual--;
+    } else if (calendarioState.mesActual > 11) {
+        calendarioState.mesActual = 0;
+        calendarioState.anioActual++;
+    }
+    
+    // Limitar a año actual y siguiente
+    const anioActual = new Date().getFullYear();
+    if (calendarioState.anioActual > anioActual + 1) {
+        calendarioState.anioActual = anioActual + 1;
+        calendarioState.mesActual = 11;
+    } else if (calendarioState.anioActual < anioActual) {
+        calendarioState.anioActual = anioActual;
+        calendarioState.mesActual = 0;
+    }
+    
+    document.getElementById('calMes').value = calendarioState.mesActual;
+    document.getElementById('calAnio').value = calendarioState.anioActual;
+    renderizarCalendario();
+}
+
+function renderizarCalendario() {
+    const container = document.getElementById('calendarioDias');
+    container.innerHTML = '';
+    
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const primerDia = new Date(calendarioState.anioActual, calendarioState.mesActual, 1);
+    const ultimoDia = new Date(calendarioState.anioActual, calendarioState.mesActual + 1, 0);
+    
+    // Ajustar para que Lunes sea el primer día (0=Lun, 6=Dom)
+    let diaSemanaInicio = primerDia.getDay() - 1;
+    if (diaSemanaInicio < 0) diaSemanaInicio = 6;
+    
+    // Días vacíos al inicio
+    for (let i = 0; i < diaSemanaInicio; i++) {
+        const div = document.createElement('div');
+        div.className = 'dia-cal vacio';
+        container.appendChild(div);
+    }
+    
+    // Días del mes
+    for (let dia = 1; dia <= ultimoDia.getDate(); dia++) {
+        const fecha = new Date(calendarioState.anioActual, calendarioState.mesActual, dia);
+        const fechaStr = fecha.toISOString().split('T')[0];
+        const diaSemana = fecha.getDay(); // 0=Domingo, 1=Lunes...
+        
+        const div = document.createElement('div');
+        div.className = 'dia-cal';
+        div.textContent = dia;
+        div.dataset.fecha = fechaStr;
+        
+        // Verificar si es pasado
+        if (fecha < hoy) {
+            div.classList.add('disabled');
+        } else {
+            div.addEventListener('click', () => seleccionarFecha(fechaStr));
+        }
+        
+        // Domingo en rojo
+        if (diaSemana === 0) {
+            div.classList.add('domingo');
+        }
+        
+        // Marcar hoy
+        if (fechaStr === hoy.toISOString().split('T')[0]) {
+            div.classList.add('hoy');
+        }
+        
+        // Marcar seleccionado
+        if (fechaStr === calendarioState.fechaSeleccionada) {
+            div.classList.add('seleccionado');
+        }
+        
+        container.appendChild(div);
+    }
+}
+
+function seleccionarFecha(fechaStr) {
+    calendarioState.fechaSeleccionada = fechaStr;
+    document.getElementById('fechaAgenda').value = fechaStr;
+    agendaState.fecha = fechaStr;
+    renderizarCalendario();
+    cargarTodasLasAgendas();
+}
+
+function inicializarControles() {
     // Botón cargar
     document.getElementById('btnCargarBloques').addEventListener('click', cargarTodasLasAgendas);
     
