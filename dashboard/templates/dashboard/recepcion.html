@@ -3,55 +3,90 @@
 
 {% block title %}Dashboard Recepción{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/base/tables_base.css' %}">
+<link rel="stylesheet" href="{% static 'css/custom/dashboard_recepcion.css' %}">
+{% endblock %}
+
 {% block content %}
+<div class="recepcion-scope">
 <div class="page-header">
     <h3 class="fw-bold mb-3">Dashboard Recepción</h3>
-    <ul class="breadcrumbs mb-3">
-        <li class="nav-home">
-            <a href="{% url 'dashboard:dashboard' %}">
-                <i class="icon-home"></i>
-            </a>
-        </li>
-        <li class="separator">
-            <i class="icon-arrow-right"></i>
-        </li>
-        <li class="nav-item">
-            <a href="#">Dashboard</a>
-        </li>
-    </ul>
 </div>
 
-<!-- Acciones Rápidas -->
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card card-round">
+<!-- Indicadores de Resumen -->
+<div class="row">
+    <div class="col-sm-6 col-md-3">
+        <div class="card card-stats card-round">
             <div class="card-body">
-                <h5 class="mb-3"><i class="fas fa-bolt me-2"></i>Acciones Rápidas</h5>
-                <div class="row">
-                    <div class="col-md-4 mb-2">
-                        <a href="{% url 'agenda:crear_cita' %}" class="btn btn-primary btn-block w-100">
-                            <i class="fas fa-calendar-plus me-2"></i>
-                            Nueva Cita
-                        </a>
+                <div class="row align-items-center">
+                    <div class="col-icon">
+                        <div class="icon-big text-center icon-primary bubble-shadow-small">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
                     </div>
-                    <div class="col-md-4 mb-2">
-                        <a href="#" onclick="buscarPacienteModal(); return false;" class="btn btn-info btn-block w-100">
-                            <i class="fas fa-search me-2"></i>
-                            Buscar Paciente
-                        </a>
+                    <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                            <p class="card-category">Total Citas</p>
+                            <h4 class="card-title">{{ agenda_stats.total_citas }}</h4>
+                        </div>
                     </div>
-                    <div class="col-md-4 mb-2">
-                        {% if caja_stats.estado == 'cerrada' %}
-                            <a href="/caja/abrir/" class="btn btn-success btn-block w-100">
-                                <i class="fas fa-cash-register me-2"></i>
-                                Abrir Caja
-                            </a>
-                        {% else %}
-                            <a href="/caja/dashboard/" class="btn btn-warning btn-block w-100">
-                                <i class="fas fa-cash-register me-2"></i>
-                                Ir a Caja
-                            </a>
-                        {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="card card-stats card-round">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-icon">
+                        <div class="icon-big text-center icon-warning bubble-shadow-small">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                    </div>
+                    <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                            <p class="card-category">Pendientes</p>
+                            <h4 class="card-title">{{ agenda_stats.pendientes }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="card card-stats card-round">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-icon">
+                        <div class="icon-big text-center icon-info bubble-shadow-small">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                    <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                            <p class="card-category">Confirmadas</p>
+                            <h4 class="card-title">{{ agenda_stats.confirmadas }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="card card-stats card-round">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-icon">
+                        <div class="icon-big text-center icon-success bubble-shadow-small">
+                            <i class="fas fa-check-double"></i>
+                        </div>
+                    </div>
+                    <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                            <p class="card-category">Completadas</p>
+                            <h4 class="card-title">{{ agenda_stats.completadas }}</h4>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -60,32 +95,45 @@
 </div>
 
 <div class="row">
-    <!-- Columna Izquierda: Agenda -->
-    <div class="col-md-8">
-        
-        <!-- Resumen de Agenda -->
-        <div class="card card-round mb-3">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-3 text-center">
-                        <h4 class="mb-0">{{ agenda_stats.total_citas }}</h4>
-                        <small class="text-muted">Total Citas</small>
-                    </div>
-                    <div class="col-3 text-center">
-                        <h4 class="mb-0 text-warning">{{ agenda_stats.pendientes }}</h4>
-                        <small class="text-muted">Pendientes</small>
-                    </div>
-                    <div class="col-3 text-center">
-                        <h4 class="mb-0 text-info">{{ agenda_stats.confirmadas }}</h4>
-                        <small class="text-muted">Confirmadas</small>
-                    </div>
-                    <div class="col-3 text-center">
-                        <h4 class="mb-0 text-success">{{ agenda_stats.completadas }}</h4>
-                        <small class="text-muted">Completadas</small>
+    <!-- Columna Izquierda: Acciones Rápidas -->
+    <div class="col-md-3">
+        <div class="card card-round rd-quick-actions">
+            <div class="card-header">
+                <div class="card-head-row">
+                    <div class="card-title">
+                        <i class="fas fa-bolt"></i>
+                        Acciones Rápidas
                     </div>
                 </div>
             </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'agenda:crear_cita' %}" class="btn btn-primary w-100">
+                        <i class="fas fa-calendar-plus me-2"></i>
+                        Nueva Cita
+                    </a>
+                    <a href="#" onclick="buscarPacienteModal(); return false;" class="btn btn-info w-100">
+                        <i class="fas fa-search me-2"></i>
+                        Buscar Paciente
+                    </a>
+                    {% if caja_stats.estado == 'cerrada' %}
+                        <a href="/caja/abrir/" class="btn btn-success w-100">
+                            <i class="fas fa-cash-register me-2"></i>
+                            Abrir Caja
+                        </a>
+                    {% else %}
+                        <a href="/caja/dashboard/" class="btn btn-warning w-100">
+                            <i class="fas fa-cash-register me-2"></i>
+                            Ir a Caja
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
+    </div>
+    
+    <!-- Columna Central: Agenda -->
+    <div class="col-md-5">
         
         <!-- Agenda del Día - Vista Horaria -->
         <div class="card card-round">
@@ -106,8 +154,9 @@
                 </div>
             </div>
             <div class="card-body">
-                <div class="agenda-horaria">
-                    {% for horario in horarios %}
+                <div class="rd-agenda-scroll">
+                    <div class="agenda-horaria">
+                        {% for horario in horarios %}
                     <div class="horario-slot {% if horario.libre %}slot-libre{% else %}slot-ocupado{% endif %} mb-2 p-3 border rounded">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
@@ -163,6 +212,7 @@
                         </div>
                     </div>
                     {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -173,33 +223,29 @@
     <div class="col-md-4">
         
         <!-- Estado de Caja -->
-        <div class="card card-round mb-3">
+        <div class="card card-round mb-3 rd-caja-card">
             <div class="card-header">
                 <div class="card-head-row">
                     <div class="card-title">
-                        <i class="fas fa-cash-register me-2"></i>
+                        <i class="fas fa-cash-register"></i>
                         Caja
                     </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span>Estado:</span>
+                    <div class="card-tools">
                         <span class="badge badge-{% if caja_stats.estado == 'abierta' %}success{% else %}danger{% endif %} badge-lg">
                             {{ caja_stats.estado|upper }}
                         </span>
                     </div>
                 </div>
-                
+            </div>
+            <div class="card-body">
                 {% if caja_stats.sesion %}
-                    <div class="mb-2">
-                        <small class="text-muted">Total Acumulado:</small>
-                        <h4 class="text-success mb-0">${{ caja_stats.total_acumulado|floatformat:0 }}</h4>
+                    <div class="rd-stats-summary mb-3">
+                        <div class="text-center">
+                            <small class="text-muted">Total Acumulado</small>
+                            <h4 class="text-success mb-0">${{ caja_stats.total_acumulado|floatformat:0 }}</h4>
+                        </div>
                     </div>
                 {% endif %}
-                
-                <hr>
                 
                 <h6 class="mb-2">
                     <i class="fas fa-clock me-2"></i>
@@ -207,32 +253,37 @@
                 </h6>
                 
                 {% if caja_stats.cobros_pendientes %}
-                    <div class="list-group mb-3">
+                    <div class="list-group mb-3 rd-cobros-scroll">
                         {% for cobro in caja_stats.cobros_pendientes %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ cobro.numero_venta }}</strong>
-                                <small class="d-block text-muted">
-                                    {% if cobro.paciente %}
-                                        {{ cobro.paciente.nombre }}
-                                    {% else %}
-                                        Venta Libre
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ cobro.numero_venta }}</strong>
+                                    <small class="d-block rd-meta">
+                                        {% if cobro.paciente %}
+                                            {{ cobro.paciente.nombre }}
+                                        {% else %}
+                                            Venta Libre
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <strong class="text-warning">${{ cobro.total|floatformat:0 }}</strong>
+                                    {% if caja_stats.estado == 'abierta' %}
+                                    <a href="/caja/cobro/{{ cobro.id }}/" class="btn btn-sm btn-success mt-1 d-block">
+                                        <i class="fas fa-dollar-sign"></i> Cobrar
+                                    </a>
                                     {% endif %}
-                                </small>
-                            </div>
-                            <div class="text-end">
-                                <strong class="text-warning">${{ cobro.total|floatformat:0 }}</strong>
-                                {% if caja_stats.estado == 'abierta' %}
-                                <a href="/caja/cobro/{{ cobro.id }}/" class="btn btn-sm btn-success mt-1">
-                                    <i class="fas fa-dollar-sign"></i> Cobrar
-                                </a>
-                                {% endif %}
+                                </div>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
                 {% else %}
-                    <p class="text-muted text-center">No hay cobros pendientes</p>
+                    <div class="text-center py-3">
+                        <i class="fas fa-check-circle fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">No hay cobros pendientes</p>
+                    </div>
                 {% endif %}
                 
                 <div class="d-grid gap-2">
@@ -256,11 +307,11 @@
         </div>
         
         <!-- Pacientes Recientes -->
-        <div class="card card-round">
+        <div class="card card-round rd-pacientes-card">
             <div class="card-header">
                 <div class="card-head-row">
                     <div class="card-title">
-                        <i class="fas fa-paw me-2"></i>
+                        <i class="fas fa-paw"></i>
                         Pacientes Recientes
                     </div>
                     <div class="card-tools">
@@ -275,72 +326,61 @@
             </div>
             <div class="card-body">
                 {% if pacientes_recientes %}
-                    <div class="list-group">
+                    <div class="list-group rd-pacientes-scroll">
                         {% for paciente in pacientes_recientes %}
-                        <a href="/pacientes/{{ paciente.id }}/" class="list-group-item list-group-item-action">
+                        <div class="list-group-item">
                             <div class="d-flex justify-content-between align-items-center">
-                                <div>
+                                <div class="flex-grow-1">
                                     <h6 class="mb-0">{{ paciente.nombre }}</h6>
-                                    <small class="text-muted">
+                                    <small class="rd-meta">
                                         {{ paciente.propietario.nombre_completo }} | 
-                                        {{ paciente.get_especie_display }}
+                                        Última consulta: {{ paciente.ultima_consulta|date:"d/m/Y" }}
                                     </small>
                                 </div>
                                 <div>
-                                    <button class="btn btn-sm btn-primary" onclick="agendarCitaPaciente({{ paciente.id }}); return false;">
-                                        <i class="fas fa-calendar-plus"></i>
-                                    </button>
+                                    <a href="/pacientes/{{ paciente.id }}/" class="btn btn-sm btn-outline-secondary rd-ver-ficha-btn">
+                                        <i class="fas fa-file-medical me-1"></i>
+                                        Ver ficha
+                                    </a>
                                 </div>
                             </div>
-                        </a>
+                        </div>
                         {% endfor %}
                     </div>
                 {% else %}
-                    <p class="text-muted text-center">No hay pacientes registrados</p>
+                    <div class="text-center py-3">
+                        <i class="fas fa-paw fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">No hay pacientes registrados</p>
+                    </div>
                 {% endif %}
-                
-                <div class="d-grid gap-2 mt-3">
-                    <button class="btn btn-outline-primary btn-round" onclick="buscarPacienteModal()">
-                        <i class="fas fa-search me-2"></i>
-                        Buscar Paciente
-                    </button>
-                </div>
             </div>
         </div>
         
     </div>
 </div>
 
+</div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script type="module">
+import { initManageWheel } from '{% static "js/base/wheel_base.js" %}';
+initManageWheel();
+
+// Funciones del dashboard
 function buscarPacienteModal() {
-    // Redirigir a la búsqueda de pacientes
     window.location.href = '/pacientes/';
 }
 
 function agendarCitaPaciente(pacienteId) {
-    // Redirigir a agendar cita con paciente preseleccionado
     window.location.href = '/agenda/agendar/?paciente=' + pacienteId;
 }
+
+// Exponer funciones globalmente
+window.buscarPacienteModal = buscarPacienteModal;
+window.agendarCitaPaciente = agendarCitaPaciente;
+
+// Recargar página cada 5 minutos para actualizar información
+setTimeout(() => location.reload(), 300000);
 </script>
-
-<style>
-.slot-libre {
-    background-color: #f0f9ff;
-    border-left: 4px solid #22c55e !important;
-}
-
-.slot-ocupado {
-    background-color: #fff;
-    border-left: 4px solid #3b82f6 !important;
-}
-
-.cita-info {
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 8px;
-}
-</style>
 {% endblock %}

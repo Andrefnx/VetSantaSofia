@@ -250,10 +250,55 @@ def _datos_recepcion(hoy, usuario):
     caja_stats['cobros_pendientes'] = cobros_pendientes
     caja_stats['cobros_pendientes_count'] = cobros_pendientes.count()
     
-    # 3. PACIENTES RECIENTES
-    pacientes_recientes = Paciente.objects.filter(
-        activo=True
-    ).select_related('propietario').order_by('-fecha_registro')[:5]
+    # 3. PACIENTES RECIENTES (consultas últimas 24h o hospitalizados activamente)
+    from clinica.models import Consulta, Hospitalizacion
+    from datetime import timedelta
+    
+    # Fecha límite: hace 24 horas
+    hace_24h = hoy - timedelta(days=1)
+    
+    # Obtener pacientes con consultas recientes (últimas 24 horas)
+    consultas_recientes = Consulta.objects.filter(
+        fecha__gte=hace_24h
+    ).select_related('paciente', 'paciente__propietario').order_by('-fecha')
+    
+    # Obtener pacientes hospitalizados activamente
+    hospitalizaciones_activas = Hospitalizacion.objects.filter(
+        estado='activa'
+    ).select_related('paciente', 'paciente__propietario').order_by('-fecha_ingreso')
+    
+    # Crear conjunto de pacientes únicos con su última actividad
+    pacientes_dict = {}
+    
+    # Agregar pacientes con consultas recientes
+    for consulta in consultas_recientes:
+        if consulta.paciente.activo and consulta.paciente.id not in pacientes_dict:
+            paciente = consulta.paciente
+            paciente.ultima_consulta = consulta.fecha
+            paciente.tipo_actividad = 'consulta'
+            pacientes_dict[paciente.id] = paciente
+    
+    # Agregar pacientes hospitalizados
+    for hosp in hospitalizaciones_activas:
+        if hosp.paciente.activo:
+            paciente = hosp.paciente
+            if paciente.id not in pacientes_dict:
+                paciente.ultima_consulta = hosp.fecha_ingreso
+                paciente.tipo_actividad = 'hospitalizado'
+                pacientes_dict[paciente.id] = paciente
+            else:
+                # Si ya existe, mantener el más reciente
+                if hosp.fecha_ingreso > pacientes_dict[paciente.id].ultima_consulta:
+                    paciente.ultima_consulta = hosp.fecha_ingreso
+                    paciente.tipo_actividad = 'hospitalizado'
+                    pacientes_dict[paciente.id] = paciente
+    
+    # Convertir a lista y ordenar por fecha más reciente
+    pacientes_recientes = sorted(
+        pacientes_dict.values(), 
+        key=lambda p: p.ultima_consulta, 
+        reverse=True
+    )[:5]
     
     return {
         'horarios': horarios,
