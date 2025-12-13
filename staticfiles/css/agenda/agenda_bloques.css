@@ -36,6 +36,7 @@ body {
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 0.75rem;
+    height: 32px;
 }
 
 .calendario-header {
@@ -56,8 +57,8 @@ body {
 }
 
 .calendario-titulo select {
-    font-size: 0.9rem;
-    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+    padding: 0 0.5rem;
     border: 1px solid #e0e0e0;
     border-radius: 6px;
     background: white;
@@ -66,7 +67,9 @@ body {
     cursor: pointer;
     transition: all 0.2s;
     white-space: nowrap;
-    height: 40px;
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
 }
 
 .calendario-titulo select:first-child {
@@ -96,17 +99,17 @@ body {
     color: #55aa55;
     cursor: pointer;
     padding: 0;
-    font-size: 1rem;
+    font-size: 0.9rem;
     transition: all 0.2s;
     border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    min-height: 40px;
-    max-height: 40px;
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
 }
 
 .btn-cal-nav:hover {
@@ -125,8 +128,8 @@ body {
     border: none;
     color: white;
     cursor: pointer;
-    padding: 0.4rem 1rem;
-    font-size: 0.85rem;
+    padding: 0 0.75rem;
+    font-size: 0.8rem;
     font-weight: 600;
     transition: all 0.2s;
     border-radius: 6px;
@@ -134,6 +137,9 @@ body {
     align-items: center;
     gap: 0.4rem;
     box-shadow: 0 2px 4px rgba(85, 170, 85, 0.2);
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
 }
 
 .btn-cal-hoy:hover {
