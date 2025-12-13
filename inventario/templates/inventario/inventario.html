@@ -141,7 +141,7 @@
                         <i class="bi bi-arrow-clockwise"></i> Restaurar
                     </button>
                     {% endif %}
-                {% else %}
+                {% elif user.rol in 'administracion,veterinario' %}
                     <button type="button" onclick="abrirModalProducto(this, 'view')">
                         <i class="bi bi-eye"></i> Ver
                     </button>
@@ -150,6 +150,10 @@
                     </button>
                     <button type="button" onclick="openConfigNivelesModal(this)">
                         <i class="fas fa-sliders-h"></i> Niveles
+                    </button>
+                {% else %}
+                    <button type="button" onclick="abrirModalProducto(this, 'view')">
+                        <i class="bi bi-eye"></i> Ver
                     </button>
                 {% endif %}
             </div>

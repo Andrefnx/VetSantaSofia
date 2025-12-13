@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from functools import wraps
 from decimal import Decimal
 import json
 import pytz
@@ -11,10 +12,22 @@ import traceback
 from .models import Insumo
 from django.db.models import Q
 
-# Esta vista fue renombrada a inventario_view más abajo
+
+def solo_admin_y_vet(view_func):
+    """Decorador para permitir solo admin y veterinarios editar inventario"""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if request.user.rol not in ['administracion', 'veterinario']:
+            return JsonResponse({
+                'success': False, 
+                'error': 'No tienes permiso para editar el inventario'
+            }, status=403)
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 @csrf_exempt
 @login_required
+@solo_admin_y_vet
 def crear_insumo(request):
     """Vista para crear un nuevo insumo"""
     if request.method == 'POST':
@@ -77,6 +90,7 @@ def crear_insumo(request):
 
 @csrf_exempt
 @login_required
+@solo_admin_y_vet
 def editar_insumo(request, insumo_id):
     """Vista para editar un insumo existente"""
     if request.method == 'POST':
@@ -238,6 +252,8 @@ def detalle_insumo(request, insumo_id):
         }, status=500)
 
 @csrf_exempt
+@login_required
+@solo_admin_y_vet
 def eliminar_insumo(request, insumo_id):
     """Vista para eliminar/archivar un insumo"""
     if request.method != 'POST':
@@ -321,6 +337,7 @@ def eliminar_insumo(request, insumo_id):
 
 @csrf_exempt
 @login_required
+@solo_admin_y_vet
 def modificar_stock_insumo(request, insumo_id):
     """Vista para modificar el stock de un insumo"""
     if request.method == 'POST':
@@ -545,6 +562,7 @@ def productos_api(request):
 
 @csrf_exempt
 @login_required
+@solo_admin_y_vet
 def actualizar_niveles_stock(request, insumo_id):
     """Vista para actualizar los niveles de stock mínimo y medio de un insumo"""
     if request.method == 'POST':

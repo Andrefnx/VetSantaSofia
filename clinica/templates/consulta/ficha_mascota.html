@@ -8,6 +8,10 @@
 <link rel="stylesheet" href="{% static 'css/custom/hospitalizaciones.css' %}">
 <!-- Meta data para hospitalizaciones -->
 <meta data-paciente-id="{{ paciente.id }}">
+<script>
+    window.userRol = "{{ user.rol }}";
+    window.pacienteId = {{ paciente.id }};
+</script>
 {% endblock %}
 
 {% block content %}
@@ -45,10 +49,10 @@
                             <div>
                                 <strong style="color: #856404;">🏥 Paciente Hospitalizado</strong>
                                 <div style="font-size: 13px; color: #856404;" id="detallesHospitalizacion"></div>
+
                             </div>
                         </div>
                     </div>
-
                     <div class="info-row">
                         <p><strong>Especie:</strong> <span class="view-mode">{{ paciente.especie }}</span>
                             <select class="form-control edit-mode" name="especie" style="display:none;">
@@ -203,6 +207,7 @@
                 </div>
             </div>
 
+            {% if user.rol != 'recepcion' %}
             <div class="section resumen-clinico antecedentes-compact">
                 <div class="section-header-with-edit">
                     <h2>Antecedentes Médicos Críticos</h2>
@@ -246,7 +251,9 @@
                     </div>
                 </div>
             </div>
+            {% endif %}
 
+            {% if user.rol != 'recepcion' %}
             <div class="section resumen-clinico">
                 <h2>Resumen Clínico</h2>
                 <div class="info">
@@ -263,13 +270,16 @@
                     <p><strong>Fecha de registro:</strong> {{ paciente.fecha_registro|date:"d/m/Y" }}</p>
                 </div>
             </div>
+            {% endif %}
         </div>
 
         <div class="section tabs-section">
             <div class="tabs-nav">
                 <button class="tab-btn active" data-tab="historial">Historial Clínico</button>
                 <button class="tab-btn" data-tab="hosp">Hospitalizaciones</button>
+                {% if user.rol != 'recepcion' %}
                 <button class="tab-btn" data-tab="docs">Documentos</button>
+                {% endif %}
             </div>
             <div class="tabs-content">
                 <div class="tab-content active" id="historial">
@@ -384,9 +394,11 @@
                                                                 <i class="bi bi-person"></i> {{ consulta.veterinario.nombre }} {{ consulta.veterinario.apellido }}
                                                             </p>
                                                         </div>
+                                                        {% if user.rol != 'recepcion' %}
                                                         <button class="timeline-btn timeline-item-btn" onclick="verDetalleConsulta('{{ consulta.id }}')">
                                                             Ver detalle
                                                         </button>
+                                                        {% endif %}
                                                     </div>
                                                 </div>
                                             </div>
@@ -460,9 +472,11 @@
                                                         <i class="bi bi-person"></i> {{ consulta.veterinario.nombre }} {{ consulta.veterinario.apellido }}
                                                     </p>
                                                 </div>
+                                                {% if user.rol != 'recepcion' %}
                                                 <button class="timeline-btn timeline-item-btn" onclick="verDetalleConsulta('{{ consulta.id }}')">
                                                     Ver detalle
                                                 </button>
+                                                {% endif %}
                                             </div>
                                         </div>
                                     </div>
@@ -666,6 +680,7 @@
                     </div>
                 </div>
 
+                {% if user.rol != 'recepcion' %}
                 <div class="tab-content" id="docs">
                     <div class="documentos">
                         <h3>Documentos</h3>
@@ -703,6 +718,7 @@
                         </ul>
                     </div>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -588,9 +588,11 @@ const hospitalizacionesManager = {
                         <span class="hosp-estado estado-${(hosp.estado || 'activa').toLowerCase()}" style="font-size:11px; padding:2px 6px;">
                             <i class="bi bi-circle-fill"></i> ${hosp.estado || 'N/A'}
                         </span>
+                        ${window.userRol !== 'recepcion' ? `
                         <button class="btn-expandir" onclick="hospitalizacionesManager.verDetalles(${hosp.id})" title="Ver detalles" style="padding:4px 8px; font-size:13px;">
                             <i class="bi bi-eye"></i>
                         </button>
+                        ` : ''}
                     </div>
                 </div>
                 
@@ -615,6 +617,12 @@ const hospitalizacionesManager = {
 
     async verDetalles(hospId) {
         try {
+            // Verificar rol: recepcion no puede ver detalles
+            if (window.userRol === 'recepcion') {
+                alert('No tienes permisos para ver detalles de hospitalizaciones');
+                return;
+            }
+            
             const response = await fetch(`/clinica/pacientes/${this.pacienteId}/hospitalizacion/${hospId}/detalle/`);
             const data = await response.json();
 
