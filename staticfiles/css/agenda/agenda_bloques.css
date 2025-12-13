@@ -631,3 +631,30 @@ body {
 #contenedorAgendas .agenda-block-label {
     font-size: 0.7rem;
 }
+
+/* Estilos para modal de agendamiento directo */
+.modal-select-tall {
+    padding: 8px 10px !important;
+    font-size: 0.95rem !important;
+    line-height: 1.6 !important;
+    background: #f9fafb !important;
+}
+
+.modal-select-tall option {
+    padding: 6px 4px;
+    background-color: #ffffff;
+    color: #103012;
+}
+
+.modal-select-tall option:hover,
+.modal-select-tall option:focus {
+    background-color: #9fcf9f;
+    color: #ffffff;
+}
+
+.modal-select-tall optgroup {
+    font-weight: 700;
+    color: #103012;
+    background-color: #f0f4f1;
+    padding: 4px 0;
+}
