@@ -55,7 +55,6 @@ h4 {
     border-radius: 10px;
     padding: 8px 14px;
     transition: all 0.3s ease;
-    min-width: 250px;
 }
 
 .vet-search:focus-within {
