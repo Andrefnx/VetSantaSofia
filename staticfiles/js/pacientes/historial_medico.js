@@ -393,10 +393,33 @@ if (formNuevaConsulta) {
         
         if (result.success) {
             console.log('✅ Consulta guardada:', result);
+            
+            // Si la consulta fue creada desde una cita, eliminar la cita del timeline
+            const citaId = form.dataset.citaId;
+            if (citaId) {
+                console.log('🗑️ Eliminando cita ID', citaId, 'del timeline');
+                const citaElement = document.querySelector(`.timeline-item[data-cita-id="${citaId}"]`);
+                if (citaElement) {
+                    citaElement.style.opacity = '0.5';
+                    citaElement.style.pointerEvents = 'none';
+                    // Fade out y remover elemento
+                    setTimeout(() => {
+                        citaElement.remove();
+                        console.log('✅ Cita removida del DOM');
+                    }, 300);
+                }
+                // Limpiar el dataset
+                delete form.dataset.citaId;
+            }
+            
             closeVetModal('nuevaConsultaModal');
             form.reset();
             medicamentosSeleccionados = [];
-            location.reload();
+            
+            // Recargar datos sin refresh completo (opcional: solo refrescar si es necesario)
+            setTimeout(() => {
+                location.reload();
+            }, 500);
         } else {
             console.error('❌ Error al guardar:', result.error);
             alert(`Error: ${result.error}`);
@@ -444,6 +467,14 @@ async function cargarInventario() {
         }
         
         console.log(`✅ ${data.productos.length} productos disponibles`);
+        
+        // ✅ CRITICAL: Render the inventory in the modal
+        if (typeof mostrarInventario === 'function') {
+            mostrarInventario(data.productos);
+            console.log('✅ Inventario renderizado en el modal');
+        } else {
+            console.error('❌ mostrarInventario() no está disponible');
+        }
         
     } catch (error) {
         console.error('❌ Error de red:', error);
@@ -582,6 +613,124 @@ function verDetalleConsulta(consultaId) {
         }, 100);
     }
 }
+
+// ===== INICIAR CITA DESDE FICHA =====
+// Función para abrir modal de consulta con datos precargados de una cita
+window.iniciarCitaDesdeFicha = async function(citaId, buttonElement) {
+    console.log('🔵 iniciarCitaDesdeFicha llamado con citaId:', citaId);
+    
+    // Obtener el elemento timeline-item que contiene esta cita
+    const timelineItem = buttonElement.closest('.timeline-item');
+    if (!timelineItem) {
+        console.error('❌ No se encontró el elemento timeline-item');
+        return;
+    }
+    
+    // Extraer datos de la cita desde el DOM
+    const citaData = {
+        id: citaId,
+        fecha: timelineItem.querySelector('.timeline-date .day')?.textContent || '',
+        mes: timelineItem.querySelector('.timeline-date .month')?.textContent || '',
+        año: timelineItem.querySelector('.timeline-date .year')?.textContent || new Date().getFullYear(),
+        servicio: timelineItem.querySelector('.event-title')?.textContent.split('\n')[0]?.trim() || '',
+        hora: timelineItem.querySelector('.timeline-item-date')?.textContent.match(/(\d{2}:\d{2})/)?.[0] || '',
+        veterinario: timelineItem.querySelector('.timeline-item-subtitle')?.textContent.replace(/\n|\t|i/g, '').trim() || '',
+    };
+    
+    console.log('📋 Datos de la cita extraídos:', citaData);
+    
+    // Abrir el modal de nueva consulta
+    openVetModal('nuevaConsultaModal');
+    
+    // Precargar datos en el formulario
+    // 1. Precargar fecha
+    const fechaConsulta = document.getElementById('fechaConsulta');
+    if (fechaConsulta) {
+        const fechaFormato = `${citaData.fecha}/${citaData.mes}/${citaData.año}`;
+        fechaConsulta.textContent = fechaFormato;
+        console.log('✅ Fecha precargada:', fechaFormato);
+    }
+    
+    // 2. Precargar veterinario (si existe un campo)
+    const medicoTratante = document.getElementById('medicoTratante');
+    if (medicoTratante) {
+        medicoTratante.textContent = citaData.veterinario;
+        console.log('✅ Veterinario precargado:', citaData.veterinario);
+    }
+    
+    // 3. Precargar servicio esperando a que serviciosPromise esté disponible
+    if (citaData.servicio) {
+        try {
+            console.log('⏳ Esperando a que los servicios se carguen...');
+            
+            // Esperar a que los servicios estén cargados
+            if (typeof window.serviciosPromise !== 'undefined' && window.serviciosPromise) {
+                await window.serviciosPromise;
+                console.log('✅ Promesa de servicios resuelta');
+            } else {
+                console.warn('⚠️ window.serviciosPromise no está disponible');
+            }
+            
+            // Ahora intentar buscar el servicio en todosLosServicios
+            if (typeof window.todosLosServicios !== 'undefined' && Array.isArray(window.todosLosServicios) && window.todosLosServicios.length > 0) {
+                console.log('📚 Servicios disponibles:', window.todosLosServicios.length);
+                
+                // Buscar el servicio por nombre (búsqueda flexible)
+                const servicioEncontrado = window.todosLosServicios.find(s => 
+                    s.nombre.toLowerCase().trim() === citaData.servicio.toLowerCase().trim()
+                );
+                
+                if (servicioEncontrado) {
+                    console.log('📌 Servicio encontrado:', servicioEncontrado);
+                    // Usar la función global agregarServicio para agregarlo
+                    if (typeof agregarServicio === 'function') {
+                        agregarServicio(servicioEncontrado.idServicio, servicioEncontrado.nombre);
+                        console.log('✅ Servicio precargado:', servicioEncontrado.nombre);
+                    } else {
+                        console.warn('⚠️ agregarServicio no está disponible');
+                    }
+                } else {
+                    console.warn('⚠️ Servicio no encontrado en la lista:', citaData.servicio);
+                    console.log('Servicios disponibles:', window.todosLosServicios.map(s => s.nombre).join(', '));
+                }
+            } else {
+                console.warn('⚠️ window.todosLosServicios no disponible o vacío:', window.todosLosServicios);
+            }
+        } catch (err) {
+            console.error('❌ Error esperando servicios:', err);
+        }
+    }
+    
+    // 4. Guardar el ID de la cita en el formulario para después usarlo
+    const formNuevaConsulta = document.getElementById('formNuevaConsulta');
+    if (formNuevaConsulta) {
+        formNuevaConsulta.dataset.citaId = citaId;
+        console.log('✅ Cita ID almacenado en dataset:', citaId);
+    }
+    
+    // 5. Cargar el inventario (esperar a que termine)
+    try {
+        console.log('⏳ Cargando inventario...');
+        if (typeof cargarInventario === 'function') {
+            const inventarioResult = await cargarInventario();
+            console.log('✅ Inventario cargado:', inventarioResult);
+        } else {
+            console.warn('⚠️ cargarInventario no está disponible');
+        }
+    } catch (err) {
+        console.error('❌ Error cargando inventario:', err);
+    }
+    
+    // 6. Cargar antecedentes
+    try {
+        if (typeof cargarAntecedentesEnModal === 'function') {
+            cargarAntecedentesEnModal();
+            console.log('✅ Antecedentes cargados');
+        }
+    } catch (err) {
+        console.error('⚠️ Error cargando antecedentes:', err);
+    }
+};
 
 // Filtrar inventario
 const searchInventario = document.getElementById('searchInventario');

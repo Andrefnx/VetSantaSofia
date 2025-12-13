@@ -4,7 +4,12 @@
 ============================================================ */
 
 let medicamentosDisponibles = [];
-let medicamentosSeleccionados = [];
+
+// Usar window.medicamentosSeleccionados del window (global) si está disponible
+// Si no, crear una local
+if (!window.medicamentosSeleccionados) {
+    window.medicamentosSeleccionados = [];
+}
 
 /**
  * Cargar inventario filtrado según el paciente
@@ -112,7 +117,7 @@ function mostrarInventario(productos) {
     }
 
     lista.innerHTML = productos.map(producto => {
-        const estaAgregado = medicamentosSeleccionados.find(m => m.id === producto.id);
+        const estaAgregado = window.medicamentosSeleccionados.find(m => m.id === producto.id);
         
         return `
             <div class="inventario-item ${estaAgregado ? 'agregado' : ''}" data-id="${producto.id}">
@@ -275,7 +280,7 @@ function agregarMedicamento(productoId) {
         return;
     }
 
-    if (medicamentosSeleccionados.find(m => m.id === productoId)) {
+    if (window.medicamentosSeleccionados.find(m => m.id === productoId)) {
         mostrarAlertaModal('Este medicamento ya está agregado', 'warning');
         return;
     }
@@ -298,14 +303,14 @@ function agregarMedicamento(productoId) {
         formato: producto.formato
     });
 
-    medicamentosSeleccionados.push({
+    window.medicamentosSeleccionados.push({
         id: producto.id,
         nombre: producto.nombre,
         peso: peso,
         dosis: dosisCalculada
     });
 
-    actualizarMedicamentosSeleccionados();
+    actualizarwindow.medicamentosSeleccionados();
     
     const item = document.querySelector(`.inventario-item[data-id="${productoId}"]`);
     if (item) {
@@ -319,8 +324,8 @@ function agregarMedicamento(productoId) {
  * Remover medicamento de la selección
  */
 function removerMedicamento(productoId) {
-    medicamentosSeleccionados = medicamentosSeleccionados.filter(m => m.id !== productoId);
-    actualizarMedicamentosSeleccionados();
+    window.medicamentosSeleccionados = window.medicamentosSeleccionados.filter(m => m.id !== productoId);
+    actualizarwindow.medicamentosSeleccionados();
     
     const item = document.querySelector(`.inventario-item[data-id="${productoId}"]`);
     if (item) {
@@ -340,12 +345,12 @@ function actualizarMedicamentosSeleccionados() {
         return;
     }
 
-    if (medicamentosSeleccionados.length === 0) {
+    if (window.medicamentosSeleccionados.length === 0) {
         container.innerHTML = '<p class="text-muted" style="font-size: 0.8rem; margin: 0;"><i class="bi bi-info-circle"></i> No hay medicamentos seleccionados</p>';
         return;
     }
 
-    container.innerHTML = medicamentosSeleccionados.map(med => {
+    container.innerHTML = window.medicamentosSeleccionados.map(med => {
         console.log('📦 Renderizando medicamento:', med);
         
         return `
@@ -473,7 +478,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // ⭐ Debounce para no hacer muchas peticiones
             timeoutId = setTimeout(() => {
                 // Recalcular dosis de medicamentos ya seleccionados
-                medicamentosSeleccionados = medicamentosSeleccionados.map(med => {
+                window.medicamentosSeleccionados = window.medicamentosSeleccionados.map(med => {
                     const producto = medicamentosDisponibles.find(p => p.id === med.id);
                     if (producto) {
                         const nuevaDosis = calcularDosisPersonalizada(producto, nuevoPeso);
@@ -486,7 +491,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     return med;
                 });
                 
-                actualizarMedicamentosSeleccionados();
+                actualizarwindow.medicamentosSeleccionados();
                 cargarInventarioFiltrado();
             }, 500); // Esperar 500ms después de que el usuario deje de escribir
         });

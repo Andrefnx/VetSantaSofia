@@ -1140,24 +1140,33 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- ⭐ VARIABLES GLOBALES - DEBE IR PRIMERO ANTES DE OTROS SCRIPTS -->
+<script>
+// Variables globales para servicios - DEFINIR PRIMERO
+window.todosLosServicios = [];
+window.serviciosPromise = null;
+window.medicamentosSeleccionados = [];
+window.serviciosSeleccionadosArray = [];
+
+console.log('✅ Variables globales inicializadas');
+</script>
+
 <script src="{% static 'js/pacientes/hospitalizaciones.js' %}"></script>
 <script src="{% static 'js/base/modals_base.js' %}"></script>
 <script src="{% static 'js/pacientes/editar_ficha.js' %}"></script>
 <script src="{% static 'js/pacientes/antecedentes_medicos.js' %}"></script>
-<script src="{% static 'js/pacientes/historial_medico.js' %}"></script>
 <script src="{% static 'js/pacientes/inventario_consulta.js' %}"></script>
+<script src="{% static 'js/pacientes/historial_medico.js' %}"></script>
 
 <script>
-// Variables globales para servicios
-let todosLosServicios = [];
-
-// Cargar servicios al inicio
+// Cargar servicios después de que el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
-    cargarServicios();
+    console.log('🔄 DOMContentLoaded - Iniciando carga de servicios');
+    window.serviciosPromise = cargarServicios();
 });
 
 function cargarServicios() {
-    fetch('/clinica/api/servicios/')
+    return fetch('/clinica/api/servicios/')
         .then(response => response.json())
         .then(data => {
             if (data.success && data.servicios) {
@@ -1165,10 +1174,13 @@ function cargarServicios() {
                 todosLosServicios = data.servicios.filter(servicio => 
                     servicio.categoria !== 'cirugia'
                 );
+                console.log('✅ Servicios cargados:', todosLosServicios.length);
             }
+            return todosLosServicios;
         })
         .catch(error => {
             console.error('Error al cargar servicios:', error);
+            return [];
         });
 }
 
