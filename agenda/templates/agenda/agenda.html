@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/agenda/agenda_bloques.css' %}">
+<link rel="stylesheet" href="{% static 'css/base/consulta_loader.css' %}">
 
 {% endblock %}
 
@@ -400,6 +401,7 @@
     const VETERINARIOS = {{ veterinarios_json|safe }};
     const SERVICIOS = {{ servicios_json|safe }};
 </script>
+<script src="{% static 'js/base/consulta_loader.js' %}"></script>
 <script src="{% static 'agenda/js/agenda_bloques.js' %}"></script>
 <script src="{% static 'agenda/js/horario_semanal.js' %}"></script>
 {% endblock %}

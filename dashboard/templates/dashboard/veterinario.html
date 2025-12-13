@@ -196,7 +196,7 @@
                                                         <i class="fas fa-play"></i> {% if cita.estado == 'en_curso' %}Continuar consulta{% else %}Iniciar consulta{% endif %}
                                                     </button>
                                                 {% endif %}
-                                                <button type="button" onclick="window.location.href='/agenda/?detalle_cita={{ cita.id }}'">
+                                                <button type="button" onclick="window.location.href='/agenda/?detalle_cita={{ cita.id }}&fecha={{ cita.fecha|date:"Y-m-d" }}&veterinario={{ cita.veterinario_id }}'">
                                                     <i class="fas fa-eye"></i> Ver detalle
                                                 </button>
                                             </div>

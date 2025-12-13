@@ -19,12 +19,10 @@
 
 .vet-modal-overlay {
     position: fixed !important;
-    top: 0 !important;
-    left: var(--sidebar-width, 260px) !important;
-    right: 0 !important;
-    width: calc(100% - var(--sidebar-width, 260px)) !important;
-    bottom: 0 !important;
+    inset: 0 !important;
+    width: 100vw !important;
     height: 100vh !important;
+    margin: 0 !important;
     background: rgba(0, 0, 0, 0.5) !important;
     display: flex !important;
     align-items: center !important;
