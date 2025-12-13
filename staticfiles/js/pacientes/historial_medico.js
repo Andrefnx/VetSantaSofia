@@ -315,6 +315,11 @@ document.addEventListener('DOMContentLoaded', function() {
 const btnNuevaConsulta = document.getElementById('btnNuevaConsulta');
 if (btnNuevaConsulta) {
     btnNuevaConsulta.onclick = async function () {
+        // 🧹 Limpiar datos temporales antes de abrir
+        window.medicamentosSeleccionados = [];
+        window.serviciosSeleccionadosArray = [];
+        console.log('🧹 Datos temporales limpiados antes de abrir Nueva Consulta');
+        
         openVetModal('nuevaConsultaModal');
         await cargarInventario();
         // Cargar antecedentes médicos en el modal
@@ -327,11 +332,27 @@ if (btnNuevaConsulta) {
 const closeNuevaConsultaModal = document.getElementById('closeNuevaConsultaModal');
 if (closeNuevaConsultaModal) {
     closeNuevaConsultaModal.onclick = function () {
+        // 🧹 Limpiar datos temporales antes de cerrar
+        window.medicamentosSeleccionados = [];
+        window.serviciosSeleccionadosArray = [];
+        document.getElementById('serviciosSeleccionados').innerHTML = '';
+        document.getElementById('insumosSeleccionados').innerHTML = '<p class="text-muted" style="font-size: 0.8rem; margin: 0;"><i class="bi bi-info-circle"></i> No hay medicamentos seleccionados</p>';
+        console.log('🧹 Datos temporales del modal nueva consulta limpiados');
+        
         closeVetModal('nuevaConsultaModal');
     };
 
     closeNuevaConsultaModal.onkeydown = function (e) {
-        if (e.key === "Enter" || e.key === " ") closeVetModal('nuevaConsultaModal');
+        if (e.key === "Enter" || e.key === " ") {
+            // 🧹 Limpiar datos temporales antes de cerrar
+            window.medicamentosSeleccionados = [];
+            window.serviciosSeleccionadosArray = [];
+            document.getElementById('serviciosSeleccionados').innerHTML = '';
+            document.getElementById('insumosSeleccionados').innerHTML = '<p class="text-muted" style="font-size: 0.8rem; margin: 0;"><i class="bi bi-info-circle"></i> No hay medicamentos seleccionados</p>';
+            console.log('🧹 Datos temporales del modal nueva consulta limpiados');
+            
+            closeVetModal('nuevaConsultaModal');
+        }
     };
 }
 
@@ -474,6 +495,14 @@ async function cargarInventario() {
             console.log('✅ Inventario renderizado en el modal');
         } else {
             console.error('❌ mostrarInventario() no está disponible');
+        }
+        
+        // ✅ CRITICAL: Initialize weight field
+        if (typeof inicializarPesoConsulta === 'function') {
+            inicializarPesoConsulta();
+            console.log('✅ Peso inicializado');
+        } else {
+            console.warn('⚠️ inicializarPesoConsulta() no está disponible');
         }
         
     } catch (error) {
@@ -619,6 +648,11 @@ function verDetalleConsulta(consultaId) {
 window.iniciarCitaDesdeFicha = async function(citaId, buttonElement) {
     console.log('🔵 iniciarCitaDesdeFicha llamado con citaId:', citaId);
     
+    // 🧹 CRITICAL: Limpiar datos temporales de cualquier modal anterior
+    window.medicamentosSeleccionados = [];
+    window.serviciosSeleccionadosArray = [];
+    console.log('🧹 Datos temporales limpiados antes de abrir modal');
+    
     // Obtener el elemento timeline-item que contiene esta cita
     const timelineItem = buttonElement.closest('.timeline-item');
     if (!timelineItem) {
@@ -626,15 +660,13 @@ window.iniciarCitaDesdeFicha = async function(citaId, buttonElement) {
         return;
     }
     
-    // Extraer datos de la cita desde el DOM
+    // Extraer datos de la cita desde los atributos data
     const citaData = {
-        id: citaId,
-        fecha: timelineItem.querySelector('.timeline-date .day')?.textContent || '',
-        mes: timelineItem.querySelector('.timeline-date .month')?.textContent || '',
-        año: timelineItem.querySelector('.timeline-date .year')?.textContent || new Date().getFullYear(),
-        servicio: timelineItem.querySelector('.event-title')?.textContent.split('\n')[0]?.trim() || '',
-        hora: timelineItem.querySelector('.timeline-item-date')?.textContent.match(/(\d{2}:\d{2})/)?.[0] || '',
-        veterinario: timelineItem.querySelector('.timeline-item-subtitle')?.textContent.replace(/\n|\t|i/g, '').trim() || '',
+        id: timelineItem.dataset.citaId || citaId,
+        servicio: timelineItem.dataset.servicio || '',
+        veterinario: timelineItem.dataset.veterinario || '',
+        fecha: timelineItem.dataset.fecha || '',
+        hora: timelineItem.dataset.hora || '',
     };
     
     console.log('📋 Datos de la cita extraídos:', citaData);
@@ -643,15 +675,14 @@ window.iniciarCitaDesdeFicha = async function(citaId, buttonElement) {
     openVetModal('nuevaConsultaModal');
     
     // Precargar datos en el formulario
-    // 1. Precargar fecha
+    // 1. Precargar fecha (ya viene en formato d/m/Y)
     const fechaConsulta = document.getElementById('fechaConsulta');
     if (fechaConsulta) {
-        const fechaFormato = `${citaData.fecha}/${citaData.mes}/${citaData.año}`;
-        fechaConsulta.textContent = fechaFormato;
-        console.log('✅ Fecha precargada:', fechaFormato);
+        fechaConsulta.textContent = citaData.fecha;
+        console.log('✅ Fecha precargada:', citaData.fecha);
     }
     
-    // 2. Precargar veterinario (si existe un campo)
+    // 2. Precargar veterinario
     const medicoTratante = document.getElementById('medicoTratante');
     if (medicoTratante) {
         medicoTratante.textContent = citaData.veterinario;
@@ -661,7 +692,7 @@ window.iniciarCitaDesdeFicha = async function(citaId, buttonElement) {
     // 3. Precargar servicio esperando a que serviciosPromise esté disponible
     if (citaData.servicio) {
         try {
-            console.log('⏳ Esperando a que los servicios se carguen...');
+            console.log('⏳ Esperando a que los servicios se carguen... Buscando:', citaData.servicio);
             
             // Esperar a que los servicios estén cargados
             if (typeof window.serviciosPromise !== 'undefined' && window.serviciosPromise) {

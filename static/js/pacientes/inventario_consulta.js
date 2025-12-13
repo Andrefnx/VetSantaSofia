@@ -103,6 +103,10 @@ function obtenerUltimoPesoRegistrado() {
  * Mostrar inventario en la lista
  */
 function mostrarInventario(productos) {
+    // ✅ CRITICAL: Update medicamentosDisponibles when showing inventory
+    medicamentosDisponibles = productos;
+    console.log(`✅ medicamentosDisponibles actualizado con ${productos.length} productos`);
+    
     const lista = document.getElementById('inventarioList');
     if (!lista) return;
 
@@ -310,7 +314,7 @@ function agregarMedicamento(productoId) {
         dosis: dosisCalculada
     });
 
-    actualizarwindow.medicamentosSeleccionados();
+    actualizarMedicamentosSeleccionados();
     
     const item = document.querySelector(`.inventario-item[data-id="${productoId}"]`);
     if (item) {
@@ -325,7 +329,7 @@ function agregarMedicamento(productoId) {
  */
 function removerMedicamento(productoId) {
     window.medicamentosSeleccionados = window.medicamentosSeleccionados.filter(m => m.id !== productoId);
-    actualizarwindow.medicamentosSeleccionados();
+    actualizarMedicamentosSeleccionados();
     
     const item = document.querySelector(`.inventario-item[data-id="${productoId}"]`);
     if (item) {
@@ -491,7 +495,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     return med;
                 });
                 
-                actualizarwindow.medicamentosSeleccionados();
+                actualizarMedicamentosSeleccionados();
                 cargarInventarioFiltrado();
             }, 500); // Esperar 500ms después de que el usuario deje de escribir
         });

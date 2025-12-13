@@ -209,12 +209,13 @@
                     <button class="btn-edit-icon" id="btnEditarAntecedentes" title="Editar antecedentes">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <div id="btnEditAntecedentesActions" style="display:none; gap: 0.5rem;">
-                        <button class="btn-thin btn-thin-cancel" id="btnCancelarAntecedentes" title="Cancelar">
-                            <i class="bi bi-x-lg"></i> Cancelar
+                    <!-- Acciones de edición (mismo patrón que Responsable) -->
+                    <div id="btnEditAntecedentesActions" style="display:none;">
+                        <button class="btn-edit-icon btn-cancel" id="btnCancelarAntecedentes" title="Cancelar">
+                            <i class="bi bi-x-lg"></i>
                         </button>
-                        <button class="btn-thin btn-thin-save" id="btnGuardarAntecedentes" title="Guardar">
-                            <i class="bi bi-check-lg"></i> Guardar
+                        <button class="btn-edit-icon btn-save" id="btnGuardarAntecedentes" title="Guardar">
+                            <i class="bi bi-check-lg"></i>
                         </button>
                     </div>
                 </div>
@@ -312,7 +313,12 @@
                                     {% for item in timeline_items %}
                                         {% if item.tipo == 'cita' %}
                                             {% with cita=item.obj %}
-                                            <div class="timeline-item" data-cita-id="{{ cita.id }}">
+                                            <div class="timeline-item" 
+                                                data-cita-id="{{ cita.id }}"
+                                                data-servicio="{{ cita.servicio.nombre|default:'' }}"
+                                                data-veterinario="{{ cita.veterinario.nombre }} {{ cita.veterinario.apellido }}"
+                                                data-fecha="{{ item.fecha|date:'d/m/Y' }}"
+                                                data-hora="{{ cita.hora_inicio|time:'H:i' }}">
                                                 <div class="timeline-date">
                                                     <span class="month">{{ item.fecha|date:"M" }}</span>
                                                     <span class="day">{{ item.fecha|date:"d" }}</span>
@@ -379,7 +385,12 @@
                                     {% endfor %}
                                 {% elif citas_agendadas or consultas %}
                                     {% for cita in citas_agendadas %}
-                                    <div class="timeline-item" data-cita-id="{{ cita.id }}">
+                                    <div class="timeline-item" 
+                                        data-cita-id="{{ cita.id }}"
+                                        data-servicio="{{ cita.servicio.nombre|default:'' }}"
+                                        data-veterinario="{{ cita.veterinario.nombre }} {{ cita.veterinario.apellido }}"
+                                        data-fecha="{{ cita.fecha|date:'d/m/Y' }}"
+                                        data-hora="{{ cita.hora_inicio|time:'H:i' }}">
                                         <div class="timeline-date">
                                             <span class="month">{{ cita.fecha|date:"M" }}</span>
                                             <span class="day">{{ cita.fecha|date:"d" }}</span>
@@ -684,6 +695,39 @@
 </div>
 
 <!-- ⭐ MODALES (sin cambios) -->
+
+<script>
+// Toggle edición de Antecedentes en la ficha (no modal)
+document.addEventListener('DOMContentLoaded', function() {
+    const btnEditar = document.getElementById('btnEditarAntecedentes');
+    const acciones = document.getElementById('btnEditAntecedentesActions');
+    const contenedor = document.getElementById('infoAntecedentes');
+    const btnCancelar = document.getElementById('btnCancelarAntecedentes');
+    const btnGuardar = document.getElementById('btnGuardarAntecedentes');
+
+    if (!btnEditar || !acciones || !contenedor) return;
+
+    const setEditMode = (editing) => {
+        // Mostrar/ocultar acciones
+        acciones.style.display = editing ? 'flex' : 'none';
+        // Alternar view-mode vs edit-mode dentro de antecedentes
+        contenedor.classList.toggle('edit-mode-active', editing);
+        contenedor.querySelectorAll('.view-mode').forEach(el => el.style.display = editing ? 'none' : 'inline');
+    };
+
+    // Inicial: solo texto
+    setEditMode(false);
+
+    btnEditar.addEventListener('click', () => setEditMode(true));
+    btnCancelar?.addEventListener('click', () => setEditMode(false));
+
+    // Guardar: mantener UI coherente; envío se maneja por backend o JS existente
+    btnGuardar?.addEventListener('click', () => {
+        // Aquí podrías recopilar datos si existe flujo de guardado específico
+        setEditMode(false);
+    });
+});
+</script>
 <!-- Modal Detalle Consulta -->
 <div id="detalleConsultaModal" class="vet-modal-overlay hide">
     <div class="vet-custom-modal">
@@ -750,28 +794,40 @@
                             </div>
 
                             <!-- Formulario de edición -->
-                            <div id="antecedentesEdicionModal" style="display:none; margin-top: 0.75rem; padding: 0.75rem; background: #f8f9fa; border-radius: 4px;">
-                                <div class="mb-2">
-                                    <label class="form-label form-label-sm"><strong>Alergias</strong></label>
-                                    <textarea class="form-control form-control-sm" id="antecedentesAlergias" placeholder="Ej: alergia al pollo" rows="2"></textarea>
+                            <div id="antecedentesEdicionModal" style="display:none; margin-top: 1rem; padding: 1rem; background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%); border-radius: 6px; border: 1px solid #e9ecef;">
+                                <div style="display: grid; grid-template-columns: 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                    <div>
+                                        <label class="form-label form-label-sm" style="font-weight: 600; font-size: 0.85rem; color: #495057; margin-bottom: 0.35rem; display: block;">
+                                            <i class="bi bi-exclamation-triangle" style="color: #dc3545; margin-right: 0.25rem;"></i> Alergias
+                                        </label>
+                                        <textarea class="form-control form-control-sm" id="antecedentesAlergias" placeholder="Ej: alergia al pollo" rows="2" style="font-size: 0.85rem;"></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="form-label form-label-sm" style="font-weight: 600; font-size: 0.85rem; color: #495057; margin-bottom: 0.35rem; display: block;">
+                                            <i class="bi bi-heart-pulse" style="color: #ffc107; margin-right: 0.25rem;"></i> Enfermedades Crónicas
+                                        </label>
+                                        <textarea class="form-control form-control-sm" id="antecedentesEnfermedades" placeholder="Ej: diabetes, artritis" rows="2" style="font-size: 0.85rem;"></textarea>
+                                    </div>
                                 </div>
-                                <div class="mb-2">
-                                    <label class="form-label form-label-sm"><strong>Enfermedades Crónicas</strong></label>
-                                    <textarea class="form-control form-control-sm" id="antecedentesEnfermedades" placeholder="Ej: diabetes, artritis" rows="2"></textarea>
+                                <div style="display: grid; grid-template-columns: 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+                                    <div>
+                                        <label class="form-label form-label-sm" style="font-weight: 600; font-size: 0.85rem; color: #495057; margin-bottom: 0.35rem; display: block;">
+                                            <i class="bi bi-capsule" style="color: #17a2b8; margin-right: 0.25rem;"></i> Medicamentos Actuales
+                                        </label>
+                                        <textarea class="form-control form-control-sm" id="antecedenteMedicamentos" placeholder="Ej: ibuprofen 400mg c/8h" rows="2" style="font-size: 0.85rem;"></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="form-label form-label-sm" style="font-weight: 600; font-size: 0.85rem; color: #495057; margin-bottom: 0.35rem; display: block;">
+                                            <i class="bi bi-scissors" style="color: #6c757d; margin-right: 0.25rem;"></i> Cirugías Previas
+                                        </label>
+                                        <textarea class="form-control form-control-sm" id="antecedenteCirugias" placeholder="Ej: esterilización 2023" rows="2" style="font-size: 0.85rem;"></textarea>
+                                    </div>
                                 </div>
-                                <div class="mb-2">
-                                    <label class="form-label form-label-sm"><strong>Medicamentos Actuales</strong></label>
-                                    <textarea class="form-control form-control-sm" id="antecedenteMedicamentos" placeholder="Medicamentos actuales" rows="2"></textarea>
-                                </div>
-                                <div class="mb-2">
-                                    <label class="form-label form-label-sm"><strong>Cirugías Previas</strong></label>
-                                    <textarea class="form-control form-control-sm" id="antecedenteCirugias" placeholder="Cirugías previas" rows="2"></textarea>
-                                </div>
-                                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                                    <button type="button" class="btn-thin btn-thin-cancel" id="btnCancelarAntecedentesModal" title="Cancelar">
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.75rem; border-top: 1px solid #dee2e6;">
+                                    <button type="button" class="btn btn-sm" id="btnCancelarAntecedentesModal" title="Cancelar" style="background: #6c757d; color: white; border: none; padding: 0.4rem 0.75rem; border-radius: 4px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s; width: 100%;" onmouseover="this.style.backgroundColor='#dc3545';" onmouseout="this.style.backgroundColor='#6c757d';">
                                         <i class="bi bi-x-lg"></i> Cancelar
                                     </button>
-                                    <button type="button" class="btn-thin btn-thin-save" id="btnGuardarAntecedentesModal" title="Guardar">
+                                    <button type="button" class="btn btn-sm" id="btnGuardarAntecedentesModal" title="Guardar" style="background: #28a745; color: white; border: none; padding: 0.4rem 0.75rem; border-radius: 4px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s; width: 100%;">
                                         <i class="bi bi-check-lg"></i> Guardar
                                     </button>
                                 </div>

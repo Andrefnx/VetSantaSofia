@@ -476,6 +476,14 @@ async function cargarInventario() {
             console.error('❌ mostrarInventario() no está disponible');
         }
         
+        // ✅ CRITICAL: Initialize weight field
+        if (typeof inicializarPesoConsulta === 'function') {
+            inicializarPesoConsulta();
+            console.log('✅ Peso inicializado');
+        } else {
+            console.warn('⚠️ inicializarPesoConsulta() no está disponible');
+        }
+        
     } catch (error) {
         console.error('❌ Error de red:', error);
     }
@@ -626,15 +634,13 @@ window.iniciarCitaDesdeFicha = async function(citaId, buttonElement) {
         return;
     }
     
-    // Extraer datos de la cita desde el DOM
+    // Extraer datos de la cita desde los atributos data
     const citaData = {
-        id: citaId,
-        fecha: timelineItem.querySelector('.timeline-date .day')?.textContent || '',
-        mes: timelineItem.querySelector('.timeline-date .month')?.textContent || '',
-        año: timelineItem.querySelector('.timeline-date .year')?.textContent || new Date().getFullYear(),
-        servicio: timelineItem.querySelector('.event-title')?.textContent.split('\n')[0]?.trim() || '',
-        hora: timelineItem.querySelector('.timeline-item-date')?.textContent.match(/(\d{2}:\d{2})/)?.[0] || '',
-        veterinario: timelineItem.querySelector('.timeline-item-subtitle')?.textContent.replace(/\n|\t|i/g, '').trim() || '',
+        id: timelineItem.dataset.citaId || citaId,
+        servicio: timelineItem.dataset.servicio || '',
+        veterinario: timelineItem.dataset.veterinario || '',
+        fecha: timelineItem.dataset.fecha || '',
+        hora: timelineItem.dataset.hora || '',
     };
     
     console.log('📋 Datos de la cita extraídos:', citaData);
@@ -643,15 +649,14 @@ window.iniciarCitaDesdeFicha = async function(citaId, buttonElement) {
     openVetModal('nuevaConsultaModal');
     
     // Precargar datos en el formulario
-    // 1. Precargar fecha
+    // 1. Precargar fecha (ya viene en formato d/m/Y)
     const fechaConsulta = document.getElementById('fechaConsulta');
     if (fechaConsulta) {
-        const fechaFormato = `${citaData.fecha}/${citaData.mes}/${citaData.año}`;
-        fechaConsulta.textContent = fechaFormato;
-        console.log('✅ Fecha precargada:', fechaFormato);
+        fechaConsulta.textContent = citaData.fecha;
+        console.log('✅ Fecha precargada:', citaData.fecha);
     }
     
-    // 2. Precargar veterinario (si existe un campo)
+    // 2. Precargar veterinario
     const medicoTratante = document.getElementById('medicoTratante');
     if (medicoTratante) {
         medicoTratante.textContent = citaData.veterinario;
@@ -661,7 +666,7 @@ window.iniciarCitaDesdeFicha = async function(citaId, buttonElement) {
     // 3. Precargar servicio esperando a que serviciosPromise esté disponible
     if (citaData.servicio) {
         try {
-            console.log('⏳ Esperando a que los servicios se carguen...');
+            console.log('⏳ Esperando a que los servicios se carguen... Buscando:', citaData.servicio);
             
             // Esperar a que los servicios estén cargados
             if (typeof window.serviciosPromise !== 'undefined' && window.serviciosPromise) {

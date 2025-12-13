@@ -1,9 +1,7 @@
-.timeline-item.timeline-cita-agendada {
+.timeline-card.timeline-cita-agendada {
     border: 2px dotted #69c087;
-}
-.timeline-item.timeline-cita-agendada .timeline-item-btn {
-    background: #69c087;
-    color: #0b4d2d;
+    border-radius: 12px;
+    padding: 12px 14px;
 }
 :root {
     --primary-color: #9fcf9f;
@@ -66,26 +64,23 @@
     background: white;
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
-    padding: 1.2rem;
-    margin-bottom: 0.8rem;
+    padding: 1rem;
+    margin-bottom: 0.6rem;
 }
 
 .section h2 {
-    font-size: 1rem;
-    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    margin-bottom: 0.6rem;
     margin-top: 0;
 }
 
-.section .info > p {
-    margin-bottom: 0.4rem;
-    font-size: 0.85rem;
-}
+.section .info > p { margin-bottom: 0.3rem; font-size: 0.85rem; }
 
 .info-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     border-top: 1px solid var(--border-color);
-    padding-top: 0.5rem;
+    padding-top: 0.4rem;
     gap: 8px;
     word-wrap: break-word;
     overflow-wrap: break-word;
@@ -97,7 +92,7 @@
 }
 
 .info-row p {
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.3rem;
     font-size: 0.85rem;
 }
 
@@ -114,8 +109,48 @@
 
 .edad-section {
     border-top: 1px solid var(--border-color);
-    padding-top: 0.8rem;
-    margin-bottom: 0.8rem;
+    padding-top: 0.6rem;
+    margin-bottom: 0.6rem;
+}
+
+/* Compact Antecedentes section */
+.antecedentes-compact .antecedentes-list { list-style: none; padding: 0; margin: 0; }
+.antecedentes-compact .antecedentes-list li { display: grid; grid-template-columns: 20px 160px 1fr; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--border-color); }
+.antecedentes-compact .antecedentes-list li:first-child { border-top: 0; }
+.antecedentes-compact .icon i { color: #6b7280; }
+.antecedentes-compact .label { font-weight: 600; color: #374151; }
+.antecedentes-compact .value { color: #111827; }
+
+/* Antecedentes en modo edición */
+.antecedentes-compact .antecedentes-list li textarea.edit-mode {
+    display: block !important;
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    margin-left: 28px;
+    padding: 10px 12px !important;
+    font-family: inherit;
+    font-size: 0.85rem !important;
+    line-height: 1.5;
+    border: 1.5px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #f9fafb;
+    resize: vertical;
+    min-height: 80px;
+    transition: all 0.2s ease;
+    width: calc(100% - 28px - 20px - 8px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.antecedentes-compact .antecedentes-list li textarea.edit-mode:hover {
+    border-color: #bfdbfe;
+    background-color: white;
+}
+
+.antecedentes-compact .antecedentes-list li textarea.edit-mode:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(159, 207, 159, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .edad-section > p {
@@ -1666,6 +1701,54 @@ td[colspan][style*="text-align: center"] {
     gap: 0.5rem;
 }
 
+#btnEditAntecedentesActions {
+    display: flex !important;
+    gap: 0.7rem;
+    align-items: center;
+}
+
+/* Estilos para antecedentes en modo edición */
+.antecedentes-compact #infoAntecedentes.edit-mode-active {
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    margin: -16px -16px 0 -16px;
+    transition: all 0.3s ease;
+}
+
+.antecedentes-compact #infoAntecedentes.edit-mode-active .antecedentes-list {
+    background-color: transparent;
+}
+
+.antecedentes-compact #infoAntecedentes.edit-mode-active .antecedentes-list li {
+    display: block;
+    padding: 12px 0;
+    border: none;
+    border-bottom: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.antecedentes-compact #infoAntecedentes.edit-mode-active .antecedentes-list li:last-child {
+    border-bottom: none;
+}
+
+.antecedentes-compact #infoAntecedentes.edit-mode-active .antecedentes-list li .icon {
+    display: inline-block;
+    margin-right: 8px;
+    vertical-align: top;
+}
+
+.antecedentes-compact #infoAntecedentes.edit-mode-active .antecedentes-list li .label {
+    display: inline-block;
+    width: 160px;
+    vertical-align: top;
+    color: #374151;
+}
+
+.antecedentes-compact #infoAntecedentes.edit-mode-active .antecedentes-list li .value {
+    display: none;
+}
 
 .paciente-nombre-display {
     font-size: 0.85rem; /* Mismo tamaño que el resto */

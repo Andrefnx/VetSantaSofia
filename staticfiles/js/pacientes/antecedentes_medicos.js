@@ -19,6 +19,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 originalAntecedentes[input.name] = input.value;
             });
 
+            // Agregar clase de modo edición
+            infoAntecedentes.classList.add('edit-mode-active');
+
             // Mostrar/ocultar elementos
             infoAntecedentes.querySelectorAll('.view-mode').forEach(el => el.style.display = 'none');
             infoAntecedentes.querySelectorAll('textarea.edit-mode').forEach(el => el.style.display = 'block');
@@ -37,6 +40,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 antecedentesInputs.forEach(input => {
                     input.value = originalAntecedentes[input.name] || '';
                 });
+
+                // Remover clase de modo edición
+                infoAntecedentes.classList.remove('edit-mode-active');
 
                 // Mostrar/ocultar elementos
                 infoAntecedentes.querySelectorAll('.view-mode').forEach(el => el.style.display = 'inline');
@@ -83,6 +89,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         viewSpans[2].textContent = data.medicamentos_actuales || 'Ninguno';
                         viewSpans[3].textContent = data.cirugia_previa || 'Ninguna registrada';
                         
+                        // Remover clase de modo edición
+                        infoAntecedentes.classList.remove('edit-mode-active');
+
                         // Volver a modo vista
                         infoAntecedentes.querySelectorAll('.view-mode').forEach(el => el.style.display = 'inline');
                         infoAntecedentes.querySelectorAll('textarea.edit-mode').forEach(el => el.style.display = 'none');
