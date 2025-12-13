@@ -297,15 +297,26 @@
                             <hr class="vd-hosp-divider">
                             
                             <!-- Footer: Estado registro -->
-                            {% if hosp.ultimo_registro %}
-                                <div class="vd-hosp-footer vd-hosp-ok">
-                                    <i class="fas fa-notes-medical me-1"></i>
-                                    Último registro: {{ hosp.ultimo_registro.fecha|date:"d/m H:i" }}
-                                </div>
+                            {% if hosp.necesita_actualizacion %}
+                                    <div class="vd-hosp-footer vd-hosp-add">
+                                        <span class="vd-hosp-warning-text">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            Sin actualizaciones en más de 12 horas
+                                        </span>
+                                        <a href="/pacientes/{{ hosp.paciente.id }}/?tab=hosp&registro_hosp={{ hosp.id }}#hosp" class="vd-hosp-add-link" title="Añadir registro">
+                                            <i class="fas fa-plus"></i>
+                                            Añadir registro
+                                        </a>
+                                    </div>
                             {% else %}
-                                <div class="vd-hosp-footer vd-hosp-warning">
-                                    <i class="fas fa-exclamation-triangle me-1"></i>
-                                    Sin registros recientes
+                                <div class="vd-hosp-footer vd-hosp-data">
+                                    <div class="vd-hosp-timestamp">Último registro ({{ hosp.ultimo_registro.fecha_registro|date:"d/m H:i" }})</div>
+                                    <div class="vd-hosp-vitals-row">
+                                        <span class="vd-hosp-vital">T: {{ hosp.ultimo_registro.temperatura|default:"-" }}°</span>
+                                        <span class="vd-hosp-vital">Kg: {{ hosp.ultimo_registro.peso|default:"-" }}</span>
+                                        <span class="vd-hosp-vital">FC: {{ hosp.ultimo_registro.frecuencia_cardiaca|default:"-" }}</span>
+                                        <span class="vd-hosp-vital">FR: {{ hosp.ultimo_registro.frecuencia_respiratoria|default:"-" }}</span>
+                                    </div>
                                 </div>
                             {% endif %}
                         </div>
@@ -316,95 +327,6 @@
                 {% else %}
                     <p class="text-muted text-center">No tienes pacientes hospitalizados</p>
                 {% endif %}
-            </div>
-        </div>
-        
-        <!-- Alertas Clínicas -->
-        <div class="card card-round">
-            <div class="card-header">
-                <div class="card-head-row">
-                    <div class="card-title">
-                        <i class="fas fa-bell me-2"></i>
-                        Alertas Clínicas
-                    </div>
-                    <div class="card-tools">
-                        <span class="badge badge-danger badge-lg">{{ alertas.total_alertas }}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                
-                <!-- Cobros Pendientes -->
-                {% if alertas.cobros_pendientes %}
-                <div class="alert alert-warning mb-3">
-                    <h6 class="alert-heading">
-                        <i class="fas fa-dollar-sign me-2"></i>
-                        Cobros Pendientes ({{ alertas.cobros_pendientes|length }})
-                    </h6>
-                    <ul class="mb-0 ps-3">
-                        {% for venta in alertas.cobros_pendientes %}
-                        <li>
-                            <strong>{{ venta.paciente.nombre }}</strong>
-                            <span class="text-danger ms-2">${{ venta.total|floatformat:0 }}</span>
-                            <a href="/caja/cobro/{{ venta.id }}/" class="btn btn-xs btn-warning ms-2">
-                                <i class="fas fa-dollar-sign"></i> Cobrar
-                            </a>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-                
-                <!-- Insumos Sin Confirmar -->
-                {% if alertas.insumos_sin_confirmar %}
-                <div class="alert alert-info mb-3">
-                    <h6 class="alert-heading">
-                        <i class="fas fa-pills me-2"></i>
-                        Insumos Sin Confirmar ({{ alertas.insumos_sin_confirmar|length }})
-                    </h6>
-                    <ul class="mb-0 ps-3">
-                        {% for consulta in alertas.insumos_sin_confirmar %}
-                        <li>
-                            <strong>{{ consulta.cita.paciente.nombre }}</strong> - 
-                            {{ consulta.fecha|date:"d/m H:i" }}
-                            <a href="/clinica/" class="btn btn-xs btn-info ms-2">
-                                <i class="fas fa-check"></i> Confirmar
-                            </a>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-                
-                <!-- Hospitalizaciones Sin Actualizar -->
-                {% if alertas.hospitalizaciones_sin_actualizar %}
-                <div class="alert alert-danger mb-3">
-                    <h6 class="alert-heading">
-                        <i class="fas fa-hospital me-2"></i>
-                        Hospitalizaciones Sin Actualizar ({{ alertas.hospitalizaciones_sin_actualizar|length }})
-                    </h6>
-                    <ul class="mb-0 ps-3">
-                        {% for hosp in alertas.hospitalizaciones_sin_actualizar %}
-                        <li>
-                            <strong>{{ hosp.paciente.nombre }}</strong> - 
-                            <span class="text-danger">{{ hosp.horas_sin_registro }} hrs sin registro</span>
-                            <a href="/pacientes/{{ hosp.paciente.id }}/?tab=hosp&registro_hosp={{ hosp.id }}#hosp" class="btn btn-xs btn-danger ms-2">
-                                <i class="fas fa-edit"></i> Actualizar
-                            </a>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-                
-                {% if not alertas.cobros_pendientes and not alertas.insumos_sin_confirmar and not alertas.hospitalizaciones_sin_actualizar %}
-                <div class="text-center py-3">
-                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-                    <p class="text-success mb-0">¡Todo al día!</p>
-                    <small class="text-muted">No hay alertas pendientes</small>
-                </div>
-                {% endif %}
-                
             </div>
         </div>
         

@@ -309,6 +309,13 @@ def _datos_veterinario(hoy, usuario):
         hosp.ultimo_registro = RegistroDiario.objects.filter(
             hospitalizacion=hosp
         ).order_by('-fecha_registro').first()
+        
+        # Determinar si necesita actualización (más de 12 horas sin registro)
+        if hosp.ultimo_registro:
+            horas_desde_registro = (timezone.now() - hosp.ultimo_registro.fecha_registro).total_seconds() / 3600
+            hosp.necesita_actualizacion = horas_desde_registro >= 12
+        else:
+            hosp.necesita_actualizacion = True
     
     # 4. ALERTAS CLÍNICAS
     alertas = []
