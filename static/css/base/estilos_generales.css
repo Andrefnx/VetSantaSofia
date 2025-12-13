@@ -2368,7 +2368,6 @@ html.sidebar-is-collapsed .main-panel {
     top: 0 !important;
     z-index: 999 !important;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-    padding: 0 20px !important;
     margin: 0 !important;
     display: flex !important;
     align-items: center !important;

@@ -232,11 +232,13 @@ function renderizarBloques(data) {
         `;
         estado.style.display = 'block';
         container.style.display = 'none';
+        document.getElementById('agendaLeyenda').style.display = 'none';
         return;
     }
     
     estado.style.display = 'none';
     container.style.display = 'grid';
+    document.getElementById('agendaLeyenda').style.display = 'block';
     container.innerHTML = '';
     
     // Determinar el rango de bloques a mostrar (solo dentro del horario de trabajo)
