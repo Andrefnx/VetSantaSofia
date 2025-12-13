@@ -19,8 +19,9 @@
     --danger-hover: #ff0000;
     --warning-color: #ffc107;
     --warning-hover: #e0a800;
-    --info-color: #17a2b8;
-    --info-hover: #138496;
+    --info-color: #74bd74;
+    --info-hover: #6c8e6b;
+    --subtle: #f1fff3;
     
     /* COLORES NEUTRALES */
     --text-dark: #103012;
@@ -2386,6 +2387,9 @@ html.sidebar-is-collapsed .main-panel {
     padding-bottom: 20px !important;
 }
 
+.bg-warning-subtle {
+    background-color: var(--subtle) !important;
+}
 
 /* Responsive */
 @media (max-width: 991px) {

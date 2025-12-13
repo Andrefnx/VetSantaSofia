@@ -373,8 +373,13 @@ def _datos_veterinario(hoy, usuario):
     # Hospitalizaciones sin actualizar
     hospitalizaciones_sin_actualizar = []
     for hosp in hospitalizaciones_asignadas:
-        if not hosp.ultimo_registro or (timezone.now() - hosp.ultimo_registro.fecha_registro).hours >= 24:
-            hosp.horas_sin_registro = 24 if not hosp.ultimo_registro else int((timezone.now() - hosp.ultimo_registro.fecha_registro).total_seconds() / 3600)
+        if hosp.ultimo_registro:
+            horas_sin_registro = int((timezone.now() - hosp.ultimo_registro.fecha_registro).total_seconds() / 3600)
+        else:
+            horas_sin_registro = 24
+        
+        if horas_sin_registro >= 24:
+            hosp.horas_sin_registro = horas_sin_registro
             hospitalizaciones_sin_actualizar.append(hosp)
     
     # Indicadores
