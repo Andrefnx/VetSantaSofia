@@ -220,32 +220,30 @@
                     </div>
                 </div>
                 <div class="info" id="infoAntecedentes">
-                    <ul class="antecedentes-list">
-                        <li>
-                            <span class="icon"><i class="bi bi-exclamation-triangle"></i></span>
-                            <span class="label">Alergias:</span>
-                            <span class="value view-mode">{{ paciente.alergias|default:"No registradas" }}</span>
+                    <div class="info-row">
+                        <p>
+                            <strong>Alergias:</strong>
+                            <span class="view-mode">{{ paciente.alergias|default:"No registradas" }}</span>
                             <textarea class="form-control edit-mode" name="alergias" style="display:none;">{{ paciente.alergias }}</textarea>
-                        </li>
-                        <li>
-                            <span class="icon"><i class="bi bi-heart-pulse"></i></span>
-                            <span class="label">Enfermedades Crónicas:</span>
-                            <span class="value view-mode">{{ paciente.enfermedades_cronicas|default:"No registradas" }}</span>
+                        </p>
+                        <p>
+                            <strong>Enfermedades Crónicas:</strong>
+                            <span class="view-mode">{{ paciente.enfermedades_cronicas|default:"No registradas" }}</span>
                             <textarea class="form-control edit-mode" name="enfermedades_cronicas" style="display:none;">{{ paciente.enfermedades_cronicas }}</textarea>
-                        </li>
-                        <li>
-                            <span class="icon"><i class="bi bi-capsule"></i></span>
-                            <span class="label">Medicamentos Actuales:</span>
-                            <span class="value view-mode">{{ paciente.medicamentos_actuales|default:"Ninguno" }}</span>
+                        </p>
+                    </div>
+                    <div class="info-row">
+                        <p>
+                            <strong>Medicamentos Actuales:</strong>
+                            <span class="view-mode">{{ paciente.medicamentos_actuales|default:"Ninguno" }}</span>
                             <textarea class="form-control edit-mode" name="medicamentos_actuales" style="display:none;">{{ paciente.medicamentos_actuales }}</textarea>
-                        </li>
-                        <li>
-                            <span class="icon"><i class="bi bi-hospital"></i></span>
-                            <span class="label">Cirugías Previas:</span>
-                            <span class="value view-mode">{{ paciente.cirugia_previa|default:"Ninguna registrada" }}</span>
+                        </p>
+                        <p>
+                            <strong>Cirugías Previas:</strong>
+                            <span class="view-mode">{{ paciente.cirugia_previa|default:"Ninguna registrada" }}</span>
                             <textarea class="form-control edit-mode" name="cirugia_previa" style="display:none;">{{ paciente.cirugia_previa }}</textarea>
-                        </li>
-                    </ul>
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -710,9 +708,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const setEditMode = (editing) => {
         // Mostrar/ocultar acciones
         acciones.style.display = editing ? 'flex' : 'none';
-        // Alternar view-mode vs edit-mode dentro de antecedentes
+        // Ocultar/mostrar el lápiz mientras se edita
+        btnEditar.style.display = editing ? 'none' : 'inline-flex';
+        // Alternar clase de edición; el CSS controla qué se muestra
         contenedor.classList.toggle('edit-mode-active', editing);
-        contenedor.querySelectorAll('.view-mode').forEach(el => el.style.display = editing ? 'none' : 'inline');
     };
 
     // Inicial: solo texto
