@@ -5,11 +5,16 @@
 /* Prevenir scroll innecesario */
 body {
     overflow-x: hidden;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
 }
 
 .container-fluid {
-    max-height: 100vh;
-    overflow: hidden;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0;
 }
 
 /* Contenedor de agendas */
@@ -596,7 +601,7 @@ body {
     background: white;
     padding: 15px;
     border-radius: 8px;
-    max-height: 75vh;
+    max-height: calc(100vh - 320px);
     overflow-y: auto;
 }
 
