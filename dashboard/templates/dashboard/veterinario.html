@@ -97,13 +97,11 @@
 {% endblock %}
 
 {% block dashboard_main %}
-<div class="row">
-    <!-- Columna Izquierda: Agenda -->
-    <div class="col-md-8">
-        
-        <!-- Cita Actual / Próxima Cita -->
+<!-- VETERINARIO LAYOUT -->
+<div class="row mb-3">
+    <div class="col-md-8 d-flex flex-column gap-3">
         {% if cita_actual %}
-        <div class="card card-round mb-3 border-warning">
+        <div class="card card-round mb-0 border-warning">
             <div class="card-body bg-warning-subtle">
                 <h5 class="mb-3">
                     <i class="fas fa-stethoscope me-2"></i>
@@ -131,101 +129,18 @@
             </div>
         </div>
         {% endif %}
-        
-        <!-- Mi Agenda del Día -->
-        <div class="card vet-card card-round">
-            <div class="card-header">
-                <div class="card-head-row">
-                    <div class="card-title">
-                        <i class="fas fa-calendar-day me-2"></i>
-                        Mi Agenda - {{ hoy|date:"l, d F Y" }}
-                    </div>
-                    <div class="card-tools">
-                        <a href="{% url 'agenda:agenda' %}" class="vet-btn vet-btn-sm">
-                            <i class="fa fa-calendar me-1"></i>
-                            Ver Agenda Completa
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                {% if mis_citas %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Hora</th>
-                                    <th>Paciente</th>
-                                    <th>Propietario</th>
-                                    <th>Tipo</th>
-                                    <th>Estado</th>
-                                    <th class="text-end">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for cita in mis_citas %}
-                                <tr class="{% if cita.estado == 'en_curso' %}table-warning{% elif cita.estado == 'completada' %}table-success{% endif %}">
-                                    <td>
-                                        <strong>{{ cita.hora_inicio|time:"H:i" }}</strong>
-                                        {% if cita.hora_fin %}
-                                            <br><small class="text-muted">{{ cita.hora_fin|time:"H:i" }}</small>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <strong>{{ cita.paciente.nombre }}</strong>
-                                        <br><small class="text-muted">{{ cita.paciente.get_especie_display }}</small>
-                                    </td>
-                                    <td>{{ cita.paciente.propietario.nombre_completo }}</td>
-                                    <td>
-                                        <span class="badge badge-secondary">
-                                            {% if cita.servicio %}{{ cita.servicio.nombre }}{% else %}{{ cita.get_tipo_display }}{% endif %}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-{% if cita.estado == 'completada' %}success{% elif cita.estado == 'en_curso' %}warning{% elif cita.estado == 'confirmada' %}info{% elif cita.estado == 'cancelada' %}danger{% else %}secondary{% endif %}">
-                                            {{ cita.get_estado_display }}
-                                        </span>
-                                    </td>
-                                    <td class="text-end">
-                                        <div class="manage-wheel">
-                                            <button type="button" onclick="toggleWheel(this)">
-                                                <i class="fas fa-cog"></i>
-                                            </button>
-                                            <div class="manage-options" style="display:none;">
-                                                {% if cita.estado != 'cancelada' and cita.estado != 'completada' %}
-                                                    <button type="button" onclick="window.location.href='/pacientes/{{ cita.paciente.id }}/?tab=historial&start_cita={{ cita.id }}#historial'">
-                                                        <i class="fas fa-play"></i> {% if cita.estado == 'en_curso' %}Continuar consulta{% else %}Iniciar consulta{% endif %}
-                                                    </button>
-                                                {% endif %}
-                                                <button type="button" onclick="window.location.href='/agenda/?detalle_cita={{ cita.id }}&fecha={{ cita.fecha|date:"Y-m-d" }}&veterinario={{ cita.veterinario_id }}'">
-                                                    <i class="fas fa-eye"></i> Ver detalle
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <div class="text-center py-5">
-                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">No tienes citas programadas para hoy</p>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-        
+
+        {% include 'partials/dashboard/agenda.html' %}
+        {% include 'partials/dashboard/pacientes.html' %}
     </div>
-    
-    <!-- Columna Derecha: Próxima Cita, Hospitalizaciones y Alertas -->
-    <div class="col-md-4">
+    <div class="col-md-4 d-flex flex-column gap-3">
+        {% include 'partials/dashboard/acciones.html' %}
+
         {% if proxima_cita %}
-        <div class="card card-round mb-3 border-info">
+        <div class="card card-round border-info">
             <div class="card-body bg-info-subtle">
                 <h5 class="mb-3">
-                    <i class="fas fa-clock me-2"></i>
+                    <i class="fas a-clock me-2"></i>
                     Próxima Cita
                 </h5>
                 <div class="row align-items-center">
@@ -256,79 +171,8 @@
             </div>
         </div>
         {% endif %}
-        
-        <!-- Mis Hospitalizaciones -->
-        <div class="card vet-card card-round mb-3">
-            <div class="card-header">
-                <div class="card-head-row">
-                    <div class="card-title">
-                        <i class="fas fa-hospital me-2"></i>
-                        Mis Hospitalizaciones
-                    </div>
-                    <div class="card-tools">
-                        <span class="badge badge-info badge-lg">{{ mis_hospitalizaciones|length }}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                {% if mis_hospitalizaciones %}
-                    <div class="list-group">
-                        {% for hosp in mis_hospitalizaciones %}
-                        <div class="list-group-item vd-hosp-card">
-                            <!-- Header: Ingreso | Dias | Eye -->
-                            <div class="vd-hosp-header">
-                                <span class="vd-hosp-date">Ingreso: {{ hosp.fecha_ingreso|date:"d/m/Y" }}</span>
-                                <span class="vd-hosp-days">{{ hosp.dias_hospitalizacion }} días</span>
-                                <a href="/pacientes/{{ hosp.paciente.id }}/?tab=hosp&hosp_id={{ hosp.id }}#hosp" class="vd-hosp-eye" title="Ver hospitalización">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                            </div>
-                            
-                            <hr class="vd-hosp-divider">
-                            
-                            <!-- Body: Mascota y veterinario -->
-                            <div class="vd-hosp-body">
-                                <div class="vd-hosp-name">{{ hosp.paciente.nombre }}</div>
-                                <div class="vd-hosp-vet">Veterinario a cargo: {{ hosp.paciente.propietario.nombre_completo }}</div>
-                            </div>
-                            
-                            <hr class="vd-hosp-divider">
-                            
-                            <!-- Footer: Estado registro -->
-                            {% if hosp.necesita_actualizacion %}
-                                    <div class="vd-hosp-footer vd-hosp-add">
-                                        <span class="vd-hosp-warning-text">
-                                            <i class="fas fa-exclamation-circle"></i>
-                                            Sin actualizaciones en más de 12 horas
-                                        </span>
-                                        <a href="/pacientes/{{ hosp.paciente.id }}/?tab=hosp&registro_hosp={{ hosp.id }}#hosp" class="vd-hosp-add-link" title="Añadir registro">
-                                            <i class="fas fa-plus"></i>
-                                            Añadir registro
-                                        </a>
-                                    </div>
-                            {% else %}
-                                <div class="vd-hosp-footer vd-hosp-data">
-                                    <div class="vd-hosp-timestamp">Último registro ({{ hosp.ultimo_registro.fecha_registro|date:"d/m H:i" }})</div>
-                                    <div class="vd-hosp-vitals-row">
-                                        <span class="vd-hosp-vital">T: {{ hosp.ultimo_registro.temperatura|default:"-" }}°</span>
-                                        <span class="vd-hosp-vital">Kg: {{ hosp.ultimo_registro.peso|default:"-" }}</span>
-                                        <span class="vd-hosp-vital">FC: {{ hosp.ultimo_registro.frecuencia_cardiaca|default:"-" }}</span>
-                                        <span class="vd-hosp-vital">FR: {{ hosp.ultimo_registro.frecuencia_respiratoria|default:"-" }}</span>
-                                    </div>
-                                </div>
-                            {% endif %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                    
-                    
-                {% else %}
-                    <p class="text-muted text-center">No tienes pacientes hospitalizados</p>
-                {% endif %}
-            </div>
-        </div>
-        
     </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}

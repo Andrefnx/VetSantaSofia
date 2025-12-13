@@ -122,7 +122,10 @@ def _datos_administrador(hoy):
     from caja.models import SesionCaja, Venta
     
     # 1. AGENDA - Resumen del día
-    citas_hoy = Cita.objects.filter(fecha=hoy)
+    citas_hoy = Cita.objects.filter(fecha=hoy).select_related(
+        'paciente', 'veterinario', 'servicio'
+    ).order_by('hora_inicio')
+    
     citas_stats = {
         'total': citas_hoy.count(),
         'pendientes': citas_hoy.filter(estado='pendiente').count(),
@@ -131,9 +134,7 @@ def _datos_administrador(hoy):
         'canceladas': citas_hoy.filter(estado='cancelada').count(),
     }
     
-    proximas_citas = citas_hoy.filter(
-        estado__in=['pendiente', 'confirmada']
-    ).select_related('paciente', 'veterinario').order_by('hora_inicio')[:5]
+    mis_citas = citas_hoy
     
     # 2. HOSPITALIZACIONES
     hospitalizaciones_activas = Hospitalizacion.objects.filter(
@@ -145,10 +146,7 @@ def _datos_administrador(hoy):
         fecha_ingreso = hosp.fecha_ingreso.date() if hasattr(hosp.fecha_ingreso, 'date') else hosp.fecha_ingreso
         hosp.dias_hospitalizacion = (hoy - fecha_ingreso).days
     
-    fecha_limite = hoy - timedelta(days=5)
-    hospitalizaciones_prolongadas = hospitalizaciones_activas.filter(
-        fecha_ingreso__date__lte=fecha_limite
-    )
+    mis_hospitalizaciones = list(hospitalizaciones_activas)
     
     # 3. INVENTARIO / STOCK
     stock_bajo = Insumo.objects.filter(
@@ -184,12 +182,22 @@ def _datos_administrador(hoy):
     if sesion_activa:
         caja_stats['total_vendido_hoy'] = sesion_activa.calcular_total_vendido()
     
-    cobros_pendientes = Venta.objects.filter(estado='pendiente')
+    cobros_pendientes = Venta.objects.filter(estado='pendiente').select_related('paciente')[:10]
     caja_stats['cobros_pendientes_count'] = cobros_pendientes.count()
     caja_stats['cobros_pendientes_total'] = sum(v.total for v in cobros_pendientes)
+    caja_stats['cobros_pendientes'] = cobros_pendientes
     
     # 5. INDICADORES GENERALES
+    cobros_pendientes_all = Venta.objects.filter(estado='pendiente')
+    cobros_pendientes_total = sum(v.total for v in cobros_pendientes_all) if cobros_pendientes_all else Decimal('0.00')
+    
     indicadores = {
+        'citas_hoy': citas_hoy.count(),
+        'citas_pendientes': citas_hoy.filter(estado__in=['pendiente', 'confirmada']).count(),
+        'citas_completadas': citas_hoy.filter(estado='completada').count(),
+        'hospitalizados': hospitalizaciones_activas.count(),
+        'cobros_pendientes_count': cobros_pendientes_all.count(),
+        'cobros_pendientes_total': cobros_pendientes_total,
         'pacientes_atendidos_hoy': Cita.objects.filter(
             fecha=hoy,
             estado='completada'
@@ -207,9 +215,8 @@ def _datos_administrador(hoy):
     
     return {
         'citas_stats': citas_stats,
-        'proximas_citas': proximas_citas,
-        'hospitalizaciones_activas': hospitalizaciones_activas[:10],
-        'hospitalizaciones_prolongadas': hospitalizaciones_prolongadas,
+        'mis_citas': mis_citas,
+        'mis_hospitalizaciones': mis_hospitalizaciones,
         'stock_bajo': stock_bajo,
         'insumos_utilizados_hoy': insumos_utilizados_hoy,
         'caja_stats': caja_stats,
@@ -220,33 +227,15 @@ def _datos_administrador(hoy):
 def _datos_recepcion(hoy, usuario):
     """Carga datos para el dashboard de recepción"""
     from agenda.models import Cita
-    from pacientes.models import Paciente
+    from clinica.models import Hospitalizacion
     from caja.models import SesionCaja, Venta
-    from datetime import time
     
-    # 1. AGENDA SIMPLE - Vista del día completo
+    # 1. AGENDA - Citas del día (mis_citas para compatible con partials)
     citas_hoy = Cita.objects.filter(fecha=hoy).select_related(
         'paciente', 'veterinario', 'servicio'
     ).order_by('hora_inicio').distinct()
     
-    # Generar vista horaria (8:00 - 20:00)
-    horarios = []
-    for hora in range(8, 21):
-        hora_obj = time(hour=hora, minute=0)
-        hora_siguiente = time(hour=hora + 1 if hora < 20 else 20, minute=0)
-        
-        citas_en_hora = list(citas_hoy.filter(
-            hora_inicio__gte=hora_obj,
-            hora_inicio__lt=hora_siguiente
-        ))
-        
-        horarios.append({
-            'hora': f"{hora:02d}:00",
-            'hora_obj': hora_obj,
-            'citas': citas_en_hora,
-            'tiene_citas': len(citas_en_hora) > 0,
-            'libre': len(citas_en_hora) == 0,
-        })
+    mis_citas = citas_hoy
     
     agenda_stats = {
         'total_citas': citas_hoy.count(),
@@ -255,7 +244,19 @@ def _datos_recepcion(hoy, usuario):
         'completadas': citas_hoy.filter(estado='completada').count(),
     }
     
-    # 2. CAJA
+    # 2. HOSPITALIZACIONES (mis_hospitalizaciones para compatible con partials)
+    hospitalizaciones_activas = Hospitalizacion.objects.filter(
+        estado='activa'
+    ).select_related('paciente', 'veterinario')
+    
+    # Agregar cálculo de días de hospitalización
+    for hosp in hospitalizaciones_activas:
+        fecha_ingreso = hosp.fecha_ingreso.date() if hasattr(hosp.fecha_ingreso, 'date') else hosp.fecha_ingreso
+        hosp.dias_hospitalizacion = (hoy - fecha_ingreso).days
+    
+    mis_hospitalizaciones = list(hospitalizaciones_activas)
+    
+    # 3. CAJA
     sesion_activa = SesionCaja.objects.filter(esta_cerrada=False).first()
     
     caja_stats = {
@@ -275,62 +276,25 @@ def _datos_recepcion(hoy, usuario):
     caja_stats['cobros_pendientes'] = cobros_pendientes
     caja_stats['cobros_pendientes_count'] = cobros_pendientes.count()
     
-    # 3. PACIENTES RECIENTES (consultas últimas 24h o hospitalizados activamente)
-    from clinica.models import Consulta, Hospitalizacion
-    from datetime import timedelta
+    # 4. INDICADORES
+    cobros_pendientes_all = Venta.objects.filter(estado='pendiente')
+    cobros_pendientes_total = sum(v.total for v in cobros_pendientes_all) if cobros_pendientes_all else Decimal('0.00')
     
-    # Fecha límite: hace 24 horas
-    hace_24h = hoy - timedelta(days=1)
-    
-    # Obtener pacientes con consultas recientes (últimas 24 horas)
-    consultas_recientes = Consulta.objects.filter(
-        fecha__gte=hace_24h
-    ).select_related('paciente', 'paciente__propietario').order_by('-fecha')
-    
-    # Obtener pacientes hospitalizados activamente
-    hospitalizaciones_activas = Hospitalizacion.objects.filter(
-        estado='activa'
-    ).select_related('paciente', 'paciente__propietario').order_by('-fecha_ingreso')
-    
-    # Crear conjunto de pacientes únicos con su última actividad
-    pacientes_dict = {}
-    
-    # Agregar pacientes con consultas recientes
-    for consulta in consultas_recientes:
-        if consulta.paciente.activo and consulta.paciente.id not in pacientes_dict:
-            paciente = consulta.paciente
-            paciente.ultima_consulta = consulta.fecha
-            paciente.tipo_actividad = 'consulta'
-            pacientes_dict[paciente.id] = paciente
-    
-    # Agregar pacientes hospitalizados
-    for hosp in hospitalizaciones_activas:
-        if hosp.paciente.activo:
-            paciente = hosp.paciente
-            if paciente.id not in pacientes_dict:
-                paciente.ultima_consulta = hosp.fecha_ingreso
-                paciente.tipo_actividad = 'hospitalizado'
-                pacientes_dict[paciente.id] = paciente
-            else:
-                # Si ya existe, mantener el más reciente
-                if hosp.fecha_ingreso > pacientes_dict[paciente.id].ultima_consulta:
-                    paciente.ultima_consulta = hosp.fecha_ingreso
-                    paciente.tipo_actividad = 'hospitalizado'
-                    pacientes_dict[paciente.id] = paciente
-    
-    # Convertir a lista y ordenar por fecha más reciente
-    pacientes_recientes = sorted(
-        pacientes_dict.values(), 
-        key=lambda p: p.ultima_consulta, 
-        reverse=True
-    )[:5]
+    indicadores = {
+        'citas_hoy': citas_hoy.count(),
+        'citas_pendientes': citas_hoy.filter(estado='pendiente').count(),
+        'citas_completadas': citas_hoy.filter(estado='completada').count(),
+        'hospitalizados': hospitalizaciones_activas.count(),
+        'cobros_pendientes_count': cobros_pendientes_all.count(),
+        'cobros_pendientes_total': cobros_pendientes_total,
+    }
     
     return {
-        'horarios': horarios,
-        'citas_hoy': citas_hoy,
+        'mis_citas': mis_citas,
+        'mis_hospitalizaciones': mis_hospitalizaciones,
         'agenda_stats': agenda_stats,
         'caja_stats': caja_stats,
-        'pacientes_recientes': pacientes_recientes,
+        'indicadores': indicadores,
     }
 
 

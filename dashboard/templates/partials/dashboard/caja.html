@@ -1,0 +1,213 @@
+{# Caja - Control de visibilidad por rol #}
+{# Contexto esperado: caja_stats, show_cobros_pending_list (booleano) #}
+
+{% load static %}
+
+{# CONTROL DE VISIBILIDAD POR ROL #}
+
+{% if user.rol == 'administracion' or user.is_superuser %}
+
+    <!-- CAJA ADMIN: Resumen y estado -->
+    <div class="card vet-card card-round">
+        <div class="card-header">
+            <div class="card-head-row">
+                <div class="card-title">
+                    <i class="fas fa-cash-register me-2"></i>
+                    Caja
+                </div>
+                <div>
+                    {% if caja_stats.estado == 'cerrada' %}
+                        <span class="badge badge-danger">
+                            <i class="fas fa-lock me-1"></i>
+                            Cerrada
+                        </span>
+                    {% else %}
+                        <span class="badge badge-success">
+                            <i class="fas fa-unlock me-1"></i>
+                            Abierta
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            {# Vista Admin: Resumen simple #}
+            <div class="card-stats">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Estado</h6>
+                        <h5 class="mb-0">
+                            {% if caja_stats.estado == 'cerrada' %}
+                                <span class="text-danger">Cerrada</span>
+                            {% else %}
+                                <span class="text-success">Abierta</span>
+                            {% endif %}
+                        </h5>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Total Vendido</h6>
+                        <h5 class="mb-0">${{ caja_stats.total_vendido_hoy|default:0|floatformat:2 }}</h5>
+                    </div>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <div class="row">
+                <div class="col-md-6 text-center">
+                    <h6 class="text-muted">Cobros Pendientes</h6>
+                    <h6>{{ caja_stats.cobros_pendientes_count|default:0 }}</h6>
+                </div>
+                <div class="col-md-6 text-center">
+                    <h6 class="text-muted">Monto Pendiente</h6>
+                    <h6 class="text-warning">${{ caja_stats.cobros_pendientes_total|default:0|floatformat:2 }}</h6>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <h6 class="mb-3">
+                <i class="fas fa-file-invoice-dollar me-2"></i>
+                Cobros Pendientes ({{ caja_stats.cobros_pendientes_count|default:0 }})
+            </h6>
+            
+            {% if caja_stats.cobros_pendientes_count > 0 %}
+                <div class="rd-cobros-scroll" style="max-height: 200px; overflow-y: auto;">
+                    {% for cobro in caja_stats.cobros_pendientes %}
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 text-truncate">{{ cobro.paciente.nombre|default:"Sin paciente" }}</h6>
+                            <small class="text-muted">{{ cobro.fecha_creacion|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        <div class="text-end ms-2">
+                            <h6 class="mb-1 text-danger">${{ cobro.total|default:0|floatformat:2 }}</h6>
+                            <a href="{% url 'caja:cashregister' %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-money-bill"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted text-center py-2">Sin cobros pendientes</p>
+            {% endif %}
+            
+            {% if caja_stats.estado == 'cerrada' %}
+                <button class="vet-btn vet-btn-block mt-3" data-bs-toggle="modal" data-bs-target="#abrirCajaModal">
+                    <i class="fas fa-unlock me-2"></i>
+                    Abrir Caja
+                </button>
+            {% else %}
+                <a href="{% url 'caja:cashregister' %}" class="vet-btn vet-btn-block mt-3">
+                    <i class="fas fa-eye me-2"></i>
+                    Ver Detalles
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+{% elif user.rol == 'veterinario' %}
+
+    {# VETERINARIO: Caja oculta - No mostrar nada #}
+    {# El veterinario no tiene acceso a gestión de caja #}
+
+{% elif user.rol == 'recepcion' %}
+
+    <!-- CAJA RECEPCIÓN: Estado + Acciones operativas -->
+    <div class="card vet-card card-round rd-caja-card">
+        <div class="card-header">
+            <div class="card-head-row">
+                <div class="card-title">
+                    <i class="fas fa-cash-register me-2"></i>
+                    Caja
+                </div>
+                <div>
+                    {% if caja_stats.estado == 'cerrada' %}
+                        <span class="badge badge-danger">
+                            <i class="fas fa-lock me-1"></i>
+                            Cerrada
+                        </span>
+                    {% else %}
+                        <span class="badge badge-success">
+                            <i class="fas fa-unlock me-1"></i>
+                            Abierta
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            {# Vista Recepción: Detallada con cobros pendientes #}
+            <div class="rd-stats-summary">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Estado</h6>
+                        <h5 class="mb-0">
+                            {% if caja_stats.estado == 'cerrada' %}
+                                <span class="text-danger">Cerrada</span>
+                            {% else %}
+                                <span class="text-success">Abierta</span>
+                            {% endif %}
+                        </h5>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Total Acumulado</h6>
+                        <h5 class="mb-0 text-primary">${{ caja_stats.total_acumulado|default:0|floatformat:2 }}</h5>
+                    </div>
+                </div>
+
+                {% if caja_stats.estado != 'cerrada' %}
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h6 class="text-muted">Operación Activa</h6>
+                            <p class="mb-0">Sesión en curso</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <hr>
+            
+            <h6 class="mb-3">
+                <i class="fas fa-file-invoice-dollar me-2"></i>
+                Cobros Pendientes ({{ caja_stats.cobros_pendientes_count|default:0 }})
+            </h6>
+            
+            {% if caja_stats.cobros_pendientes_count > 0 %}
+                <div class="rd-cobros-scroll" style="max-height: 200px; overflow-y: auto;">
+                    {% for cobro in caja_stats.cobros_pendientes %}
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 text-truncate">{{ cobro.paciente.nombre|default:"Sin paciente" }}</h6>
+                            <small class="text-muted">{{ cobro.fecha_creacion|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        <div class="text-end ms-2">
+                            <h6 class="mb-1 text-danger">${{ cobro.total|default:0|floatformat:2 }}</h6>
+                            <a href="{% url 'caja:cashregister' %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-money-bill"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted text-center py-2">Sin cobros pendientes</p>
+            {% endif %}
+
+            <div class="d-grid gap-2 mt-3">
+                {% if caja_stats.estado == 'cerrada' %}
+                    <button class="vet-btn vet-btn-block" data-bs-toggle="modal" data-bs-target="#abrirCajaModal">
+                        <i class="fas fa-unlock me-2"></i>
+                        Abrir Caja
+                    </button>
+                {% else %}
+                    <a href="{% url 'caja:cashregister' %}" class="vet-btn vet-btn-block">
+                        <i class="fas fa-cash-register me-2"></i>
+                        Ir a Caja
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+{% endif %}
