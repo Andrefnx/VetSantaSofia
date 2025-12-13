@@ -2101,3 +2101,275 @@ pre code {
     padding: 0;
 }
 
+/* =============================
+   SIDEBAR CUSTOM VETERINARIA
+============================= */
+
+/* Wrapper y Main Panel Override */
+.wrapper {
+    position: relative;
+    min-height: 100vh;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+/* Sidebar Container */
+.vet-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100vh;
+    background: #1a2035;
+    z-index: 1000;
+    transition: width 0.3s ease, transform 0.3s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.vet-sidebar.collapsed,
+html.sidebar-is-collapsed .vet-sidebar {
+    width: 70px;
+}
+
+/* Sidebar Header */
+.vet-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 15px;
+    background: #1a2035;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    min-height: 70px;
+}
+
+.vet-sidebar-logo {
+    display: flex;
+    align-items: center;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    opacity: 1;
+    visibility: visible;
+}
+
+.vet-sidebar.collapsed .vet-sidebar-logo {
+    opacity: 0;
+    visibility: hidden;
+    width: 0;
+    overflow: hidden;
+}
+
+.vet-sidebar-toggle-container {
+    display: flex;
+    align-items: center;
+    transition: margin 0.3s ease;
+}
+
+.vet-sidebar.collapsed .vet-sidebar-toggle-container {
+    margin: 0 auto;
+}
+
+.vet-toggle-btn {
+    background: none !important;
+    border: none !important;
+    color: #fff !important;
+    font-size: 1.4rem !important;
+    padding: 8px !important;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none !important;
+}
+
+.vet-toggle-btn:hover {
+    color: var(--primary-hover) !important;
+}
+
+.vet-toggle-btn:focus {
+    outline: none !important;
+}
+
+/* Sidebar Content Wrapper */
+.vet-sidebar-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.vet-sidebar-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+
+.vet-sidebar-wrapper::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.vet-sidebar-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.vet-sidebar-wrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Navigation Menu */
+.vet-nav-menu {
+    list-style: none;
+    padding: 15px 0;
+    margin: 0;
+}
+
+.vet-nav-item {
+    margin: 0;
+    padding: 0;
+}
+
+.vet-nav-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #b9babf;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.vet-nav-link i {
+    font-size: 1.2rem;
+    min-width: 30px;
+    color: #b9babf;
+    transition: color 0.2s ease;
+}
+
+.vet-nav-link span {
+    margin-left: 10px;
+    font-size: 0.95rem;
+    font-weight: 400;
+    transition: opacity 0.3s ease;
+}
+
+.vet-sidebar.collapsed .vet-nav-link span {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.vet-nav-link:hover {
+    background: rgba(175, 225, 175, 0.1);
+    color: #fff;
+}
+
+.vet-nav-link:hover i {
+    color: var(--primary-color);
+}
+
+/* Active Item */
+.vet-nav-item.active .vet-nav-link {
+    background: rgba(175, 225, 175, 0.15);
+    color: #fff;
+    border-left: 4px solid var(--primary-color);
+}
+
+.vet-nav-item.active .vet-nav-link i {
+    color: var(--primary-color);
+}
+
+/* Nav Section */
+.vet-nav-section {
+    display: flex;
+    align-items: center;
+    padding: 20px 20px 10px 20px;
+    margin-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 15px;
+}
+
+.vet-nav-section-icon {
+    min-width: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.vet-nav-section-icon i {
+    font-size: 0.9rem;
+    color: var(--primary-color);
+}
+
+.vet-nav-section-title {
+    margin: 0;
+    margin-left: 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.vet-sidebar.collapsed .vet-nav-section-title {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.vet-sidebar.collapsed .vet-nav-section {
+    display: none;
+}
+
+/* Main Panel Adjustment */
+.main-panel {
+    margin-left: 260px !important;
+    transition: margin-left 0.3s ease !important;
+    width: calc(100% - 260px) !important;
+    position: relative;
+    min-height: 100vh;
+}
+
+.main-panel.sidebar-collapsed,
+html.sidebar-is-collapsed .main-panel {
+    margin-left: 70px !important;
+    width: calc(100% - 70px) !important;
+}
+
+/* Container adjustments */
+.container,
+.container-fluid {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.page-inner {
+    padding: 20px;
+}
+
+/* Topbar fixed */
+.main-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 999 !important;
+    background: #fff !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .vet-sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .vet-sidebar.mobile-open {
+        transform: translateX(0);
+    }
+    
+    .main-panel,
+    .main-panel.sidebar-collapsed {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
+

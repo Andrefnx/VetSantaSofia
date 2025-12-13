@@ -1,89 +1,84 @@
 {% load static %}
 
-<!-- Sidebar -->
+<!-- Sidebar Custom -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-<style>
-    nav-item i:hover {
-        color: #ffffff!important;
-    }
-</style>
 
-<div class="sidebar" data-background-color="dark">
-    <div class="sidebar-logo">
-        <!-- Logo Header -->
-        <div class="logo-header" data-background-color="dark">
-            <a href="{% url 'dashboard:dashboard' %}" class="logo">
-                <img src="{% static 'img/logo.png' %}" alt="navbar brand" class="navbar-brand" height="40" />
-            </a>
-            <div class="nav-toggle">
-                <button class="btn btn-toggle toggle-sidebar">
-                    <i class="gg-menu-right"></i>
-                </button>
-                <button class="btn btn-toggle sidenav-toggler">
-                    <i class="gg-menu-left"></i>
-                </button>
-            </div>
-            <button class="topbar-toggler more">
-                <i class="gg-more-vertical-alt"></i>
+<!-- Script inline para aplicar estado antes de renderizar -->
+<script>
+(function() {
+    var savedState = localStorage.getItem('sidebarState');
+    if (savedState === 'collapsed') {
+        document.documentElement.classList.add('sidebar-is-collapsed');
+    }
+})();
+</script>
+
+<div class="vet-sidebar" id="vetSidebar">
+    <div class="vet-sidebar-header">
+        <a href="{% url 'dashboard:dashboard' %}" class="vet-sidebar-logo">
+            <img src="{% static 'img/logo.png' %}" alt="VetSantaSofia" height="40" />
+        </a>
+        <div class="vet-sidebar-toggle-container">
+            <button class="vet-toggle-btn" id="sidebarToggleBtn" onclick="toggleVetSidebar()">
+                <i class="fas fa-bars"></i>
             </button>
         </div>
-        <!-- End Logo Header -->
     </div>
 
-    <div class="sidebar-wrapper scrollbar scrollbar-inner">
-        <div class="sidebar-content">
-            <ul class="nav nav-secondary">
+    <div class="vet-sidebar-wrapper">
+        <div class="vet-sidebar-content">
+            <ul class="vet-nav-menu">
 
                 <!-- DASHBOARD -->
-                <li class="nav-item {% if request.resolver_match.namespace == 'dashboard' %}active{% endif %}">
-                    <a href="{% url 'dashboard:dashboard' %}">
+                <li class="vet-nav-item {% if request.resolver_match.namespace == 'dashboard' %}active{% endif %}">
+                    <a href="{% url 'dashboard:dashboard' %}" class="vet-nav-link">
                         <i class="fas fa-home"></i>
-                        <p>Dashboard</p>
+                        <span>Dashboard</span>
                     </a>
                 </li>
 
                 <!-- CAJA -->
-                <li class="nav-item {% if request.resolver_match.namespace == 'caja' %}active{% endif %}">
-                    <a href="{% url 'caja:cashregister' %}">
+                <li class="vet-nav-item {% if request.resolver_match.namespace == 'caja' %}active{% endif %}">
+                    <a href="{% url 'caja:cashregister' %}" class="vet-nav-link">
                         <i class="bi bi-bag-check-fill"></i>
-                        <p>Caja</p>
+                        <span>Caja</span>
                     </a>
                 </li>
 
-                <li class="nav-section">
-                    <span class="sidebar-mini-icon"><i class="fas fa-bolt"></i></span>
-                    <h4 class="text-section">CLINICA</h4>
+                <li class="vet-nav-section">
+                   
+                    <h4 class="vet-nav-section-title">CLINICA</h4>
                 </li>
 
-                <!-- SECCIÓN: AGENDA -->
-                <li class="nav-item {% if request.resolver_match.namespace == 'agenda' %}active{% endif %}">
-                    <a href="{% url 'agenda:agenda' %}">
+                <!-- AGENDA -->
+                <li class="vet-nav-item {% if request.resolver_match.namespace == 'agenda' %}active{% endif %}">
+                    <a href="{% url 'agenda:agenda' %}" class="vet-nav-link">
                         <i class="fas fa-calendar-alt"></i>
-                        <p>Agenda</p>
+                        <span>Agenda</span>
                     </a>
                 </li>
 
-                <!-- SECCIÓN: PACIENTES -->
-                <li class="nav-item {% if request.resolver_match.namespace == 'pacientes' %}active{% endif %}">
-                    <a href="{% url 'pacientes:pacientes' %}">
+                <!-- PACIENTES -->
+                <li class="vet-nav-item {% if request.resolver_match.namespace == 'pacientes' %}active{% endif %}">
+                    <a href="{% url 'pacientes:pacientes' %}" class="vet-nav-link">
                         <i class="fas fa-paw"></i>
-                        <p>Pacientes</p>
+                        <span>Pacientes</span>
                     </a>
                 </li>
 
-                <!-- SECCIÓN: INVENTARIO -->
-                <li class="nav-item {% if request.resolver_match.namespace == 'inventario' %}active{% endif %}">
-                    <a href="{% url 'inventario:inventario' %}">
+                <!-- INVENTARIO -->
+                <li class="vet-nav-item {% if request.resolver_match.namespace == 'inventario' %}active{% endif %}">
+                    <a href="{% url 'inventario:inventario' %}" class="vet-nav-link">
                         <i class="bi bi-box-seam"></i>
-                        <p>Inventario</p>
+                        <span>Inventario</span>
                     </a>
                 </li>
 
-                <!-- SECCIÓN: SERVICIOS -->
-                <li class="nav-item {% if request.resolver_match.namespace == 'servicios' %}active{% endif %}">
-                    <a href="{% url 'servicios:servicios' %}">
+                <!-- SERVICIOS -->
+                <li class="vet-nav-item {% if request.resolver_match.namespace == 'servicios' %}active{% endif %}">
+                    <a href="{% url 'servicios:servicios' %}" class="vet-nav-link">
                         <i class="bi bi-prescription2"></i>
-                        <p>Servicios</p>
+                        <span>Servicios</span>
                     </a>
                 </li>
 
@@ -91,4 +86,44 @@
         </div>
     </div>
 </div>
-<!-- End Sidebar -->
+
+<!-- JavaScript Custom para Sidebar -->
+<script>
+function toggleVetSidebar() {
+    const sidebar = document.getElementById('vetSidebar');
+    const mainPanel = document.querySelector('.main-panel');
+    const html = document.documentElement;
+    
+    if (sidebar.classList.contains('collapsed')) {
+        sidebar.classList.remove('collapsed');
+        if (mainPanel) mainPanel.classList.remove('sidebar-collapsed');
+        html.classList.remove('sidebar-is-collapsed');
+        localStorage.setItem('sidebarState', 'expanded');
+    } else {
+        sidebar.classList.add('collapsed');
+        if (mainPanel) mainPanel.classList.add('sidebar-collapsed');
+        html.classList.add('sidebar-is-collapsed');
+        localStorage.setItem('sidebarState', 'collapsed');
+    }
+}
+
+// Restaurar estado del sidebar cuando el DOM esté listo
+(function() {
+    const sidebar = document.getElementById('vetSidebar');
+    const mainPanel = document.querySelector('.main-panel');
+    const savedState = localStorage.getItem('sidebarState');
+    
+    if (savedState === 'collapsed') {
+        sidebar.classList.add('collapsed');
+        if (mainPanel) {
+            mainPanel.classList.add('sidebar-collapsed');
+        }
+    } else {
+        sidebar.classList.remove('collapsed');
+        if (mainPanel) {
+            mainPanel.classList.remove('sidebar-collapsed');
+        }
+    }
+})();
+</script>
+<!-- End Sidebar Custom -->
