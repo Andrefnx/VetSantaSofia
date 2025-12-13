@@ -203,13 +203,12 @@
                 </div>
             </div>
 
-            <div class="section resumen-clinico">
+            <div class="section resumen-clinico antecedentes-compact">
                 <div class="section-header-with-edit">
                     <h2>Antecedentes Médicos Críticos</h2>
                     <button class="btn-edit-icon" id="btnEditarAntecedentes" title="Editar antecedentes">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <!-- Botones Guardar / Cancelar (ocultos inicialmente) -->
                     <div id="btnEditAntecedentesActions" style="display:none; gap: 0.5rem;">
                         <button class="btn-thin btn-thin-cancel" id="btnCancelarAntecedentes" title="Cancelar">
                             <i class="bi bi-x-lg"></i> Cancelar
@@ -220,32 +219,32 @@
                     </div>
                 </div>
                 <div class="info" id="infoAntecedentes">
-                    <div class="info-row">
-                        <div style="width: 100%; margin-bottom: 1rem;">
-                            <p><strong><i class="bi bi-exclamation-triangle" style="color: #dc3545;"></i> Alergias:</strong> 
-                                <span class="view-mode">{{ paciente.alergias|default:"No registradas" }}</span>
-                                <textarea class="form-control edit-mode" name="alergias" style="display:none;">{{ paciente.alergias }}</textarea>
-                            </p>
-                        </div>
-                        <div style="width: 100%; margin-bottom: 1rem;">
-                            <p><strong><i class="bi bi-heart-pulse" style="color: #e74c3c;"></i> Enfermedades Crónicas:</strong> 
-                                <span class="view-mode">{{ paciente.enfermedades_cronicas|default:"No registradas" }}</span>
-                                <textarea class="form-control edit-mode" name="enfermedades_cronicas" style="display:none;">{{ paciente.enfermedades_cronicas }}</textarea>
-                            </p>
-                        </div>
-                        <div style="width: 100%; margin-bottom: 1rem;">
-                            <p><strong><i class="bi bi-capsule" style="color: #3498db;"></i> Medicamentos Actuales:</strong> 
-                                <span class="view-mode">{{ paciente.medicamentos_actuales|default:"Ninguno" }}</span>
-                                <textarea class="form-control edit-mode" name="medicamentos_actuales" style="display:none;">{{ paciente.medicamentos_actuales }}</textarea>
-                            </p>
-                        </div>
-                        <div style="width: 100%;">
-                            <p><strong><i class="bi bi-hospital" style="color: #9b59b6;"></i> Cirugías Previas:</strong> 
-                                <span class="view-mode">{{ paciente.cirugia_previa|default:"Ninguna registrada" }}</span>
-                                <textarea class="form-control edit-mode" name="cirugia_previa" style="display:none;">{{ paciente.cirugia_previa }}</textarea>
-                            </p>
-                        </div>
-                    </div>
+                    <ul class="antecedentes-list">
+                        <li>
+                            <span class="icon"><i class="bi bi-exclamation-triangle"></i></span>
+                            <span class="label">Alergias:</span>
+                            <span class="value view-mode">{{ paciente.alergias|default:"No registradas" }}</span>
+                            <textarea class="form-control edit-mode" name="alergias" style="display:none;">{{ paciente.alergias }}</textarea>
+                        </li>
+                        <li>
+                            <span class="icon"><i class="bi bi-heart-pulse"></i></span>
+                            <span class="label">Enfermedades Crónicas:</span>
+                            <span class="value view-mode">{{ paciente.enfermedades_cronicas|default:"No registradas" }}</span>
+                            <textarea class="form-control edit-mode" name="enfermedades_cronicas" style="display:none;">{{ paciente.enfermedades_cronicas }}</textarea>
+                        </li>
+                        <li>
+                            <span class="icon"><i class="bi bi-capsule"></i></span>
+                            <span class="label">Medicamentos Actuales:</span>
+                            <span class="value view-mode">{{ paciente.medicamentos_actuales|default:"Ninguno" }}</span>
+                            <textarea class="form-control edit-mode" name="medicamentos_actuales" style="display:none;">{{ paciente.medicamentos_actuales }}</textarea>
+                        </li>
+                        <li>
+                            <span class="icon"><i class="bi bi-hospital"></i></span>
+                            <span class="label">Cirugías Previas:</span>
+                            <span class="value view-mode">{{ paciente.cirugia_previa|default:"Ninguna registrada" }}</span>
+                            <textarea class="form-control edit-mode" name="cirugia_previa" style="display:none;">{{ paciente.cirugia_previa }}</textarea>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
@@ -278,9 +277,56 @@
                     <div class="historial-container">
                         <!-- Contenido Principal -->
                         <div class="historial-main">
-                            <h3>Historial Clínico</h3>
-
+                            <h3>Historial Clínico 
+                                <small style="color: #6b7280; font-size: 0.8rem; font-weight: normal;">
+                                    ({{ citas_agendadas|length }} cita{{ citas_agendadas|length|pluralize }} agendada{{ citas_agendadas|length|pluralize }})
+                                </small>
+                            </h3>
+                            <!-- DEBUG: Citas count = {{ citas_agendadas|length }} -->
+                            <!-- DEBUG: citas_agendadas existe = {% if citas_agendadas %}SI{% else %}NO{% endif %} -->
+                            <!-- DEBUG: Tipo = {{ citas_agendadas|default:"UNDEFINED" }} -->
+                            {% if citas_agendadas %}
+                                {% for c in citas_agendadas %}
+                                    <!-- DEBUG CITA: ID={{ c.id }} Fecha={{ c.fecha }} Hora={{ c.hora_inicio }} -->
+                                {% endfor %}
+                            {% endif %}
+                            
                             <div class="timeline" id="timeline">
+                                <!-- START CITAS AGENDADAS LOOP -->
+                                {% for cita in citas_agendadas %}
+                                <!-- DEBUG: Rendering cita ID {{ cita.id }} -->
+                                <div class="timeline-item" data-cita-id="{{ cita.id }}">
+                                    <div class="timeline-date">
+                                        <span class="month">{{ cita.fecha|date:"M" }}</span>
+                                        <span class="day">{{ cita.fecha|date:"d" }}</span>
+                                        <span class="year" style="display:none;">{{ cita.fecha|date:"Y" }}</span>
+                                    </div>
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-card timeline-cita-agendada">
+                                            <div class="timeline-item-header">
+                                                <div class="timeline-item-info">
+                                                <h3 class="event-title timeline-item-title">
+                                                    {{ cita.servicio.nombre|default:"Cita agendada" }}
+                                                    <span class="timeline-item-date">
+                                                        {{ cita.hora_inicio|time:"H:i" }} - {{ cita.hora_fin|time:"H:i" }}
+                                                    </span>
+                                                </h3>
+                                                    <p class="event-subtitle timeline-item-subtitle">
+                                                        <i class="bi bi-person"></i> {{ cita.veterinario.nombre }} {{ cita.veterinario.apellido }}
+                                                    </p>
+                                                </div>
+                                                <button class="timeline-btn timeline-item-btn" onclick="iniciarCitaDesdeFicha({{ cita.id }}, this)">
+                                                    Iniciar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                <!-- END CITAS AGENDADAS LOOP -->
+                                
+                                <!-- START CONSULTAS LOOP -->
                                 {% for consulta in consultas %}
                                 <div class="timeline-item"
                                     data-diagnostico="{{ consulta.diagnostico|lower|default:'' }}"

@@ -1,3 +1,8 @@
+.timeline-card.timeline-cita-agendada {
+    border: 2px dotted #69c087;
+    border-radius: 12px;
+    padding: 12px 14px;
+}
 :root {
     --primary-color: #9fcf9f;
     --primary-hover: #75b167;
@@ -59,26 +64,23 @@
     background: white;
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
-    padding: 1.2rem;
-    margin-bottom: 0.8rem;
+    padding: 1rem;
+    margin-bottom: 0.6rem;
 }
 
 .section h2 {
-    font-size: 1rem;
-    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    margin-bottom: 0.6rem;
     margin-top: 0;
 }
 
-.section .info > p {
-    margin-bottom: 0.4rem;
-    font-size: 0.85rem;
-}
+.section .info > p { margin-bottom: 0.3rem; font-size: 0.85rem; }
 
 .info-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     border-top: 1px solid var(--border-color);
-    padding-top: 0.5rem;
+    padding-top: 0.4rem;
     gap: 8px;
     word-wrap: break-word;
     overflow-wrap: break-word;
@@ -90,7 +92,7 @@
 }
 
 .info-row p {
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.3rem;
     font-size: 0.85rem;
 }
 
@@ -107,9 +109,17 @@
 
 .edad-section {
     border-top: 1px solid var(--border-color);
-    padding-top: 0.8rem;
-    margin-bottom: 0.8rem;
+    padding-top: 0.6rem;
+    margin-bottom: 0.6rem;
 }
+
+/* Compact Antecedentes section */
+.antecedentes-compact .antecedentes-list { list-style: none; padding: 0; margin: 0; }
+.antecedentes-compact .antecedentes-list li { display: grid; grid-template-columns: 20px 160px 1fr; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--border-color); }
+.antecedentes-compact .antecedentes-list li:first-child { border-top: 0; }
+.antecedentes-compact .icon i { color: #6b7280; }
+.antecedentes-compact .label { font-weight: 600; color: #374151; }
+.antecedentes-compact .value { color: #111827; }
 
 .edad-section > p {
     margin-bottom: 1rem;

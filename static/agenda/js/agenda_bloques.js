@@ -718,7 +718,7 @@ function renderizarBloquesVeterinario(vetId, data) {
                         
                         // Crear bloque unificado
                         const blockEl = document.createElement('div');
-                        blockEl.className = `agenda-block is-occupied cita-agendada`;
+                        blockEl.className = `agenda-block is-occupied`;
                         blockEl.dataset.blockIndex = blockIndex;
                         blockEl.dataset.citaId = bloque.cita_id;
                         blockEl.dataset.startTime = bloque.start_time;
@@ -728,16 +728,6 @@ function renderizarBloquesVeterinario(vetId, data) {
                             <div class="agenda-block-label">${bloque.paciente_nombre || 'Sin paciente'} | ${bloque.propietario_nombre || 'Sin dueño'}</div>
                             <div class="agenda-block-info">${bloque.servicio_nombre || 'Sin servicio'}</div>
                         `;
-                        // Botón iniciar cita
-                        const btnIniciar = document.createElement('button');
-                        btnIniciar.className = 'btn-iniciar-cita';
-                        btnIniciar.textContent = 'Iniciar';
-                        btnIniciar.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            iniciarCita(bloque.cita_id, blockEl);
-                        });
-                        blockEl.appendChild(btnIniciar);
-
                         blockEl.style.cursor = 'pointer';
                         blockEl.addEventListener('click', () => mostrarDetalleCita(bloque));
                         blockEl.addEventListener('mouseenter', () => destacarCitaCompleta(bloque.cita_id));

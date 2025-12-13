@@ -8,6 +8,7 @@ from .models import Consulta, Hospitalizacion, Cirugia, RegistroDiario, Alta, Do
 from pacientes.models import Paciente
 from cuentas.models import CustomUser
 from servicios.models import Servicio
+from agenda.models import Cita
 import json
 import sys
 import os
@@ -35,6 +36,9 @@ def vet_disponibilidad_view(request):
 @login_required
 def ficha_paciente(request, paciente_id):
     """Vista de la ficha del paciente"""
+    import sys
+    print(f"\n{'#'*80}\n>>> INICIO FICHA_PACIENTE - ID: {paciente_id}\n{'#'*80}", file=sys.stderr)
+    
     paciente = get_object_or_404(Paciente, id=paciente_id)
     
     # Obtener consultas del paciente ordenadas por fecha
@@ -49,12 +53,44 @@ def ficha_paciente(request, paciente_id):
     # ✅ CAMBIAR 'role' POR 'rol'
     veterinarios = CustomUser.objects.filter(rol='veterinario').order_by('nombre', 'apellido')
     
+    # Citas agendadas próximas y del día
+    hoy = timezone.localdate()
+    
+    # DEBUG: Probar sin filtro primero
+    todas_citas = Cita.objects.filter(paciente=paciente).select_related('veterinario', 'servicio')
+    print(f"\n{'='*80}", file=sys.stderr)
+    print(f"🔍 DEBUG QUERY", file=sys.stderr)
+    print(f"📅 timezone.localdate(): {hoy} (tipo: {type(hoy)})", file=sys.stderr)
+    print(f"👤 Paciente: {paciente.nombre} (ID: {paciente.id})", file=sys.stderr)
+    print(f"📊 TODAS las citas del paciente: {todas_citas.count()}", file=sys.stderr)
+    for c in todas_citas:
+        print(f"   - Cita {c.id}: fecha={c.fecha} (tipo:{type(c.fecha)}) >= {hoy}? {c.fecha >= hoy}", file=sys.stderr)
+    
+    citas_agendadas = Cita.objects.filter(paciente=paciente, fecha__gte=hoy).select_related('veterinario', 'servicio').order_by('fecha', 'hora_inicio')
+    print(f"\n📊 Citas filtradas (fecha__gte={hoy}): {citas_agendadas.count()}", file=sys.stderr)
+    
+    if citas_agendadas.exists():
+        print(f"\n🔍 CITAS ENCONTRADAS:", file=sys.stderr)
+        for idx, cita in enumerate(citas_agendadas, 1):
+            print(f"\n  📌 CITA #{idx}:", file=sys.stderr)
+            print(f"     ID: {cita.id}", file=sys.stderr)
+            print(f"     Fecha: {cita.fecha}", file=sys.stderr)
+            print(f"     Hora: {cita.hora_inicio} - {cita.hora_fin}", file=sys.stderr)
+            print(f"     Veterinario: {cita.veterinario.nombre} {cita.veterinario.apellido}", file=sys.stderr)
+            print(f"     Servicio: {cita.servicio.nombre if cita.servicio else 'Sin servicio'}", file=sys.stderr)
+            print(f"     Estado: {cita.estado}", file=sys.stderr)
+    else:
+        print(f"\n⚠️  NO HAY CITAS para este paciente desde hoy", file=sys.stderr)
+    
+    print(f"{'='*80}\n", file=sys.stderr)
+
     context = {
         'paciente': paciente,
         'consultas': consultas,
         'documentos': documentos,
         'nombre_veterinario': nombre_veterinario,
         'veterinarios': veterinarios,
+        'citas_agendadas': citas_agendadas,
     }
     
     return render(request, 'consulta/ficha_mascota.html', context)
@@ -366,10 +402,10 @@ import sys
 
 @login_required
 def ficha_mascota(request, pk):
-    import sys
-    sys.stderr.write("\n" + "="*60 + "\n")
-    sys.stderr.write(f"🔴 FICHA MASCOTA LLAMADA - PK: {pk}\n")
-    sys.stderr.write("="*60 + "\n\n")
+    FORCE_RELOAD_12345 = True  # Force Python bytecode reload
+    print("\n" + "#"*80)
+    print(f"### FICHA_MASCOTA VIEW EJECUTANDOSE - PK: {pk}")
+    print("#"*80 + "\n", flush=True)
     
     paciente = get_object_or_404(Paciente, pk=pk)
     consultas = Consulta.objects.filter(paciente=paciente).select_related('veterinario').order_by('-fecha')
@@ -410,7 +446,16 @@ def ficha_mascota(request, pk):
     nombre_veterinario = f"{request.user.nombre} {request.user.apellido}".strip()
     sys.stderr.write(f"\n👤 Veterinario logueado: {nombre_veterinario} (rol='{request.user.rol}')\n")
     sys.stderr.write(f"📝 Total de veterinarios a mostrar: {veterinarios.count()}\n")
-    sys.stderr.write("="*60 + "\n\n")
+    
+    # ⭐ AGREGAR CITAS AGENDADAS
+    hoy = timezone.localdate()
+    citas_agendadas = Cita.objects.filter(paciente=paciente, fecha__gte=hoy).select_related('veterinario', 'servicio').order_by('fecha', 'hora_inicio')
+    
+    print(f"\n### CITAS AGENDADAS - Fecha hoy: {hoy}")
+    print(f"### Total citas encontradas: {citas_agendadas.count()}")
+    for cita in citas_agendadas:
+        print(f"###   Cita ID {cita.id}: {cita.fecha} {cita.hora_inicio} - Vet: {cita.veterinario.nombre}")
+    print("###" + "="*77 + "\n", flush=True)
     
     context = {
         'paciente': paciente,
@@ -420,6 +465,7 @@ def ficha_mascota(request, pk):
         'hospitalizaciones': paciente.hospitalizaciones.all(),
         'examenes': paciente.examenes.all(),
         'documentos': paciente.documentos.all(),
+        'citas_agendadas': citas_agendadas,
     }
     return render(request, 'consulta/ficha_mascota.html', context)
 

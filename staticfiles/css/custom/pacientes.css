@@ -1,3 +1,10 @@
+.timeline-item.timeline-cita-agendada {
+    border: 2px dotted #69c087;
+}
+.timeline-item.timeline-cita-agendada .timeline-item-btn {
+    background: #69c087;
+    color: #0b4d2d;
+}
 :root {
     --primary-color: #9fcf9f;
     --primary-hover: #75b167;

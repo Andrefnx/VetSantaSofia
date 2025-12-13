@@ -7,6 +7,8 @@ from django.contrib.auth.decorators import login_required
 import json
 from datetime import date, datetime
 from .models import Paciente, Propietario
+from agenda.models import Cita
+from django.utils import timezone
 import re
 import unicodedata
 
@@ -148,12 +150,29 @@ def pacientes_view(request):
 @login_required
 def ficha_mascota_view(request, paciente_id):
     """Vista de la ficha de la mascota"""
+    print("\n" + "="*80)
+    print(f"🔍 FICHA_MASCOTA_VIEW EJECUTANDOSE - Paciente ID: {paciente_id}")
+    print("="*80 + "\n", flush=True)
+    
     from cuentas.models import CustomUser
     
     paciente = get_object_or_404(Paciente, id=paciente_id)
     
     # Obtener consultas con medicamentos (ahora funcionará)
     consultas = paciente.consultas.prefetch_related('medicamentos').all()
+    
+    # ⭐ OBTENER CITAS AGENDADAS (futuras o hoy)
+    hoy = timezone.localdate()
+    citas_agendadas = Cita.objects.filter(
+        paciente=paciente,
+        fecha__gte=hoy
+    ).select_related('veterinario', 'servicio').order_by('fecha', 'hora_inicio')
+    
+    print(f"📅 Fecha hoy: {hoy}")
+    print(f"📋 Total citas agendadas encontradas: {citas_agendadas.count()}")
+    for cita in citas_agendadas:
+        print(f"   └─ Cita ID {cita.id}: {cita.fecha} {cita.hora_inicio}-{cita.hora_fin} | Vet: {cita.veterinario.nombre} | Servicio: {cita.servicio.nombre if cita.servicio else 'Sin servicio'}")
+    print("", flush=True)
     
     # Obtener otros datos relacionados
     hospitalizaciones = paciente.hospitalizaciones.all() if hasattr(paciente, 'hospitalizaciones') else []
@@ -190,6 +209,7 @@ def ficha_mascota_view(request, paciente_id):
         'paciente': paciente,
         'paciente_data_json': paciente_data,
         'consultas': consultas,
+            'citas_agendadas': citas_agendadas,
         'hospitalizaciones': hospitalizaciones,
         'examenes': examenes,
         'documentos': documentos,
