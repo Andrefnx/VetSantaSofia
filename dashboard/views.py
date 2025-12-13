@@ -139,7 +139,8 @@ def _datos_administrador(hoy):
         'canceladas': citas_hoy.filter(estado='cancelada').count(),
     }
     
-    mis_citas = citas_hoy
+    # Mostrar solo citas pendientes y confirmadas
+    mis_citas = citas_hoy.filter(estado__in=['pendiente', 'confirmada'])
     
     # 2. HOSPITALIZACIONES
     hospitalizaciones_activas = Hospitalizacion.objects.filter(
@@ -240,7 +241,8 @@ def _datos_recepcion(hoy, usuario):
         'paciente__propietario', 'veterinario', 'servicio'
     ).order_by('hora_inicio').distinct()
     
-    mis_citas = citas_hoy
+    # Mostrar solo citas pendientes y confirmadas
+    mis_citas = citas_hoy.filter(estado__in=['pendiente', 'confirmada'])
     
     agenda_stats = {
         'total_citas': citas_hoy.count(),
@@ -314,6 +316,11 @@ def _datos_veterinario(hoy, usuario):
         veterinario=usuario,
         fecha=hoy
     ).select_related('paciente__propietario', 'servicio').order_by('hora_inicio')
+    
+    # Mostrar solo citas pendientes y confirmadas en la agenda
+    mis_citas = citas_del_dia.filter(
+        estado__in=['pendiente', 'confirmada']
+    )
     
     proximas_citas = citas_del_dia.filter(
         estado__in=['pendiente', 'confirmada']
@@ -445,7 +452,7 @@ def _datos_veterinario(hoy, usuario):
     }
     
     return {
-        'mis_citas': citas_del_dia,
+        'mis_citas': mis_citas,
         'proxima_cita': proximas_citas.first() if proximas_citas.exists() else None,
         'cita_actual': cita_actual,
         'indicadores': indicadores,

@@ -6,7 +6,7 @@
 {# Determinar el rol a mostrar: vista_como (testing) o user.rol (real) #}
 {% if vista_como == 'veterinario' or user.rol == 'veterinario' and not vista_como %}
 
-    <!-- AGENDA VETERINARIO: Agenda completa (detalle por hora) -->
+    <!-- AGENDA VETERINARIO: Vista simplificada -->
     <div class="card vet-card card-round">
         <div class="card-header">
             <div class="card-head-row">
@@ -23,7 +23,7 @@
             </div>
         </div>
         <div class="card-body">
-            {# Tabla canonical de citas (versión completa) #}
+            {# Tabla simplificada veterinario #}
             {% if mis_citas %}
                 <div class="table-responsive">
                     <table class="table table-hover table-sm">
@@ -31,18 +31,13 @@
                             <tr>
                                 <th>Hora</th>
                                 <th>Paciente</th>
-                                <th>Dueño</th>
-                                <th>Teléfono</th>
-                                <th>Correo</th>
-                                <th>Veterinario</th>
                                 <th>Tipo</th>
-                                <th>Estado</th>
                                 <th class="text-end">Ver Ficha</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for cita in mis_citas %}
-                            <tr class="{% if cita.estado == 'en_curso' %}table-warning{% elif cita.estado == 'completada' %}table-success{% endif %}">
+                            <tr>
                                 <td>
                                     <div><strong>{{ cita.hora_inicio|time:"H:i" }}</strong></div>
                                     <small class="text-muted d-block" style="font-size: 0.75rem;">{{ cita.hora_fin|time:"H:i"|default:"—" }}</small>
@@ -51,18 +46,9 @@
                                     <strong>{{ cita.paciente.nombre }}</strong><br>
                                     <small class="text-muted">{{ cita.paciente.get_especie_display }}</small>
                                 </td>
-                                <td>{{ cita.paciente.propietario.nombre_completo }}</td>
-                                <td>{{ cita.paciente.propietario.telefono|default:"—" }}</td>
-                                <td>{{ cita.paciente.propietario.email|default:"—" }}</td>
-                                <td>{{ cita.veterinario.nombre }} {{ cita.veterinario.apellido|default:"" }}</td>
                                 <td>
                                     <span class="badge badge-secondary">
                                         {% if cita.servicio %}{{ cita.servicio.nombre }}{% else %}{{ cita.get_tipo_display }}{% endif %}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge badge-{% if cita.estado == 'completada' %}success{% elif cita.estado == 'en_curso' %}warning{% elif cita.estado == 'confirmada' %}info{% elif cita.estado == 'cancelada' %}danger{% else %}secondary{% endif %}">
-                                        {{ cita.get_estado_display }}
                                     </span>
                                 </td>
                                 <td class="text-end">
@@ -78,7 +64,7 @@
             {% else %}
                 <div class="text-center py-5">
                     <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">No tienes citas programadas para hoy</p>
+                    <p class="text-muted">No tienes citas pendientes para hoy</p>
                 </div>
             {% endif %}
         </div>
@@ -86,7 +72,7 @@
 
 {% elif vista_como == 'recepcion' or user.rol == 'recepcion' and not vista_como %}
 
-    <!-- AGENDA RECEPCIÓN: Agenda completa con acciones de agendamiento -->
+    <!-- AGENDA RECEPCIÓN: Vista completa para gestión -->
     <div class="card vet-card card-round">
         <div class="card-header">
             <div class="card-head-row">
@@ -103,7 +89,7 @@
             </div>
         </div>
         <div class="card-body">
-            {# Tabla canonical con opciones de recepción #}
+            {# Tabla recepción #}
             {% if mis_citas %}
                 <div class="table-responsive">
                     <table class="table table-hover table-sm">
@@ -112,17 +98,15 @@
                                 <th>Hora</th>
                                 <th>Paciente</th>
                                 <th>Dueño</th>
-                                <th>Teléfono</th>
-                                <th>Correo</th>
+                                <th>Contacto</th>
                                 <th>Veterinario</th>
                                 <th>Tipo</th>
-                                <th>Estado</th>
                                 <th class="text-end">Ver Ficha</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for cita in mis_citas %}
-                            <tr class="{% if cita.estado == 'en_curso' %}table-warning{% elif cita.estado == 'completada' %}table-success{% endif %}">
+                            <tr>
                                 <td>
                                     <div><strong>{{ cita.hora_inicio|time:"H:i" }}</strong></div>
                                     <small class="text-muted d-block" style="font-size: 0.75rem;">{{ cita.hora_fin|time:"H:i"|default:"—" }}</small>
@@ -132,17 +116,14 @@
                                     <small class="text-muted">{{ cita.paciente.get_especie_display }}</small>
                                 </td>
                                 <td>{{ cita.paciente.propietario.nombre_completo }}</td>
-                                <td>{{ cita.paciente.propietario.telefono|default:"—" }}</td>
-                                <td>{{ cita.paciente.propietario.email|default:"—" }}</td>
+                                <td>
+                                    <div><strong>{{ cita.paciente.propietario.telefono|default:"—" }}</strong></div>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">{{ cita.paciente.propietario.email|default:"—" }}</small>
+                                </td>
                                 <td>{{ cita.veterinario.nombre }} {{ cita.veterinario.apellido|default:"" }}</td>
                                 <td>
                                     <span class="badge badge-secondary">
                                         {% if cita.servicio %}{{ cita.servicio.nombre }}{% else %}{{ cita.get_tipo_display }}{% endif %}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge badge-{% if cita.estado == 'completada' %}success{% elif cita.estado == 'en_curso' %}warning{% elif cita.estado == 'confirmada' %}info{% elif cita.estado == 'cancelada' %}danger{% else %}secondary{% endif %}">
-                                        {{ cita.get_estado_display }}
                                     </span>
                                 </td>
                                 <td class="text-end">
@@ -158,7 +139,7 @@
             {% else %}
                 <div class="text-center py-5">
                     <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">No hay citas programadas para hoy</p>
+                    <p class="text-muted">No hay citas pendientes para hoy</p>
                 </div>
             {% endif %}
         </div>
@@ -166,7 +147,7 @@
 
 {% else %}
 
-    <!-- AGENDA ADMIN: Solo resumen (conteos y próximas citas) -->
+    <!-- AGENDA ADMIN: Vista completa con todos los datos -->
     <div class="card vet-card card-round">
         <div class="card-header">
             <div class="card-head-row">
@@ -199,25 +180,50 @@
                 </div>
             </div>
             
-            {# Próximas citas (máximo 5) #}
+            {# Tabla completa admin #}
             {% if mis_citas %}
                 <hr>
-                <h6 class="mb-3">Próximas Citas</h6>
+                <h6 class="mb-3">Citas Pendientes</h6>
                 <div class="table-responsive">
-                    <table class="table table-sm">
+                    <table class="table table-hover table-sm">
                         <thead>
                             <tr>
                                 <th>Hora</th>
                                 <th>Paciente</th>
+                                <th>Dueño</th>
+                                <th>Contacto</th>
                                 <th>Veterinario</th>
+                                <th>Tipo</th>
+                                <th class="text-end">Ver Ficha</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for cita in mis_citas|slice:":5" %}
+                            {% for cita in mis_citas %}
                             <tr>
-                                <td><strong>{{ cita.hora_inicio|time:"H:i" }}</strong></td>
-                                <td>{{ cita.paciente.nombre }}</td>
-                                <td>{{ cita.veterinario.nombre|default:"N/A" }}</td>
+                                <td>
+                                    <div><strong>{{ cita.hora_inicio|time:"H:i" }}</strong></div>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">{{ cita.hora_fin|time:"H:i"|default:"—" }}</small>
+                                </td>
+                                <td>
+                                    <strong>{{ cita.paciente.nombre }}</strong><br>
+                                    <small class="text-muted">{{ cita.paciente.get_especie_display }}</small>
+                                </td>
+                                <td>{{ cita.paciente.propietario.nombre_completo }}</td>
+                                <td>
+                                    <div><strong>{{ cita.paciente.propietario.telefono|default:"—" }}</strong></div>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">{{ cita.paciente.propietario.email|default:"—" }}</small>
+                                </td>
+                                <td>{{ cita.veterinario.nombre }} {{ cita.veterinario.apellido|default:"" }}</td>
+                                <td>
+                                    <span class="badge badge-secondary">
+                                        {% if cita.servicio %}{{ cita.servicio.nombre }}{% else %}{{ cita.get_tipo_display }}{% endif %}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'pacientes:ficha_mascota' cita.paciente.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-file-medical"></i>
+                                    </a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -226,7 +232,7 @@
             {% else %}
                 <div class="text-center py-5">
                     <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">No hay citas programadas para hoy</p>
+                    <p class="text-muted">No hay citas pendientes para hoy</p>
                 </div>
             {% endif %}
         </div>
