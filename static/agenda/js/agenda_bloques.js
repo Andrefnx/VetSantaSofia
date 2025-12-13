@@ -1348,7 +1348,8 @@ function mostrarDetalleCita(bloque) {
         pacienteNombre: bloque.paciente_nombre,
         servicioNombre: bloque.servicio_nombre,
         horaInicio: bloque.hora_inicio,
-        horaFin: bloque.hora_fin
+        horaFin: bloque.hora_fin,
+        fecha: bloque.fecha || agendaState.fecha || null,
     };
     
     // Actualizar título con servicio y horario
@@ -1358,6 +1359,10 @@ function mostrarDetalleCita(bloque) {
     // Llenar los datos del modal
     document.getElementById('detallePaciente').textContent = bloque.paciente_nombre || '-';
     document.getElementById('detallePropietario').textContent = bloque.propietario_nombre || '-';
+
+    const fechaDetalle = bloque.fecha || agendaState.fecha || null;
+    const fechaLabel = fechaDetalle ? formatearFecha(fechaDetalle) : '-';
+    document.getElementById('detalleFecha').textContent = fechaLabel;
     
     // Teléfono como enlace WhatsApp
     const btnTelefono = document.getElementById('detalleTelefonoPropietario');

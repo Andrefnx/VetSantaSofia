@@ -23,7 +23,7 @@ from .models import (
 )
 
 
-def _build_day_blocks(availability: DisponibilidadBloquesDia, citas_qs):
+def _build_day_blocks(availability: DisponibilidadBloquesDia, citas_qs, fecha=None):
     """Construye la lista de 96 bloques con estado available/occupied/unavailable."""
     blocks = []
     for idx in range(96):
@@ -35,6 +35,7 @@ def _build_day_blocks(availability: DisponibilidadBloquesDia, citas_qs):
             'end_time': end_t.strftime('%H:%M'),
             'status': 'unavailable',
             'label': '',
+            'fecha': fecha.isoformat() if fecha else None,
         })
 
     if availability and availability.trabaja:
@@ -64,6 +65,7 @@ def _build_day_blocks(availability: DisponibilidadBloquesDia, citas_qs):
                 blocks[idx]['servicio_nombre'] = cita.servicio.nombre if cita.servicio_id else 'Sin servicio'
                 blocks[idx]['hora_inicio'] = cita.hora_inicio.strftime('%H:%M') if cita.hora_inicio else ''
                 blocks[idx]['hora_fin'] = cita.hora_fin.strftime('%H:%M') if cita.hora_fin else ''
+                blocks[idx]['fecha'] = cita.fecha.isoformat() if hasattr(cita, 'fecha') and cita.fecha else (fecha.isoformat() if fecha else None)
 
     return blocks
 
@@ -578,7 +580,7 @@ def agenda_bloques_dia(request, veterinario_id, year, month, day):
             estado__in=['pendiente', 'confirmada', 'en_curso']
         ).select_related('paciente')
 
-        blocks = _build_day_blocks(disponibilidad, citas)
+        blocks = _build_day_blocks(disponibilidad, citas, fecha)
 
         return JsonResponse({
             'success': True,

@@ -277,11 +277,25 @@
                     <div class="historial-container">
                         <!-- Contenido Principal -->
                         <div class="historial-main">
-                            <h3>Historial Clínico 
-                                <small style="color: #6b7280; font-size: 0.8rem; font-weight: normal;">
-                                    ({{ citas_agendadas|length }} cita{{ citas_agendadas|length|pluralize }} agendada{{ citas_agendadas|length|pluralize }})
-                                </small>
-                            </h3>
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <h3 class="mb-0">Historial Clínico 
+                                    <small style="color: #6b7280; font-size: 0.8rem; font-weight: normal;">
+                                        ({{ citas_agendadas|length }} cita{{ citas_agendadas|length|pluralize }} agendada{{ citas_agendadas|length|pluralize }})
+                                    </small>
+                                </h3>
+                                <form method="get" class="d-flex align-items-center gap-2">
+                                    <label class="mb-0 small text-muted">Orden</label>
+                                    <select name="orden_timeline" class="form-select form-select-sm" onchange="this.form.submit()" style="width: auto;">
+                                        <option value="asc" {% if orden_timeline == 'asc' %}selected{% endif %}>Ascendente</option>
+                                        <option value="desc" {% if orden_timeline == 'desc' %}selected{% endif %}>Descendente</option>
+                                    </select>
+                                    {% for key, value in request.GET.items %}
+                                        {% if key != 'orden_timeline' %}
+                                            <input type="hidden" name="{{ key }}" value="{{ value }}" />
+                                        {% endif %}
+                                    {% endfor %}
+                                </form>
+                            </div>
                             <!-- DEBUG: Citas count = {{ citas_agendadas|length }} -->
                             <!-- DEBUG: citas_agendadas existe = {% if citas_agendadas %}SI{% else %}NO{% endif %} -->
                             <!-- DEBUG: Tipo = {{ citas_agendadas|default:"UNDEFINED" }} -->
@@ -293,80 +307,148 @@
                             
                             <div class="timeline" id="timeline">
                                 <!-- START CITAS AGENDADAS LOOP -->
-                                {% for cita in citas_agendadas %}
-                                <!-- DEBUG: Rendering cita ID {{ cita.id }} -->
-                                <div class="timeline-item" data-cita-id="{{ cita.id }}">
-                                    <div class="timeline-date">
-                                        <span class="month">{{ cita.fecha|date:"M" }}</span>
-                                        <span class="day">{{ cita.fecha|date:"d" }}</span>
-                                        <span class="year" style="display:none;">{{ cita.fecha|date:"Y" }}</span>
+                                {% if timeline_items %}
+                                    {% for item in timeline_items %}
+                                        {% if item.tipo == 'cita' %}
+                                            {% with cita=item.obj %}
+                                            <div class="timeline-item" data-cita-id="{{ cita.id }}">
+                                                <div class="timeline-date">
+                                                    <span class="month">{{ item.fecha|date:"M" }}</span>
+                                                    <span class="day">{{ item.fecha|date:"d" }}</span>
+                                                    <span class="year" style="display:none;">{{ item.fecha|date:"Y" }}</span>
+                                                </div>
+                                                <div class="timeline-marker"></div>
+                                                <div class="timeline-content">
+                                                    <div class="timeline-card timeline-cita-agendada">
+                                                        <div class="timeline-item-header">
+                                                            <div class="timeline-item-info">
+                                                                <h3 class="event-title timeline-item-title">
+                                                                    {{ cita.servicio.nombre|default:"Cita agendada" }}
+                                                                    <span class="timeline-item-date">
+                                                                        {{ item.fecha|date:"d/m/Y" }} {{ cita.hora_inicio|time:"H:i" }} - {{ cita.hora_fin|time:"H:i" }}
+                                                                    </span>
+                                                                </h3>
+                                                                <p class="event-subtitle timeline-item-subtitle">
+                                                                    <i class="bi bi-person"></i> {{ cita.veterinario.nombre }} {{ cita.veterinario.apellido }}
+                                                                </p>
+                                                            </div>
+                                                            <button class="timeline-btn timeline-item-btn" onclick="iniciarCitaDesdeFicha({{ cita.id }}, this)">
+                                                                Iniciar
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endwith %}
+                                        {% else %}
+                                            {% with consulta=item.obj %}
+                                            <div class="timeline-item"
+                                                data-diagnostico="{{ consulta.diagnostico|lower|default:'' }}"
+                                                data-tratamiento="{{ consulta.tratamiento|lower|default:'' }}"
+                                                data-veterinario="{{ consulta.veterinario.nombre|lower }} {{ consulta.veterinario.apellido|lower }}"
+                                                data-veterinario-id="{{ consulta.veterinario.id }}"
+                                                data-tipo="{{ consulta.get_tipo_consulta_display|lower }}">
+                                                <div class="timeline-date">
+                                                    <span class="month">{{ item.fecha|date:"M" }}</span>
+                                                    <span class="day">{{ item.fecha|date:"d" }}</span>
+                                                    <span class="year" style="display:none;">{{ item.fecha|date:"Y" }}</span>
+                                                </div>
+                                                <div class="timeline-marker"></div>
+                                                <div class="timeline-content">
+                                                    <div class="timeline-item-header">
+                                                        <div class="timeline-item-info">
+                                                            <h3 class="event-title timeline-item-title">
+                                                                {{ consulta.servicios_nombres|default:"Consulta general" }}
+                                                                <span class="timeline-item-date">
+                                                                    {{ consulta.fecha|date:"d/m/Y H:i" }}
+                                                                </span>
+                                                            </h3>
+                                                            <p class="event-subtitle timeline-item-subtitle">
+                                                                <i class="bi bi-person"></i> {{ consulta.veterinario.nombre }} {{ consulta.veterinario.apellido }}
+                                                            </p>
+                                                        </div>
+                                                        <button class="timeline-btn timeline-item-btn" onclick="verDetalleConsulta('{{ consulta.id }}')">
+                                                            Ver detalle
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endwith %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% elif citas_agendadas or consultas %}
+                                    {% for cita in citas_agendadas %}
+                                    <div class="timeline-item" data-cita-id="{{ cita.id }}">
+                                        <div class="timeline-date">
+                                            <span class="month">{{ cita.fecha|date:"M" }}</span>
+                                            <span class="day">{{ cita.fecha|date:"d" }}</span>
+                                            <span class="year" style="display:none;">{{ cita.fecha|date:"Y" }}</span>
+                                        </div>
+                                        <div class="timeline-marker"></div>
+                                        <div class="timeline-content">
+                                            <div class="timeline-card timeline-cita-agendada">
+                                                <div class="timeline-item-header">
+                                                    <div class="timeline-item-info">
+                                                        <h3 class="event-title timeline-item-title">
+                                                            {{ cita.servicio.nombre|default:"Cita agendada" }}
+                                                            <span class="timeline-item-date">
+                                                                {{ cita.fecha|date:"d/m/Y" }} {{ cita.hora_inicio|time:"H:i" }} - {{ cita.hora_fin|time:"H:i" }}
+                                                            </span>
+                                                        </h3>
+                                                        <p class="event-subtitle timeline-item-subtitle">
+                                                            <i class="bi bi-person"></i> {{ cita.veterinario.nombre }} {{ cita.veterinario.apellido }}
+                                                        </p>
+                                                    </div>
+                                                    <button class="timeline-btn timeline-item-btn" onclick="iniciarCitaDesdeFicha({{ cita.id }}, this)">
+                                                        Iniciar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="timeline-marker"></div>
-                                    <div class="timeline-content">
-                                        <div class="timeline-card timeline-cita-agendada">
+                                    {% endfor %}
+
+                                    {% for consulta in consultas %}
+                                    <div class="timeline-item"
+                                        data-diagnostico="{{ consulta.diagnostico|lower|default:'' }}"
+                                        data-tratamiento="{{ consulta.tratamiento|lower|default:'' }}"
+                                        data-veterinario="{{ consulta.veterinario.nombre|lower }} {{ consulta.veterinario.apellido|lower }}"
+                                        data-veterinario-id="{{ consulta.veterinario.id }}"
+                                        data-tipo="{{ consulta.get_tipo_consulta_display|lower }}">
+                                        <div class="timeline-date">
+                                            <span class="month">{{ consulta.fecha|date:"M" }}</span>
+                                            <span class="day">{{ consulta.fecha|date:"d" }}</span>
+                                            <span class="year" style="display:none;">{{ consulta.fecha|date:"Y" }}</span>
+                                        </div>
+                                        <div class="timeline-marker"></div>
+                                        <div class="timeline-content">
                                             <div class="timeline-item-header">
                                                 <div class="timeline-item-info">
-                                                <h3 class="event-title timeline-item-title">
-                                                    {{ cita.servicio.nombre|default:"Cita agendada" }}
-                                                    <span class="timeline-item-date">
-                                                        {{ cita.hora_inicio|time:"H:i" }} - {{ cita.hora_fin|time:"H:i" }}
-                                                    </span>
-                                                </h3>
+                                                    <h3 class="event-title timeline-item-title">
+                                                        {{ consulta.servicios_nombres|default:"Consulta general" }}
+                                                        <span class="timeline-item-date">
+                                                            {{ consulta.fecha|date:"d/m/Y H:i" }}
+                                                        </span>
+                                                    </h3>
                                                     <p class="event-subtitle timeline-item-subtitle">
-                                                        <i class="bi bi-person"></i> {{ cita.veterinario.nombre }} {{ cita.veterinario.apellido }}
+                                                        <i class="bi bi-person"></i> {{ consulta.veterinario.nombre }} {{ consulta.veterinario.apellido }}
                                                     </p>
                                                 </div>
-                                                <button class="timeline-btn timeline-item-btn" onclick="iniciarCitaDesdeFicha({{ cita.id }}, this)">
-                                                    Iniciar
+                                                <button class="timeline-btn timeline-item-btn" onclick="verDetalleConsulta('{{ consulta.id }}')">
+                                                    Ver detalle
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                {% endfor %}
-                                <!-- END CITAS AGENDADAS LOOP -->
-                                
-                                <!-- START CONSULTAS LOOP -->
-                                {% for consulta in consultas %}
-                                <div class="timeline-item"
-                                    data-diagnostico="{{ consulta.diagnostico|lower|default:'' }}"
-                                    data-tratamiento="{{ consulta.tratamiento|lower|default:'' }}"
-                                    data-veterinario="{{ consulta.veterinario.nombre|lower }} {{ consulta.veterinario.apellido|lower }}"
-                                    data-veterinario-id="{{ consulta.veterinario.id }}"
-                                    data-tipo="{{ consulta.get_tipo_consulta_display|lower }}">
-                                    <div class="timeline-date">
-                                        <span class="month">{{ consulta.fecha|date:"M" }}</span>
-                                        <span class="day">{{ consulta.fecha|date:"d" }}</span>
-                                        <span class="year" style="display:none;">{{ consulta.fecha|date:"Y" }}</span>
-                                    </div>
-                                    <div class="timeline-marker"></div>
-                                    <div class="timeline-content">
-                                        <div class="timeline-item-header">
-                                            <div class="timeline-item-info">
-                                                <h3 class="event-title timeline-item-title">
-                                                    {{ consulta.servicios_nombres|default:"Consulta general" }}
-                                                    <span class="timeline-item-date">
-                                                        {{ consulta.fecha|date:"d/m/Y H:i" }}
-                                                    </span>
-                                                </h3>
-                                                <p class="event-subtitle timeline-item-subtitle">
-                                                    <i class="bi bi-person"></i> {{ consulta.veterinario.nombre }} {{ consulta.veterinario.apellido }}
-                                                </p>
-                                            </div>
-                                            <button class="timeline-btn timeline-item-btn" onclick="verDetalleConsulta('{{ consulta.id }}')">
-                                                Ver detalle
-                                            </button>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="timeline-item empty-state">
+                                        <div class="timeline-content" style="text-align: center; padding: 2rem; color: #999;">
+                                            <i class="bi bi-clipboard2-pulse" style="font-size: 3rem;"></i>
+                                            <p style="margin-top: 1rem;">No hay consultas registradas</p>
                                         </div>
                                     </div>
-                                </div>
-                                {% empty %}
-                                <div class="timeline-item empty-state">
-                                    <div class="timeline-content" style="text-align: center; padding: 2rem; color: #999;">
-                                        <i class="bi bi-clipboard2-pulse" style="font-size: 3rem;"></i>
-                                        <p style="margin-top: 1rem;">No hay consultas registradas</p>
-                                    </div>
-                                </div>
-                                {% endfor %}
+                                {% endif %}
                             </div>
                         </div>
 

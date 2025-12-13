@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, FileResponse, Http404
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
+from datetime import datetime, time
 from django.core.exceptions import ValidationError
 from .models import Consulta, Hospitalizacion, Cirugia, RegistroDiario, Alta, Documento
 from pacientes.models import Paciente
@@ -84,6 +85,31 @@ def ficha_paciente(request, paciente_id):
     
     print(f"{'='*80}\n", file=sys.stderr)
 
+    orden_timeline = request.GET.get('orden_timeline', 'asc').lower()
+    if orden_timeline not in ['asc', 'desc']:
+        orden_timeline = 'asc'
+
+    timeline_items = []
+    for cita in citas_agendadas:
+        sort_key = datetime.combine(cita.fecha, cita.hora_inicio or time.min)
+        timeline_items.append({
+            'tipo': 'cita',
+            'obj': cita,
+            'fecha': cita.fecha,
+            'sort_key': sort_key,
+        })
+
+    for consulta in consultas:
+        consulta_dt = consulta.fecha if isinstance(consulta.fecha, datetime) else datetime.combine(consulta.fecha, time.min)
+        timeline_items.append({
+            'tipo': 'consulta',
+            'obj': consulta,
+            'fecha': consulta_dt.date(),
+            'sort_key': consulta_dt,
+        })
+
+    timeline_items = sorted(timeline_items, key=lambda item: item['sort_key'], reverse=(orden_timeline == 'desc'))
+
     context = {
         'paciente': paciente,
         'consultas': consultas,
@@ -91,6 +117,8 @@ def ficha_paciente(request, paciente_id):
         'nombre_veterinario': nombre_veterinario,
         'veterinarios': veterinarios,
         'citas_agendadas': citas_agendadas,
+        'timeline_items': timeline_items,
+        'orden_timeline': orden_timeline,
     }
     
     return render(request, 'consulta/ficha_mascota.html', context)
@@ -457,6 +485,31 @@ def ficha_mascota(request, pk):
         print(f"###   Cita ID {cita.id}: {cita.fecha} {cita.hora_inicio} - Vet: {cita.veterinario.nombre}")
     print("###" + "="*77 + "\n", flush=True)
     
+    orden_timeline = request.GET.get('orden_timeline', 'asc').lower()
+    if orden_timeline not in ['asc', 'desc']:
+        orden_timeline = 'asc'
+
+    timeline_items = []
+    for cita in citas_agendadas:
+        sort_key = datetime.combine(cita.fecha, cita.hora_inicio or time.min)
+        timeline_items.append({
+            'tipo': 'cita',
+            'obj': cita,
+            'fecha': cita.fecha,
+            'sort_key': sort_key,
+        })
+
+    for consulta in consultas:
+        consulta_dt = consulta.fecha if isinstance(consulta.fecha, datetime) else datetime.combine(consulta.fecha, time.min)
+        timeline_items.append({
+            'tipo': 'consulta',
+            'obj': consulta,
+            'fecha': consulta_dt.date(),
+            'sort_key': consulta_dt,
+        })
+
+    timeline_items = sorted(timeline_items, key=lambda item: item['sort_key'], reverse=(orden_timeline == 'desc'))
+
     context = {
         'paciente': paciente,
         'consultas': consultas,
@@ -466,6 +519,8 @@ def ficha_mascota(request, pk):
         'examenes': paciente.examenes.all(),
         'documentos': paciente.documentos.all(),
         'citas_agendadas': citas_agendadas,
+        'timeline_items': timeline_items,
+        'orden_timeline': orden_timeline,
     }
     return render(request, 'consulta/ficha_mascota.html', context)
 
