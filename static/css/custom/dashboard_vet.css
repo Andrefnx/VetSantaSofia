@@ -266,6 +266,57 @@
   margin-bottom: 16px !important;
 }
 
+/* Compact wheel actions (agenda) */
+.vetdash-scope .manage-wheel-compact {
+  display: inline-flex;
+  position: relative;
+}
+
+.vetdash-scope .manage-wheel-compact .wheel-trigger {
+  width: 36px;
+  height: 32px;
+  border: 1px solid var(--vd-border);
+  background: var(--vd-bg-subtle);
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--vd-shadow-btn);
+  color: var(--vd-text);
+}
+
+.vetdash-scope .manage-wheel-compact .wheel-trigger:hover {
+  background: #eef2f7;
+  border-color: #d5d9e0;
+}
+
+.vetdash-scope .manage-wheel-compact .manage-options {
+  min-width: 180px;
+  background: var(--vd-bg);
+  border: 1px solid var(--vd-border);
+  border-radius: 10px;
+  box-shadow: var(--vd-shadow-card);
+  overflow: hidden;
+}
+
+.vetdash-scope .manage-wheel-compact .manage-options button {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: none;
+  background: #fff;
+  color: var(--vd-text-strong);
+}
+
+.vetdash-scope .manage-wheel-compact .manage-options button i {
+  margin-right: 8px;
+}
+
+/* Visibility helper for wheel menu */
+.vetdash-scope .manage-wheel-compact .manage-options.show {
+  display: block !important;
+}
+
 /* Hospitalization compact card styles */
 .vetdash-scope .vd-hosp-card {
   padding: 12px 14px !important;
