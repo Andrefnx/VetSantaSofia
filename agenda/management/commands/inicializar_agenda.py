@@ -46,7 +46,7 @@ class Command(BaseCommand):
                     hora_inicio=time(9, 0),
                     defaults={
                         'hora_fin': time(13, 0),
-                        'tipo': 'disponible',
+                        'tipo': 'disponible_extra',
                         'notas': 'Horario de mañana'
                     }
                 )
@@ -58,7 +58,7 @@ class Command(BaseCommand):
                     hora_inicio=time(15, 0),
                     defaults={
                         'hora_fin': time(18, 0),
-                        'tipo': 'disponible',
+                        'tipo': 'disponible_extra',
                         'notas': 'Horario de tarde'
                     }
                 )
