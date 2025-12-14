@@ -72,6 +72,25 @@
                         <option value="{{ vet.id }}">{{ vet.nombre }} {{ vet.apellido }}</option>
                         {% endfor %}
                     </select>
+                    <div class="d-grid mt-2">
+                        <button type="button" class="btn btn-primary btn-sm" id="btnDisponibilidadFiltro">
+                            <i class="fas fa-cog"></i> Disponibilidad
+                        </button>
+                        <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            var btn = document.getElementById('btnDisponibilidadFiltro');
+                            if (btn) {
+                                btn.onclick = function() {
+                                    if (typeof abrirModalDisponibilidad === 'function') {
+                                        abrirModalDisponibilidad();
+                                    } else if (window.abrirModalDisponibilidad) {
+                                        window.abrirModalDisponibilidad();
+                                    }
+                                };
+                            }
+                        });
+                        </script>
+                    </div>
                 </div>
             </div>
         </div>

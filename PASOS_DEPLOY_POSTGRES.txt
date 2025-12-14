@@ -55,7 +55,7 @@
 
 
 1. Abre una terminal y ejecuta:
-   g_dump -U tu_usuario -h localhost -d vetsantasofia > backup.sqlp
+   pg_dump -U tu_usuario -h localhost -d vetsantasofia > backup.sql
 
    Si recibes un error de 'pg_dump' no reconocido en Windows, usa la ruta completa (ajusta según tu instalación):
    "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -U tu_usuario -h localhost -d vetsantasofia > backup.sql
