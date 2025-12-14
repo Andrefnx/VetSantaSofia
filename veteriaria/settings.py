@@ -100,7 +100,7 @@ DATABASES = {
     }
 }
 
-
+#postgresql://veterinaria_user:rE6lP3TUvymRHnbqJTUJCyZrm1BDlPiL@dpg-d4vkdku3jp1c73enatp0-a.virginia-postgres.render.com/veterinaria_db_xsde
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
