@@ -1,0 +1,88 @@
+# PASOS PARA COMPARTIR Y SUBIR EL PROYECTO DJANGO + POSTGRESQL
+
+1. Clona el repositorio o copia el proyecto completo (sin la carpeta venv ni archivos .sqlite3).
+
+2. Instala Python 3.8+ y PostgreSQL en tu máquina o servidor.
+
+3. Crea y activa un entorno virtual:
+   - Windows:
+     .\venv\Scripts\activate
+   - Linux/Mac:
+     source venv/bin/activate
+
+4. Instala las dependencias:
+   pip install -r requirements.txt
+
+5. Crea una base de datos PostgreSQL y un usuario:
+   - Accede a psql y ejecuta:
+     CREATE DATABASE vetsantasofia;
+     CREATE USER tu_usuario WITH PASSWORD 'tu_password';
+     GRANT ALL PRIVILEGES ON DATABASE vetsantasofia TO tu_usuario;
+
+6. Configura el archivo settings.py o .env para usar PostgreSQL:
+   DATABASES = {
+       'default': {
+           'ENGINE': 'django.db.backends.postgresql',
+           'NAME': 'vetsantasofia',
+           'USER': 'tu_usuario',
+           'PASSWORD': 'tu_password',
+           'HOST': 'localhost',
+           'PORT': '5432',
+       }
+   }
+
+7. Si tienes un backup de la base de datos, impórtalo:
+   psql -U tu_usuario -d vetsantasofia -f backup.sql
+
+8. Si no tienes backup, aplica migraciones:
+   python manage.py makemigrations
+   python manage.py migrate
+
+9. Crea un superusuario:
+   python manage.py createsuperuser
+
+10. (Opcional) Carga datos de ejemplo:
+    python manage.py inicializar_agenda
+
+11. Ejecuta el servidor:
+    python manage.py runserver
+
+12. Accede a http://localhost:8000/
+
+---
+
+# EXPORTAR LA BASE DE DATOS (PostgreSQL)
+
+
+1. Abre una terminal y ejecuta:
+   g_dump -U tu_usuario -h localhost -d vetsantasofia > backup.sqlp
+
+   Si recibes un error de 'pg_dump' no reconocido en Windows, usa la ruta completa (ajusta según tu instalación):
+   "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -U tu_usuario -h localhost -d vetsantasofia > backup.sql
+
+   O agrega temporalmente al PATH en la terminal:
+   $env:Path += ";C:\Program Files\PostgreSQL\18\bin"
+   Y luego ejecuta el comando normalmente.
+
+2. El archivo backup.sql contiene toda la base de datos y puedes compartirlo.
+
+---
+
+# SUBIR A PRODUCCIÓN (RESUMEN)
+
+1. Sube el código a un repositorio (GitHub, GitLab, etc.).
+2. En el servidor de producción:
+   - Clona el repo
+   - Configura entorno virtual y dependencias
+   - Configura variables de entorno y settings.py
+   - Restaura la base de datos con backup.sql
+   - Aplica migraciones si es necesario
+   - Configura servidor WSGI (gunicorn/uwsgi) y Nginx/Apache
+   - Configura archivos estáticos y media
+
+---
+
+# NOTAS
+- No subas archivos sensibles ni credenciales al repo.
+- Usa .env para variables privadas.
+- Documenta cualquier paso adicional específico de tu proyecto.
