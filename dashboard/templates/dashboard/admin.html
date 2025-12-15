@@ -1,16 +1,14 @@
-{% extends 'partials/base.html' %}
+{% extends 'partials/dashboard_base.html' %}
 {% load static %}
 
-{% block title %}Dashboard Administrador{% endblock %}
+{% block dashboard_title %}Dashboard Administrador{% endblock %}
 
-{% block extra_css %}
+{% block dashboard_extra_css %}
 <link rel="stylesheet" href="{% static 'css/base/tables_base.css' %}">
 <link rel="stylesheet" href="{% static 'css/custom/dashboard_vet.css' %}">
 {% endblock %}
 
-{% block content %}
-<div class="vetdash-scope">
-<div class="dashboard-compact">
+{% block dashboard_inline_styles %}
 <style>
     .action-link {
         color: #6b7280;
@@ -22,6 +20,9 @@
         color: #111827;
     }
 </style>
+{% endblock %}
+
+{% block dashboard_page_header %}
 <div class="page-header">
     <h3 class="fw-bold mb-3">Dashboard Administrador</h3>
     <ul class="breadcrumbs mb-3">
@@ -38,7 +39,9 @@
         </li>
     </ul>
 </div>
+{% endblock %}
 
+{% block dashboard_metrics %}
 <!-- Indicadores Principales -->
 <div class="row">
     <div class="col-sm-6 col-md-3">
@@ -121,7 +124,9 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block dashboard_main %}
 <!-- Contenido Principal en 3 Columnas -->
 <div class="row">
     <!-- Agenda del Día -->
@@ -414,7 +419,4 @@
         
     </div>
 </div>
-</div>
-</div>
-
 {% endblock %}

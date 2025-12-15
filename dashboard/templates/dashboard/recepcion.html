@@ -1,69 +1,20 @@
-{% extends 'partials/base.html' %}
+{% extends 'partials/dashboard_base.html' %}
 {% load static %}
 
-{% block title %}Dashboard Recepción{% endblock %}
+{% block dashboard_title %}Dashboard Recepción{% endblock %}
 
-{% block extra_css %}
+{% block dashboard_extra_css %}
 <link rel="stylesheet" href="{% static 'css/base/tables_base.css' %}">
-<link rel="stylesheet" href="{% static 'css/custom/dashboard_recepcion.css' %}">
+<link rel="stylesheet" href="{% static 'css/custom/dashboard_vet.css' %}">
 {% endblock %}
 
-{% block content %}
-<div class="recepcion-scope">
-<style>
-    /* Normaliza las tarjetas de resumen al estilo actual de Admin */
-    .recepcion-scope .card.card-stats.card-round {
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 6px 16px rgba(17, 24, 39, 0.05);
-        border-radius: 14px;
-    }
-    .recepcion-scope .card.card-stats .card-body {
-        padding: 16px 18px;
-    }
-    .recepcion-scope .card.card-stats .col-icon .icon-big {
-        background: transparent;
-        box-shadow: none;
-        width: auto;
-        height: auto;
-        color: #4b5563;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-    }
-    .recepcion-scope .card.card-stats .numbers .card-category {
-        margin-bottom: 4px;
-        font-size: 0.9rem;
-        color: #6b7280;
-    }
-    .recepcion-scope .card.card-stats .numbers .card-title {
-        font-size: 1.35rem;
-        color: #111827;
-        font-weight: 700;
-    }
-    /* Normaliza tarjetas generales al estilo Admin */
-    .recepcion-scope .card.card-round {
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 6px 16px rgba(17, 24, 39, 0.05);
-        border-radius: 12px;
-        background: #fff;
-    }
-    .recepcion-scope .card.card-round .card-header {
-        border-bottom: 1px solid #e5e7eb;
-        background: transparent;
-        padding: 12px 16px;
-    }
-    .recepcion-scope .card.card-round .card-title {
-        color: #0f172a;
-        font-weight: 700;
-    }
-    .recepcion-scope .card.card-round .card-body {
-        background: #fff;
-    }
-</style>
+{% block dashboard_page_header %}
 <div class="page-header">
     <h3 class="fw-bold mb-3">Dashboard Recepción</h3>
 </div>
+{% endblock %}
+
+{% block dashboard_metrics %}
 
 <!-- Indicadores de Resumen -->
 <div class="row">
@@ -143,37 +94,38 @@
             </div>
         </div>
     </div>
-</div>
+{% endblock %}
 
+{% block dashboard_main %}
 <div class="row">
     <!-- Columna Izquierda: Acciones Rápidas -->
     <div class="col-md-3">
-        <div class="card card-round rd-quick-actions">
+        <div class="card vet-card card-round rd-quick-actions">
             <div class="card-header">
                 <div class="card-head-row">
                     <div class="card-title">
-                        <i class="fas fa-bolt"></i>
+                        <i class="fas fa-bolt me-2"></i>
                         Acciones Rápidas
                     </div>
                 </div>
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    <a href="{% url 'agenda:crear_cita' %}" class="btn btn-primary w-100">
+                    <a href="{% url 'agenda:crear_cita' %}" class="vet-btn w-100">
                         <i class="fas fa-calendar-plus me-2"></i>
                         Nueva Cita
                     </a>
-                    <a href="#" onclick="buscarPacienteModal(); return false;" class="btn btn-info w-100">
+                    <a href="#" onclick="buscarPacienteModal(); return false;" class="vet-btn w-100">
                         <i class="fas fa-search me-2"></i>
                         Buscar Paciente
                     </a>
                     {% if caja_stats.estado == 'cerrada' %}
-                        <a href="/caja/abrir/" class="btn btn-success w-100">
+                        <a href="/caja/abrir/" class="vet-btn w-100">
                             <i class="fas fa-cash-register me-2"></i>
                             Abrir Caja
                         </a>
                     {% else %}
-                        <a href="/caja/dashboard/" class="btn btn-warning w-100">
+                        <a href="/caja/dashboard/" class="vet-btn w-100">
                             <i class="fas fa-cash-register me-2"></i>
                             Ir a Caja
                         </a>
@@ -187,7 +139,7 @@
     <div class="col-md-5">
         
         <!-- Agenda del Día - Vista Horaria -->
-        <div class="card card-round">
+        <div class="card vet-card card-round">
             <div class="card-header">
                 <div class="card-head-row">
                     <div class="card-title">
@@ -195,10 +147,8 @@
                         Agenda del Día - {{ hoy|date:"l, d F Y" }}
                     </div>
                     <div class="card-tools">
-                        <a href="{% url 'agenda:agenda' %}" class="btn btn-label-primary btn-round btn-sm">
-                            <span class="btn-label">
-                                <i class="fa fa-calendar"></i>
-                            </span>
+                        <a href="{% url 'agenda:agenda' %}" class="vet-btn vet-btn-sm">
+                            <i class="fa fa-calendar me-1"></i>
                             Agenda Completa
                         </a>
                     </div>
@@ -208,61 +158,61 @@
                 <div class="rd-agenda-scroll">
                     <div class="agenda-horaria">
                         {% for horario in horarios %}
-                    <div class="horario-slot {% if horario.libre %}slot-libre{% else %}slot-ocupado{% endif %} mb-2 p-3 border rounded">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h6 class="mb-2">
-                                    <i class="far fa-clock me-2"></i>
-                                    {{ horario.hora }}
-                                    {% if horario.libre %}
-                                        <span class="badge badge-success ms-2">Libre</span>
-                                    {% else %}
-                                        <span class="badge badge-primary ms-2">{{ horario.citas.count }} cita(s)</span>
-                                    {% endif %}
-                                </h6>
-                                
-                                {% if horario.citas %}
-                                    {% for cita in horario.citas %}
-                                    <div class="cita-info mb-2 ps-3 border-start border-3 {% if cita.estado == 'completada' %}border-success{% elif cita.estado == 'confirmada' %}border-info{% elif cita.estado == 'en_curso' %}border-warning{% else %}border-secondary{% endif %}">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <strong>{{ cita.hora_inicio|time:"H:i" }}</strong> - 
-                                                <strong>{{ cita.paciente.nombre }}</strong>
-                                                <small class="text-muted d-block">
-                                                    Dr/a. {{ cita.veterinario.nombre }} | {{ cita.get_tipo_display }}
-                                                </small>
-                                            </div>
-                                            <div>
-                                                <span class="badge badge-{% if cita.estado == 'completada' %}success{% elif cita.estado == 'confirmada' %}info{% elif cita.estado == 'en_curso' %}warning{% elif cita.estado == 'cancelada' %}danger{% else %}secondary{% endif %}">
-                                                    {{ cita.get_estado_display }}
-                                                </span>
-                                                <div class="btn-group btn-group-sm mt-1">
-                                                    <a href="/agenda/" class="btn btn-sm btn-outline-primary" title="Ver detalle">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    {% if cita.estado != 'completada' and cita.estado != 'cancelada' %}
-                                                    <a href="{% url 'agenda:editar_cita' cita.id %}" class="btn btn-sm btn-outline-warning" title="Editar">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
-                                                    {% endif %}
+                        <div class="horario-slot {% if horario.libre %}slot-libre{% else %}slot-ocupado{% endif %} mb-2 p-3 border rounded">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-2">
+                                        <i class="far fa-clock me-2"></i>
+                                        {{ horario.hora }}
+                                        {% if horario.libre %}
+                                            <span class="badge badge-success ms-2">Libre</span>
+                                        {% else %}
+                                            <span class="badge badge-primary ms-2">{{ horario.citas.count }} cita(s)</span>
+                                        {% endif %}
+                                    </h6>
+                                    
+                                    {% if horario.citas %}
+                                        {% for cita in horario.citas %}
+                                        <div class="cita-info mb-2 ps-3 border-start border-3 {% if cita.estado == 'completada' %}border-success{% elif cita.estado == 'confirmada' %}border-info{% elif cita.estado == 'en_curso' %}border-warning{% else %}border-secondary{% endif %}">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>{{ cita.hora_inicio|time:"H:i" }}</strong> - 
+                                                    <strong>{{ cita.paciente.nombre }}</strong>
+                                                    <small class="text-muted d-block">
+                                                        Dr/a. {{ cita.veterinario.nombre }} | {{ cita.get_tipo_display }}
+                                                    </small>
+                                                </div>
+                                                <div>
+                                                    <span class="badge badge-{% if cita.estado == 'completada' %}success{% elif cita.estado == 'confirmada' %}info{% elif cita.estado == 'en_curso' %}warning{% elif cita.estado == 'cancelada' %}danger{% else %}secondary{% endif %}">
+                                                        {{ cita.get_estado_display }}
+                                                    </span>
+                                                    <div class="btn-group btn-group-sm mt-1">
+                                                        <a href="/agenda/" class="btn btn-sm btn-outline-primary" title="Ver detalle">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        {% if cita.estado != 'completada' and cita.estado != 'cancelada' %}
+                                                        <a href="{% url 'agenda:editar_cita' cita.id %}" class="btn btn-sm btn-outline-warning" title="Editar">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        {% endif %}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    {% endfor %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                
+                                {% if horario.libre %}
+                                <div>
+                                    <a href="{% url 'agenda:crear_cita' %}?hora={{ horario.hora }}" class="btn btn-sm btn-success">
+                                        <i class="fas fa-plus"></i> Agendar
+                                    </a>
+                                </div>
                                 {% endif %}
                             </div>
-                            
-                            {% if horario.libre %}
-                            <div>
-                                <a href="{% url 'agenda:crear_cita' %}?hora={{ horario.hora }}" class="btn btn-sm btn-success">
-                                    <i class="fas fa-plus"></i> Agendar
-                                </a>
-                            </div>
-                            {% endif %}
                         </div>
-                    </div>
-                    {% endfor %}
+                        {% endfor %}
                     </div>
                 </div>
             </div>
@@ -274,7 +224,7 @@
     <div class="col-md-4">
         
         <!-- Estado de Caja -->
-        <div class="card card-round mb-3 rd-caja-card">
+        <div class="card vet-card card-round mb-3 rd-caja-card">
             <div class="card-header">
                 <div class="card-head-row">
                     <div class="card-title">
@@ -321,7 +271,7 @@
                                 <div class="text-end">
                                     <strong class="text-warning">${{ cobro.total|floatformat:0 }}</strong>
                                     {% if caja_stats.estado == 'abierta' %}
-                                    <a href="/caja/cobro/{{ cobro.id }}/" class="btn btn-sm btn-success mt-1 d-block">
+                                    <a href="/caja/cobro/{{ cobro.id }}/" class="vet-btn vet-btn-sm mt-1 d-block">
                                         <i class="fas fa-dollar-sign"></i> Cobrar
                                     </a>
                                     {% endif %}
@@ -339,16 +289,16 @@
                 
                 <div class="d-grid gap-2">
                     {% if caja_stats.estado == 'cerrada' %}
-                        <a href="/caja/abrir/" class="btn btn-success btn-round">
+                        <a href="/caja/abrir/" class="vet-btn">
                             <i class="fas fa-unlock me-2"></i>
                             Abrir Caja
                         </a>
                     {% else %}
-                        <a href="/caja/dashboard/" class="btn btn-primary btn-round">
+                        <a href="/caja/dashboard/" class="vet-btn">
                             <i class="fas fa-cash-register me-2"></i>
                             Ir a Caja
                         </a>
-                        <a href="/caja/crear-venta-libre/" class="btn btn-outline-primary btn-round">
+                        <a href="/caja/crear-venta-libre/" class="vet-btn">
                             <i class="fas fa-shopping-cart me-2"></i>
                             Venta Libre
                         </a>
@@ -358,18 +308,16 @@
         </div>
         
         <!-- Pacientes Recientes -->
-        <div class="card card-round rd-pacientes-card">
+        <div class="card vet-card card-round rd-pacientes-card">
             <div class="card-header">
                 <div class="card-head-row">
                     <div class="card-title">
-                        <i class="fas fa-paw"></i>
+                        <i class="fas fa-paw me-2"></i>
                         Pacientes Recientes
                     </div>
                     <div class="card-tools">
-                        <a href="/pacientes/" class="btn btn-label-info btn-round btn-sm">
-                            <span class="btn-label">
-                                <i class="fa fa-list"></i>
-                            </span>
+                        <a href="/pacientes/" class="vet-btn vet-btn-sm">
+                            <i class="fa fa-list me-1"></i>
                             Ver Todos
                         </a>
                     </div>
@@ -389,7 +337,7 @@
                                     </small>
                                 </div>
                                 <div>
-                                    <a href="/pacientes/{{ paciente.id }}/" class="btn btn-sm btn-outline-secondary rd-ver-ficha-btn">
+                                    <a href="/pacientes/{{ paciente.id }}/" class="vet-btn vet-btn-sm rd-ver-ficha-btn">
                                         <i class="fas fa-file-medical me-1"></i>
                                         Ver ficha
                                     </a>
@@ -408,8 +356,6 @@
         </div>
         
     </div>
-</div>
-
 </div>
 {% endblock %}
 
