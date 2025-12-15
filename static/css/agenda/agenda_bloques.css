@@ -652,12 +652,14 @@ div[class*="footer"] {
 .vet-modal-compact {
     max-width: 520px !important;
     box-shadow: var(--shadow-md) !important;
+    max-height: calc(100vh - 80px) !important;
 }
 
 .vet-modal-panel {
     position: relative !important;
     width: 96% !important;
     max-width: 980px !important;
+    max-height: calc(100vh - 80px) !important;
     background: var(--card-bg) !important;
     border-radius: 12px !important;
     box-shadow: var(--shadow-md) !important;
@@ -694,6 +696,9 @@ div[class*="footer"] {
     background: #f7f9f8 !important;
     border-top: 1px solid var(--border-color) !important;
     gap: 10px !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 2 !important;
 }
 
 .modal-detail-card {

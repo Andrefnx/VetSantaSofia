@@ -24,26 +24,28 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
     min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(1rem, 3vw, 2.5rem);
     color: var(--primary-text);
-    background-color: white;
+    background: radial-gradient(circle at 20% 20%, #f4fff4 0, transparent 25%),
+        radial-gradient(circle at 80% 0%, #f1f9f1 0, transparent 25%),
+        #ffffff;
 }
 
 /* ================================
    CONTENEDOR PRINCIPAL
 ================================ */
 .login-container {
-    width: 100%;
-    max-width: 420px;
-    padding: 1rem;
+    width: min(520px, 100%);
+    padding: clamp(1rem, 2vw, 2rem);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: clamp(0.75rem, 1.5vw, 1.5rem);
+    margin: clamp(0.5rem, 2vh, 1.5rem) auto;
 }
 
 /* Contenedor más ancho para registro */
@@ -52,11 +54,11 @@ body {
 }
 
 .logo {
-    width: 220px;
-    max-width: 420px;
+    width: clamp(160px, 28vw, 220px);
+    max-width: 100%;
     height: auto;
     display: block;
-    margin: 0 auto 2rem;
+    margin: 0 auto clamp(1.25rem, 3vw, 2.25rem);
 }
 
 /* ================================
@@ -64,9 +66,9 @@ body {
 ================================ */
 form {
     background: var(--white);
-    padding: 3rem 2.5rem;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    padding: clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 4vw, 2.5rem);
+    border-radius: 14px;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.12);
     width: 100%;
 }
 
@@ -216,6 +218,7 @@ form {
 ================================ */
 .button-group {
     display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
     margin-top: 1.5rem;
 }
@@ -521,10 +524,47 @@ select.form-control option:hover {
     }
 }
 
+@media (max-height: 740px) {
+    body {
+        align-items: flex-start;
+        padding-top: 1.25rem;
+    }
+
+    .logo {
+        margin-bottom: 1.25rem;
+    }
+
+    form {
+        padding: 1.5rem 1.25rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .button-group {
+        margin-top: 1rem;
+    }
+}
+
+@media (max-width: 640px) {
+    body {
+        padding: 1.25rem;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+}
+
 @media (max-width: 480px) {
+    body {
+        padding: 1rem;
+    }
+
     .login-container {
         max-width: 100%;
-        padding: 1rem;
+        padding: 0.75rem;
     }
 
     .logo {
@@ -532,11 +572,6 @@ select.form-control option:hover {
     }
 
     form {
-        padding: 2rem 1.5rem;
-    }
-
-    .button-group {
-        flex-direction: column;
-        gap: 0.75rem;
+        padding: 1.5rem 1.25rem;
     }
 }

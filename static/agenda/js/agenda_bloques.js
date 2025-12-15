@@ -40,8 +40,8 @@ function toggleModal(modalId, show = true) {
 // Estado del calendario
 let calendarioState = {
     fechaSeleccionada: null,
-    mesActual: new Date().getMonth(),
-    anioActual: new Date().getFullYear(),
+    mesActual: new Date().getMonth(), // Mes actual del sistema (0-11)
+    anioActual: new Date().getFullYear(), // Año actual del sistema
     feriados: [] // [{date: 'YYYY-MM-DD', title: '', irrenunciable: bool}]
 };
 
@@ -59,6 +59,7 @@ function calcularHoraFinalBloque(horaInicio) {
 
 // Helper para verificar si un bloque está en el pasado
 function esBloqueEnPasado(fechaAgenda, horaBloque) {
+    // Obtener fecha y hora actual del sistema
     const ahora = new Date();
     const [year, month, day] = fechaAgenda.split('-');
     const [hora, minuto] = horaBloque.split(':').map(Number);
@@ -68,6 +69,7 @@ function esBloqueEnPasado(fechaAgenda, horaBloque) {
 
 // Helper para obtener el índice del bloque más cercano a la hora actual
 function obtenerIndiceBloqueActual(bloques, fechaAgenda) {
+    // Obtener fecha y hora actual del sistema
     const ahora = new Date();
     const [year, month, day] = fechaAgenda.split('-');
     
@@ -178,7 +180,9 @@ function esFeriado(fechaStr) {
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
     const params = new URLSearchParams(window.location.search);
-    const hoy = new Date().toISOString().split('T')[0];
+        // Obtener fecha actual del sistema (fecha de hoy de la computadora)
+        const ahora = new Date();
+        const hoy = ahora.toISOString().split('T')[0];
     const fechaParam = params.get('fecha');
     const initialDate = fechaParam || hoy;
     const initialDateObj = new Date(initialDate);
@@ -187,6 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!Number.isNaN(initialDateObj.getTime())) {
         calendarioState.mesActual = initialDateObj.getMonth();
         calendarioState.anioActual = initialDateObj.getFullYear();
+            calendarioState.fechaSeleccionada = initialDate;
     }
 
     inicializarCalendario();
@@ -196,9 +201,9 @@ document.addEventListener('DOMContentLoaded', function() {
     inicializarBuscadoresModalDirecto();
     inicializarTabs();
     
-    // Setear fecha inicial (hoy o la recibida por querystring)
+        // Setear fecha inicial (fecha de hoy del sistema o la recibida por querystring)
     document.getElementById('fechaAgenda').value = initialDate;
-    calendarioState.fechaSeleccionada = initialDate;
+        agendaState.fecha = initialDate;
     
     // Event listener para filtro de veterinario
     document.getElementById('filtroVeterinario').addEventListener('change', function() {
@@ -267,7 +272,8 @@ function inicializarCalendario() {
     // Generar feriados chilenos
     cargarFeriados();
     
-    const hoy = new Date();
+        // Obtener fecha actual del sistema
+        const hoy = new Date();
     const anioActual = hoy.getFullYear();
     
     // Poblar select de meses
@@ -337,7 +343,8 @@ function renderizarCalendario() {
     const container = document.getElementById('calendarioDias');
     container.innerHTML = '';
     
-    const hoy = new Date();
+        // Obtener fecha actual del sistema para comparaciones
+        const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
     const primerDia = new Date(calendarioState.anioActual, calendarioState.mesActual, 1);
     const ultimoDia = new Date(calendarioState.anioActual, calendarioState.mesActual + 1, 0);
@@ -409,6 +416,7 @@ function seleccionarFecha(fechaStr) {
 }
 
 function irAHoy() {
+    // Obtener fecha actual del sistema (fecha de hoy de la computadora)
     const hoy = new Date();
     calendarioState.mesActual = hoy.getMonth();
     calendarioState.anioActual = hoy.getFullYear();

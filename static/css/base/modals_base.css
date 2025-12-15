@@ -232,6 +232,21 @@
     background: #f8f9fa !important;
     border-top: 1px solid #eee !important;
     text-align: right !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    visibility: visible !important;
+    min-height: auto !important;
+}
+
+/* Asegurar que los botones del footer sean visibles aunque haya estilos heredados que los oculten */
+.vet-modal-footer .btn,
+.vet-modal-footer .vet-btn,
+.modal-footer .btn,
+.modal-footer .vet-btn {
+    display: inline-flex !important;
 }
 
 /* =============================

@@ -1,0 +1,64 @@
+.consulta-loader-overlay {
+    position: fixed;
+    top: 0;
+    left: var(--sidebar-width, 260px);
+    right: 0;
+    width: calc(100% - var(--sidebar-width, 260px));
+    bottom: 0;
+    height: 100vh;
+    margin: 0;
+    background: rgba(15, 27, 23, 0.35);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 12000;
+    backdrop-filter: blur(1px);
+}
+
+.consulta-loader-card {
+    background: #f8faf9;
+    color: #0f2b17;
+    padding: 2.5rem 3rem;
+    border-radius: 16px;
+    box-shadow: 0 16px 42px rgba(0,0,0,0.18);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+    font-weight: 700;
+    font-size: 1.25rem;
+    min-width: 640px;
+    min-height: 360px;
+    width: min(90vw, 720px);
+    justify-content: center;
+    text-align: center;
+}
+
+.loader-consulta {
+    width: 60px;
+    aspect-ratio: 2;
+    --_g: no-repeat radial-gradient(circle closest-side, #25b09b 90%, #0000);
+    background:
+      var(--_g) 0%   50%,
+      var(--_g) 50%  50%,
+      var(--_g) 100% 50%;
+    background-size: calc(100%/3) 50%;
+    animation: consultaDots 1s infinite linear;
+    margin: 0 auto 10px auto;
+}
+
+.consulta-loader-text {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: #0f2b17;
+    text-align: center;
+}
+
+@keyframes consultaDots {
+    20%{background-position:0%   0%, 50%  50%,100%  50%}
+    40%{background-position:0% 100%, 50%   0%,100%  50%}
+    60%{background-position:0%  50%, 50% 100%,100%   0%}
+    80%{background-position:0%  50%, 50%  50%,100% 100%}
+}

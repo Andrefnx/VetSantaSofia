@@ -3,13 +3,13 @@
    Sistema de Diseño Vet Santa Sofía
    ============================= */
 
-/* Ocultar footer del tema completamente */
-.footer,
-footer,
-.main-panel .footer,
-.main-panel footer,
-div.footer,
-div[class*="footer"] {
+/* Ocultar solo el footer global del layout, sin afectar los footers de modales/cards */
+.main-panel > .footer,
+.main-panel > footer,
+body > .footer,
+body > footer,
+div.layout-footer,
+div.page-footer {
     display: none !important;
     height: 0 !important;
     min-height: 0 !important;

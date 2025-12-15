@@ -202,7 +202,7 @@ def _datos_recepcion(hoy, usuario):
     # 1. AGENDA SIMPLE - Vista del día completo
     citas_hoy = Cita.objects.filter(fecha=hoy).select_related(
         'paciente', 'veterinario', 'servicio'
-    ).order_by('hora_inicio')
+    ).order_by('hora_inicio').distinct()
     
     # Generar vista horaria (8:00 - 20:00)
     horarios = []
@@ -210,17 +210,17 @@ def _datos_recepcion(hoy, usuario):
         hora_obj = time(hour=hora, minute=0)
         hora_siguiente = time(hour=hora + 1 if hora < 20 else 20, minute=0)
         
-        citas_en_hora = citas_hoy.filter(
+        citas_en_hora = list(citas_hoy.filter(
             hora_inicio__gte=hora_obj,
             hora_inicio__lt=hora_siguiente
-        )
+        ))
         
         horarios.append({
             'hora': f"{hora:02d}:00",
             'hora_obj': hora_obj,
             'citas': citas_en_hora,
-            'tiene_citas': citas_en_hora.exists(),
-            'libre': not citas_en_hora.exists(),
+            'tiene_citas': len(citas_en_hora) > 0,
+            'libre': len(citas_en_hora) == 0,
         })
     
     agenda_stats = {
