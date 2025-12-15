@@ -647,20 +647,38 @@ def ficha_mascota(request, pk):
 def obtener_servicios(request):
     """Retorna lista de servicios en formato JSON para cargar dinámicamente en consultas"""
     try:
+        from servicios.models import ServicioInsumo
+        
         categoria = request.GET.get('categoria')
         qs = Servicio.objects.all()
         if categoria:
             qs = qs.filter(categoria__iexact=categoria)
 
-        servicios_qs = qs.values('idServicio', 'nombre', 'categoria', 'duracion', 'descripcion').order_by('nombre')
-        servicios = [
-            {
-                **s,
-                # Alias para compatibilidad con el front
-                'descripcion_servicio': s.get('descripcion'),
-            }
-            for s in servicios_qs
-        ]
+        servicios = []
+        for servicio in qs.order_by('nombre'):
+            # Obtener insumos asociados al servicio
+            insumos_servicio = ServicioInsumo.objects.filter(servicio=servicio).select_related('insumo')
+            insumos_data = []
+            for si in insumos_servicio:
+                insumo = si.insumo
+                insumos_data.append({
+                    'id': insumo.idInventario,
+                    'nombre': insumo.medicamento,
+                    'cantidad': si.cantidad,
+                    'stock_actual': insumo.cantidad,
+                    'unidad': insumo.unidad or 'unidad',
+                    'origen': 'catalogo_servicio'  # Marca que viene del catálogo
+                })
+            
+            servicios.append({
+                'idServicio': servicio.idServicio,
+                'nombre': servicio.nombre,
+                'categoria': servicio.categoria,
+                'duracion': servicio.duracion,
+                'descripcion': servicio.descripcion,
+                'descripcion_servicio': servicio.descripcion,
+                'insumos': insumos_data  # ⭐ NUEVO: Insumos del servicio
+            })
 
         return JsonResponse({
             'success': True,

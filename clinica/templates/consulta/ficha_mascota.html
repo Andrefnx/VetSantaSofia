@@ -901,15 +901,28 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="tratamiento-container">
                                 <textarea class="form-control" name="tratamiento" rows="6" placeholder="Descripción del tratamiento..."></textarea>
                                 
+                                <!-- ⭐ INSUMOS DEL SERVICIO (Solo lectura) -->
+                                <div id="insumosServicioContainer" style="display: none; margin-bottom: 16px; padding: 12px; background: #f0f9ff; border: 1px solid #bfdbfe; border-radius: 6px;">
+                                    <div style="font-weight: 600; font-size: 0.9rem; color: #1e40af; margin-bottom: 8px;">
+                                        <i class="bi bi-box-seam"></i> Insumos requeridos por el servicio
+                                    </div>
+                                    <div id="insumosServicioLista" style="font-size: 0.85rem; color: #1e3a8a;">
+                                        <!-- Se llena dinámicamente con JS -->
+                                    </div>
+                                    <small style="display: block; margin-top: 8px; font-size: 11px; color: #64748b;">
+                                        <i class="bi bi-info-circle"></i> Estos insumos están predefinidos en el catálogo del servicio y se incluirán automáticamente.
+                                    </small>
+                                </div>
+                                
                                 <div class="inventario-selector-compact">
-                                    <input type="text" class="form-control form-control-sm" id="searchInventario" placeholder="Buscar medicamento...">
+                                    <input type="text" class="form-control form-control-sm" id="searchInventario" placeholder="Buscar medicamento adicional...">
                                     <div class="inventario-list-compact" id="inventarioList">
                                         <!-- Lista dinámica -->
                                     </div>
                                 </div>
                                 
                                 <div class="insumos-utilizados">
-                                    <div class="insumos-title">Insumos utilizados:</div>
+                                    <div class="insumos-title">Insumos adicionales:</div>
                                     <div id="insumosSeleccionados">
                                         <!-- Tags dinámicos -->
                                     </div>
@@ -1119,8 +1132,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         <hr class="section-divider">
 
                         <div class="detail-section">
-                            <div class="detail-section-title">Insumos / Implementos</div>
-                            <input type="text" class="form-control" id="buscarInsumosCirugia" placeholder="Buscar insumo..." style="margin-bottom:8px;">
+                            <!-- ⭐ INSUMOS DEL SERVICIO DE CIRUGÍA (Solo lectura) -->
+                            <div id="insumosServicioCirugiaContainer" style="display: none; margin-bottom: 16px; padding: 12px; background: #f0f9ff; border: 1px solid #bfdbfe; border-radius: 6px;">
+                                <div style="font-weight: 600; font-size: 0.9rem; color: #1e40af; margin-bottom: 8px;">
+                                    <i class="bi bi-box-seam"></i> Insumos requeridos por la cirugía
+                                </div>
+                                <div id="insumosServicioCirugiaLista" style="font-size: 0.85rem; color: #1e3a8a;">
+                                    <!-- Se llena dinámicamente con JS -->
+                                </div>
+                                <small style="display: block; margin-top: 8px; font-size: 11px; color: #64748b;">
+                                    <i class="bi bi-info-circle"></i> Estos insumos están predefinidos en el catálogo del servicio.
+                                </small>
+                            </div>
+                            
+                            <div class="detail-section-title">Insumos Adicionales</div>
+                            <input type="text" class="form-control" id="buscarInsumosCirugia" placeholder="Buscar insumo adicional..." style="margin-bottom:8px;">
                             <div id="insumosCirugia" class="insumos-container"></div>
                             <input type="hidden" name="insumos_cirugia" id="insumosCirugiaHidden">
                             <small class="info-note">Nota: los insumos seleccionados se descuentan del stock.</small>
@@ -1364,11 +1390,21 @@ function agregarServicio(id, nombre) {
         return;
     }
     
+    // Buscar el servicio completo para obtener sus insumos
+    const servicioCompleto = todosLosServicios.find(s => s.idServicio === id);
+    
     // Agregar al array
-    serviciosSeleccionadosArray.push({ id, nombre });
+    serviciosSeleccionadosArray.push({ 
+        id, 
+        nombre,
+        insumos: servicioCompleto?.insumos || []  // ⭐ Incluir insumos del servicio
+    });
     
     // Actualizar vista
     actualizarServiciosSeleccionados();
+    
+    // ⭐ Mostrar insumos del servicio
+    mostrarInsumosServicios();
     
     // Limpiar buscador
     buscarServicio.value = '';
@@ -1378,6 +1414,9 @@ function agregarServicio(id, nombre) {
 function eliminarServicio(id) {
     serviciosSeleccionadosArray = serviciosSeleccionadosArray.filter(s => s.id !== id);
     actualizarServiciosSeleccionados();
+    
+    // ⭐ Actualizar insumos del servicio
+    mostrarInsumosServicios();
 }
 
 function actualizarServiciosSeleccionados() {
@@ -1400,6 +1439,61 @@ function actualizarServiciosSeleccionados() {
             </span>
         `).join('');
     }
+}
+
+// ⭐ NUEVA FUNCIÓN: Mostrar insumos predefinidos de los servicios
+function mostrarInsumosServicios() {
+    const container = document.getElementById('insumosServicioContainer');
+    const lista = document.getElementById('insumosServicioLista');
+    
+    if (!container || !lista) return;
+    
+    // Recolectar todos los insumos de los servicios seleccionados
+    const insumosMap = new Map();
+    
+    serviciosSeleccionadosArray.forEach(servicio => {
+        if (servicio.insumos && servicio.insumos.length > 0) {
+            servicio.insumos.forEach(insumo => {
+                const key = insumo.id;
+                if (insumosMap.has(key)) {
+                    // Si ya existe, sumar la cantidad
+                    insumosMap.get(key).cantidad += insumo.cantidad;
+                } else {
+                    // Agregar nuevo
+                    insumosMap.set(key, { ...insumo });
+                }
+            });
+        }
+    });
+    
+    const insumosArray = Array.from(insumosMap.values());
+    
+    if (insumosArray.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    // Mostrar contenedor
+    container.style.display = 'block';
+    
+    // Generar HTML de insumos
+    lista.innerHTML = insumosArray.map(insumo => {
+        const stockBajo = insumo.stock_actual < insumo.cantidad;
+        const stockClass = stockBajo ? 'text-danger' : 'text-success';
+        const stockIcon = stockBajo ? 'exclamation-triangle-fill' : 'check-circle-fill';
+        
+        return `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid #dbeafe; background: white; border-radius: 4px; margin-bottom: 4px;">
+                <div style="flex: 1;">
+                    <strong style="color: #1e3a8a;">${insumo.nombre}</strong>
+                    <small style="color: #64748b; margin-left: 8px;">× ${insumo.cantidad} ${insumo.unidad || 'unidad(es)'}</small>
+                </div>
+                <div class="${stockClass}" style="font-size: 0.85rem; font-weight: 600;">
+                    <i class="bi bi-${stockIcon}"></i> Stock: ${insumo.stock_actual}
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // Función para subir documento

@@ -88,6 +88,9 @@ const hospitalizacionesManager = {
 
                 if (duracionInput) duracionInput.value = opt.dataset.duracion || '';
                 if (descripcionInput) descripcionInput.value = opt.dataset.descripcion || '';
+                
+                // Mostrar insumos del servicio seleccionado
+                this.mostrarInsumosServicioCirugia(selectServicio.value);
             });
 
             formCirugia.addEventListener('submit', (e) => {
@@ -411,6 +414,58 @@ const hospitalizacionesManager = {
 
         const buscador = document.getElementById('buscarInsumosCirugia');
         this.renderInsumosSelect(buscador ? buscador.value : '');
+    },
+
+    mostrarInsumosServicioCirugia(servicioId) {
+        const container = document.getElementById('insumosServicioCirugiaContainer');
+        if (!container) return;
+
+        // Si no hay servicio seleccionado, ocultar
+        if (!servicioId) {
+            container.style.display = 'none';
+            return;
+        }
+
+        // Buscar el servicio en this.serviciosCirugia
+        const servicio = this.serviciosCirugia.find(s => String(s.id) === String(servicioId));
+        if (!servicio || !servicio.insumos || servicio.insumos.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+
+        // Construir HTML con los insumos del servicio
+        let html = '<div class="alert alert-info mb-2"><i class="bi bi-info-circle me-2"></i><strong>Insumos definidos para este servicio:</strong></div>';
+        html += '<ul class="list-group mb-3">';
+
+        servicio.insumos.forEach(insumo => {
+            const stockSuficiente = insumo.stock_actual >= insumo.cantidad;
+            const iconoStock = stockSuficiente 
+                ? '<i class="bi bi-check-circle-fill text-success"></i>' 
+                : '<i class="bi bi-exclamation-triangle-fill text-warning"></i>';
+            const claseStock = stockSuficiente ? 'text-success' : 'text-warning';
+            
+            html += `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${insumo.nombre}</strong>
+                        <br>
+                        <small class="text-muted">
+                            Cantidad requerida: ${insumo.cantidad} ${insumo.unidad_medida || ''}
+                        </small>
+                    </div>
+                    <div class="text-end">
+                        ${iconoStock}
+                        <small class="${claseStock}">
+                            Stock: ${insumo.stock_actual} ${insumo.unidad_medida || ''}
+                        </small>
+                    </div>
+                </li>
+            `;
+        });
+
+        html += '</ul>';
+        container.innerHTML = html;
+        container.style.display = 'block';
     },
 
     renderEquipoSelect(filtro = '') {
