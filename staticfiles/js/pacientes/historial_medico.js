@@ -409,6 +409,11 @@ document.addEventListener('DOMContentLoaded', function() {
 const btnNuevaConsulta = document.getElementById('btnNuevaConsulta');
 if (btnNuevaConsulta) {
     btnNuevaConsulta.onclick = async function () {
+        // ⭐ LIMPIAR FORMULARIO al abrir nueva consulta
+        if (typeof window.limpiarFormularioConsulta === 'function') {
+            window.limpiarFormularioConsulta();
+        }
+        
         openVetModal('nuevaConsultaModal');
         await cargarInventario();
         // Cargar antecedentes médicos en el modal
@@ -421,11 +426,21 @@ if (btnNuevaConsulta) {
 const closeNuevaConsultaModal = document.getElementById('closeNuevaConsultaModal');
 if (closeNuevaConsultaModal) {
     closeNuevaConsultaModal.onclick = function () {
+        // ⭐ LIMPIAR FORMULARIO al cerrar modal
+        if (typeof window.limpiarFormularioConsulta === 'function') {
+            window.limpiarFormularioConsulta();
+        }
         closeVetModal('nuevaConsultaModal');
     };
 
     closeNuevaConsultaModal.onkeydown = function (e) {
-        if (e.key === "Enter" || e.key === " ") closeVetModal('nuevaConsultaModal');
+        if (e.key === "Enter" || e.key === " ") {
+            // ⭐ LIMPIAR FORMULARIO al cerrar modal
+            if (typeof window.limpiarFormularioConsulta === 'function') {
+                window.limpiarFormularioConsulta();
+            }
+            closeVetModal('nuevaConsultaModal');
+        }
     };
 }
 
@@ -451,10 +466,225 @@ if (closeAgendarCitaModal) {
 // Guardar nueva consulta (si el formulario existe)
 const formNuevaConsulta = document.getElementById('formNuevaConsulta');
 if (formNuevaConsulta) {
-    formNuevaConsulta.onsubmit = async function (e) {
-    e.preventDefault();
-    const form = e.target;
-    const submitButton = form.querySelector('button[type="submit"]');
+    // Variable para controlar si es finalización o borrador
+    let esFinalizacion = false;
+    
+    // Botón Guardar Borrador
+    const btnGuardarBorrador = document.getElementById('btnGuardarBorrador');
+    if (btnGuardarBorrador) {
+        btnGuardarBorrador.onclick = function() {
+            esFinalizacion = false;
+            guardarConsulta(btnGuardarBorrador);
+        };
+    }
+    
+    // Botón Finalizar Consulta
+    const btnFinalizarConsulta = document.getElementById('btnFinalizarConsulta');
+    if (btnFinalizarConsulta) {
+        btnFinalizarConsulta.onclick = function() {
+            // Verificar si ya está deshabilitado
+            if (btnFinalizarConsulta.disabled) {
+                alert('⚠️ Esta consulta ya fue finalizada\n\nLos insumos ya fueron descontados del inventario.');
+                return;
+            }
+            
+            // Mostrar advertencia
+            const confirmacion = confirm(
+                '⚠️ ATENCIÓN: Finalizar Consulta\n\n' +
+                'Esta acción descontará los medicamentos e insumos del inventario.\n\n' +
+                'Una vez finalizada, la consulta quedará registrada y no se podrá volver a descontar insumos.\n\n' +
+                '¿Desea continuar?'
+            );
+            
+            if (confirmacion) {
+                esFinalizacion = true;
+                guardarConsulta(btnFinalizarConsulta);
+            }
+        };
+    }
+    
+    // Función para actualizar estado de botones según consulta
+    window.actualizarEstadoBotonesConsulta = function(consultaData) {
+        const btnFinalizar = document.getElementById('btnFinalizarConsulta');
+        const btnGuardarBorrador = document.getElementById('btnGuardarBorrador');
+        const estadoTexto = document.getElementById('estadoConsultaTexto');
+        
+        if (!btnFinalizar || !estadoTexto) return;
+        
+        if (consultaData && consultaData.insumos_descontados) {
+            // ⭐ CONSULTA YA FINALIZADA - BLOQUEAR EDICIÓN
+            btnFinalizar.disabled = true;
+            btnFinalizar.style.opacity = '0.5';
+            btnFinalizar.style.cursor = 'not-allowed';
+            btnFinalizar.title = 'Esta consulta ya fue finalizada';
+            
+            // También bloquear botón de guardar borrador
+            if (btnGuardarBorrador) {
+                btnGuardarBorrador.disabled = true;
+                btnGuardarBorrador.style.opacity = '0.5';
+                btnGuardarBorrador.style.cursor = 'not-allowed';
+                btnGuardarBorrador.title = 'No se puede modificar una consulta finalizada';
+            }
+            
+            estadoTexto.innerHTML = '<i class="bi bi-lock-fill text-success"></i> Consulta finalizada - No se puede modificar';
+            estadoTexto.className = 'text-success fw-bold';
+            
+            // ⭐ BLOQUEAR TODOS LOS CAMPOS DEL FORMULARIO
+            bloquearFormularioConsulta();
+        } else {
+            // Consulta en borrador - permitir edición
+            btnFinalizar.disabled = false;
+            btnFinalizar.style.opacity = '1';
+            btnFinalizar.style.cursor = 'pointer';
+            btnFinalizar.title = 'Finalizar y descontar insumos del inventario';
+            
+            if (btnGuardarBorrador) {
+                btnGuardarBorrador.disabled = false;
+                btnGuardarBorrador.style.opacity = '1';
+                btnGuardarBorrador.style.cursor = 'pointer';
+                btnGuardarBorrador.title = 'Guardar sin descontar insumos';
+            }
+            
+            estadoTexto.innerHTML = '<i class="bi bi-info-circle text-muted"></i> Borrador - Sin descuento de insumos';
+            estadoTexto.className = 'text-muted';
+            
+            // Desbloquear campos
+            desbloquearFormularioConsulta();
+        }
+    };
+    
+    // ⭐ FUNCIÓN PARA BLOQUEAR FORMULARIO DE CONSULTA CONFIRMADA
+    function bloquearFormularioConsulta() {
+        const formulario = document.querySelector('#modalConsulta form');
+        if (!formulario) return;
+        
+        // Bloquear todos los inputs, selects y textareas
+        formulario.querySelectorAll('input, select, textarea').forEach(campo => {
+            campo.disabled = true;
+            campo.style.opacity = '0.6';
+            campo.style.cursor = 'not-allowed';
+        });
+        
+        // Bloquear botones de agregar medicamentos
+        const botonesAgregar = formulario.querySelectorAll('button[onclick*="agregarMedicamento"]');
+        botonesAgregar.forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+        });
+        
+        console.log('🔒 Formulario bloqueado - Consulta confirmada');
+    }
+    
+    // ⭐ FUNCIÓN PARA DESBLOQUEAR FORMULARIO
+    function desbloquearFormularioConsulta() {
+        const formulario = document.querySelector('#modalConsulta form');
+        if (!formulario) return;
+        
+        // Desbloquear todos los campos
+        formulario.querySelectorAll('input, select, textarea').forEach(campo => {
+            campo.disabled = false;
+            campo.style.opacity = '1';
+            campo.style.cursor = '';
+        });
+        
+        // Desbloquear botones de agregar medicamentos
+        const botonesAgregar = formulario.querySelectorAll('button[onclick*="agregarMedicamento"]');
+        botonesAgregar.forEach(btn => {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+        });
+        
+        console.log('🔓 Formulario desbloqueado - Consulta en borrador');
+    }
+    
+    // Inicializar estado al abrir modal (por defecto: nueva consulta)
+    window.actualizarEstadoBotonesConsulta(null);
+    
+    // ⭐ FUNCIÓN PARA LIMPIAR FORMULARIO COMPLETO
+    function limpiarFormularioConsulta() {
+        const form = document.getElementById('formNuevaConsulta');
+        if (!form) return;
+        
+        // Resetear formulario
+        form.reset();
+        
+        // Limpiar medicamentos
+        if (typeof window.medicamentosSeleccionados !== 'undefined') {
+            window.medicamentosSeleccionados = [];
+        }
+        if (typeof actualizarMedicamentosSeleccionados === 'function') {
+            actualizarMedicamentosSeleccionados();
+        }
+        
+        // ⭐ LIMPIAR MODO EDICIÓN
+        delete form.dataset.modoEdicion;
+        delete form.dataset.consultaId;
+        delete form.dataset.citaId;
+        
+        // ⭐ RESTAURAR TÍTULO DEL MODAL
+        const modalTitle = document.querySelector('#nuevaConsultaModal .modal-title');
+        if (modalTitle) {
+            modalTitle.innerHTML = '<i class="bi bi-clipboard2-plus"></i> Nueva Consulta';
+        }
+        
+        // Desbloquear campos
+        desbloquearFormularioConsulta();
+        
+        // Resetear estado de botones
+        window.actualizarEstadoBotonesConsulta(null);
+        
+        console.log('🧹 Formulario limpiado completamente');
+    }
+    
+    // Exportar función para uso global
+    window.limpiarFormularioConsulta = limpiarFormularioConsulta;
+    
+    // ⭐ FUNCIÓN PARA ACTUALIZAR TIMELINE CUANDO SE FINALIZA UNA CONSULTA
+    function actualizarTimelineConsultaFinalizada(consultaId) {
+        console.log(`🔄 Actualizando timeline para consulta finalizada ${consultaId}`);
+        
+        // Buscar el elemento de la consulta en el timeline
+        const consultaItems = document.querySelectorAll('.timeline-item[data-diagnostico]');
+        
+        for (const item of consultaItems) {
+            // Intentar encontrar el elemento que contiene el botón de editar
+            const botonEditar = item.querySelector(`button[onclick*="editarConsulta('${consultaId}')"]`);
+            
+            if (botonEditar) {
+                console.log('✅ Encontrado elemento a actualizar');
+                
+                // 1. QUITAR BADGE "BORRADOR"
+                const badge = item.querySelector('.badge.bg-warning');
+                if (badge) {
+                    badge.remove();
+                    console.log('✅ Badge "Borrador" eliminado');
+                }
+                
+                // 2. CAMBIAR BOTÓN "EDITAR" POR "VER DETALLE"
+                botonEditar.onclick = null;
+                botonEditar.setAttribute('onclick', `verDetalleConsulta('${consultaId}')`);
+                botonEditar.className = 'timeline-btn timeline-item-btn'; // Remover btn-warning
+                botonEditar.innerHTML = '<i class="bi bi-eye"></i> Ver detalle';
+                console.log('✅ Botón actualizado a "Ver detalle"');
+                
+                // 3. AÑADIR EFECTO VISUAL DE ACTUALIZACIÓN
+                item.style.backgroundColor = '#d4edda'; // Verde suave
+                setTimeout(() => {
+                    item.style.transition = 'background-color 1s';
+                    item.style.backgroundColor = '';
+                }, 100);
+                
+                console.log('✅ Timeline actualizado exitosamente');
+                break;
+            }
+        }
+    }
+    
+    // Función unificada para guardar
+    async function guardarConsulta(botonActivador) {
+    const form = formNuevaConsulta;
     
     // ✅ VALIDACIÓN CENTRALIZADA: verificar si el formulario ya fue enviado
     if (window.ValidadorInsumos && window.ValidadorInsumos.formularioYaEnviado(form)) {
@@ -477,20 +707,42 @@ if (formNuevaConsulta) {
         tratamiento: formData.get('tratamiento') || '',
         notas: formData.get('notas') || '',
         medicamentos: medicamentosSeleccionados,
-        cita_id: form.dataset.citaId || null
+        cita_id: form.dataset.citaId || null,
+        finalizar: esFinalizacion  // ⭐ Nuevo parámetro
     };
     
-    console.log('📤 Enviando consulta:', data);
+    // ⭐ DETECTAR MODO EDICIÓN
+    const modoEdicion = form.dataset.modoEdicion === 'true';
+    const consultaId = form.dataset.consultaId;
+    
+    if (modoEdicion) {
+        console.log(`📝 Actualizando consulta ${consultaId} (${esFinalizacion ? 'FINALIZACIÓN' : 'BORRADOR'}):`, data);
+    } else {
+        console.log(`📤 Creando nueva consulta (${esFinalizacion ? 'FINALIZACIÓN' : 'BORRADOR'}):`, data);
+    }
     
     // ✅ BLOQUEAR BOTÓN durante procesamiento
-    if (window.ValidadorInsumos && submitButton) {
-        window.ValidadorInsumos.bloquearBoton(submitButton);
+    if (window.ValidadorInsumos && botonActivador) {
+        window.ValidadorInsumos.bloquearBoton(botonActivador);
         window.ValidadorInsumos.marcarFormularioEnviado(form);
     }
     
     try {
-        const response = await fetch(`/clinica/pacientes/${window.pacienteData.id}/consulta/crear/`, {
-            method: 'POST',
+        // ⭐ DETERMINAR URL Y MÉTODO SEGÚN MODO
+        let url, method;
+        if (modoEdicion && consultaId) {
+            // Modo edición: UPDATE
+            url = `/clinica/consultas/${consultaId}/actualizar/`;
+            method = 'PUT';
+            data.consulta_id = consultaId;  // Agregar ID a los datos
+        } else {
+            // Modo creación: CREATE
+            url = `/clinica/pacientes/${window.pacienteData.id}/consulta/crear/`;
+            method = 'POST';
+        }
+        
+        const response = await fetch(url, {
+            method: method,
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
@@ -501,11 +753,23 @@ if (formNuevaConsulta) {
         const result = await response.json();
         
         if (result.success) {
-            console.log('✅ Consulta guardada:', result);
+            console.log(`✅ Consulta guardada (${esFinalizacion ? 'FINALIZADA' : 'BORRADOR'}):`, result);
             
             // ✅ DESBLOQUEAR BOTÓN con éxito
-            if (window.ValidadorInsumos && submitButton) {
-                window.ValidadorInsumos.desbloquearBoton(submitButton, true);
+            if (window.ValidadorInsumos && botonActivador) {
+                window.ValidadorInsumos.desbloquearBoton(botonActivador, true);
+            }
+            
+            // Mostrar mensaje apropiado
+            if (esFinalizacion) {
+                alert('✅ Consulta finalizada exitosamente\n\nLos insumos han sido descontados del inventario.');
+            } else {
+                alert('✅ Borrador guardado\n\nLa consulta se guardó sin descontar insumos.');
+            }
+            
+            // ⭐ SI SE FINALIZÓ UNA CONSULTA EN MODO EDICIÓN, ACTUALIZAR EL TIMELINE
+            if (modoEdicion && esFinalizacion && consultaId) {
+                actualizarTimelineConsultaFinalizada(consultaId);
             }
             
             // Si la consulta fue creada desde una cita, eliminar la cita del timeline
@@ -527,8 +791,7 @@ if (formNuevaConsulta) {
             }
             
             closeVetModal('nuevaConsultaModal');
-            form.reset();
-            medicamentosSeleccionados = [];
+            limpiarFormularioConsulta();
             
             // Recargar datos sin refresh completo (opcional: solo refrescar si es necesario)
             setTimeout(() => {
@@ -539,11 +802,19 @@ if (formNuevaConsulta) {
             
             // ✅ DESBLOQUEAR BOTÓN y resetear formulario en caso de error
             if (window.ValidadorInsumos) {
-                if (submitButton) window.ValidadorInsumos.desbloquearBoton(submitButton, false);
+                if (botonActivador) window.ValidadorInsumos.desbloquearBoton(botonActivador, false);
                 window.ValidadorInsumos.resetearFormulario(form);
             }
             
-            alert(`Error: ${result.error}`);
+            // ⭐ MOSTRAR MENSAJE ESPECÍFICO SEGÚN EL TIPO DE ERROR
+            if (result.error === 'stock_insuficiente') {
+                // Error de stock insuficiente
+                const mensaje = result.message || result.detalles || 'Stock insuficiente para completar esta operación';
+                alert(mensaje);
+            } else {
+                // Otro tipo de error
+                alert(`Error: ${result.error}`);
+            }
         }
         
     } catch (error) {
@@ -551,13 +822,13 @@ if (formNuevaConsulta) {
         
         // ✅ DESBLOQUEAR BOTÓN y resetear formulario en caso de error de red
         if (window.ValidadorInsumos) {
-            if (submitButton) window.ValidadorInsumos.desbloquearBoton(submitButton, false);
+            if (botonActivador) window.ValidadorInsumos.desbloquearBoton(botonActivador, false);
             window.ValidadorInsumos.resetearFormulario(form);
         }
         
         alert('Error al guardar la consulta. Por favor intente nuevamente.');
     }
-    };
+    }
 }
 
 // Modal detalle
@@ -764,6 +1035,168 @@ function verDetalleConsulta(consultaId) {
         }, 100);
     }
 }
+
+// ===== EDITAR CONSULTA (BORRADOR) =====
+/**
+ * Abre el modal de consulta en modo edición para consultas en borrador
+ * @param {number} consultaId - ID de la consulta a editar
+ */
+window.editarConsulta = async function(consultaId) {
+    console.log(`📝 Editando consulta ${consultaId}`);
+    
+    if (!consultaId || consultaId === 'undefined' || consultaId === '') {
+        console.error('Error: consultaId no es válido', consultaId);
+        alert('Error: No se puede obtener el ID de la consulta');
+        return;
+    }
+    
+    // Verificar que pacienteData esté disponible
+    if (!window.pacienteData || !window.pacienteData.id) {
+        console.error('Error: window.pacienteData no está disponible');
+        alert('Error: No se pueden cargar los datos del paciente. Por favor, recarga la página.');
+        return;
+    }
+    
+    const pacienteId = window.pacienteData.id;
+    
+    try {
+        // Obtener datos de la consulta
+        const response = await fetch(`/clinica/pacientes/${pacienteId}/consulta/${consultaId}/detalle/`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            alert('Error al cargar la consulta');
+            return;
+        }
+        
+        const consulta = data.consulta;
+        console.log('📥 Consulta cargada:', consulta);
+        
+        // Verificar que sea un borrador editable
+        if (consulta.insumos_descontados) {
+            alert('⚠️ Esta consulta ya fue finalizada y no se puede editar.\n\nLos insumos ya fueron descontados del inventario.');
+            return;
+        }
+        
+        // ⭐ ABRIR MODAL PRIMERO (para mejor UX)
+        openVetModal('nuevaConsultaModal');
+        
+        // ⭐ CAMBIAR TÍTULO DEL MODAL
+        const modalTitle = document.querySelector('#nuevaConsultaModal .modal-title');
+        if (modalTitle) {
+            modalTitle.innerHTML = '<i class="bi bi-pencil-square"></i> Editar Consulta (Borrador)';
+        }
+        
+        // ⭐ CARGAR INVENTARIO (en paralelo, no bloquea)
+        if (typeof cargarInventario === 'function') {
+            cargarInventario().catch(e => console.warn('⚠️ Error al cargar inventario:', e));
+        }
+        
+        // ⭐ CARGAR DATOS EN EL FORMULARIO
+        const form = document.getElementById('formNuevaConsulta');
+        if (!form) {
+            console.error('No se encontró el formulario');
+            return;
+        }
+        
+        // Cargar signos vitales
+        if (consulta.temperatura && consulta.temperatura !== '-') {
+            const tempInput = form.querySelector('[name="temperatura"]');
+            if (tempInput) tempInput.value = consulta.temperatura.replace('°C', '').trim();
+        }
+        
+        if (consulta.peso && consulta.peso !== '-') {
+            const pesoInput = form.querySelector('[name="peso"]');
+            if (pesoInput) pesoInput.value = consulta.peso.replace('kg', '').trim();
+        }
+        
+        if (consulta.frecuencia_cardiaca && consulta.frecuencia_cardiaca !== '-') {
+            const fcInput = form.querySelector('[name="frecuencia_cardiaca"]');
+            if (fcInput) fcInput.value = consulta.frecuencia_cardiaca.replace('lpm', '').trim();
+        }
+        
+        if (consulta.frecuencia_respiratoria && consulta.frecuencia_respiratoria !== '-') {
+            const frInput = form.querySelector('[name="frecuencia_respiratoria"]');
+            if (frInput) frInput.value = consulta.frecuencia_respiratoria.replace('rpm', '').trim();
+        }
+        
+        // Cargar campos de texto
+        const otrosTextarea = form.querySelector('[name="otros"]');
+        if (otrosTextarea && consulta.otros && consulta.otros !== '-') {
+            otrosTextarea.value = consulta.otros;
+        }
+        
+        const diagnosticoTextarea = form.querySelector('[name="diagnostico"]');
+        if (diagnosticoTextarea) {
+            diagnosticoTextarea.value = consulta.diagnostico || '';
+        }
+        
+        const tratamientoTextarea = form.querySelector('[name="tratamiento"]');
+        if (tratamientoTextarea && consulta.tratamiento && consulta.tratamiento !== '-') {
+            tratamientoTextarea.value = consulta.tratamiento;
+        }
+        
+        const notasTextarea = form.querySelector('[name="notas"]');
+        if (notasTextarea && consulta.notas && consulta.notas !== '-') {
+            notasTextarea.value = consulta.notas;
+        }
+        
+        // ⭐ CARGAR MEDICAMENTOS (si existen)
+        if (consulta.medicamentos && consulta.medicamentos.length > 0) {
+            console.log(`💊 Cargando ${consulta.medicamentos.length} medicamentos:`, consulta.medicamentos);
+            
+            // Asegurar que medicamentosSeleccionados está definido
+            if (typeof window.medicamentosSeleccionados !== 'undefined') {
+                window.medicamentosSeleccionados.length = 0; // Limpiar array existente
+                consulta.medicamentos.forEach(med => {
+                    const medicamento = {
+                        id: med.inventario_id || med.id || null,
+                        nombre: med.nombre,
+                        dosis: med.dosis || ''
+                    };
+                    // ⭐ Agregar peso_paciente si existe
+                    if (med.peso_paciente) {
+                        medicamento.peso_paciente = parseFloat(med.peso_paciente);
+                    }
+                    window.medicamentosSeleccionados.push(medicamento);
+                    console.log(`  ✅ Agregado: ${medicamento.nombre} (ID: ${medicamento.id}, Peso: ${medicamento.peso_paciente || 'N/A'})`);
+                });
+                
+                console.log(`💊 medicamentosSeleccionados final:`, window.medicamentosSeleccionados);
+            }
+            
+            // Actualizar la UI de medicamentos si la función existe
+            if (typeof actualizarMedicamentosSeleccionados === 'function') {
+                try {
+                    actualizarMedicamentosSeleccionados();
+                    console.log('✅ UI de medicamentos actualizada');
+                } catch (e) {
+                    console.error('❌ Error al actualizar lista de medicamentos:', e);
+                }
+            } else {
+                console.warn('⚠️ actualizarMedicamentosSeleccionados no está disponible');
+            }
+        } else {
+            console.log('ℹ️ No hay medicamentos para cargar');
+        }
+        
+        // ⭐ MARCAR CONSULTA COMO MODO EDICIÓN
+        form.dataset.modoEdicion = 'true';
+        form.dataset.consultaId = consultaId;
+        
+        // ⭐ ACTUALIZAR ESTADO DE BOTONES
+        window.actualizarEstadoBotonesConsulta({
+            insumos_descontados: false
+        });
+        
+        console.log('✅ Modal de edición preparado');
+        
+    } catch (error) {
+        console.error('❌ Error al cargar consulta:', error);
+        console.error('Stack trace:', error.stack);
+        // No mostrar alert para no interrumpir si el modal ya se abrió
+    }
+};
 
 // ===== INICIAR CITA DESDE FICHA =====
 // Función para abrir modal de consulta con datos precargados de una cita
@@ -1031,3 +1464,199 @@ document.getElementById('btnRecuperarDatos')?.addEventListener('click', async fu
     
     console.log('✅ Eventos del modal configurados correctamente');
 })();
+
+// ===== FUNCIÓN PARA CONFIRMAR CONSULTA =====
+/**
+ * Confirma una consulta guardada como borrador, descontando insumos del inventario
+ * @param {number} consultaId - ID de la consulta a confirmar
+ */
+window.confirmConsulta = async function(consultaId) {
+    console.log(`🔵 Iniciando confirmación de consulta ${consultaId}`);
+    
+    // Validar ID
+    if (!consultaId) {
+        alert('❌ Error: ID de consulta inválido');
+        return;
+    }
+    
+    // Mostrar confirmación con advertencia
+    const confirmacion = confirm(
+        '⚠️ ATENCIÓN: Confirmar Consulta\n\n' +
+        'Esta acción descontará los medicamentos e insumos del inventario.\n\n' +
+        '• Los insumos se restarán del stock disponible\n' +
+        '• Esta acción NO se puede revertir\n' +
+        '• La consulta quedará marcada como finalizada\n\n' +
+        '¿Desea continuar con la confirmación?'
+    );
+    
+    if (!confirmacion) {
+        console.log('⚠️ Confirmación cancelada por el usuario');
+        return;
+    }
+    
+    // Buscar el botón de confirmación para esta consulta
+    const botonConfirmar = document.querySelector(`[data-consulta-id="${consultaId}"]`);
+    
+    // Bloquear botón durante procesamiento
+    if (botonConfirmar && window.ValidadorInsumos) {
+        window.ValidadorInsumos.bloquearBoton(botonConfirmar);
+    } else if (botonConfirmar) {
+        botonConfirmar.disabled = true;
+        botonConfirmar.textContent = 'Procesando...';
+    }
+    
+    try {
+        console.log(`📤 Enviando solicitud de confirmación...`);
+        
+        const response = await fetch(`/clinica/consultas/${consultaId}/confirmar/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const result = await response.json();
+        
+        console.log('📥 Respuesta recibida:', result);
+        
+        if (result.success) {
+            // ✅ ÉXITO
+            console.log('✅ Consulta confirmada exitosamente');
+            
+            // Desbloquear botón con estado de éxito
+            if (botonConfirmar && window.ValidadorInsumos) {
+                window.ValidadorInsumos.desbloquearBoton(botonConfirmar, true);
+            }
+            
+            // Mostrar mensaje de éxito
+            alert(result.message || '✅ Consulta confirmada exitosamente\n\nLos insumos han sido descontados del inventario.');
+            
+            // Actualizar visualmente el estado
+            actualizarEstadoConsultaVisual(consultaId, true);
+            
+            // Deshabilitar permanentemente el botón
+            if (botonConfirmar) {
+                setTimeout(() => {
+                    botonConfirmar.disabled = true;
+                    botonConfirmar.style.opacity = '0.5';
+                    botonConfirmar.style.cursor = 'not-allowed';
+                    botonConfirmar.innerHTML = '<i class="bi bi-check-circle"></i> Confirmada';
+                    botonConfirmar.title = 'Esta consulta ya fue confirmada';
+                }, 2000);
+            }
+            
+            // Recargar timeline para reflejar cambios
+            setTimeout(() => {
+                location.reload();
+            }, 2500);
+            
+        } else {
+            // ❌ ERROR
+            console.error('❌ Error al confirmar:', result);
+            
+            // Desbloquear botón
+            if (botonConfirmar && window.ValidadorInsumos) {
+                window.ValidadorInsumos.desbloquearBoton(botonConfirmar, false);
+            } else if (botonConfirmar) {
+                botonConfirmar.disabled = false;
+                botonConfirmar.textContent = 'Confirmar';
+            }
+            
+            // Manejar diferentes tipos de error
+            if (result.error === 'ya_confirmada') {
+                // Consulta ya confirmada
+                alert(result.message || '🔒 Esta consulta ya fue confirmada previamente.');
+                actualizarEstadoConsultaVisual(consultaId, true);
+                if (botonConfirmar) {
+                    botonConfirmar.disabled = true;
+                    botonConfirmar.style.opacity = '0.5';
+                    botonConfirmar.innerHTML = '<i class="bi bi-check-circle"></i> Confirmada';
+                }
+            } else if (result.error === 'stock_insuficiente') {
+                // Stock insuficiente
+                alert(result.message || '⚠️ Stock insuficiente\n\nNo hay suficientes insumos en inventario para confirmar esta consulta.');
+            } else {
+                // Otro error
+                alert(result.message || '❌ Error al confirmar la consulta\n\nPor favor, intente nuevamente.');
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ Error de red:', error);
+        
+        // Desbloquear botón
+        if (botonConfirmar && window.ValidadorInsumos) {
+            window.ValidadorInsumos.desbloquearBoton(botonConfirmar, false);
+        } else if (botonConfirmar) {
+            botonConfirmar.disabled = false;
+            botonConfirmar.textContent = 'Confirmar';
+        }
+        
+        alert('❌ Error de conexión\n\nNo se pudo conectar con el servidor. Por favor, verifique su conexión e intente nuevamente.');
+    }
+};
+
+/**
+ * Actualiza el estado visual de una consulta en el timeline
+ * @param {number} consultaId - ID de la consulta
+ * @param {boolean} confirmada - Si la consulta está confirmada
+ */
+function actualizarEstadoConsultaVisual(consultaId, confirmada) {
+    console.log(`🎨 Actualizando estado visual de consulta ${consultaId}`);
+    
+    // Buscar el elemento de la consulta en el timeline (múltiples formas)
+    let consultaElement = document.querySelector(`.timeline-item[data-consulta-id="${consultaId}"]`);
+    
+    // Si no se encuentra con data-consulta-id, buscar por botón
+    if (!consultaElement) {
+        const consultaItems = document.querySelectorAll('.timeline-item[data-diagnostico]');
+        for (const item of consultaItems) {
+            const botonEditar = item.querySelector(`button[onclick*="editarConsulta('${consultaId}')"]`);
+            const botonVer = item.querySelector(`button[onclick*="verDetalleConsulta('${consultaId}')"]`);
+            if (botonEditar || botonVer) {
+                consultaElement = item;
+                break;
+            }
+        }
+    }
+    
+    if (!consultaElement) {
+        console.warn(`⚠️ No se encontró elemento visual para consulta ${consultaId}`);
+        return;
+    }
+    
+    if (confirmada) {
+        console.log('🔄 Actualizando consulta a estado FINALIZADA');
+        
+        // 1. QUITAR BADGE "BORRADOR" si existe
+        const badgeBorrador = consultaElement.querySelector('.badge.bg-warning');
+        if (badgeBorrador) {
+            badgeBorrador.remove();
+            console.log('✅ Badge "Borrador" eliminado');
+        }
+        
+        // 2. BUSCAR Y ACTUALIZAR BOTÓN
+        const botonEditar = consultaElement.querySelector(`button[onclick*="editarConsulta('${consultaId}')"]`);
+        if (botonEditar) {
+            // Cambiar de "Editar" a "Ver detalle"
+            botonEditar.onclick = null;
+            botonEditar.setAttribute('onclick', `verDetalleConsulta('${consultaId}')`);
+            botonEditar.className = 'timeline-btn timeline-item-btn'; // Remover btn-warning
+            botonEditar.innerHTML = '<i class="bi bi-eye"></i> Ver detalle';
+            console.log('✅ Botón actualizado a "Ver detalle"');
+        }
+        
+        // 3. AGREGAR EFECTO VISUAL
+        consultaElement.style.backgroundColor = '#d4edda'; // Verde suave
+        setTimeout(() => {
+            consultaElement.style.transition = 'background-color 1s';
+            consultaElement.style.backgroundColor = '';
+        }, 100);
+        
+        // Actualizar clase del elemento
+        consultaElement.classList.add('consulta-confirmada');
+    }
+    
+    console.log('✅ Estado visual actualizado completamente');
+}

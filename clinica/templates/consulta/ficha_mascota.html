@@ -392,12 +392,23 @@
                                                             </h3>
                                                             <p class="event-subtitle timeline-item-subtitle">
                                                                 <i class="bi bi-person"></i> {{ consulta.veterinario.nombre }} {{ consulta.veterinario.apellido }}
+                                                                {% if not consulta.insumos_descontados %}
+                                                                <span class="badge bg-warning text-dark ms-2" title="Borrador sin finalizar">
+                                                                    <i class="bi bi-pencil"></i> Borrador
+                                                                </span>
+                                                                {% endif %}
                                                             </p>
                                                         </div>
                                                         {% if user.rol != 'recepcion' %}
-                                                        <button class="timeline-btn timeline-item-btn" onclick="verDetalleConsulta('{{ consulta.id }}')">
-                                                            Ver detalle
-                                                        </button>
+                                                            {% if consulta.insumos_descontados %}
+                                                            <button class="timeline-btn timeline-item-btn" onclick="verDetalleConsulta('{{ consulta.id }}')">
+                                                                <i class="bi bi-eye"></i> Ver detalle
+                                                            </button>
+                                                            {% else %}
+                                                            <button class="timeline-btn timeline-item-btn btn-warning" onclick="editarConsulta('{{ consulta.id }}')">
+                                                                <i class="bi bi-pencil-square"></i> Editar
+                                                            </button>
+                                                            {% endif %}
                                                         {% endif %}
                                                     </div>
                                                 </div>
@@ -940,10 +951,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             </div>
-            <div class="vet-modal-footer d-flex justify-content-end align-items-center">
-                <button type="submit" class="vet-btn vet-btn-primary" id="btnAgendarNuevaCita">
-                    <i class="bi bi-check-lg"></i> Guardar
-                </button>
+            <div class="vet-modal-footer d-flex justify-content-between align-items-center">
+                <div class="d-flex gap-2 align-items-center">
+                    <i class="bi bi-info-circle text-muted"></i>
+                    <small class="text-muted" id="estadoConsultaTexto">Borrador - Sin descuento de insumos</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="vet-btn vet-btn-grey" id="btnGuardarBorrador">
+                        <i class="bi bi-file-earmark"></i> Guardar borrador
+                    </button>
+                    <button type="button" class="vet-btn vet-btn-success" id="btnFinalizarConsulta">
+                        <i class="bi bi-check-circle"></i> Finalizar consulta
+                    </button>
+                </div>
             </div>
         </form>
     </div>

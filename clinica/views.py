@@ -243,6 +243,9 @@ def crear_consulta(request, paciente_id):
         peso = data.get('peso')
         fc = data.get('frecuencia_cardiaca')
         fr = data.get('frecuencia_respiratoria')
+        finalizar = data.get('finalizar', False)  # ⭐ Nuevo parámetro
+        
+        print(f'🔄 Modo: {"FINALIZACIÓN (descontar insumos)" if finalizar else "BORRADOR (sin descuento)"}')
         
         # Determinar tipo de consulta basado en servicios seleccionados
         tipo_consulta = 'otros'  # Por defecto para múltiples servicios
@@ -333,17 +336,49 @@ def crear_consulta(request, paciente_id):
             except Exception as e:
                 print(f'  ❌ Error al guardar medicamento {med.get("nombre")}: {str(e)}')
 
-        # ⭐ DESCUENTO DE INVENTARIO POR SERVICIOS
+        # ⭐ DESCUENTO DE INVENTARIO POR SERVICIOS (solo si finalizar=True)
         # Descontar insumos del inventario según los servicios ejecutados
-        if consulta.servicios.exists():
+        if finalizar and consulta.servicios.exists():
             try:
-                from .services.inventario_service import discount_stock_for_services
+                from .services.inventario_service import validate_stock_for_services, discount_stock_for_services
                 
+                # ⭐ PASO 1: VALIDAR STOCK ANTES DE DESCONTAR
+                print(f'🔍 Validando disponibilidad de stock...')
+                servicios = consulta.servicios.all()
+                
+                try:
+                    validate_stock_for_services(servicios)
+                    print(f'  ✅ Stock suficiente para todos los insumos')
+                except ValidationError as stock_error:
+                    # Stock insuficiente detectado ANTES de descontar
+                    print(f'  ⚠️ Stock insuficiente detectado:')
+                    print(f'     {str(stock_error)}')
+                    
+                    consulta.delete()  # Revertir creación de consulta
+                    
+                    mensaje_error = (
+                        "⚠️ STOCK INSUFICIENTE\n\n"
+                        "No es posible finalizar esta consulta porque algunos insumos "
+                        "no tienen stock disponible:\n\n"
+                        f"{str(stock_error)}\n\n"
+                        "Opciones:\n"
+                        "• Guarde como BORRADOR y confirme más tarde\n"
+                        "• Registre nuevos ingresos de inventario\n"
+                        "• Modifique los servicios seleccionados"
+                    )
+                    
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'stock_insuficiente',
+                        'message': mensaje_error,
+                        'detalles': str(stock_error)
+                    }, status=400)
+                
+                # ⭐ PASO 2: DESCONTAR INVENTARIO (solo si validación pasó)
                 print(f'📦 Iniciando descuento de inventario para servicios...')
                 
-                # Llamar al servicio de descuento de inventario
                 resultado = discount_stock_for_services(
-                    services=consulta.servicios.all(),
+                    services=servicios,
                     user=request.user,
                     origen_obj=consulta
                 )
@@ -354,12 +389,14 @@ def crear_consulta(request, paciente_id):
                     print(f'    - {item["medicamento"]}: {item["cantidad_descontada"]} unidades (quedan {item["stock_restante"]})')
                 
             except ValidationError as ve:
-                # Si hay error de validación (stock insuficiente o ya descontado), revertir y notificar
+                # Si hay error de validación (backup por si acaso)
                 print(f'  ⚠️ Error de validación en inventario: {str(ve)}')
                 consulta.delete()  # Revertir creación de consulta
                 return JsonResponse({
                     'success': False,
-                    'error': f'Error de inventario: {str(ve)}'
+                    'error': 'stock_insuficiente',
+                    'message': f'⚠️ Stock insuficiente\n\n{str(ve)}\n\nPor favor, verifique el inventario.',
+                    'detalles': str(ve)
                 }, status=400)
             except Exception as e:
                 # Cualquier otro error en el descuento
@@ -369,12 +406,14 @@ def crear_consulta(request, paciente_id):
                     'success': False,
                     'error': f'Error al procesar inventario: {str(e)}'
                 }, status=500)
+        elif not finalizar and consulta.servicios.exists():
+            print(f'  ℹ️ MODO BORRADOR: Servicios asociados pero NO se descuenta inventario')
         else:
-            print(f'  ℹ️ No hay servicios asociados, no se descuenta inventario')
+            print(f'  ℹ️ No hay servicios asociados')
         
-        # Si la consulta proviene de una cita, marcarla como completada
+        # Si la consulta proviene de una cita, marcarla como completada (solo si finalizar=True)
         cita_id = data.get('cita_id')
-        if cita_id:
+        if cita_id and finalizar:
             try:
                 cita_relacionada = Cita.objects.get(id=cita_id, paciente=paciente)
                 cita_relacionada.estado = 'completada'
@@ -382,25 +421,252 @@ def crear_consulta(request, paciente_id):
                 print(f'  ✅ Cita {cita_id} marcada como completada')
             except Cita.DoesNotExist:
                 print(f'  ⚠️ Cita {cita_id} no encontrada para este paciente; no se actualiza estado')
+        elif cita_id and not finalizar:
+            print(f'  ℹ️ MODO BORRADOR: Cita {cita_id} NO se marca como completada')
         
         print('=' * 50)
         print(f'✅ CONSULTA CREADA EXITOSAMENTE')
         print(f'   ID: {consulta.id}')
+        print(f'   Modo: {"FINALIZADA" if finalizar else "BORRADOR"}')
         print(f'   Tipo: {consulta.tipo_consulta}')
         print(f'   Paciente: {paciente.nombre}')
         print(f'   Veterinario: {request.user.nombre} {request.user.apellido}')
         print(f'   Medicamentos guardados: {consulta.medicamentos_detalle.count()}')
+        print(f'   Insumos descontados: {consulta.insumos_descontados}')
         print('=' * 50)
+        
+        mensaje = 'Consulta finalizada exitosamente' if finalizar else 'Borrador de consulta guardado'
         
         return JsonResponse({
             'success': True,
-            'message': 'Consulta creada exitosamente',
-            'consulta_id': consulta.id
+            'message': mensaje,
+            'consulta_id': consulta.id,
+            'finalizada': finalizar,
+            'insumos_descontados': consulta.insumos_descontados
         })
         
     except Exception as e:
         print('=' * 50)
         print('❌ ERROR AL CREAR CONSULTA')
+        print('=' * 50)
+        print(f'Tipo de error: {type(e).__name__}')
+        print(f'Mensaje: {str(e)}')
+        import traceback
+        print('Traceback completo:')
+        traceback.print_exc()
+        print('=' * 50)
+        
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+@login_required
+@require_http_methods(["PUT"])
+def actualizar_consulta(request, consulta_id):
+    """
+    Actualiza una consulta existente (solo si es un borrador sin finalizar).
+    """
+    try:
+        print('=' * 50)
+        print('🔄 ACTUALIZANDO CONSULTA')
+        print('=' * 50)
+        
+        # Obtener la consulta
+        consulta = get_object_or_404(Consulta, id=consulta_id)
+        print(f'✅ Consulta encontrada: ID {consulta.id}')
+        print(f'   Paciente: {consulta.paciente.nombre}')
+        print(f'   Estado actual insumos_descontados: {consulta.insumos_descontados}')
+        
+        # ⭐ VALIDACIÓN CRÍTICA: No permitir edición de consultas finalizadas
+        if consulta.insumos_descontados:
+            print('🔒 Consulta ya finalizada - No se puede editar')
+            return JsonResponse({
+                'success': False,
+                'error': 'consulta_finalizada',
+                'message': '🔒 Esta consulta ya fue finalizada y no se puede modificar.\n\nLos insumos ya fueron descontados del inventario.'
+            }, status=403)
+        
+        # Parsear el body
+        try:
+            data = json.loads(request.body)
+            print(f'✅ JSON parseado correctamente')
+            print(f'📥 Datos recibidos: {json.dumps(data, indent=2, ensure_ascii=False)}')
+        except json.JSONDecodeError as e:
+            print(f'❌ Error al parsear JSON: {str(e)}')
+            return JsonResponse({
+                'success': False,
+                'error': f'JSON inválido: {str(e)}'
+            }, status=400)
+        
+        # Extraer parámetros
+        finalizar = data.get('finalizar', False)
+        print(f'🔄 Modo actualización: {"FINALIZACIÓN (descontar insumos)" if finalizar else "BORRADOR (sin descuento)"}')
+        
+        # Actualizar campos básicos
+        consulta.temperatura = data.get('temperatura') if data.get('temperatura') else None
+        consulta.peso = data.get('peso') if data.get('peso') else None
+        consulta.frecuencia_cardiaca = data.get('frecuencia_cardiaca') if data.get('frecuencia_cardiaca') else None
+        consulta.frecuencia_respiratoria = data.get('frecuencia_respiratoria') if data.get('frecuencia_respiratoria') else None
+        consulta.otros = data.get('otros', '')
+        consulta.diagnostico = data.get('diagnostico', '')
+        consulta.tratamiento = data.get('tratamiento', '')
+        consulta.notas = data.get('notas', '')
+        
+        print('✅ Campos básicos actualizados')
+        
+        # Actualizar peso del paciente si se proporcionó
+        peso = data.get('peso')
+        if peso:
+            try:
+                peso_float = float(peso)
+                consulta.paciente.ultimo_peso = peso_float
+                consulta.paciente.save()
+                print(f'✅ Peso del paciente actualizado: {peso_float} kg')
+            except (ValueError, TypeError) as e:
+                print(f'⚠️  Error al actualizar peso: {str(e)}')
+        
+        # Actualizar servicios
+        servicios_ids = data.get('servicios_ids', '')
+        if servicios_ids:
+            # Limpiar servicios existentes
+            consulta.servicios.clear()
+            print('🗑️ Servicios anteriores eliminados')
+            
+            # Agregar nuevos servicios
+            ids_list = servicios_ids.split(',')
+            for servicio_id in ids_list:
+                try:
+                    servicio = Servicio.objects.get(idServicio=servicio_id.strip())
+                    consulta.servicios.add(servicio)
+                    print(f'✅ Servicio agregado: {servicio.nombre}')
+                except Servicio.DoesNotExist:
+                    print(f'⚠️  Servicio no encontrado: {servicio_id}')
+        
+        # Actualizar medicamentos - Eliminar anteriores y crear nuevos
+        from .models import MedicamentoUtilizado
+        consulta.medicamentos_detalle.all().delete()
+        print('🗑️ Medicamentos anteriores eliminados')
+        
+        medicamentos = data.get('medicamentos', [])
+        print(f'💊 Medicamentos a guardar: {len(medicamentos)}')
+        
+        for med in medicamentos:
+            try:
+                MedicamentoUtilizado.objects.create(
+                    consulta=consulta,
+                    inventario_id=med.get('id'),
+                    nombre=med.get('nombre'),
+                    dosis=med.get('dosis', ''),
+                    peso_paciente=peso if peso else None
+                )
+                print(f'  ✅ Medicamento guardado: {med["nombre"]} - Dosis: {med.get("dosis", "Sin dosis")}')
+            except Exception as e:
+                print(f'  ❌ Error al guardar medicamento {med.get("nombre")}: {str(e)}')
+        
+        # ⭐ GUARDAR CAMBIOS BÁSICOS ANTES DEL DESCUENTO
+        consulta.save()
+        print('✅ Campos básicos guardados en BD')
+        
+        # ⭐ SI SE FINALIZA, MARCAR EL FLAG (independiente de si hay servicios)
+        if finalizar:
+            consulta.insumos_descontados = True
+            print('✅ Marcando consulta como finalizada (finalizar=True)')
+        
+        # ⭐ DESCUENTO DE INVENTARIO (solo si hay servicios)
+        if finalizar and consulta.servicios.exists():
+            try:
+                from .services.inventario_service import validate_stock_for_services, discount_stock_for_services
+                
+                # Validar stock ANTES de descontar
+                print(f'🔍 Validando disponibilidad de stock...')
+                servicios = consulta.servicios.all()
+                
+                try:
+                    validate_stock_for_services(servicios)
+                    print(f'  ✅ Stock suficiente para todos los insumos')
+                except ValidationError as stock_error:
+                    print(f'  ⚠️ Stock insuficiente detectado:')
+                    print(f'     {str(stock_error)}')
+                    
+                    mensaje_error = (
+                        "⚠️ STOCK INSUFICIENTE\n\n"
+                        "No es posible finalizar esta consulta porque algunos insumos "
+                        "no tienen stock disponible:\n\n"
+                        f"{str(stock_error)}\n\n"
+                        "Opciones:\n"
+                        "• Guarde como BORRADOR y confirme más tarde\n"
+                        "• Registre nuevos ingresos de inventario\n"
+                        "• Modifique los servicios seleccionados"
+                    )
+                    
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'stock_insuficiente',
+                        'message': mensaje_error,
+                        'detalles': str(stock_error)
+                    }, status=400)
+                
+                # Descontar inventario
+                print(f'📦 Iniciando descuento de inventario...')
+                
+                resultado = discount_stock_for_services(
+                    services=servicios,
+                    user=request.user,
+                    origen_obj=consulta
+                )
+                
+                print(f'  ✅ Inventario descontado exitosamente')
+                print(f'  📊 Items descontados: {resultado["total_items"]}')
+                
+            except ValidationError as ve:
+                print(f'  ⚠️ Error de validación en inventario: {str(ve)}')
+                return JsonResponse({
+                    'success': False,
+                    'error': 'stock_insuficiente',
+                    'message': f'⚠️ Stock insuficiente\n\n{str(ve)}',
+                    'detalles': str(ve)
+                }, status=400)
+            except Exception as e:
+                print(f'  ❌ Error al descontar inventario: {str(e)}')
+                return JsonResponse({
+                    'success': False,
+                    'error': 'error_inventario',
+                    'message': f'❌ Error al procesar inventario\n\n{str(e)}'
+                }, status=500)
+        else:
+            # Si se finaliza pero no hay servicios, solo imprimir info
+            if finalizar:
+                print('ℹ️ Consulta finalizada sin servicios - no hay insumos para descontar')
+        
+        # ⭐ GUARDAR FLAG SI SE FINALIZÓ
+        if finalizar:
+            consulta.save(update_fields=['insumos_descontados'])
+            print(f'✅ Flag insumos_descontados guardado: {consulta.insumos_descontados}')
+        
+        # Verificar estado final
+        print(f'📊 Estado final - insumos_descontados: {consulta.insumos_descontados}')
+        
+        print('=' * 50)
+        print(f'✅ CONSULTA ACTUALIZADA EXITOSAMENTE')
+        print(f'   ID: {consulta.id}')
+        print(f'   Modo: {"FINALIZADA" if finalizar else "BORRADOR"}')
+        print(f'   Insumos descontados: {consulta.insumos_descontados}')
+        print('=' * 50)
+        
+        mensaje = 'Consulta actualizada y finalizada exitosamente' if finalizar else 'Borrador de consulta actualizado'
+        
+        return JsonResponse({
+            'success': True,
+            'message': mensaje,
+            'consulta_id': consulta.id,
+            'finalizada': finalizar,
+            'insumos_descontados': consulta.insumos_descontados
+        })
+        
+    except Exception as e:
+        print('=' * 50)
+        print('❌ ERROR AL ACTUALIZAR CONSULTA')
         print('=' * 50)
         print(f'Tipo de error: {type(e).__name__}')
         print(f'Mensaje: {str(e)}')
@@ -428,9 +694,12 @@ def detalle_consulta(request, paciente_id, consulta_id):
         for med_detalle in consulta.medicamentos_detalle.all():
             med_info = {
                 'nombre': med_detalle.nombre,
+                'inventario_id': med_detalle.inventario_id,  # ⭐ ID para reconstruir selección
             }
             if med_detalle.dosis:
                 med_info['dosis'] = med_detalle.dosis
+            if med_detalle.peso_paciente:
+                med_info['peso_paciente'] = str(med_detalle.peso_paciente)  # ⭐ Peso para recalcular dosis
             medicamentos.append(med_info)
         
         veterinario_nombre = f"{consulta.veterinario.nombre} {consulta.veterinario.apellido}".strip()
@@ -460,6 +729,145 @@ def detalle_consulta(request, paciente_id, consulta_id):
     except Exception as e:
         print(f"Error en detalle_consulta: {str(e)}")
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def confirmar_consulta(request, consulta_id):
+    """
+    Confirma una consulta previamente guardada como borrador,
+    descontando los insumos del inventario.
+    """
+    try:
+        print('=' * 50)
+        print('🔵 CONFIRMANDO CONSULTA')
+        print('=' * 50)
+        
+        # Obtener la consulta
+        consulta = get_object_or_404(Consulta, id=consulta_id)
+        print(f'✅ Consulta encontrada: ID {consulta.id}')
+        print(f'   Paciente: {consulta.paciente.nombre}')
+        print(f'   Estado actual insumos_descontados: {consulta.insumos_descontados}')
+        
+        # Validar que no esté ya confirmada
+        if consulta.insumos_descontados:
+            print('⚠️ Consulta ya confirmada previamente')
+            return JsonResponse({
+                'success': False,
+                'error': 'ya_confirmada',
+                'message': '🔒 Esta consulta ya fue confirmada.\n\nLos insumos ya fueron descontados del inventario.'
+            }, status=400)
+        
+        # Descontar insumos del inventario
+        if consulta.servicios.exists():
+            try:
+                from .services.inventario_service import validate_stock_for_services, discount_stock_for_services
+                
+                # ⭐ PASO 1: VALIDAR STOCK ANTES DE DESCONTAR
+                print(f'🔍 Validando disponibilidad de stock...')
+                servicios = consulta.servicios.all()
+                
+                try:
+                    validate_stock_for_services(servicios)
+                    print(f'✅ Stock suficiente para todos los insumos')
+                except ValidationError as ve:
+                    # Stock insuficiente detectado ANTES de descontar
+                    print(f'⚠️ Stock insuficiente detectado:')
+                    print(f'   {str(ve)}')
+                    
+                    # Preparar mensaje detallado para el usuario
+                    mensaje_error = (
+                        "⚠️ STOCK INSUFICIENTE\n\n"
+                        "No es posible confirmar esta consulta porque algunos insumos "
+                        "no tienen stock disponible en el inventario:\n\n"
+                        f"{str(ve)}\n\n"
+                        "Por favor:\n"
+                        "• Verifique el inventario\n"
+                        "• Registre nuevos ingresos de stock si es necesario\n"
+                        "• O ajuste los servicios de la consulta"
+                    )
+                    
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'stock_insuficiente',
+                        'message': mensaje_error,
+                        'detalles': str(ve)
+                    }, status=400)
+                
+                # ⭐ PASO 2: DESCONTAR INVENTARIO (solo si validación pasó)
+                print(f'📦 Iniciando descuento de inventario...')
+                
+                resultado = discount_stock_for_services(
+                    services=servicios,
+                    user=request.user,
+                    origen_obj=consulta
+                )
+                
+                print(f'✅ Inventario descontado exitosamente')
+                print(f'📊 Items descontados: {resultado["total_items"]}')
+                for item in resultado['insumos_descontados']:
+                    print(f'  - {item["medicamento"]}: {item["cantidad_descontada"]} unidades')
+                
+            except ValidationError as ve:
+                # Error de validación (backup por si acaso)
+                print(f'⚠️ Error de validación: {str(ve)}')
+                return JsonResponse({
+                    'success': False,
+                    'error': 'stock_insuficiente',
+                    'message': f'⚠️ Stock insuficiente\n\n{str(ve)}\n\nPor favor, verifique el inventario antes de confirmar.',
+                    'detalles': str(ve)
+                }, status=400)
+            except Exception as e:
+                # Otro error en el descuento
+                print(f'❌ Error al descontar inventario: {str(e)}')
+                return JsonResponse({
+                    'success': False,
+                    'error': 'error_inventario',
+                    'message': f'❌ Error al procesar inventario\n\n{str(e)}'
+                }, status=500)
+        else:
+            print('ℹ️ Consulta sin servicios asociados, no hay insumos para descontar')
+        
+        # ⭐ MARCAR CONSULTA COMO CONFIRMADA (evita doble descuento)
+        consulta.insumos_descontados = True
+        consulta.save(update_fields=['insumos_descontados'])
+        print(f'✅ Flag insumos_descontados actualizado a True')
+        
+        print('=' * 50)
+        print(f'✅ CONSULTA CONFIRMADA EXITOSAMENTE')
+        print(f'   ID: {consulta.id}')
+        print(f'   Insumos descontados: {consulta.insumos_descontados}')
+        print('=' * 50)
+        
+        return JsonResponse({
+            'success': True,
+            'message': '✅ Consulta confirmada exitosamente\n\nLos insumos han sido descontados del inventario.',
+            'consulta': {
+                'id': consulta.id,
+                'insumos_descontados': consulta.insumos_descontados
+            }
+        })
+        
+    except Consulta.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'not_found',
+            'message': 'Consulta no encontrada'
+        }, status=404)
+    except Exception as e:
+        print('=' * 50)
+        print('❌ ERROR AL CONFIRMAR CONSULTA')
+        print('=' * 50)
+        print(f'Tipo: {type(e).__name__}')
+        print(f'Mensaje: {str(e)}')
+        import traceback
+        traceback.print_exc()
+        print('=' * 50)
+        
+        return JsonResponse({
+            'success': False,
+            'error': 'error',
+            'message': f'Error al confirmar consulta: {str(e)}'
+        }, status=500)
 
 @login_required
 def guardar_consulta(request, paciente_id):

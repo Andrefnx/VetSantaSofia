@@ -357,6 +357,9 @@ function actualizarMedicamentosSeleccionados() {
     container.innerHTML = window.medicamentosSeleccionados.map(med => {
         console.log('📦 Renderizando medicamento:', med);
         
+        // ⭐ Obtener peso: puede estar como peso_paciente o peso
+        const peso = med.peso_paciente || med.peso || 'N/A';
+        
         return `
             <div class="medicamento-tag">
                 <div class="medicamento-info">
@@ -364,7 +367,7 @@ function actualizarMedicamentosSeleccionados() {
                     ${med.dosis ? `
                         <div class="medicamento-dosis">
                             <i class="bi bi-prescription2"></i> 
-                            <span>${med.dosis} por ${med.peso} kg</span>
+                            <span>${med.dosis} por ${peso} kg</span>
                         </div>
                     ` : `
                         <div class="medicamento-dosis" style="opacity: 0.7;">
