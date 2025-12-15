@@ -9,6 +9,14 @@
         <h3 class="fw-bold mb-3">Panel General</h3>
         <h6 class="op-7 mb-2">Bienvenido, {{ user.nombre }} {{ user.apellido }}</h6>
     </div>
+    <div class="ms-md-auto mt-3 mt-md-0">
+        <!-- Botones de Testing de Roles -->
+        <div class="btn-group" role="group" aria-label="Testing roles">
+            <a href="{% url 'dashboard:dashboard' %}?as=admin" class="btn btn-sm btn-primary">Ver como Admin</a>
+            <a href="{% url 'dashboard:dashboard' %}?as=vet" class="btn btn-sm btn-info">Ver como Vet</a>
+            <a href="{% url 'dashboard:dashboard' %}?as=recepcion" class="btn btn-sm btn-secondary">Ver como Recepción</a>
+        </div>
+    </div>
 </div>
 
 <!-- Quick Actions Section -->

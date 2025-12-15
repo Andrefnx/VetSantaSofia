@@ -3,8 +3,25 @@
 
 {% block title %}Dashboard Administrador{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/base/tables_base.css' %}">
+<link rel="stylesheet" href="{% static 'css/custom/dashboard_vet.css' %}">
+{% endblock %}
+
 {% block content %}
+<div class="vetdash-scope">
 <div class="dashboard-compact">
+<style>
+    .action-link {
+        color: #6b7280;
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: color 0.2s ease-in-out;
+    }
+    .action-link:hover {
+        color: #111827;
+    }
+</style>
 <div class="page-header">
     <h3 class="fw-bold mb-3">Dashboard Administrador</h3>
     <ul class="breadcrumbs mb-3">
@@ -25,63 +42,79 @@
 <!-- Indicadores Principales -->
 <div class="row">
     <div class="col-sm-6 col-md-3">
-        <div class="card vet-card card-round">
+        <div class="card card-stats card-round">
             <div class="card-body">
-                <div class="vet-card-content">
-                    <div class="vet-card-icon">
-                        <i class="fas fa-users"></i>
+                <div class="row align-items-center">
+                    <div class="col-icon">
+                        <div class="icon-big text-center icon-primary bubble-shadow-small">
+                            <i class="fas fa-users"></i>
+                        </div>
                     </div>
-                    <div class="vet-card-info">
-                        <p class="vet-card-label">Pacientes Atendidos Hoy</p>
-                        <h4 class="vet-card-value">{{ indicadores.pacientes_atendidos_hoy }}</h4>
+                    <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                            <p class="card-category">Pacientes Atendidos Hoy</p>
+                            <h4 class="card-title">{{ indicadores.pacientes_atendidos_hoy }}</h4>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <div class="col-sm-6 col-md-3">
-        <div class="card vet-card card-round">
+        <div class="card card-stats card-round">
             <div class="card-body">
-                <div class="vet-card-content">
-                    <div class="vet-card-icon">
-                        <i class="fas fa-dollar-sign"></i>
+                <div class="row align-items-center">
+                    <div class="col-icon">
+                        <div class="icon-big text-center icon-success bubble-shadow-small">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
                     </div>
-                    <div class="vet-card-info">
-                        <p class="vet-card-label">Ingresos del Día</p>
-                        <h4 class="vet-card-value">${{ indicadores.ingresos_del_dia|floatformat:0 }}</h4>
+                    <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                            <p class="card-category">Ingresos del Día</p>
+                            <h4 class="card-title">${{ indicadores.ingresos_del_dia|floatformat:0 }}</h4>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <div class="col-sm-6 col-md-3">
-        <div class="card vet-card card-round">
+        <div class="card card-stats card-round">
             <div class="card-body">
-                <div class="vet-card-content">
-                    <div class="vet-card-icon">
-                        <i class="fas fa-calendar-check"></i>
+                <div class="row align-items-center">
+                    <div class="col-icon">
+                        <div class="icon-big text-center icon-info bubble-shadow-small">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
                     </div>
-                    <div class="vet-card-info">
-                        <p class="vet-card-label">Citas del Día</p>
-                        <h4 class="vet-card-value">{{ citas_stats.total }}</h4>
+                    <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                            <p class="card-category">Citas del Día</p>
+                            <h4 class="card-title">{{ citas_stats.total }}</h4>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <div class="col-sm-6 col-md-3">
-        <div class="card vet-card card-round">
+        <div class="card card-stats card-round">
             <div class="card-body">
-                <div class="vet-card-content">
-                    <div class="vet-card-icon">
-                        <i class="fas fa-hospital"></i>
+                <div class="row align-items-center">
+                    <div class="col-icon">
+                        <div class="icon-big text-center icon-warning bubble-shadow-small">
+                            <i class="fas fa-hospital"></i>
+                        </div>
                     </div>
-                    <div class="vet-card-info">
-                        <p class="vet-card-label">Hospitalizados</p>
-                        <h4 class="vet-card-value">{{ indicadores.hospitalizaciones_activas_count }}</h4>
+                    <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                            <p class="card-category">Hospitalizados</p>
+                            <h4 class="card-title">{{ indicadores.hospitalizaciones_activas_count }}</h4>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -93,7 +126,7 @@
 <div class="row">
     <!-- Agenda del Día -->
     <div class="col-md-4">
-        <div class="card card-round">
+        <div class="card vet-card card-round">
             <div class="card-header">
                 <div class="card-head-row">
                     <div class="card-title">
@@ -147,7 +180,7 @@
                                     <th>Hora</th>
                                     <th>Paciente</th>
                                     <th>Veterinario</th>
-                                    <th>Estado</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -155,11 +188,17 @@
                                 <tr>
                                     <td><strong>{{ cita.hora_inicio|time:"H:i" }}</strong></td>
                                     <td>{{ cita.paciente.nombre }}</td>
-                                    <td>{{ cita.veterinario.nombre }}</td>
                                     <td>
-                                        <span class="badge badge-{% if cita.estado == 'confirmada' %}success{% elif cita.estado == 'pendiente' %}warning{% else %}secondary{% endif %}">
-                                            {{ cita.get_estado_display }}
-                                        </span>
+                                        {% if cita.veterinario %}
+                                            {{ cita.veterinario.nombre }} {{ cita.veterinario.apellido }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'pacientes:ficha_mascota' cita.paciente.id %}" class="action-link" title="Ver ficha">
+                                            <i class="fas fa-file-medical"></i>
+                                        </a>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -175,18 +214,12 @@
     
     <!-- Hospitalizaciones Activas -->
     <div class="col-md-4">
-        <div class="card card-round">
+        <div class="card vet-card card-round">
             <div class="card-header">
                 <div class="card-head-row">
                     <div class="card-title">
                         <i class="fas fa-hospital-user me-2"></i>
                         Hospitalizaciones Activas
-                    </div>
-                    <div class="card-tools">
-                        <a href="/hospital/" class="vet-btn vet-btn-sm">
-                            <i class="fa fa-eye me-1"></i>
-                            Ver Todas
-                        </a>
                     </div>
                 </div>
             </div>
@@ -213,7 +246,7 @@
                                         <br>
                                         <small class="text-muted">{{ hosp.fecha_ingreso|date:"d/m H:i" }}</small>
                                         <br>
-                                        <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}#hospitalizaciones" target="_blank" class="text-decoration-none" style="color: #6b7280; font-size: 0.85rem;">
+                                        <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}#hospitalizaciones" target="_blank" class="action-link">
                                             <i class="fas fa-file-medical me-1"></i> Ver ficha
                                         </a>
                                     </td>
@@ -228,12 +261,12 @@
                                         {% if hosp.paciente.propietario %}
                                             <div style="display: flex; flex-direction: column; gap: 4px;">
                                                 {% if hosp.paciente.propietario.telefono %}
-                                                    <a href="tel:{{ hosp.paciente.propietario.telefono }}" class="text-decoration-none" style="color: #6b7280; font-size: 0.85rem;">
+                                                    <a href="tel:{{ hosp.paciente.propietario.telefono }}" class="action-link">
                                                         <i class="fas fa-phone me-1"></i> Llamar
                                                     </a>
                                                 {% endif %}
                                                 {% if hosp.paciente.propietario.email %}
-                                                    <a href="mailto:{{ hosp.paciente.propietario.email }}" class="text-decoration-none" style="color: #6b7280; font-size: 0.85rem;">
+                                                    <a href="mailto:{{ hosp.paciente.propietario.email }}" class="action-link">
                                                         <i class="fas fa-envelope me-1"></i> Enviar correo
                                                     </a>
                                                 {% endif %}
@@ -263,7 +296,7 @@
     <!-- Columna Derecha: Caja e Inventario -->
     <div class="col-md-4">
         <!-- Estado de Caja -->
-        <div class="card card-round">
+        <div class="card vet-card card-round">
             <div class="card-header">
                 <div class="card-head-row">
                     <div class="card-title">
@@ -311,16 +344,16 @@
                 </div>
                 
                 <div class="d-grid gap-2 mt-3">
-                    <a href="/caja/dashboard/" class="vet-btn vet-btn-block">
-                        <i class="fas fa-cash-register me-2"></i>
-                        Ir a Caja
-                    </a>
+                    <button type="button" class="vet-btn vet-btn-block" data-bs-toggle="modal" data-bs-target="#abrirCajaModal">
+                        <i class="fas fa-unlock me-2"></i>
+                        Abrir Caja
+                    </button>
                 </div>
             </div>
         </div>
         
         <!-- Alertas de Inventario -->
-        <div class="card card-round">
+        <div class="card vet-card card-round">
             <div class="card-header">
                 <div class="card-head-row">
                     <div class="card-title">
@@ -380,6 +413,7 @@
         </div>
         
     </div>
+</div>
 </div>
 </div>
 

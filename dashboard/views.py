@@ -14,6 +14,18 @@ def dashboard(request):
     """
     usuario = request.user
     hoy = date.today()
+    # Permitir testing de roles mediante query param (?as=admin|vet|recepcion)
+    rol_override = request.GET.get('as')
+    if rol_override in ['admin', 'administracion', 'vet', 'veterinario', 'recepcion']:
+        # Normalizar a valores usados internamente
+        if rol_override == 'admin':
+            rol_test = 'administracion'
+        elif rol_override in ['vet', 'veterinario']:
+            rol_test = 'veterinario'
+        else:
+            rol_test = 'recepcion'
+    else:
+        rol_test = None
     
     # Contexto base
     context = {
@@ -21,15 +33,28 @@ def dashboard(request):
         'hoy': hoy,
     }
     
-    # Cargar datos según rol
-    if usuario.rol == 'administracion' or usuario.is_superuser:
+    # Cargar datos según rol (priorizar override de testing)
+    if rol_test == 'administracion':
         context.update(_datos_administrador(hoy))
         template = 'dashboard/admin.html'
-    
+    elif rol_test == 'recepcion':
+        context.update(_datos_recepcion(hoy, usuario))
+        template = 'dashboard/recepcion.html'
+    elif rol_test == 'veterinario':
+        try:
+            from cuentas.models import CustomUser
+            usuario_vet = CustomUser.objects.filter(rol='veterinario', is_active=True).first() or usuario
+        except Exception:
+            usuario_vet = usuario
+        context.update(_datos_veterinario(hoy, usuario_vet))
+        context['vista_como'] = 'veterinario'
+        template = 'dashboard/veterinario.html'
+    elif usuario.rol == 'administracion' or usuario.is_superuser:
+        context.update(_datos_administrador(hoy))
+        template = 'dashboard/admin.html'
     elif usuario.rol == 'recepcion':
         context.update(_datos_recepcion(hoy, usuario))
         template = 'dashboard/recepcion.html'
-    
     elif usuario.rol == 'veterinario':
         context.update(_datos_veterinario(hoy, usuario))
         template = 'dashboard/veterinario.html'

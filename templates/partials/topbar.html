@@ -123,6 +123,22 @@
             </nav>
 
             <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
+                <!-- Testing: ver dashboard como distintos roles -->
+                <li class="nav-item d-none d-lg-flex me-3">
+                    <div class="btn-group" role="group" aria-label="Testing roles">
+                        <a href="{% url 'dashboard:dashboard' %}?as=admin" class="btn btn-sm btn-outline-primary">Admin</a>
+                        <a href="{% url 'dashboard:dashboard' %}?as=vet" class="btn btn-sm btn-outline-info">Vet</a>
+                        <a href="{% url 'dashboard:dashboard' %}?as=recepcion" class="btn btn-sm btn-outline-secondary">Recepción</a>
+                    </div>
+                </li>
+                <!-- Versión móvil -->
+                <li class="nav-item d-flex d-lg-none px-2 py-1">
+                    <div class="w-100 d-flex gap-2">
+                        <a href="{% url 'dashboard:dashboard' %}?as=admin" class="btn btn-xs btn-outline-primary flex-fill">Admin</a>
+                        <a href="{% url 'dashboard:dashboard' %}?as=vet" class="btn btn-xs btn-outline-info flex-fill">Vet</a>
+                        <a href="{% url 'dashboard:dashboard' %}?as=recepcion" class="btn btn-xs btn-outline-secondary flex-fill">Recepción</a>
+                    </div>
+                </li>
                 <!-- Cash Status Mobile (reemplaza search mobile) -->
                 <li class="nav-item topbar-icon d-flex d-lg-none">
                     <div class="cash-status-btn open cash-status-mobile" id="cashStatusBtnMobile" onclick="toggleCashRegister()">
