@@ -333,6 +333,45 @@ def crear_consulta(request, paciente_id):
             except Exception as e:
                 print(f'  ❌ Error al guardar medicamento {med.get("nombre")}: {str(e)}')
 
+        # ⭐ DESCUENTO DE INVENTARIO POR SERVICIOS
+        # Descontar insumos del inventario según los servicios ejecutados
+        if consulta.servicios.exists():
+            try:
+                from .services.inventario_service import discount_stock_for_services
+                
+                print(f'📦 Iniciando descuento de inventario para servicios...')
+                
+                # Llamar al servicio de descuento de inventario
+                resultado = discount_stock_for_services(
+                    services=consulta.servicios.all(),
+                    user=request.user,
+                    origen_obj=consulta
+                )
+                
+                print(f'  ✅ Inventario descontado exitosamente')
+                print(f'  📊 Items descontados: {resultado["total_items"]}')
+                for item in resultado['insumos_descontados']:
+                    print(f'    - {item["medicamento"]}: {item["cantidad_descontada"]} unidades (quedan {item["stock_restante"]})')
+                
+            except ValidationError as ve:
+                # Si hay error de validación (stock insuficiente o ya descontado), revertir y notificar
+                print(f'  ⚠️ Error de validación en inventario: {str(ve)}')
+                consulta.delete()  # Revertir creación de consulta
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error de inventario: {str(ve)}'
+                }, status=400)
+            except Exception as e:
+                # Cualquier otro error en el descuento
+                print(f'  ❌ Error inesperado al descontar inventario: {str(e)}')
+                consulta.delete()  # Revertir creación de consulta
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error al procesar inventario: {str(e)}'
+                }, status=500)
+        else:
+            print(f'  ℹ️ No hay servicios asociados, no se descuenta inventario')
+        
         # Si la consulta proviene de una cita, marcarla como completada
         cita_id = data.get('cita_id')
         if cita_id:
@@ -866,7 +905,68 @@ def crear_alta_medica(request, hospitalizacion_id):
         hospitalizacion = get_object_or_404(Hospitalizacion, id=hospitalizacion_id)
         data = json.loads(request.body)
         
-        # Crear el alta (todos los campos son opcionales)
+        print('=' * 80)
+        print(f'🏥 INICIANDO PROCESO DE ALTA MÉDICA')
+        print(f'   Hospitalización ID: {hospitalizacion_id}')
+        print(f'   Paciente: {hospitalizacion.paciente.nombre}')
+        print(f'   Estado actual: {hospitalizacion.estado}')
+        print('=' * 80)
+        
+        # ⭐ PASO 1: RECOPILAR SERVICIOS DE CIRUGÍAS
+        # Obtener todos los servicios asociados a las cirugías de esta hospitalización
+        servicios_cirugias = []
+        cirugias = hospitalizacion.cirugias.all()
+        
+        print(f'\n📋 Cirugías registradas: {cirugias.count()}')
+        for cirugia in cirugias:
+            if cirugia.servicio:
+                servicios_cirugias.append(cirugia.servicio)
+                print(f'  ✅ Cirugía: {cirugia.tipo_cirugia} - Servicio: {cirugia.servicio.nombre}')
+            else:
+                print(f'  ⚠️  Cirugía: {cirugia.tipo_cirugia} - Sin servicio asociado')
+        
+        print(f'\n📦 Total de servicios a descontar: {len(servicios_cirugias)}')
+        
+        # ⭐ PASO 2: DESCONTAR INVENTARIO POR SERVICIOS (si hay servicios)
+        if servicios_cirugias:
+            try:
+                from .services.inventario_service import discount_stock_for_services
+                
+                print(f'\n💰 Iniciando descuento de inventario...')
+                
+                # Llamar al servicio de descuento
+                resultado = discount_stock_for_services(
+                    services=servicios_cirugias,
+                    user=request.user,
+                    origen_obj=hospitalizacion
+                )
+                
+                print(f'  ✅ Inventario descontado exitosamente')
+                print(f'  📊 Items descontados: {resultado["total_items"]}')
+                for item in resultado['insumos_descontados']:
+                    print(f'    - {item["medicamento"]}: {item["cantidad_descontada"]} unidades (quedan {item["stock_restante"]})')
+                
+            except ValidationError as ve:
+                # Error de validación (stock insuficiente o ya descontado)
+                print(f'\n❌ Error de validación en inventario: {str(ve)}')
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error de inventario: {str(ve)}'
+                }, status=400)
+            except Exception as e:
+                # Cualquier otro error en el descuento
+                print(f'\n❌ Error inesperado al descontar inventario: {str(e)}')
+                import traceback
+                traceback.print_exc()
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error al procesar inventario: {str(e)}'
+                }, status=500)
+        else:
+            print(f'\n  ℹ️  No hay servicios de cirugías para descontar inventario')
+        
+        # ⭐ PASO 3: CREAR ALTA MÉDICA (solo si inventario fue exitoso o no aplica)
+        print(f'\n📄 Creando registro de alta médica...')
         alta = Alta.objects.create(
             hospitalizacion=hospitalizacion,
             fecha_alta=timezone.now(),
@@ -875,18 +975,39 @@ def crear_alta_medica(request, hospitalizacion_id):
             recomendaciones=data.get('recomendaciones', ''),
             proxima_revision=data.get('proxima_revision') or None
         )
+        print(f'  ✅ Alta médica creada con ID: {alta.id}')
         
-        # Actualizar estado de hospitalización
+        # ⭐ PASO 4: ACTUALIZAR ESTADO DE HOSPITALIZACIÓN
+        print(f'\n🏥 Actualizando estado de hospitalización...')
         hospitalizacion.estado = 'alta'
         hospitalizacion.fecha_alta = timezone.now()
         hospitalizacion.save()
+        print(f'  ✅ Estado actualizado a "alta"')
+        
+        print('=' * 80)
+        print(f'✅ ALTA MÉDICA COMPLETADA EXITOSAMENTE')
+        print(f'   Alta ID: {alta.id}')
+        print(f'   Servicios procesados: {len(servicios_cirugias)}')
+        print(f'   Inventario descontado: {"Sí" if servicios_cirugias else "No aplica"}')
+        print('=' * 80)
         
         return JsonResponse({
             'success': True,
-            'message': 'Alta médica registrada',
-            'alta_id': alta.id
+            'message': 'Alta médica registrada exitosamente',
+            'alta_id': alta.id,
+            'servicios_procesados': len(servicios_cirugias)
         })
     except Exception as e:
+        print('=' * 80)
+        print('❌ ERROR AL CREAR ALTA MÉDICA')
+        print('=' * 80)
+        print(f'Tipo de error: {type(e).__name__}')
+        print(f'Mensaje: {str(e)}')
+        import traceback
+        print('Traceback completo:')
+        traceback.print_exc()
+        print('=' * 80)
+        
         return JsonResponse({
             'success': False,
             'error': str(e)

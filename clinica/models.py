@@ -37,6 +37,13 @@ class Consulta(models.Model):
     # ⭐ Relación ManyToMany con Servicios
     servicios = models.ManyToManyField(Servicio, blank=True, related_name='consultas')
     
+    # ⭐ Control de descuento de inventario
+    insumos_descontados = models.BooleanField(
+        default=False,
+        help_text="Indica si los insumos de esta consulta ya fueron descontados del inventario. "
+                  "Previene descuentos duplicados."
+    )
+    
     class Meta:
         ordering = ['-fecha']
         verbose_name = 'Consulta'
@@ -85,6 +92,13 @@ class Hospitalizacion(models.Model):
     observaciones = models.TextField(blank=True, null=True)
     # Insumos/implementos usados durante la hospitalización completa
     insumos = models.ManyToManyField(Insumo, blank=True, related_name='hospitalizaciones_usadas')
+    
+    # ⭐ Control de descuento de inventario
+    insumos_descontados = models.BooleanField(
+        default=False,
+        help_text="Indica si los insumos de esta hospitalización ya fueron descontados del inventario. "
+                  "Previene descuentos duplicados."
+    )
     
     class Meta:
         ordering = ['-fecha_ingreso']
