@@ -61,7 +61,7 @@
                             </div>
 
                             <div class="mt-2 pt-2 border-top">
-                                <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hospital&hosp_id={{ hosp.id }}#hospital" class="vet-btn vet-btn-sm">
+                                <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hosp&hosp_id={{ hosp.id }}#hosp" class="vet-btn vet-btn-sm">
                                     <i class="fas fa-edit me-1"></i>
                                     Ver Detalles
                                 </a>
@@ -186,7 +186,7 @@
                             {% endif %}
 
                             <div class="mt-2 pt-2 border-top">
-                                <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hospital&hosp_id={{ hosp.id }}#hospital" class="vet-btn vet-btn-sm">
+                                <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hosp&hosp_id={{ hosp.id }}#hosp" class="vet-btn vet-btn-sm">
                                     <i class="fas fa-edit me-1"></i>
                                     Actualizar
                                 </a>

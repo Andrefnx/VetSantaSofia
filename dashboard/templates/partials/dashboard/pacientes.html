@@ -35,7 +35,7 @@
                         <td>{{ hosp.fecha_ingreso|date:"d/m/Y H:i" }}</td>
                         <td>{{ hosp.dias_hospitalizacion }}</td>
                         <td class="text-end">
-                            <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hospital&hosp_id={{ hosp.id }}#hospital" class="vet-btn vet-btn-sm">
+                            <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hosp&hosp_id={{ hosp.id }}#hosp" class="vet-btn vet-btn-sm">
                                 <i class="fas fa-eye me-1"></i>
                                 Ver
                             </a>
@@ -91,7 +91,7 @@
                         <td>{{ hosp.fecha_ingreso|date:"d/m/Y H:i" }}</td>
                         <td>{{ hosp.dias_hospitalizacion }}</td>
                         <td class="text-end">
-                            <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hospital&hosp_id={{ hosp.id }}#hospital" class="vet-btn vet-btn-sm">
+                            <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hosp&hosp_id={{ hosp.id }}#hosp" class="vet-btn vet-btn-sm">
                                 <i class="fas fa-notes-medical me-1"></i>
                                 Actualizar
                             </a>
