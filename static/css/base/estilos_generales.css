@@ -3,6 +3,7 @@
    Sistema de Diseño Vet Santa Sofía
    ============================= */
 
+<<<<<<< HEAD
 /* Ocultar solo el footer global del layout, sin afectar los footers de modales/cards */
 .main-panel > .footer,
 .main-panel > footer,
@@ -38,6 +39,8 @@ div.page-footer {
     margin-bottom: 0 !important;
 }
 
+=======
+>>>>>>> parent of d9f10bd (Hide footer and update primary color theme)
 /* =============================
    VARIABLES GLOBALES - DEFINICIÓN ÚNICA
 ============================= */
@@ -987,6 +990,7 @@ table tbody td {
 .container-fluid {
     padding: 2rem;
     background: var(--bg-light);
+    min-height: 100vh;
 }
 
 /* =============================
@@ -2379,6 +2383,7 @@ html.sidebar-is-collapsed .vet-sidebar {
     transition: margin-left 0.3s ease !important;
     width: calc(100% - 260px) !important;
     position: relative;
+    min-height: 100vh;
 }
 
 .main-panel.sidebar-collapsed,

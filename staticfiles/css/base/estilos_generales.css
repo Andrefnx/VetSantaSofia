@@ -3,6 +3,7 @@
    Sistema de Diseño Vet Santa Sofía
    ============================= */
 
+<<<<<<< HEAD
 /* Ocultar solo el footer global del layout, sin afectar los footers de modales/cards */
 .main-panel > .footer,
 .main-panel > footer,
@@ -38,6 +39,8 @@ div.page-footer {
     margin-bottom: 0 !important;
 }
 
+=======
+>>>>>>> parent of d9f10bd (Hide footer and update primary color theme)
 /* =============================
    VARIABLES GLOBALES - DEFINICIÓN ÚNICA
 ============================= */
@@ -54,9 +57,8 @@ div.page-footer {
     --danger-hover: #ff0000;
     --warning-color: #ffc107;
     --warning-hover: #e0a800;
-    --info-color: #74bd74;
-    --info-hover: #6c8e6b;
-    --subtle: #f1fff3;
+    --info-color: #17a2b8;
+    --info-hover: #138496;
     
     /* COLORES NEUTRALES */
     --text-dark: #103012;
@@ -987,6 +989,7 @@ table tbody td {
 .container-fluid {
     padding: 2rem;
     background: var(--bg-light);
+    min-height: 100vh;
 }
 
 /* =============================
@@ -2379,6 +2382,7 @@ html.sidebar-is-collapsed .vet-sidebar {
     transition: margin-left 0.3s ease !important;
     width: calc(100% - 260px) !important;
     position: relative;
+    min-height: 100vh;
 }
 
 .main-panel.sidebar-collapsed,
@@ -2419,9 +2423,6 @@ html.sidebar-is-collapsed .main-panel {
     padding-bottom: 20px !important;
 }
 
-.bg-warning-subtle {
-    background-color: var(--subtle) !important;
-}
 
 /* Responsive */
 @media (max-width: 991px) {
