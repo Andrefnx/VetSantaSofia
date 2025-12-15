@@ -1,0 +1,47 @@
+Analiza SOLO la app "<NOMBRE_APP>" del proyecto Django en modo diagnóstico.
+
+REGLAS:
+- NO modificar código.
+- NO refactorizar.
+- NO eliminar modelos.
+- NO crear migraciones.
+- SOLO analizar y documentar.
+
+Objetivo:
+Entender el uso REAL de los modelos y flujos de la app dentro del sistema actual.
+
+Analiza:
+- models.py
+- views.py / views_*.py
+- services.py y signals.py (si existen)
+- templates relacionados
+- relaciones con otras apps (FK / M2M / O2O)
+
+ENTREGAR:
+
+1) MODELOS  
+Para cada modelo:
+- Rol funcional real
+- Qué vistas lo usan
+- Qué otras apps dependen de él
+- Impacto en clínica / caja / inventario
+
+2) USO REAL  
+- Dónde se crea, edita y lee
+- Dependencia de signals o lógica implícita
+
+3) SOLAPAMIENTOS  
+- Duplicación con otras apps
+- Legacy vs activo
+
+4) RIESGO  
+Clasifica la app:
+🔴 crítica / 🟠 sensible / 🟢 candidata a eliminar
+
+5) CONCLUSIÓN  
+- Mantener
+- Refactor futuro
+- Eliminar (solo análisis)
+
+Formato:
+Texto estructurado y guardado en carpeta "---Analisis base de datos" , sin código, sin propuestas de cambio.

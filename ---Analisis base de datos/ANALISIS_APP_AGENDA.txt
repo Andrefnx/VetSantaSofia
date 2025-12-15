@@ -1,0 +1,671 @@
+================================================================================
+ANÁLISIS DIAGNÓSTICO: APP AGENDA
+================================================================================
+Proyecto: VetSantaSofia
+Fecha: 15 de diciembre de 2025
+Modo: Solo análisis - Sin modificaciones
+
+================================================================================
+1. MODELOS - ARQUITECTURA Y ROL FUNCIONAL
+================================================================================
+
+1.1. HorarioFijoVeterinario
+----------------------------
+Ubicación: agenda/models.py (líneas 40-82)
+
+Definición:
+Modelo que define el horario fijo semanal de cada veterinario. Define bloques 
+horarios que se repiten cada semana (Lunes a Domingo).
+
+Campos principales:
+- veterinario: FK a CustomUser (limit_choices_to={'rol': 'veterinario'})
+- dia_semana: IntegerField con choices (0=Lunes, 6=Domingo)
+- hora_inicio / hora_fin: TimeField
+- activo: BooleanField para activar/desactivar temporalmente
+- notas: TextField opcional
+
+Restricciones:
+- unique_together: ['veterinario', 'dia_semana', 'hora_inicio']
+- Validación: hora_inicio < hora_fin
+
+Rol funcional real:
+✓ Plantilla: Define horario base que se repite semanalmente
+✓ Generador: Usado para generar DisponibilidadBloquesDia automáticamente
+✓ Validación: Verifica disponibilidad al crear citas
+✓ Configuración: Permite al admin configurar horarios recurrentes
+
+Vistas que lo usan:
+┌──────────────────────────────────┬──────────────────────────────────┐
+│ Vista                            │ Función                          │
+├──────────────────────────────────┼──────────────────────────────────┤
+│ crear_cita()                     │ Valida que veterinario tenga     │
+│                                  │ horario para ese día             │
+│ obtener_horario_semanal()        │ Lee horario semanal completo     │
+│ guardar_horario_semanal()        │ Crea/actualiza horario semanal   │
+│ regenerar_disponibilidades()     │ Regenera disponibilidad diaria   │
+│ horarios_fijos()                 │ Lista horarios del veterinario   │
+│ crear/editar/eliminar_horario()  │ CRUD de horarios fijos           │
+└──────────────────────────────────┴──────────────────────────────────┘
+
+Dependencias de otras apps:
+- cuentas.CustomUser (FK veterinario)
+
+Relación con otros modelos de agenda:
+- HorarioFijoVeterinario → genera → DisponibilidadBloquesDia (automático)
+- HorarioFijoVeterinario → valida → Cita (al crear)
+
+Estado: ✅ ACTIVO - Utilizado para configuración de horarios recurrentes
+
+
+1.2. DisponibilidadVeterinario
+-------------------------------
+Ubicación: agenda/models.py (líneas 84-145)
+
+Definición:
+Modelo para gestionar excepciones al horario fijo. Permite definir vacaciones,
+licencias, ausencias y disponibilidades extra para fechas específicas.
+
+Campos principales:
+- veterinario: FK a CustomUser (limit_choices_to={'rol': 'veterinario'})
+- fecha: DateField (fecha específica de la excepción)
+- hora_inicio / hora_fin: TimeField
+- tipo: CharField con choices:
+  * vacaciones
+  * licencia
+  * ausencia
+  * disponible_extra
+- notas: TextField opcional
+
+Validaciones:
+- hora_inicio < hora_fin
+- No solapamiento de disponibilidades para mismo veterinario en misma fecha
+
+Rol funcional real:
+✓ Excepciones: Sobrescribe horario fijo para fechas específicas
+✓ Ausencias: Marca días no laborables (vacaciones, licencias)
+✓ Disponibilidad extra: Permite agregar horarios fuera del horario fijo
+✓ Validación: Bloquea creación de citas en fechas marcadas como ausencia
+
+Vistas que lo usan:
+┌─────────────────────────────┬────────────────────────────────────┐
+│ Vista                       │ Función                            │
+├─────────────────────────────┼────────────────────────────────────┤
+│ crear_cita()                │ Valida que no haya ausencia        │
+│ disponibilidad_mes()        │ Lista excepciones del mes          │
+│ disponibilidad_dia()        │ Lista excepciones del día          │
+│ crear_disponibilidad()      │ Crea nueva excepción               │
+│ editar_disponibilidad()     │ Modifica excepción                 │
+│ eliminar_disponibilidad()   │ Elimina excepción                  │
+└─────────────────────────────┴────────────────────────────────────┘
+
+Dependencias:
+- cuentas.CustomUser (FK veterinario)
+
+Uso REAL:
+- Se consulta en crear_cita() para validar que no hay ausencias
+- Gestión manual desde la interfaz de agenda
+- NO se genera automáticamente
+
+Estado: ✅ ACTIVO - Usado para excepciones y ausencias
+
+
+1.3. DisponibilidadBloquesDia
+------------------------------
+Ubicación: agenda/models.py (líneas 147-210)
+
+Definición:
+Disponibilidad diaria basada en bloques de 15 minutos. Representa la 
+disponibilidad REAL de un veterinario para un día específico.
+
+Campos principales:
+- veterinario: FK a CustomUser (limit_choices_to={'rol': 'veterinario'})
+- fecha: DateField
+- trabaja: BooleanField (si trabaja ese día)
+- rangos: JSONField - Lista de dicts {"start_block": int, "end_block": int}
+  * Cada bloque representa 15 minutos (0-96 bloques por día)
+- notas: TextField opcional
+
+Restricciones:
+- unique_together: ['veterinario', 'fecha']
+- Validación de rangos: 0 <= start_block < end_block <= 96
+- Auto-merge de rangos solapados
+
+Rol funcional real:
+✓ Disponibilidad real: Almacena disponibilidad granular por día
+✓ Sistema de bloques: Divide día en 96 bloques de 15 minutos
+✓ Generación automática: Se crea desde HorarioFijoVeterinario
+✓ Validación granular: Valida citas bloque por bloque
+
+Vistas que lo usan:
+┌──────────────────────────────────┬──────────────────────────────────┐
+│ Vista                            │ Función                          │
+├──────────────────────────────────┼──────────────────────────────────┤
+│ agenda_bloques_dia()             │ Obtiene bloques disponibles      │
+│ agendar_cita_por_bloques()       │ Agenda en bloques específicos    │
+│ guardar_horario_semanal()        │ Genera para 8 semanas            │
+│ regenerar_disponibilidades()     │ Regenera desde horario fijo      │
+│ _build_day_blocks()              │ Construye vista de 96 bloques    │
+└──────────────────────────────────┴──────────────────────────────────┘
+
+Generación automática:
+- Función: _generar_disponibilidades_desde_horario_semanal()
+- Origen: HorarioFijoVeterinario
+- Alcance: Genera para próximas 8 semanas
+- Actualización: Solo si notas indican generación automática
+
+Dependencias:
+- cuentas.CustomUser (FK veterinario)
+
+Estado: ✅ ACTIVO - Sistema de bloques para agenda granular
+
+
+1.4. Cita
+----------
+Ubicación: agenda/models.py (líneas 212-365)
+
+Definición:
+Modelo central para gestión de citas veterinarias. Almacena agendamiento de
+pacientes con veterinarios para servicios específicos.
+
+Campos principales:
+- paciente: FK a Paciente (CASCADE)
+- veterinario: FK a CustomUser (SET_NULL, limit_choices_to={'rol': 'veterinario'})
+- servicio: FK a Servicio (SET_NULL, opcional)
+- fecha: DateField
+- hora_inicio / hora_fin: TimeField
+- start_block / end_block: PositiveSmallIntegerField (índices de bloques)
+- tipo: CharField con choices:
+  * consulta, vacunacion, cirugia, control, emergencia, peluqueria, otro
+- estado: CharField con choices:
+  * pendiente, confirmada, en_curso, completada, cancelada, no_asistio
+- motivo: TextField
+- notas: TextField opcional
+- recordatorio_enviado: BooleanField
+
+Restricciones:
+- unique_together: ['veterinario', 'fecha', 'hora_inicio']
+- Validación compleja en clean():
+  * Sincronización automática de bloques desde hora_inicio y servicio.duracion
+  * Cálculo automático de hora_fin desde bloques o servicio
+  * Validación de disponibilidad en DisponibilidadBloquesDia
+  * Validación de no solapamiento con otras citas
+
+Property calculada:
+- duracion_minutos: Calcula duración desde horas o desde servicio
+
+Rol funcional real:
+✓ Agendamiento: Reserva horario veterinario-paciente
+✓ Flujo operativo: Rastrea estado de la cita (pendiente → en_curso → completada)
+✓ Integración clínica: Se vincula con Consulta al iniciar atención
+✓ Validación: Garantiza no solapamientos y respeta disponibilidad
+✓ Reportes: Fuente para estadísticas de agenda
+
+Vistas que lo usan:
+┌──────────────────────────────┬────────────────────────────────────┐
+│ Vista                        │ Función                            │
+├──────────────────────────────┼────────────────────────────────────┤
+│ agenda()                     │ Vista principal de agenda          │
+│ citas_dia()                  │ Lista citas de un día              │
+│ crear_cita()                 │ Crea nueva cita con validación     │
+│ editar_cita()                │ Modifica cita existente            │
+│ eliminar_cita()              │ Elimina cita                       │
+│ iniciar_cita()               │ Cambia estado a 'en_curso'         │
+│ agenda_bloques_dia()         │ Muestra citas en vista de bloques  │
+│ agendar_cita_por_bloques()   │ Agenda por bloques específicos     │
+└──────────────────────────────┴────────────────────────────────────┘
+
+Dependencias de otras apps:
+
+▸ ForeignKey DESDE Cita:
+  1. pacientes.Paciente → cita.paciente (CASCADE)
+  2. cuentas.CustomUser → cita.veterinario (SET_NULL)
+  3. servicios.Servicio → cita.servicio (SET_NULL, opcional)
+
+▸ Usado POR otras apps:
+  1. clinica.views.historial_medico()
+     - Lee citas del paciente para mostrar en historial
+     - Integración: Al crear Consulta, marca cita como 'completada'
+     
+  2. clinica.views.crear_consulta() / editar_consulta()
+     - Recibe cita_id opcional
+     - Si existe cita, actualiza estado a 'completada'
+     
+  3. pacientes.views.perfil_paciente()
+     - Muestra citas próximas del paciente
+     
+  4. dashboard.views.dashboard_administracion()
+     - Estadísticas de citas del día
+     - Conteo de pacientes atendidos (citas completadas)
+     
+  5. dashboard.views.dashboard_veterinario()
+     - Citas del día para el veterinario logueado
+     
+  6. dashboard.views.obtener_citas_dia()
+     - API para obtener citas de un día específico
+
+Impacto en operaciones críticas:
+✓ Agenda: Es el modelo CENTRAL de agendamiento
+✓ Clínica: Se vincula con Consulta, NO hay dependencia dura
+✓ Reportes: Fuente de verdad para estadísticas de atención
+
+Estado: ✅ ACTIVO Y CRÍTICO - Centro del sistema de agendamiento
+
+================================================================================
+2. FUNCIONES AUXILIARES
+================================================================================
+
+2.1. time_to_block_index(value: time) -> int
+---------------------------------------------
+Convierte una hora (time) a índice de bloque de 15 minutos (0-95).
+- Ejemplo: 09:00 → bloque 36 (9*60/15)
+- Validaciones: múltiplo de 15, rango 0-1440 minutos
+
+2.2. block_index_to_time(index: int) -> time
+---------------------------------------------
+Convierte índice de bloque (0-96) a hora.
+- Ejemplo: bloque 36 → 09:00
+- Caso límite: bloque 96 → 23:59 (fin del día)
+
+2.3. _build_day_blocks(availability, citas_qs, fecha)
+------------------------------------------------------
+Construye lista de 96 bloques con estados:
+- 'unavailable': veterinario no trabaja
+- 'available': veterinario disponible
+- 'occupied': bloque ocupado por cita
+
+Retorna JSON con información completa de cada bloque.
+
+2.4. _generar_disponibilidades_desde_horario_semanal(vet, semanas)
+-------------------------------------------------------------------
+Genera DisponibilidadBloquesDia para un veterinario:
+- Lee HorarioFijoVeterinario
+- Genera para próximas 'semanas' semanas
+- Solo actualiza registros generados automáticamente
+
+================================================================================
+3. USO REAL EN EL SISTEMA
+================================================================================
+
+3.1. Dónde se CREA
+------------------
+
+▸ HorarioFijoVeterinario
+  - Manualmente: guardar_horario_semanal() - Admin configura horario semanal
+  - Manualmente: crear_horario_fijo() - Crear horario individual
+
+▸ DisponibilidadVeterinario
+  - Manualmente: crear_disponibilidad() - Admin crea excepción (vacaciones, etc.)
+
+▸ DisponibilidadBloquesDia
+  - Automáticamente: _generar_disponibilidades_desde_horario_semanal()
+    * Trigger: Al guardar HorarioFijoVeterinario
+    * Trigger: Al llamar regenerar_disponibilidades_veterinario()
+
+▸ Cita
+  - Manualmente: crear_cita() - Usuario agenda cita desde interfaz
+  - Manualmente: agendar_cita_por_bloques() - Agenda usando vista de bloques
+
+
+3.2. Dónde se EDITA
+-------------------
+
+▸ HorarioFijoVeterinario
+  - editar_horario_fijo() - Modifica horario específico
+  - guardar_horario_semanal() - Reemplaza todos los horarios del veterinario
+
+▸ DisponibilidadVeterinario
+  - editar_disponibilidad() - Modifica excepción
+
+▸ DisponibilidadBloquesDia
+  - Automáticamente: Al regenerar desde horario semanal
+  - Lógica: Solo actualiza si notas indican generación automática
+
+▸ Cita
+  - editar_cita() - Modifica cualquier campo de la cita
+  - iniciar_cita() - Cambia estado a 'en_curso'
+  - Desde clinica: Al crear/editar Consulta, marca cita como 'completada'
+
+
+3.3. Dónde se LEE/USA
+---------------------
+
+▸ Lectura desde agenda:
+  - agenda() - Vista principal, lista veterinarios y prepara contexto
+  - citas_dia() - Obtiene citas de un día específico
+  - agenda_bloques_dia() - Vista de bloques con disponibilidad y citas
+
+▸ Lectura desde clinica:
+  - historial_medico() - Muestra citas pasadas del paciente
+  - crear_consulta() - Obtiene cita_id para marcar como completada
+  - Flujo: Cita.estado = 'en_curso' → crear Consulta → Cita.estado = 'completada'
+
+▸ Lectura desde pacientes:
+  - perfil_paciente() - Muestra próximas citas del paciente
+
+▸ Lectura desde dashboard:
+  - dashboard_administracion() - Citas del día, estadísticas
+  - dashboard_veterinario() - Citas del veterinario logueado
+  - obtener_citas_dia() - API para calendario
+
+
+3.4. Signals y lógica implícita
+--------------------------------
+
+⚠ NO EXISTEN signals.py ni services.py en la app agenda
+
+Lógica implícita:
+- Validaciones en clean() de modelos (ejecutadas en save())
+- Generación automática en _generar_disponibilidades_desde_horario_semanal()
+  * Llamada desde guardar_horario_semanal()
+  * Llamada desde regenerar_disponibilidades_veterinario()
+
+Integración con clinica:
+- NO hay signal automático
+- Integración MANUAL: clinica.views actualiza Cita.estado al crear Consulta
+- Código explícito en clinica/views.py líneas 337-345
+
+================================================================================
+4. SOLAPAMIENTOS Y DUPLICACIÓN
+================================================================================
+
+4.1. Solapamiento con otros modelos
+------------------------------------
+
+⚠ Posible duplicación de concepto: DisponibilidadVeterinario vs DisponibilidadBloquesDia
+
+┌────────────────────────────────┬──────────────────────────────────┐
+│ DisponibilidadVeterinario      │ DisponibilidadBloquesDia         │
+├────────────────────────────────┼──────────────────────────────────┤
+│ Excepciones al horario fijo    │ Disponibilidad granular diaria   │
+│ Gestión manual                 │ Generación automática            │
+│ Tipos: vacaciones, ausencia    │ Bloques de 15 minutos            │
+│ hora_inicio/fin (simple)       │ rangos JSON (complejo)           │
+│ Usado en validación básica     │ Usado en sistema de bloques      │
+└────────────────────────────────┴──────────────────────────────────┘
+
+¿Son redundantes?
+NO - Tienen propósitos diferentes:
+- DisponibilidadVeterinario: Excepciones simples (vacaciones, licencias)
+- DisponibilidadBloquesDia: Sistema granular para agenda por bloques
+
+Pero hay SOLAPAMIENTO funcional:
+- Ambos pueden representar "veterinario no disponible en fecha X"
+- DisponibilidadVeterinario se valida en crear_cita()
+- DisponibilidadBloquesDia se valida en Cita.clean()
+
+⚠ Potencial inconsistencia si no están sincronizados
+
+
+4.2. ¿Legacy o Activo?
+----------------------
+
+Estado de cada modelo:
+
+┌────────────────────────────────┬─────────┬──────────────────────┐
+│ Modelo                         │ Estado  │ Evidencia            │
+├────────────────────────────────┼─────────┼──────────────────────┤
+│ HorarioFijoVeterinario         │ ✅ ACTIVO│ CRUD completo, usado │
+│ DisponibilidadVeterinario      │ ✅ ACTIVO│ CRUD, validaciones   │
+│ DisponibilidadBloquesDia       │ ✅ ACTIVO│ Sistema de bloques   │
+│ Cita                           │ ✅ ACTIVO│ Centro de agenda     │
+└────────────────────────────────┴─────────┴──────────────────────┘
+
+Todos los modelos están ACTIVOS y en uso.
+
+Templates activos:
+- agenda/agenda.html - Interfaz principal de agenda
+- Múltiples JS: agenda-sistema.js, agenda_bloques.js
+
+Admin activo:
+- Todos los modelos registrados en admin.py
+- CRUD completo desde Django Admin
+
+================================================================================
+5. RIESGO Y CLASIFICACIÓN
+================================================================================
+
+Nivel de criticidad: 🔴 CRÍTICA
+
+5.1. Justificación
+------------------
+
+▸ Impacto en operaciones
+  - Agenda: Sin estos modelos, NO hay sistema de agendamiento
+  - Clínica: Consultas referencian citas (integración fuerte)
+  - Reportes: Dashboard depende de estadísticas de citas
+
+▸ Dependencias técnicas
+
+  CustomUser (veterinario)
+     ↓ FK
+  HorarioFijoVeterinario
+     ↓ genera
+  DisponibilidadBloquesDia
+     ↓ valida
+  Cita ← FK ← Paciente
+     ↓ FK ← Servicio
+  Consulta (clinica)
+
+▸ Flujo operativo crítico:
+  1. Admin configura HorarioFijoVeterinario
+  2. Sistema genera DisponibilidadBloquesDia
+  3. Usuario agenda Cita (valida disponibilidad)
+  4. Veterinario inicia Cita (estado → 'en_curso')
+  5. Veterinario crea Consulta (marca Cita como 'completada')
+  6. Dashboard reporta estadísticas desde Cita
+
+Eliminar app agenda causaría:
+✗ Pérdida total del sistema de agendamiento
+✗ Ruptura de flujo operativo (no hay forma de agendar pacientes)
+✗ Pérdida de trazabilidad (no se sabe quién atendió a quién)
+✗ Dashboard sin datos de citas
+✗ Clínica pierde referencia a cita (pero toleraría SET_NULL)
+
+▸ Protección existente:
+  ✓ Cita.paciente = CASCADE (si eliminas paciente, elimina sus citas)
+  ✓ Cita.veterinario = SET_NULL (tolera eliminación de veterinario)
+  ✓ Cita.servicio = SET_NULL (tolera eliminación de servicio)
+  ⚠ Clinica.Consulta NO tiene FK a Cita (solo referencia vía cita_id en request)
+
+
+5.2. Sensibilidad a cambios
+----------------------------
+
+┌────────────────────────────────┬───────┬──────────────────────┐
+│ Operación                      │ Riesgo│ Razón                │
+├────────────────────────────────┼───────┼──────────────────────┤
+│ Agregar campo a Cita           │ 🟢 Bajo│ Solo migración      │
+│ Cambiar estado de cita         │ 🟢 Bajo│ Flujo bien definido │
+│ Modificar horario fijo         │ 🟠 Medio│ Regenerar disponib. │
+│ Eliminar cita                  │ 🟠 Medio│ Puede romper flujo  │
+│ Cambiar sistema de bloques     │ 🔴 Alto│ Afecta validaciones │
+│ Eliminar DisponibilidadBloques │ 🔴 Alto│ Rompe sistema       │
+│ Eliminar modelo Cita           │ 🔴 CRÍTICO│ Colapsa agenda    │
+└────────────────────────────────┴───────┴──────────────────────┘
+
+
+5.3. Puntos críticos
+--------------------
+
+⚠ CRÍTICO 1: Sincronización entre DisponibilidadVeterinario y DisponibilidadBloquesDia
+  - Si hay excepción (vacaciones) pero bloques generados, puede haber inconsistencia
+  - Validación en crear_cita() usa DisponibilidadVeterinario
+  - Validación en Cita.clean() usa DisponibilidadBloquesDia
+
+⚠ CRÍTICO 2: Integración manual con clinica
+  - NO hay FK directo Consulta → Cita
+  - Actualización de estado es manual (puede olvidarse)
+  - Si falla actualización, cita queda en 'en_curso' eternamente
+
+⚠ CRÍTICO 3: Cálculo de bloques en clean()
+  - Lógica compleja en Cita.clean()
+  - Sincronización automática start_block/end_block desde hora_inicio
+  - Si falla validación, mensaje puede ser confuso
+
+⚠ MEDIO 4: Generación automática de disponibilidades
+  - Solo actualiza registros con notas específicas
+  - Si admin modifica manual, puede perderse en regeneración
+
+================================================================================
+6. CONCLUSIÓN Y RECOMENDACIONES
+================================================================================
+
+6.1. Veredicto: MANTENER - CRÍTICA
+-----------------------------------
+
+Razones:
+1. Modelo CENTRAL del sistema: Sin agenda, no hay operación clínica
+2. Integración profunda: clinica, pacientes, dashboard dependen de ella
+3. Arquitectura sofisticada: Sistema de bloques bien implementado
+4. Sin redundancia real: Cada modelo tiene propósito específico
+5. Activo y necesario: Usado diariamente en operaciones
+
+La app agenda es IRREMPLAZABLE en el sistema actual.
+
+
+6.2. Calidad técnica: 🟢 BUENA (con áreas de mejora)
+-----------------------------------------------------
+
+Fortalezas:
+✓ Validaciones robustas en clean()
+✓ Sistema de bloques granular (15 min)
+✓ Generación automática de disponibilidades
+✓ Índices de BD bien configurados
+✓ Unique constraints apropiados
+✓ Permisos por rol (veterinario vs admin)
+
+Debilidades detectadas:
+⚠ Sincronización manual con clinica (no automática)
+⚠ Posible inconsistencia entre DisponibilidadVeterinario y DisponibilidadBloquesDia
+⚠ Lógica compleja en clean() puede ser difícil de mantener
+⚠ No hay flag 'eliminado' (eliminación física)
+
+
+6.3. Refactorización futura (solo análisis)
+--------------------------------------------
+
+Si en el futuro se considerara mejorar:
+
+▸ Problema 1: Integración manual con clinica
+  Estado actual: clinica.views actualiza Cita.estado manualmente
+  
+  Evaluación futura:
+  - Considerar signal post_save en Consulta para actualizar Cita
+  - O agregar FK Consulta → Cita (OneToOneField opcional)
+  - O mantener actual (explícito es mejor que implícito)
+
+▸ Problema 2: Sincronización de disponibilidades
+  Estado actual: Dos modelos pueden representar "no disponible"
+  
+  Evaluación futura:
+  - Al crear DisponibilidadVeterinario (ausencia), actualizar DisponibilidadBloquesDia
+  - O unificar en un solo modelo con tipos
+  - O documentar claramente que son sistemas independientes
+
+▸ Problema 3: Eliminación física de citas
+  Estado actual: cita.delete() elimina físicamente
+  
+  Evaluación futura:
+  - Agregar campo 'activo' o 'cancelado_definitivo'
+  - Mantener registro histórico
+  - O mantener actual si no se requiere auditoría estricta
+
+▸ Problema 4: Campos start_block/end_block
+  Estado actual: Se calculan automáticamente en clean()
+  
+  Evaluación futura:
+  - Podrían ser @property calculadas dinámicamente
+  - O mantener actual para mejor performance en queries
+
+
+6.4. Documentación recomendada
+-------------------------------
+
+Para desarrolladores:
+- Cita.clean() sincroniza automáticamente bloques desde hora_inicio
+- HorarioFijoVeterinario genera DisponibilidadBloquesDia para 8 semanas
+- DisponibilidadVeterinario NO actualiza DisponibilidadBloquesDia automáticamente
+- Al crear Consulta, actualizar manualmente Cita.estado = 'completada'
+- Sistema de bloques: 96 bloques de 15 min por día (0-95)
+
+Para usuarios:
+- Configurar horario semanal primero (HorarioFijoVeterinario)
+- Sistema genera disponibilidades automáticamente
+- Para excepciones, usar DisponibilidadVeterinario
+- Citas validan disponibilidad automáticamente
+- Estado de cita refleja progreso de atención
+
+================================================================================
+RESUMEN EJECUTIVO
+================================================================================
+
+┌───────────────────┬──────────────────────────────────────────────┐
+│ Aspecto           │ Evaluación                                   │
+├───────────────────┼──────────────────────────────────────────────┤
+│ Estado            │ ✅ Activo, crítico, usado diariamente        │
+│ Criticidad        │ 🔴 CRÍTICA - Centro del sistema operativo    │
+│ Duplicación       │ ✅ Sin duplicación significativa             │
+│ Calidad técnica   │ 🟢 Buena, con validaciones robustas          │
+│ Arquitectura      │ 🟢 Bien diseñada, sistema de bloques sólido  │
+│ Integraciones     │ 🟠 Manual con clinica, funciona pero mejorable│
+│ Riesgo eliminar   │ 🔴 CRÍTICO - Colapsa operación               │
+│ Recomendación     │ MANTENER - NO TOCAR                          │
+└───────────────────┴──────────────────────────────────────────────┘
+
+Modelos por criticidad:
+- Cita: 🔴 CRÍTICA ABSOLUTA - Centro de agendamiento
+- HorarioFijoVeterinario: 🔴 CRÍTICA - Configuración base
+- DisponibilidadBloquesDia: 🔴 CRÍTICA - Sistema de bloques
+- DisponibilidadVeterinario: 🟠 IMPORTANTE - Excepciones
+
+Relaciones críticas:
+- Cita → Paciente (CASCADE) 🔴
+- Cita → Veterinario (SET_NULL) 🟠
+- Cita → Servicio (SET_NULL) 🟢
+- Integración con clinica.Consulta (manual) 🟠
+
+Acción: NO TOCAR. App fundamental para operación diaria.
+
+================================================================================
+DEPENDENCIAS EXTERNAS (apps que usan agenda)
+================================================================================
+
+1. clinica
+   - Importa: Cita
+   - Función: Marca cita como completada al crear Consulta
+   - Impacto: ALTO - Flujo operativo depende de esto
+   - Tipo: Integración manual (explícita)
+
+2. pacientes
+   - Importa: Cita
+   - Función: Muestra próximas citas en perfil
+   - Impacto: MEDIO - UI informativa
+   - Tipo: Solo lectura
+
+3. dashboard
+   - Importa: Cita
+   - Función: Estadísticas y reportes
+   - Impacto: ALTO - Métricas operativas
+   - Tipo: Solo lectura
+
+4. cuentas
+   - Usada por: HorarioFijoVeterinario, DisponibilidadVeterinario, DisponibilidadBloquesDia, Cita
+   - Función: FK a CustomUser (veterinarios)
+   - Impacto: CRÍTICO - No funciona sin veterinarios
+   - Tipo: Dependencia fundamental
+
+5. servicios
+   - Usada por: Cita
+   - Función: FK opcional para asociar servicio
+   - Impacto: MEDIO - Opcional pero útil
+   - Tipo: Referencia enriquecedora
+
+6. pacientes
+   - Usada por: Cita
+   - Función: FK a Paciente (quien recibe atención)
+   - Impacto: CRÍTICO - No hay cita sin paciente
+   - Tipo: Dependencia fundamental
+
+================================================================================
+FIN DEL ANÁLISIS DIAGNÓSTICO
+================================================================================

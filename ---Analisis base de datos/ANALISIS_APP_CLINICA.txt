@@ -1,0 +1,1004 @@
+================================================================================
+ANÁLISIS DIAGNÓSTICO: APP CLINICA
+================================================================================
+Proyecto: VetSantaSofia
+Fecha: 15 de diciembre de 2025
+Modo: Solo análisis - Sin modificaciones
+
+================================================================================
+1. MODELOS - ARQUITECTURA Y ROL FUNCIONAL
+================================================================================
+
+1.1. Consulta
+--------------
+Ubicación: clinica/models.py (líneas 8-48)
+
+Definición:
+Modelo para registro de consultas veterinarias. Almacena información clínica
+de cada atención médica.
+
+Campos principales:
+- paciente: FK a Paciente (CASCADE)
+- veterinario: FK a CustomUser (SET_NULL)
+- fecha: DateTimeField (auto now)
+- tipo_consulta: CharField con choices:
+  * consulta_general, urgencia, vacuna, desparacitacion, control, cirugia, otros
+- Signos vitales: temperatura, peso, frecuencia_cardiaca, frecuencia_respiratoria
+- diagnostico: TextField (obligatorio)
+- tratamiento: TextField (opcional)
+- notas: TextField (opcional)
+
+Relaciones M2M:
+- medicamentos: ManyToManyField con Insumo (relacionado 'consultas_usadas')
+- servicios: ManyToManyField con Servicio (relacionado 'consultas')
+
+Method útil:
+- servicios_nombres(): Retorna nombres de servicios o tipo_consulta_display
+
+Rol funcional real:
+✓ Registro clínico: Almacena información médica de cada atención
+✓ Historial: Genera timeline del paciente
+✓ Integración con agenda: Marca cita como completada al crear consulta
+✓ Facturación: Genera cobro pendiente automáticamente (via signal)
+✓ Trazabilidad: Quién atendió, qué se hizo, qué se usó
+
+Vistas que lo usan:
+┌────────────────────────────────┬──────────────────────────────────┐
+│ Vista                          │ Función                          │
+├────────────────────────────────┼──────────────────────────────────┤
+│ ficha_paciente()               │ Muestra consultas en historial   │
+│ ficha_mascota()                │ Muestra consultas en timeline    │
+│ crear_consulta()               │ Crea nueva consulta              │
+│ detalle_consulta()             │ Obtiene detalles de consulta     │
+│ guardar_consulta()             │ Crea consulta (duplicado?)       │
+└────────────────────────────────┴──────────────────────────────────┘
+
+Dependencias de otras apps:
+
+▸ ForeignKey DESDE Consulta:
+  1. pacientes.Paciente → consulta.paciente (CASCADE)
+  2. cuentas.CustomUser → consulta.veterinario (SET_NULL)
+
+▸ ManyToMany DESDE Consulta:
+  3. inventario.Insumo → consulta.medicamentos
+  4. servicios.Servicio → consulta.servicios
+
+▸ OneToOne HACIA Consulta:
+  5. caja.Venta → consulta (OneToOneField, related_name='venta')
+
+▸ Usado POR otras apps:
+  1. caja.services.crear_cobro_pendiente_desde_consulta()
+     - Lee consulta.servicios para generar líneas de venta
+     - Lee consulta.insumos_detalle para facturar insumos
+     
+  2. clinica.signals.crear_cobro_desde_consulta
+     - Signal post_save que crea cobro automáticamente
+     - Se activa al guardar Consulta con servicios/insumos
+     
+  3. pacientes.views.obtener_consultas_recientes()
+     - Lee consultas para mostrar en perfil de paciente
+
+Impacto en operaciones críticas:
+✓ Clínica: Es el CENTRO del registro médico
+✓ Caja: Genera cobros automáticamente
+✓ Inventario: Registra uso de insumos (sin descontar stock automático)
+✓ Agenda: Integración manual para marcar cita completada
+
+Estado: ✅ ACTIVO Y CRÍTICO - Centro del registro clínico
+
+
+1.2. MedicamentoUtilizado
+--------------------------
+Ubicación: clinica/models.py (líneas 51-63)
+
+Definición:
+Tabla intermedia para registrar medicamentos usados en consultas.
+Complementa la relación M2M Consulta ↔ Insumo.
+
+Campos principales:
+- consulta: FK a Consulta (CASCADE)
+- inventario_id: IntegerField (ID del insumo)
+- nombre: CharField (nombre del medicamento)
+- dosis: CharField (dosis administrada)
+- peso_paciente: DecimalField (peso al momento)
+- fecha_registro: DateTimeField (auto)
+
+Rol funcional real:
+✓ Detalle de medicación: Almacena dosis específica administrada
+✓ Complemento: Extiende M2M medicamentos con datos adicionales
+✓ Historial: Trazabilidad de qué medicamento, cuánto, cuándo
+
+⚠ IMPORTANTE: Modelo LEGACY - Existe ConsultaInsumo más completo
+
+Vistas que lo usan:
+- crear_consulta(): Crea registros MedicamentoUtilizado
+- detalle_consulta(): Lee medicamentos_detalle
+
+Estado: 🟠 LEGACY/TRANSICIÓN - Existe modelo más moderno (ConsultaInsumo)
+
+
+1.3. Hospitalizacion
+---------------------
+Ubicación: clinica/models.py (líneas 66-114)
+
+Definición:
+Modelo para hospitalizaciones. Representa ingreso del paciente a internación.
+
+Campos principales:
+- paciente: FK a Paciente (CASCADE)
+- veterinario: FK a CustomUser (SET_NULL)
+- fecha_ingreso: DateTimeField
+- fecha_alta: DateTimeField (nullable)
+- motivo: TextField
+- diagnostico_hosp: TextField
+- estado: CharField con choices:
+  * activa, alta, fallecido
+- observaciones: TextField
+
+Relación M2M:
+- insumos: ManyToManyField con Insumo (relacionado 'hospitalizaciones_usadas')
+
+Validación crítica:
+- clean(): Valida que NO haya otra hospitalización activa para mismo paciente
+- Solo puede haber UNA hospitalización activa por paciente
+
+Rol funcional real:
+✓ Internación: Registro de pacientes hospitalizados
+✓ Seguimiento: Estado actual de hospitalización
+✓ Contenedor: Agrupa cirugías, registros diarios, alta médica
+✓ Facturación: Genera cobro al dar de alta (via signal)
+
+Vistas que lo usan:
+┌─────────────────────────────────┬─────────────────────────────────┐
+│ Vista                           │ Función                         │
+├─────────────────────────────────┼─────────────────────────────────┤
+│ crear_hospitalizacion()         │ Crea nueva hospitalización      │
+│ obtener_hospitalizaciones()     │ Lista hospitalizaciones         │
+│ detalle_hospitalizacion()       │ Detalles de hospitalización     │
+│ dashboard (admin/veterinario)   │ Hospitalizaciones activas       │
+└─────────────────────────────────┴─────────────────────────────────┘
+
+Dependencias:
+
+▸ ForeignKey DESDE Hospitalizacion:
+  1. pacientes.Paciente → hospitalizacion.paciente (CASCADE)
+  2. cuentas.CustomUser → hospitalizacion.veterinario (SET_NULL)
+
+▸ OneToOne HACIA Hospitalizacion:
+  3. caja.Venta → hospitalizacion (OneToOneField)
+  4. Alta → hospitalizacion (OneToOneField)
+
+▸ ForeignKey HACIA Hospitalizacion:
+  5. Cirugia → hospitalizacion (CASCADE)
+  6. RegistroDiario → hospitalizacion (CASCADE)
+
+▸ Usado POR otras apps:
+  1. caja.services.crear_cobro_pendiente_desde_hospitalizacion()
+     - Lee cirugías, insumos para generar cobro al alta
+     
+  2. clinica.signals.crear_cobro_desde_hospitalizacion
+     - Signal que se activa cuando estado='alta'
+     
+  3. dashboard.views (admin y veterinario)
+     - Muestra hospitalizaciones activas
+     - Estadísticas de pacientes hospitalizados
+
+Impacto en operaciones críticas:
+✓ Clínica: Control de pacientes internados
+✓ Caja: Genera factura completa al alta
+✓ Reportes: Estadísticas de hospitalizaciones
+
+Estado: ✅ ACTIVO Y CRÍTICO - Centro de internación
+
+
+1.4. Cirugia
+-------------
+Ubicación: clinica/models.py (líneas 117-147)
+
+Definición:
+Modelo para cirugías realizadas dentro de una hospitalización.
+
+Campos principales:
+- hospitalizacion: FK a Hospitalizacion (CASCADE)
+- servicio: FK a Servicio (SET_NULL, opcional)
+- fecha_cirugia: DateTimeField
+- veterinario_cirujano: FK a CustomUser (SET_NULL)
+- tipo_cirugia: CharField
+- descripcion: TextField
+- duracion_minutos: IntegerField
+- anestesiologo: CharField
+- tipo_anestesia: CharField
+- complicaciones: TextField
+- resultado: CharField con choices:
+  * '', exitosa, con_complicaciones, problemas
+
+Relación M2M:
+- medicamentos: ManyToManyField con Insumo (relacionado 'cirugias_usadas')
+
+Rol funcional real:
+✓ Registro quirúrgico: Detalle de procedimientos quirúrgicos
+✓ Trazabilidad: Quién operó, qué se hizo, resultado
+✓ Facturación: Servicio de cirugía se cobra en factura de hospitalización
+✓ Insumos: Registra materiales usados en cirugía
+
+Vistas que lo usan:
+- crear_cirugia(): Crea registro de cirugía
+
+Dependencias:
+
+▸ ForeignKey DESDE Cirugia:
+  1. Hospitalizacion → cirugia.hospitalizacion (CASCADE)
+  2. servicios.Servicio → cirugia.servicio (SET_NULL)
+  3. cuentas.CustomUser → cirugia.veterinario_cirujano (SET_NULL)
+
+▸ Usado POR caja:
+  - crear_cobro_pendiente_desde_hospitalizacion() lee cirugias.all()
+  - Cobra servicio si cirugia.servicio existe
+
+Impacto:
+✓ Clínica: Registro de procedimientos
+✓ Caja: Facturación de cirugía como servicio
+
+Estado: ✅ ACTIVO - Parte del flujo de hospitalización
+
+
+1.5. RegistroDiario
+--------------------
+Ubicación: clinica/models.py (líneas 150-167)
+
+Definición:
+Registro diario durante hospitalización. Seguimiento del paciente internado.
+
+Campos principales:
+- hospitalizacion: FK a Hospitalizacion (CASCADE)
+- fecha_registro: DateTimeField
+- temperatura: DecimalField (obligatorio)
+- peso: DecimalField (opcional)
+- frecuencia_cardiaca: IntegerField (opcional)
+- frecuencia_respiratoria: IntegerField (opcional)
+- observaciones: TextField
+
+Relación M2M:
+- medicamentos: ManyToManyField con Insumo (relacionado 'registros_usados')
+
+Rol funcional real:
+✓ Seguimiento: Evolución diaria del paciente
+✓ Signos vitales: Temperatura obligatoria, otros opcionales
+✓ Medicación: Registro de medicamentos administrados diariamente
+
+Vistas que lo usan:
+- crear_registro_diario(): Crea nuevo registro
+- dashboard muestra conteo de registros
+
+Estado: ✅ ACTIVO - Seguimiento hospitalario
+
+
+1.6. Alta
+----------
+Ubicación: clinica/models.py (líneas 170-184)
+
+Definición:
+Resumen de alta médica al finalizar hospitalización.
+
+Campos principales:
+- hospitalizacion: OneToOneField a Hospitalizacion (CASCADE)
+- fecha_alta: DateTimeField
+- diagnostico_final: TextField
+- tratamiento_post_alta: TextField
+- recomendaciones: TextField
+- proxima_revision: DateField (nullable)
+
+Rol funcional real:
+✓ Cierre: Documento de alta médica
+✓ Seguimiento: Indica próxima revisión
+✓ Recomendaciones: Instrucciones post-hospitalización
+
+Vistas que lo usan:
+- crear_alta_medica(): Crea alta
+
+Relación con Hospitalizacion:
+- OneToOne: Cada hospitalización tiene máximo una alta
+- Al crear alta, cambia estado de hospitalización
+
+Estado: ✅ ACTIVO - Cierre de hospitalización
+
+
+1.7. Examen
+------------
+Ubicación: clinica/models.py (líneas 187-199)
+
+Definición:
+Modelo para exámenes médicos y resultados.
+
+Campos principales:
+- paciente: FK a Paciente (CASCADE)
+- veterinario: FK a CustomUser (SET_NULL)
+- fecha: DateField
+- tipo: CharField (tipo de examen)
+- resultado: TextField
+- archivo: FileField (upload_to='examenes/')
+
+Rol funcional real:
+✓ Resultados: Almacena resultados de laboratorio, imágenes, etc.
+✓ Archivos: Guarda PDFs, imágenes de exámenes
+✓ Historial: Timeline de exámenes del paciente
+
+Vistas: No hay vistas específicas en clinica.views
+Estado: 🟠 DEFINIDO PERO SIN CRUD ACTIVO
+
+
+1.8. Documento
+---------------
+Ubicación: clinica/models.py (líneas 202-217)
+
+Definición:
+Documentos adjuntos del paciente.
+
+Campos principales:
+- paciente: FK a Paciente (CASCADE)
+- nombre: CharField
+- descripcion: TextField
+- archivo: FileField (upload_to='documentos/')
+- fecha_subida: DateTimeField (auto)
+
+Rol funcional real:
+✓ Adjuntos: Documentos varios del paciente
+✓ Gestión: Subir, descargar, eliminar documentos
+
+Vistas que lo usan:
+- subir_documento()
+- descargar_documento()
+- eliminar_documento()
+
+Estado: ✅ ACTIVO - Gestión documental
+
+
+1.9. ConsultaInsumo (NUEVO)
+----------------------------
+Ubicación: clinica/models.py (líneas 223-300)
+
+Definición:
+Tabla intermedia moderna para registrar insumos usados en consultas
+con cálculo automático de cantidad basado en dosis y peso.
+
+Campos principales:
+- consulta: FK a Consulta (CASCADE)
+- insumo: FK a Insumo (PROTECT)
+- Datos de cálculo:
+  * peso_paciente: DecimalField
+  * dosis_ml_por_kg: DecimalField
+  * dosis_total_ml: DecimalField (calculado)
+  * ml_por_contenedor: DecimalField
+- Cantidades:
+  * cantidad_calculada: DecimalField
+  * cantidad_manual: DecimalField (override)
+  * cantidad_final: DecimalField
+- Metadata:
+  * calculo_automatico: BooleanField
+  * requiere_confirmacion: BooleanField
+  * confirmado_por: FK a CustomUser
+  * fecha_confirmacion: DateTimeField
+  * observaciones: TextField
+
+Method clave:
+- calcular_cantidad(): Calcula automáticamente cantidad de contenedores
+  * Formula: dosis_total_ml = peso_paciente * dosis_ml_por_kg
+  * Formula: cantidad = ceil(dosis_total_ml / ml_por_contenedor)
+  * Redondeo hacia arriba para no quedar corto
+
+Lógica en save():
+- Llama calcular_cantidad() automáticamente antes de guardar
+
+Rol funcional real:
+✓ Cálculo automático: Determina cuántos contenedores usar
+✓ Trazabilidad: Guarda cálculo completo (peso, dosis, resultado)
+✓ Facturación: cantidad_final se usa en DetalleVenta
+✓ Confirmación: Permite validación manual si faltan datos
+
+Estado: ✅ ACTIVO - Sistema moderno de cálculo de insumos
+
+
+1.10. HospitalizacionInsumo (NUEVO)
+------------------------------------
+Ubicación: clinica/models.py (líneas 303-376)
+
+Definición:
+Tabla intermedia para insumos de hospitalizaciones.
+Idéntica lógica a ConsultaInsumo pero para hospitalizaciones.
+
+Campos: Mismos que ConsultaInsumo
+Method: calcular_cantidad() con misma lógica
+
+Rol funcional real:
+✓ Cálculo automático para hospitalizaciones
+✓ Facturación al dar de alta
+
+Estado: ✅ ACTIVO - Sistema de cálculo para hospitalizaciones
+
+
+1.11. CirugiaInsumo (NUEVO)
+----------------------------
+Ubicación: clinica/models.py (líneas 379-451)
+
+Definición:
+Tabla intermedia para insumos de cirugías.
+Idéntica lógica a ConsultaInsumo/HospitalizacionInsumo.
+
+Campos: Mismos que ConsultaInsumo
+Method: calcular_cantidad() con misma lógica
+
+Rol funcional real:
+✓ Cálculo automático para cirugías
+✓ Facturación dentro de hospitalización
+
+Estado: ✅ ACTIVO - Sistema de cálculo para cirugías
+
+================================================================================
+2. SIGNALS - LÓGICA IMPLÍCITA
+================================================================================
+
+Archivo: clinica/signals.py
+
+2.1. Signal: crear_cobro_desde_consulta
+----------------------------------------
+Trigger: post_save de Consulta
+Condición: Si NO tiene venta asociada Y tiene servicios o insumos
+Acción: Llama crear_cobro_pendiente_desde_consulta()
+
+Flujo:
+1. Se guarda Consulta
+2. Signal verifica si tiene servicios/insumos
+3. Crea Venta automáticamente en estado 'pendiente'
+4. Genera DetalleVenta por cada servicio e insumo
+
+⚠ IMPORTANTE: Signal NO se ejecuta en created=True únicamente
+- Se ejecuta cada vez que se GUARDA la consulta
+- Protección: Verifica que no exista venta antes de crearla
+
+
+2.2. Signal: crear_cobro_desde_hospitalizacion
+-----------------------------------------------
+Trigger: post_save de Hospitalizacion
+Condición: Si estado='alta' Y NO tiene venta Y tiene insumos/cirugías
+Acción: Llama crear_cobro_pendiente_desde_hospitalizacion()
+
+Flujo:
+1. Se guarda Hospitalizacion con estado='alta'
+2. Signal verifica insumos/cirugías
+3. Crea Venta con todos los cargos acumulados
+4. Incluye: insumos de hospitalización + cirugías + insumos de cirugía
+
+⚠ IMPORTANTE: Solo se ejecuta al cambiar a 'alta'
+
+================================================================================
+3. USO REAL EN EL SISTEMA
+================================================================================
+
+3.1. Dónde se CREA
+------------------
+
+▸ Consulta
+  - crear_consulta() - POST desde ficha_mascota
+  - guardar_consulta() - POST (parece duplicado?)
+  - Integración con agenda: Recibe cita_id opcional
+
+▸ Hospitalizacion
+  - crear_hospitalizacion() - POST desde ficha_mascota
+  - Validación automática: No permite duplicar hospitalización activa
+
+▸ Cirugia
+  - crear_cirugia() - POST, requiere hospitalizacion_id
+
+▸ RegistroDiario
+  - crear_registro_diario() - POST, requiere hospitalizacion_id
+
+▸ Alta
+  - crear_alta_medica() - POST, requiere hospitalizacion_id
+  - Probablemente cambia estado de hospitalización a 'alta'
+
+▸ Documento
+  - subir_documento() - POST multipart/form-data
+
+▸ Insumos calculados
+  - ConsultaInsumo: Se crea desde crear_consulta()
+  - HospitalizacionInsumo: Se crea desde crear_hospitalizacion()
+  - CirugiaInsumo: Se crea desde crear_cirugia()
+  - Cálculo automático en save()
+
+
+3.2. Dónde se EDITA
+-------------------
+
+⚠ NO hay vistas de edición explícitas detectadas
+
+Posible edición:
+- Django Admin (todos los modelos registrados)
+- Actualización de estado de hospitalización (activa → alta)
+
+Campos auto-actualizados:
+- Consulta.fecha (auto_now_add)
+- MedicamentoUtilizado.fecha_registro (auto_now_add)
+- Documento.fecha_subida (auto_now_add)
+- ConsultaInsumo.cantidad_final (calculado en save)
+
+
+3.3. Dónde se LEE/USA
+---------------------
+
+▸ Desde clinica:
+  - ficha_paciente() / ficha_mascota()
+    * Lee consultas para historial
+    * Lee citas agendadas
+    * Combina en timeline ordenado
+  
+  - detalle_consulta()
+    * Obtiene detalles completos de consulta
+    * Incluye medicamentos_detalle
+
+  - obtener_hospitalizaciones()
+    * Lista hospitalizaciones del paciente
+
+  - detalle_hospitalizacion()
+    * Detalles completos con cirugías y registros
+
+▸ Desde caja:
+  - crear_cobro_pendiente_desde_consulta()
+    * Lee consulta.servicios para facturar
+    * Lee consulta.insumos_detalle para facturar
+  
+  - crear_cobro_pendiente_desde_hospitalizacion()
+    * Lee hospitalizacion.cirugias
+    * Lee hospitalizacion.insumos_detalle
+    * Lee cirugia.insumos_detalle por cada cirugía
+
+▸ Desde dashboard:
+  - dashboard_administracion()
+    * Hospitalizaciones activas
+    * Registros diarios
+  
+  - dashboard_veterinario()
+    * Hospitalizaciones asignadas
+    * Consultas del día
+
+▸ Desde pacientes:
+  - perfil_paciente()
+    * Consultas recientes
+    * Exámenes
+    * Documentos
+
+
+3.4. Integración con otras apps
+--------------------------------
+
+▸ Con agenda:
+  - Integración MANUAL (no automática)
+  - crear_consulta() recibe cita_id opcional
+  - Actualiza cita.estado = 'completada' al crear consulta
+  - Código explícito en clinica/views.py líneas 337-345
+
+▸ Con caja:
+  - Integración AUTOMÁTICA via signals
+  - post_save de Consulta → crea Venta
+  - post_save de Hospitalizacion (estado=alta) → crea Venta
+  - caja.services lee modelos de clinica para facturar
+
+▸ Con inventario:
+  - Lee Insumo para medicamentos
+  - NO descuenta stock automáticamente
+  - Relaciones M2M para registrar uso
+
+▸ Con pacientes:
+  - Todos los modelos clínicos tienen FK a Paciente
+  - CASCADE en la mayoría: eliminar paciente elimina registros clínicos
+
+▸ Con servicios:
+  - Consulta tiene M2M con Servicio
+  - Cirugia tiene FK opcional a Servicio
+  - Usado para facturación
+
+================================================================================
+4. SOLAPAMIENTOS Y DUPLICACIÓN
+================================================================================
+
+4.1. Duplicación detectada
+---------------------------
+
+⚠ MedicamentoUtilizado vs ConsultaInsumo
+
+┌───────────────────────────┬────────────────────────────────┐
+│ MedicamentoUtilizado      │ ConsultaInsumo                 │
+├───────────────────────────┼────────────────────────────────┤
+│ Modelo simple             │ Modelo complejo                │
+│ Campos básicos            │ Cálculo automático             │
+│ inventario_id (int)       │ insumo (FK PROTECT)            │
+│ dosis (string)            │ dosis_ml_por_kg (decimal)      │
+│ Sin cálculo               │ Con calcular_cantidad()        │
+│ LEGACY                    │ MODERNO                        │
+└───────────────────────────┴────────────────────────────────┘
+
+Análisis:
+- Ambos cumplen función similar: registrar medicamentos de consulta
+- MedicamentoUtilizado es más simple, usado actualmente
+- ConsultaInsumo es más sofisticado, preparado para cálculo automático
+- En crear_consulta() se usa MedicamentoUtilizado
+- ConsultaInsumo existe pero parece no usarse aún en vistas
+
+Conclusión: TRANSICIÓN EN CURSO
+- Sistema antiguo: MedicamentoUtilizado (activo)
+- Sistema nuevo: ConsultaInsumo (preparado, no implementado completamente)
+
+
+⚠ Relaciones M2M vs Tablas intermedias
+
+Consulta tiene:
+- medicamentos = ManyToManyField(Insumo) - Relación simple
+- MedicamentoUtilizado - Tabla intermedia con dosis
+- ConsultaInsumo - Tabla intermedia moderna
+
+¿Por qué 3 formas de lo mismo?
+1. medicamentos M2M: Relación básica Django
+2. MedicamentoUtilizado: Extensión con dosis (actualmente usado)
+3. ConsultaInsumo: Versión moderna con cálculo automático (futuro)
+
+Recomendación futura: Unificar en ConsultaInsumo únicamente
+
+
+4.2. Vistas duplicadas?
+------------------------
+
+⚠ crear_consulta() vs guardar_consulta()
+
+Análisis de diferencias:
+- Ambas crean Consulta
+- Ambas guardan medicamentos
+- Ambas marcan cita como completada
+- crear_consulta() tiene más logging
+- guardar_consulta() más simple
+
+Posible causa: Refactor incompleto o múltiples endpoints
+
+
+4.3. ¿Legacy o Activo?
+----------------------
+
+┌────────────────────────────┬─────────┬──────────────────────┐
+│ Modelo                     │ Estado  │ Evidencia            │
+├────────────────────────────┼─────────┼──────────────────────┤
+│ Consulta                   │ ✅ ACTIVO│ Usado diariamente   │
+│ MedicamentoUtilizado       │ 🟠 LEGACY│ Funciona pero simple│
+│ Hospitalizacion            │ ✅ ACTIVO│ Flujo completo      │
+│ Cirugia                    │ ✅ ACTIVO│ Parte de hosp       │
+│ RegistroDiario             │ ✅ ACTIVO│ Seguimiento diario  │
+│ Alta                       │ ✅ ACTIVO│ Cierre de hosp      │
+│ Examen                     │ 🟠 PASIVO│ Sin CRUD activo     │
+│ Documento                  │ ✅ ACTIVO│ Gestión completa    │
+│ ConsultaInsumo             │ 🟡 PREPARADO│ Listo, no usado  │
+│ HospitalizacionInsumo      │ 🟡 PREPARADO│ Listo, no usado  │
+│ CirugiaInsumo              │ 🟡 PREPARADO│ Listo, no usado  │
+└────────────────────────────┴─────────┴──────────────────────┘
+
+================================================================================
+5. RIESGO Y CLASIFICACIÓN
+================================================================================
+
+Nivel de criticidad: 🔴 CRÍTICA
+
+5.1. Justificación
+------------------
+
+▸ Impacto en operaciones
+  - Clínica: Sin estos modelos, NO hay registro médico
+  - Caja: Facturación depende de signals de clinica
+  - Reportes: Estadísticas dependen de consultas/hospitalizaciones
+  - Legal: Registro clínico obligatorio
+
+▸ Dependencias técnicas
+
+  Paciente (CASCADE)
+     ↓
+  Consulta ← Signal → Venta (caja)
+     ↓ M2M
+  Servicio, Insumo
+  
+  Paciente (CASCADE)
+     ↓
+  Hospitalizacion ← Signal → Venta (caja)
+     ↓ CASCADE
+  Cirugia, RegistroDiario, Alta
+     ↓
+  Insumos, Servicios
+
+▸ Flujo operativo crítico:
+  1. Veterinario inicia consulta desde cita
+  2. Crea Consulta con servicios/medicamentos
+  3. Signal crea Venta automáticamente
+  4. Caja cobra al propietario
+  5. Dashboard reporta estadísticas
+
+Eliminar app clinica causaría:
+✗ Pérdida total del registro médico
+✗ Imposibilidad de facturar servicios clínicos
+✗ Pérdida de trazabilidad médica
+✗ Incumplimiento legal (falta historial clínico)
+✗ Dashboard sin datos operativos
+
+▸ Protección existente:
+  ✓ Signals crean cobros automáticamente
+  ✓ Validación de hospitalización única
+  ✓ FK con PROTECT en insumos (no permite eliminar insumos en uso)
+  ⚠ CASCADE en paciente (eliminar paciente borra todo historial)
+
+
+5.2. Sensibilidad a cambios
+----------------------------
+
+┌────────────────────────────────┬───────┬──────────────────────┐
+│ Operación                      │ Riesgo│ Razón                │
+├────────────────────────────────┼───────┼──────────────────────┤
+│ Agregar campo a Consulta       │ 🟢 Bajo│ Solo migración      │
+│ Cambiar signal                 │ 🔴 Alto│ Afecta facturación  │
+│ Eliminar MedicamentoUtilizado  │ 🟠 Medio│ En uso actualmente  │
+│ Activar ConsultaInsumo         │ 🟠 Medio│ Cambio de flujo     │
+│ Modificar calcular_cantidad()  │ 🔴 Alto│ Afecta facturación  │
+│ Eliminar Hospitalizacion       │ 🔴 CRÍTICO│ Colapsa sistema   │
+│ Cambiar CASCADE a SET_NULL     │ 🟠 Medio│ Cambia borrado      │
+└────────────────────────────────┴───────┴──────────────────────┘
+
+
+5.3. Puntos críticos
+--------------------
+
+⚠ CRÍTICO 1: Signals automáticos
+  - Signal crea Venta SIN intervención del usuario
+  - Si falla signal, consulta queda sin factura
+  - No hay mecanismo de recuperación automático
+  - Error silencioso (solo print, no alerta)
+
+⚠ CRÍTICO 2: Validación de hospitalización única
+  - Solo permite UNA hospitalización activa por paciente
+  - Validación en clean(), puede saltearse
+  - Si falla validación, data inconsistente
+
+⚠ CRÍTICO 3: Cálculo automático de insumos
+  - ConsultaInsumo.save() calcula cantidad_final
+  - Si fórmula tiene error, factura incorrecta
+  - Redondeo hacia arriba puede sobrefacturar
+
+⚠ CRÍTICO 4: Integración manual con agenda
+  - Actualización de cita.estado es manual
+  - Si falla, cita queda en 'en_curso' eternamente
+  - No hay rollback si crear_consulta falla después
+
+⚠ MEDIO 5: Duplicación MedicamentoUtilizado vs ConsultaInsumo
+  - Sistema usa el simple actualmente
+  - Sistema complejo existe pero no se usa
+  - Confusión en codebase
+
+⚠ MEDIO 6: CASCADE en paciente
+  - Eliminar paciente borra TODO su historial clínico
+  - No hay soft delete
+  - Pérdida irreversible de datos médicos
+
+================================================================================
+6. CONCLUSIÓN Y RECOMENDACIONES
+================================================================================
+
+6.1. Veredicto: MANTENER - CRÍTICA
+-----------------------------------
+
+Razones:
+1. Modelo CENTRAL: Sin clinica, no hay práctica veterinaria
+2. Integración profunda: caja, agenda, dashboard dependen totalmente
+3. Registro legal: Historial clínico obligatorio
+4. Signals activos: Automatización de facturación
+5. Sin alternativa: No hay forma de reemplazar esta funcionalidad
+
+La app clinica es ABSOLUTAMENTE CRÍTICA e IRREMPLAZABLE.
+
+
+6.2. Calidad técnica: 🟡 BUENA con áreas de mejora
+---------------------------------------------------
+
+Fortalezas:
+✓ Modelos bien estructurados
+✓ Validaciones en clean()
+✓ Sistema de cálculo automático (ConsultaInsumo)
+✓ Signals para automatización
+✓ Relaciones FK/M2M correctas
+✓ Timestamps automáticos
+✓ Related_name consistentes
+
+Debilidades detectadas:
+⚠ Duplicación: MedicamentoUtilizado vs ConsultaInsumo
+⚠ Vistas duplicadas: crear_consulta vs guardar_consulta
+⚠ Sistema de insumos en transición (antiguo y nuevo coexisten)
+⚠ Signals sin manejo robusto de errores
+⚠ Integración manual con agenda (propensa a errores)
+⚠ Examen sin CRUD completo
+⚠ CASCADE en paciente (pérdida irreversible)
+⚠ No hay soft delete
+
+
+6.3. Refactorización futura (solo análisis)
+--------------------------------------------
+
+Si en el futuro se considerara mejorar:
+
+▸ Problema 1: Duplicación de sistema de medicamentos
+  Estado actual: MedicamentoUtilizado (simple, usado) + ConsultaInsumo (complejo, no usado)
+  
+  Evaluación futura:
+  - Migrar completamente a ConsultaInsumo
+  - Eliminar MedicamentoUtilizado
+  - Migración de datos históricos
+  - O mantener MedicamentoUtilizado y eliminar ConsultaInsumo si no se usará
+
+▸ Problema 2: Vistas duplicadas
+  Estado actual: crear_consulta() y guardar_consulta() hacen lo mismo
+  
+  Evaluación futura:
+  - Unificar en una sola vista
+  - O documentar claramente por qué existen dos
+
+▸ Problema 3: Signals sin manejo robusto de errores
+  Estado actual: print() para errores, continúa ejecución
+  
+  Evaluación futura:
+  - Implementar logging formal
+  - Notificar admin si falla creación de cobro
+  - Retry automático o manual
+  - O agregar comando de management para regenerar ventas faltantes
+
+▸ Problema 4: Integración manual con agenda
+  Estado actual: clinica.views actualiza Cita.estado manualmente
+  
+  Evaluación futura:
+  - Considerar signal en Consulta.post_save para actualizar cita
+  - O agregar campo cita FK en Consulta (OneToOneField opcional)
+  - O mantener actual si se prefiere control explícito
+
+▸ Problema 5: CASCADE en paciente
+  Estado actual: Eliminar paciente borra historial
+  
+  Evaluación futura:
+  - Agregar soft delete (campo 'activo')
+  - O cambiar CASCADE a PROTECT en modelos críticos
+  - O mantener actual si eliminación de paciente es rara
+
+▸ Problema 6: Examen sin CRUD
+  Estado actual: Modelo existe pero no hay vistas
+  
+  Evaluación futura:
+  - Implementar CRUD completo
+  - O eliminar modelo si no se usa
+  - O documentar que se gestiona solo desde admin
+
+▸ Problema 7: Cálculo automático en save()
+  Estado actual: calcular_cantidad() se ejecuta siempre en save()
+  
+  Evaluación futura:
+  - Validar que no se recalcule si cantidad_manual está seteada
+  - Agregar flag 'bloqueado' para evitar recálculos accidentales
+  - O mantener actual si funciona bien
+
+
+6.4. Documentación recomendada
+-------------------------------
+
+Para desarrolladores:
+- Signals crean Venta automáticamente al guardar Consulta/Hospitalizacion
+- MedicamentoUtilizado es LEGACY, ConsultaInsumo es MODERNO (no usado aún)
+- calcular_cantidad() se ejecuta en save() automáticamente
+- Hospitalización valida unicidad en clean() - solo una activa por paciente
+- Integración con agenda es MANUAL - actualizar cita.estado explícitamente
+- CASCADE en paciente - eliminar paciente borra TODO su historial
+- Sistema de insumos en TRANSICIÓN - antiguo y nuevo coexisten
+
+Para usuarios:
+- Al crear consulta, se genera cobro automáticamente
+- Al dar de alta hospitalización, se factura todo junto
+- Solo puede haber UNA hospitalización activa por paciente
+- Signos vitales mínimos: temperatura en consulta
+- Cálculo de medicamentos automático si se usan modelos nuevos
+
+================================================================================
+RESUMEN EJECUTIVO
+================================================================================
+
+┌───────────────────┬──────────────────────────────────────────────┐
+│ Aspecto           │ Evaluación                                   │
+├───────────────────┼──────────────────────────────────────────────┤
+│ Estado            │ ✅ Activo, crítico, usado diariamente        │
+│ Criticidad        │ 🔴 CRÍTICA - Centro del sistema clínico      │
+│ Duplicación       │ 🟠 Existe duplicación en sistema de insumos  │
+│ Calidad técnica   │ 🟡 Buena, con áreas de mejora detectadas     │
+│ Arquitectura      │ 🟢 Bien diseñada, signals automatización     │
+│ Integraciones     │ 🟠 Manual con agenda, automática con caja    │
+│ Riesgo eliminar   │ 🔴 CRÍTICO - Colapsa operación completa      │
+│ Transición        │ 🟡 Sistema de insumos en migración           │
+│ Recomendación     │ MANTENER - ABSOLUTAMENTE CRÍTICA             │
+└───────────────────┴──────────────────────────────────────────────┘
+
+Modelos por criticidad:
+- Consulta: 🔴 CRÍTICA ABSOLUTA - Centro registro médico
+- Hospitalizacion: 🔴 CRÍTICA - Internación esencial
+- ConsultaInsumo: 🟡 PREPARADO - Sistema moderno no implementado
+- MedicamentoUtilizado: 🟠 LEGACY ACTIVO - En transición
+- Cirugia: 🔴 IMPORTANTE - Parte de hospitalización
+- RegistroDiario: 🟢 ACTIVO - Seguimiento
+- Alta: 🟢 ACTIVO - Cierre
+- Documento: 🟢 ACTIVO - Gestión documental
+- Examen: 🟡 PASIVO - Sin CRUD
+
+Relaciones críticas:
+- Consulta → Paciente (CASCADE) 🔴
+- Consulta → Venta (via signal) 🔴
+- Hospitalizacion → Paciente (CASCADE) 🔴
+- Hospitalizacion → Venta (via signal) 🔴
+- Cirugia → Hospitalizacion (CASCADE) 🟠
+- Integración con agenda.Cita (manual) 🟠
+
+Acción: NO TOCAR núcleo. App absolutamente fundamental.
+
+Mejoras posibles (futuro):
+1. Completar migración a ConsultaInsumo
+2. Unificar vistas duplicadas
+3. Mejorar manejo de errores en signals
+4. Implementar CRUD de Examen o eliminar modelo
+5. Considerar soft delete para pacientes
+
+================================================================================
+DEPENDENCIAS EXTERNAS (apps que usan clinica)
+================================================================================
+
+1. caja (CRÍTICA)
+   - Importa: Consulta, Hospitalizacion, ConsultaInsumo, HospitalizacionInsumo
+   - Función: Facturación automática via signals
+   - Impacto: CRÍTICO - Sin clinica, no hay facturación de servicios médicos
+   - Tipo: Automatización via signals + lectura explícita
+
+2. signals (AUTOMÁTICA)
+   - post_save Consulta → crea Venta
+   - post_save Hospitalizacion (estado=alta) → crea Venta
+   - Impacto: CRÍTICO - Automatización de facturación
+   - Tipo: Signal receivers
+
+3. agenda (MANUAL)
+   - Referencia: Consulta recibe cita_id
+   - Función: Marca cita como completada
+   - Impacto: ALTO - Integración de flujo operativo
+   - Tipo: Integración manual explícita
+
+4. pacientes (LECTURA)
+   - Todas las entidades clínicas tienen FK a Paciente
+   - Función: Historial médico del paciente
+   - Impacto: CRÍTICO - Sin paciente, no hay registro
+   - Tipo: ForeignKey CASCADE
+
+5. dashboard (REPORTES)
+   - Importa: Hospitalizacion, RegistroDiario, ConsultaInsumo
+   - Función: Estadísticas operativas
+   - Impacto: ALTO - Métricas de gestión
+   - Tipo: Solo lectura
+
+6. inventario (REFERENCIA)
+   - Usado por: Consulta, Hospitalizacion, Cirugia, RegistroDiario
+   - Función: Registrar uso de insumos
+   - Impacto: MEDIO - NO descuenta stock automáticamente
+   - Tipo: ManyToMany + tablas intermedias
+
+7. servicios (REFERENCIA)
+   - Usado por: Consulta (M2M), Cirugia (FK)
+   - Función: Asociar servicios prestados
+   - Impacto: ALTO - Necesario para facturación
+   - Tipo: ManyToMany + ForeignKey
+
+8. cuentas (VETERINARIOS)
+   - Usado por: Consulta, Hospitalizacion, Cirugia
+   - Función: FK a veterinario que atendió
+   - Impacto: CRÍTICO - Trazabilidad de atención
+   - Tipo: ForeignKey SET_NULL
+
+================================================================================
+FIN DEL ANÁLISIS DIAGNÓSTICO
+================================================================================

@@ -1,0 +1,554 @@
+═══════════════════════════════════════════════════════════════════════════════
+  ANÁLISIS DIAGNÓSTICO: APP DASHBOARD
+  Sistema de Paneles de Control - Veterinaria Santa Sofía
+═══════════════════════════════════════════════════════════════════════════════
+
+📅 Fecha de análisis: Diciembre 15, 2025
+🎯 Propósito: Diagnóstico de modelos, uso real y dependencias
+⚠️  Modalidad: SOLO LECTURA - Sin modificaciones de código
+
+═══════════════════════════════════════════════════════════════════════════════
+  1. MODELOS IDENTIFICADOS
+═══════════════════════════════════════════════════════════════════════════════
+
+⚠️ IMPORTANTE: La app 'dashboard' NO tiene modelos propios.
+
+Estado de dashboard/models.py:
+   └─ Archivo vacío (solo contiene comentario "# Create your models here.")
+
+Conclusión: Dashboard es una app de VISUALIZACIÓN pura, no almacena datos.
+             Solo CONSUME datos de otras apps mediante queries en las vistas.
+
+═══════════════════════════════════════════════════════════════════════════════
+  2. USO REAL DEL SISTEMA
+═══════════════════════════════════════════════════════════════════════════════
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ ARQUITECTURA: DASHBOARD DIFERENCIADO POR ROL                               │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Ubicación: dashboard/views.py
+URL: /dashboard/
+Función principal: dashboard(request) - Vista única que bifurca por rol
+
+FLUJO DE RENDERIZADO:
+1. Usuario autenticado accede a /dashboard/
+2. Vista dashboard() detecta rol del usuario (o parámetro ?as= para testing)
+3. Bifurca a una de 3 funciones auxiliares según rol:
+   • _datos_administrador(hoy) → template: dashboard/admin.html
+   • _datos_recepcion(hoy, usuario) → template: dashboard/recepcion.html
+   • _datos_veterinario(hoy, usuario) → template: dashboard/veterinario.html
+4. Cada función carga datos específicos del rol
+5. Retorna render con template específico
+
+Testing de roles:
+   • /dashboard/?as=admin → Vista de administrador
+   • /dashboard/?as=vet → Vista de veterinario
+   • /dashboard/?as=recepcion → Vista de recepción
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ FUNCIÓN: _datos_administrador(hoy)                                         │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Ubicación: dashboard/views.py (líneas 117-252)
+Rol: administracion / superuser
+Template: dashboard/admin.html
+
+DATOS CARGADOS:
+
+1. AGENDA DEL DÍA (desde agenda.Cita):
+   • citas_hoy: Todas las citas del día
+   • citas_stats: Total, pendientes, confirmadas, completadas, canceladas
+   • mis_citas: Solo citas pendientes y confirmadas (para mostrar en widget)
+
+2. HOSPITALIZACIONES ACTIVAS (desde clinica.Hospitalizacion):
+   • hospitalizaciones_activas: Pacientes internados actualmente
+   • Por cada hospitalización:
+     - dias_hospitalizacion: Días desde ingreso
+     - ultimo_registro: Último RegistroDiario
+     - necesita_actualizacion: True si >12 horas sin registro
+
+3. INVENTARIO (desde inventario.Insumo):
+   • stock_bajo: Insumos con stock_actual <= 10
+   • insumos_utilizados_hoy: Top 5 insumos vendidos hoy (desde DetalleVenta)
+
+4. CAJA (desde caja.SesionCaja, caja.Venta):
+   • sesion_activa: SesionCaja sin cerrar
+   • caja_stats:
+     - estado: 'abierta' / 'cerrada'
+     - total_vendido_hoy: Suma de ventas de la sesión
+     - cobros_pendientes: Ventas en estado 'pendiente' (top 10)
+     - cobros_pendientes_count: Total de cobros pendientes
+     - cobros_pendientes_total: Suma de total de cobros pendientes
+
+5. INDICADORES GENERALES:
+   • citas_hoy, citas_pendientes, citas_completadas
+   • hospitalizados: Total de hospitalizaciones activas
+   • cobros_pendientes_count, cobros_pendientes_total
+   • pacientes_atendidos_hoy: Citas completadas distintas
+   • ingresos_del_dia: Suma de Venta.total pagadas hoy
+   • total_pacientes: Pacientes activos
+   • hospitalizaciones_activas_count
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ FUNCIÓN: _datos_recepcion(hoy, usuario)                                    │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Ubicación: dashboard/views.py (líneas 255-327)
+Rol: recepcion
+Template: dashboard/recepcion.html
+
+DATOS CARGADOS:
+
+1. AGENDA DEL DÍA (desde agenda.Cita):
+   • citas_hoy: Todas las citas del día (no filtradas por usuario)
+   • mis_citas: Solo pendientes y confirmadas
+   • agenda_stats: Total, pendientes, confirmadas, completadas
+
+2. HOSPITALIZACIONES (desde clinica.Hospitalizacion):
+   • hospitalizaciones_activas: Todas las activas (no solo del usuario)
+   • mis_hospitalizaciones: Lista completa con cálculos de días y necesita_actualizacion
+
+3. CAJA (desde caja.SesionCaja, caja.Venta):
+   • sesion_activa: SesionCaja sin cerrar
+   • caja_stats:
+     - estado, sesion, puede_abrir
+     - total_acumulado: Total vendido en sesión activa
+     - cobros_pendientes: Top 10 ventas pendientes
+     - cobros_pendientes_count
+
+4. INDICADORES:
+   • citas_hoy, citas_pendientes, citas_completadas
+   • hospitalizados, cobros_pendientes_count, cobros_pendientes_total
+
+DIFERENCIA CON ADMIN:
+   • Recepción ve TODAS las citas del día, no solo las suyas
+   • Puede abrir/cerrar caja (puede_abrir)
+   • No ve inventario detallado
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ FUNCIÓN: _datos_veterinario(hoy, usuario)                                  │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Ubicación: dashboard/views.py (líneas 330-487)
+Rol: veterinario
+Template: dashboard/veterinario.html
+
+DATOS CARGADOS:
+
+1. AGENDA PERSONAL (desde agenda.Cita):
+   • citas_del_dia: Solo citas del veterinario actual
+   • mis_citas: Pendientes y confirmadas del día
+   • proximas_citas: Primeras 5 citas pendientes/confirmadas
+   • cita_actual: Primera cita en estado 'en_curso'
+   • agenda_stats: Total, completadas, pendientes
+
+2. PACIENTES DEL DÍA:
+   • pacientes_del_dia: Lista con cita y estado de atención
+
+3. HOSPITALIZACIONES ASIGNADAS (desde clinica.Hospitalizacion):
+   • hospitalizaciones_asignadas: Filtradas por veterinario=usuario
+   • Por cada hospitalización:
+     - dias_hospitalizacion
+     - ultimo_registro
+     - necesita_actualizacion (>12 horas sin registro)
+
+4. ALERTAS CLÍNICAS:
+   Sistema de alertas en 3 categorías:
+
+   a) Cobros pendientes (desde caja.Venta):
+      • Consultas del veterinario con estado='pendiente' de días anteriores
+      • Lista completa en alertas_detalladas.cobros_pendientes (top 10)
+
+   b) Insumos sin confirmar (desde clinica.ConsultaInsumo):
+      • ConsultaInsumo con requiere_confirmacion=True y confirmado_por=None
+      • Del veterinario actual
+      • Lista completa en alertas_detalladas.insumos_sin_confirmar (top 10)
+
+   c) Hospitalizaciones sin actualizar:
+      • Hospitalizaciones asignadas con >24 horas sin RegistroDiario
+      • Calcula horas_sin_registro para cada una
+      • Lista en alertas_detalladas.hospitalizaciones_sin_actualizar
+
+5. INDICADORES:
+   • citas_hoy, citas_pendientes, citas_completadas, hospitalizados
+
+6. ALERTAS DETALLADAS:
+   • cobros_pendientes (lista de Venta)
+   • insumos_sin_confirmar (lista de ConsultaInsumo)
+   • hospitalizaciones_sin_actualizar (lista de Hospitalizacion)
+   • total_alertas: Suma de todas las alertas
+
+DIFERENCIA CON OTROS ROLES:
+   • Solo ve SUS citas y SUS hospitalizaciones
+   • Sistema completo de alertas clínicas
+   • No ve estado de caja
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ TEMPLATES Y PARTIALS                                                       │
+└────────────────────────────────────────────────────────────────────────────┘
+
+ESTRUCTURA DE TEMPLATES:
+dashboard/templates/
+   ├── dashboard/
+   │   ├── admin.html           → Dashboard de administrador
+   │   ├── recepcion.html       → Dashboard de recepción
+   │   └── veterinario.html     → Dashboard de veterinario
+   ├── dashboard.html           → Fallback genérico (con botones de testing)
+   ├── partials/
+   │   └── dashboard/
+   │       ├── agenda.html           → Widget de agenda (usa mis_citas)
+   │       ├── hospitalizaciones.html → Widget de hospitalizaciones
+   │       ├── caja.html             → Widget de estado de caja
+   │       ├── pacientes.html        → Widget de pacientes
+   │       └── acciones.html         → Widget de acciones rápidas
+   └── kaiadmin/                → Templates de demostración (UI kit)
+       ├── components/
+       ├── forms/
+       ├── tables/
+       ├── charts/
+       ├── maps/
+       └── widgets.html
+
+PARTIALS REUTILIZABLES:
+Los partials en dashboard/templates/partials/dashboard/ son componentes
+que se incluyen en los 3 dashboards principales usando {% include %}.
+
+Ejemplo:
+   • agenda.html espera contexto "mis_citas"
+   • hospitalizaciones.html espera "mis_hospitalizaciones"
+   • caja.html espera "caja_stats"
+
+Este diseño permite que los 3 roles compartan el mismo HTML pero con
+datos filtrados según el rol.
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VISTAS DEMO DE KAIADMIN (NO USADAS)                                        │
+└────────────────────────────────────────────────────────────────────────────┘
+
+dashboard/views.py contiene múltiples funciones para demostrar componentes
+del template Kaiadmin (bootstrap admin theme):
+
+• avatars(), buttons(), gridsystem(), panels(), notifications(), typography()
+• font_awesome_icons(), simple_line_icons(), sweetalert()
+• forms(), tables(), datatables()
+• charts(), sparkline()
+• googlemaps(), jsvectormap()
+• widgets()
+• icon_menu(), sidebar_style_2()
+
+Estado: DEMO / DOCUMENTACIÓN - No se usan en el sistema real
+Ubicación: dashboard/views.py (líneas 68-115, 489-506)
+
+Estas vistas renderizan templates en dashboard/templates/kaiadmin/ que
+muestran ejemplos de componentes UI del theme.
+
+═══════════════════════════════════════════════════════════════════════════════
+  3. DEPENDENCIAS CON OTRAS APPS
+═══════════════════════════════════════════════════════════════════════════════
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ IMPORTS DIRECTOS (Dashboard consume estas apps)                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+dashboard → agenda (CRÍTICO):
+   • Import: from agenda.models import Cita
+   • Uso: Cargar citas del día, stats de agenda, mis_citas
+   • En todas las vistas: _datos_administrador, _datos_recepcion, _datos_veterinario
+   • Datos: fecha, hora_inicio, estado, veterinario, paciente, servicio
+
+dashboard → pacientes (CRÍTICO):
+   • Import: from pacientes.models import Paciente
+   • Uso: Total de pacientes activos, datos de propietario (via FK)
+   • Acceso: Siempre a través de Cita.paciente o Hospitalizacion.paciente
+
+dashboard → clinica (CRÍTICO):
+   • Import: from clinica.models import Hospitalizacion, RegistroDiario, ConsultaInsumo
+   • Uso:
+     - Hospitalizacion: Pacientes internados, estado='activa', filtro por veterinario
+     - RegistroDiario: Calcular último registro, necesita_actualizacion
+     - ConsultaInsumo: Alertas de insumos sin confirmar (veterinario)
+   • En: _datos_administrador, _datos_recepcion, _datos_veterinario
+
+dashboard → caja (CRÍTICO):
+   • Import: from caja.models import SesionCaja, Venta, DetalleVenta
+   • Uso:
+     - SesionCaja: Estado de caja (abierta/cerrada), total vendido
+     - Venta: Cobros pendientes, ingresos del día
+     - DetalleVenta: Insumos más utilizados del día
+   • En: _datos_administrador, _datos_recepcion, _datos_veterinario
+
+dashboard → inventario (MEDIO):
+   • Import: from inventario.models import Insumo
+   • Uso: Stock bajo (stock_actual <= 10)
+   • Solo en: _datos_administrador
+   • No usado por recepción ni veterinario
+
+dashboard → servicios (NO USADO):
+   • No hay import directo de servicios.models
+   • Acceso a servicios solo via Cita.servicio (FK)
+
+dashboard → cuentas (IMPLÍCITO):
+   • No hay import directo
+   • Acceso a usuarios via request.user y FKs como Cita.veterinario
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ DEPENDENCIAS INVERSAS (Otras apps usan dashboard)                          │
+└────────────────────────────────────────────────────────────────────────────┘
+
+login → dashboard:
+   • login/views.py: redirect('dashboard:dashboard') después de login
+   • settings.py: LOGIN_REDIRECT_URL = '/dashboard/'
+   • Uso: Redirección principal después de autenticación
+
+caja → dashboard:
+   • caja/views.py: redirect('dashboard:dashboard') en varias vistas
+   • Uso: Redirección cuando usuario no tiene permisos
+
+templates → dashboard:
+   • templates/partials/sidebar.html: Link al dashboard en logo y menú
+   • templates/partials/topbar.html: Link al dashboard en logo
+   • Uso: Navegación principal
+
+TODAS las apps:
+   • Dashboard es el HUB central después de login
+   • Todas las operaciones eventualmente retornan al dashboard
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ ANÁLISIS DE QUERIES: OPTIMIZACIÓN                                          │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Las funciones _datos_* usan select_related() para optimizar queries:
+
+✅ OPTIMIZADO:
+   • Cita.objects.filter(...).select_related('paciente__propietario', 'veterinario', 'servicio')
+   • Hospitalizacion.objects.filter(...).select_related('paciente__propietario', 'veterinario')
+   • Venta.objects.filter(...).select_related('paciente')
+
+Beneficio: Evita N+1 queries al acceder a FKs en templates
+
+⚠️ POTENCIAL MEJORA:
+   • RegistroDiario.objects.filter(...).order_by('-fecha_registro').first()
+     Se ejecuta dentro de un loop → Podría usar prefetch_related
+
+═══════════════════════════════════════════════════════════════════════════════
+  4. SOLAPAMIENTOS Y FUNCIONALIDAD DUPLICADA
+═══════════════════════════════════════════════════════════════════════════════
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ NO HAY DUPLICACIÓN DE MODELOS                                              │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Dashboard NO tiene modelos propios, por lo tanto no hay solapamiento con
+otras apps en términos de almacenamiento de datos.
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ CÓDIGO REPETIDO: LÓGICA COMPARTIDA ENTRE ROLES                             │
+└────────────────────────────────────────────────────────────────────────────┘
+
+🟡 REPETICIÓN DETECTADA:
+
+Cálculo de "dias_hospitalizacion" y "necesita_actualizacion":
+   • Ubicación: 3 lugares
+     - _datos_administrador (líneas 154-170)
+     - _datos_recepcion (líneas 294-311)
+     - _datos_veterinario (líneas 384-398)
+   
+   • Lógica idéntica:
+     ```
+     for hosp in hospitalizaciones:
+         hosp.dias_hospitalizacion = (hoy - fecha_ingreso).days
+         hosp.ultimo_registro = RegistroDiario.objects.filter(...).first()
+         if hosp.ultimo_registro:
+             horas_desde_registro = (timezone.now() - hosp.ultimo_registro.fecha_registro).total_seconds() / 3600
+             hosp.necesita_actualizacion = horas_desde_registro >= 12
+         else:
+             hosp.necesita_actualizacion = True
+     ```
+   
+   • Impacto: MEDIO - Funciona pero no DRY
+   • Mejora posible: Extraer a función auxiliar o método de modelo
+
+Obtención de cobros pendientes:
+   • Ubicación: 3 lugares
+     - _datos_administrador (línea 186)
+     - _datos_recepcion (línea 303)
+     - _datos_veterinario (línea 447)
+   
+   • Lógica similar pero con filtros diferentes:
+     - Admin: Venta.objects.filter(estado='pendiente')
+     - Recepción: Igual que admin
+     - Veterinario: Venta.objects.filter(tipo_origen='consulta', consulta__veterinario=usuario, estado='pendiente')
+   
+   • Impacto: BAJO - Filtros son diferentes por rol
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VISTAS DEMO DE KAIADMIN: NO USADAS                                         │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Estado: DOCUMENTACIÓN / DEMO del theme bootstrap
+Ubicación: dashboard/views.py + dashboard/templates/kaiadmin/
+
+Vistas demo (14 funciones):
+   • avatars, buttons, gridsystem, panels, notifications, typography
+   • font_awesome_icons, simple_line_icons, sweetalert
+   • forms, tables, datatables
+   • charts, sparkline, googlemaps, jsvectormap, widgets
+   • icon_menu, sidebar_style_2
+
+Uso real: NO se usan en operación normal de la veterinaria
+Propósito: Referencia de componentes UI disponibles en el theme
+
+Riesgo de eliminación: BAJO - Son solo ejemplos
+Beneficio de mantener: Documentación visual del theme
+
+═══════════════════════════════════════════════════════════════════════════════
+  5. CLASIFICACIÓN DE RIESGO
+═══════════════════════════════════════════════════════════════════════════════
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ 🔴 APP CRÍTICA - ABSOLUTAMENTE ESENCIAL                                    │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Clasificación: 🔴 CRÍTICA - MÁXIMA PRIORIDAD
+
+Motivos:
+
+1. HUB CENTRAL DE NAVEGACIÓN:
+   • Primera vista después de login (LOGIN_REDIRECT_URL)
+   • Todas las apps redirigen aquí en caso de error o falta de permisos
+   • Punto de entrada principal para todos los roles
+   
+2. INTEGRACIÓN TOTAL:
+   • Consume datos de 5 apps críticas: agenda, clinica, caja, pacientes, inventario
+   • Único punto donde se consolida información de múltiples fuentes
+   • Vista unificada del estado del negocio
+   
+3. DIFERENCIACIÓN POR ROL:
+   • Administrador: Vista completa (caja, inventario, todas las citas)
+   • Recepción: Enfoque en agenda y caja
+   • Veterinario: Agenda personal, hospitalizaciones, alertas clínicas
+   
+4. SISTEMA DE ALERTAS:
+   • Único lugar donde veterinarios ven:
+     - Cobros pendientes de sus consultas
+     - Insumos sin confirmar
+     - Hospitalizaciones sin actualizar
+   
+5. MONITOREO OPERATIVO:
+   • Estado de caja en tiempo real
+   • Hospitalizaciones activas y tiempo sin registro
+   • Stock bajo (administrador)
+   • Pacientes del día
+   
+6. MÉTRICAS DE NEGOCIO:
+   • Ingresos del día
+   • Pacientes atendidos
+   • Citas completadas
+   • Cobros pendientes (monto total)
+
+Riesgo de eliminación: IMPOSIBLE
+   • Sin dashboard, el sistema pierde su punto de entrada principal
+   • Usuarios no tendrían forma de ver su trabajo pendiente
+   • Pérdida de visibilidad del estado del negocio
+   • Colapso de UX (sin navegación central)
+
+Riesgo de modificación: ALTO
+   • Cambios en dashboard afectan experiencia de TODOS los usuarios
+   • Errores en queries pueden sobrecargar la base de datos
+   • Modificar estructura de contexto rompe templates
+
+═══════════════════════════════════════════════════════════════════════════════
+  6. CONCLUSIÓN FINAL
+═══════════════════════════════════════════════════════════════════════════════
+
+ESTADO ACTUAL:
+--------------
+La app 'dashboard' es el CENTRO DE CONTROL del sistema VetSantaSofia.
+Es la primera vista que ven todos los usuarios después de hacer login y
+el punto de retorno principal en toda la navegación.
+
+ARQUITECTURA:
+------------
+• TIPO: App de visualización pura (sin modelos)
+• PATRÓN: Vista única que bifurca por rol
+• ROLES: Administración, Recepción, Veterinario
+• TESTING: Permite simular roles con parámetro ?as=
+
+FUNCIÓN PRINCIPAL:
+-----------------
+Consolidar información de múltiples apps en una vista unificada según el rol:
+
+1. ADMINISTRADOR:
+   • Vista completa del negocio
+   • Citas, hospitalizaciones, inventario, caja
+   • Métricas de ingresos y pacientes
+
+2. RECEPCIÓN:
+   • Enfoque en agenda y caja
+   • Todas las citas del día (no filtradas)
+   • Estado de caja y cobros pendientes
+
+3. VETERINARIO:
+   • Agenda personal
+   • Hospitalizaciones asignadas
+   • Sistema de alertas clínicas (cobros, insumos, registros)
+
+DEPENDENCIAS CRÍTICAS:
+---------------------
+dashboard CONSUME (no puede vivir sin):
+   • agenda.Cita → Agenda del día
+   • clinica.Hospitalizacion, RegistroDiario, ConsultaInsumo → Estado clínico
+   • caja.SesionCaja, Venta, DetalleVenta → Estado financiero
+   • pacientes.Paciente → Información de pacientes
+   • inventario.Insumo → Control de stock (solo admin)
+
+Otras apps USAN dashboard:
+   • login → Redirección principal después de autenticación
+   • caja → Redirección cuando falta permisos
+   • templates → Navegación (sidebar, topbar)
+
+ASPECTOS TÉCNICOS:
+-----------------
+✅ Optimizado:
+   • Usa select_related() para evitar N+1 queries
+   • Partials reutilizables para componentes comunes
+
+⚠️ Código repetido:
+   • Cálculo de dias_hospitalizacion en 3 lugares
+   • Lógica de necesita_actualizacion duplicada
+   • Mejora: Extraer a función auxiliar
+
+🟡 Vistas demo:
+   • 14+ vistas de demostración del theme Kaiadmin
+   • Estado: NO USADAS en operación
+   • Riesgo de eliminar: BAJO - Son solo ejemplos
+
+CLASIFICACIÓN DE RIESGO:
+-----------------------
+🔴 CRÍTICA - MÁXIMA PRIORIDAD
+
+La app dashboard es ABSOLUTAMENTE ESENCIAL:
+   • Punto de entrada principal del sistema
+   • Único consolidador de información multi-app
+   • Sistema de alertas para veterinarios
+   • Vista unificada del estado del negocio
+
+Eliminar dashboard = COLAPSO DEL SISTEMA
+Modificar dashboard = Riesgo alto de afectar a todos los usuarios
+
+RECOMENDACIÓN OPERATIVA:
+-----------------------
+1. MANTENER: Dashboard es esencial, no eliminar
+2. OPTIMIZAR: Extraer lógica repetida a funciones auxiliares
+3. CONSIDERAR: Eliminar vistas demo de Kaiadmin si no se usan
+4. MONITOREAR: Performance de queries en loop (RegistroDiario)
+
+Prioridad: 🔴 MÁXIMA
+La app 'dashboard' es el corazón de la experiencia del usuario. Cualquier
+problema en esta app afecta a TODOS los roles en su primer punto de contacto
+con el sistema.
+
+═══════════════════════════════════════════════════════════════════════════════
+  FIN DEL ANÁLISIS
+═══════════════════════════════════════════════════════════════════════════════
