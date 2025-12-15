@@ -454,6 +454,14 @@ if (formNuevaConsulta) {
     formNuevaConsulta.onsubmit = async function (e) {
     e.preventDefault();
     const form = e.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    
+    // ✅ VALIDACIÓN CENTRALIZADA: verificar si el formulario ya fue enviado
+    if (window.ValidadorInsumos && window.ValidadorInsumos.formularioYaEnviado(form)) {
+        window.ValidadorInsumos.mostrarAlerta('Esta consulta ya está siendo procesada.', 'ya_procesando');
+        return;
+    }
+    
     const formData = new FormData(form);
     
     const data = {
@@ -474,6 +482,12 @@ if (formNuevaConsulta) {
     
     console.log('📤 Enviando consulta:', data);
     
+    // ✅ BLOQUEAR BOTÓN durante procesamiento
+    if (window.ValidadorInsumos && submitButton) {
+        window.ValidadorInsumos.bloquearBoton(submitButton);
+        window.ValidadorInsumos.marcarFormularioEnviado(form);
+    }
+    
     try {
         const response = await fetch(`/clinica/pacientes/${window.pacienteData.id}/consulta/crear/`, {
             method: 'POST',
@@ -488,6 +502,11 @@ if (formNuevaConsulta) {
         
         if (result.success) {
             console.log('✅ Consulta guardada:', result);
+            
+            // ✅ DESBLOQUEAR BOTÓN con éxito
+            if (window.ValidadorInsumos && submitButton) {
+                window.ValidadorInsumos.desbloquearBoton(submitButton, true);
+            }
             
             // Si la consulta fue creada desde una cita, eliminar la cita del timeline
             const citaId = form.dataset.citaId;
@@ -517,11 +536,25 @@ if (formNuevaConsulta) {
             }, 500);
         } else {
             console.error('❌ Error al guardar:', result.error);
+            
+            // ✅ DESBLOQUEAR BOTÓN y resetear formulario en caso de error
+            if (window.ValidadorInsumos) {
+                if (submitButton) window.ValidadorInsumos.desbloquearBoton(submitButton, false);
+                window.ValidadorInsumos.resetearFormulario(form);
+            }
+            
             alert(`Error: ${result.error}`);
         }
         
     } catch (error) {
         console.error('❌ Error de red:', error);
+        
+        // ✅ DESBLOQUEAR BOTÓN y resetear formulario en caso de error de red
+        if (window.ValidadorInsumos) {
+            if (submitButton) window.ValidadorInsumos.desbloquearBoton(submitButton, false);
+            window.ValidadorInsumos.resetearFormulario(form);
+        }
+        
         alert('Error al guardar la consulta. Por favor intente nuevamente.');
     }
     };
@@ -648,17 +681,17 @@ function verDetalleConsulta(consultaId) {
                     medicamentosHTML += '</ul></div>';
                 }
                 
-                // ⭐ Badge de estado de insumos
+                // ⭐ Badge de estado de insumos mejorado
                 let estadoInsumosHTML = '';
                 if (c.insumos_descontados) {
                     estadoInsumosHTML = `<div class="alert alert-success" style="margin-top: 10px; padding: 8px 12px; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
                         <i class="bi bi-check-circle-fill"></i>
-                        <span><strong>Insumos descontados del inventario</strong></span>
+                        <span><strong>✓ Medicamentos e insumos registrados en inventario</strong></span>
                     </div>`;
                 } else if (c.medicamentos && c.medicamentos.length > 0) {
                     estadoInsumosHTML = `<div class="alert alert-warning" style="margin-top: 10px; padding: 8px 12px; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
                         <i class="bi bi-exclamation-triangle-fill"></i>
-                        <span><strong>Insumos pendientes de descuento</strong></span>
+                        <span><strong>⚠ Pendiente: Registrar uso de insumos en inventario</strong></span>
                     </div>`;
                 }
                 

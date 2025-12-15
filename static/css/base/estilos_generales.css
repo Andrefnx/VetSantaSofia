@@ -83,7 +83,7 @@ div.page-footer {
     --z-popover: 10;
 
     /* LAYOUT */
-    --sidebar-width: 260px;
+    --sidebar-width: min-260px;
     --sidebar-width-collapsed: 70px;
     
 
@@ -809,10 +809,10 @@ table tbody td {
 .vet-modal-overlay {
     position: fixed !important;
     top: 0 !important;
-    left: var(--sidebar-width, 260px) !important;
+    left: var(--sidebar-width, min-260px) !important;
     right: 0 !important;
     bottom: 0 !important;
-    width: calc(100% - var(--sidebar-width, 260px)) !important;
+    width: calc(100% - var(--sidebar-width, min-260px)) !important;
     height: 100vh !important;
     background: rgba(0, 0, 0, 0.5) !important;
     display: flex !important;
@@ -2220,7 +2220,7 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    width: 260px;
+    min-width: 260px;
     height: 100vh;
     background: #1a2035;
     z-index: 1000;

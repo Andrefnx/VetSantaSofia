@@ -1269,6 +1269,9 @@ window.serviciosSeleccionadosArray = [];
 console.log('✅ Variables globales inicializadas');
 </script>
 
+<!-- ✅ Validador de Insumos (debe cargar PRIMERO) -->
+<script src="{% static 'js/utils/validator_insumos.js' %}"></script>
+
 <script src="{% static 'js/pacientes/hospitalizaciones.js' %}"></script>
 <script src="{% static 'js/base/modals_base.js' %}"></script>
 <script src="{% static 'js/pacientes/editar_ficha.js' %}"></script>
@@ -1475,6 +1478,56 @@ function mostrarInsumosServicios() {
     
     // Mostrar contenedor
     container.style.display = 'block';
+    
+    // Generar HTML con mensajes mejorados
+    let html = '<div class="alert alert-info d-flex align-items-start mb-3" role="alert">';
+    html += '<i class="bi bi-info-circle-fill me-2 mt-1" style="font-size: 1.2rem;"></i>';
+    html += '<div>';
+    html += '<strong>Insumos médicos de los servicios seleccionados</strong><br>';
+    html += '<small class="text-muted">Estos medicamentos e insumos se utilizarán en la consulta</small>';
+    html += '</div>';
+    html += '</div>';
+    
+    html += '<ul class="list-group">';
+    
+    insumosArray.forEach(insumo => {
+        const stockSuficiente = insumo.stock_actual >= insumo.cantidad;
+        let iconoStock, claseStock, mensajeStock;
+        
+        if (stockSuficiente) {
+            iconoStock = '<i class="bi bi-check-circle-fill text-success"></i>';
+            claseStock = 'text-success';
+            mensajeStock = 'Disponible';
+        } else {
+            iconoStock = '<i class="bi bi-exclamation-triangle-fill text-danger"></i>';
+            claseStock = 'text-danger';
+            mensajeStock = 'Stock insuficiente - Verificar antes de proceder';
+        }
+        
+        html += `
+            <li class="list-group-item d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <strong>${insumo.nombre}</strong>
+                    <br>
+                    <small class="text-muted">
+                        Cantidad necesaria: ${insumo.cantidad} ${insumo.unidad_medida || ''}
+                    </small>
+                </div>
+                <div class="text-end ms-3" style="min-width: 140px;">
+                    ${iconoStock}
+                    <small class="d-block mt-1 ${claseStock}" style="font-weight: 500;">
+                        ${mensajeStock}
+                    </small>
+                    <small class="text-muted d-block">
+                        Stock: ${insumo.stock_actual} ${insumo.unidad_medida || ''}
+                    </small>
+                </div>
+            </li>
+        `;
+    });
+    
+    html += '</ul>';
+    lista.innerHTML = html;
     
     // Generar HTML de insumos
     lista.innerHTML = insumosArray.map(insumo => {
