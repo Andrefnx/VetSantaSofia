@@ -1141,6 +1141,49 @@ window.editarConsulta = async function(consultaId) {
             notasTextarea.value = consulta.notas;
         }
         
+        // ⭐ CARGAR SERVICIOS (si existen)
+        if (consulta.servicios && consulta.servicios.length > 0) {
+            console.log(`🔧 Cargando ${consulta.servicios.length} servicios:`, consulta.servicios);
+            
+            // Esperar a que los servicios estén cargados
+            if (window.serviciosPromise) {
+                window.serviciosPromise.then(() => {
+                    // Limpiar servicios seleccionados
+                    if (typeof window.serviciosSeleccionadosArray !== 'undefined') {
+                        window.serviciosSeleccionadosArray = [];
+                    }
+                    
+                    // Agregar cada servicio
+                    consulta.servicios.forEach(servicio => {
+                        if (typeof window.serviciosSeleccionadosArray !== 'undefined') {
+                            window.serviciosSeleccionadosArray.push({
+                                id: servicio.id,
+                                nombre: servicio.nombre
+                            });
+                        }
+                        console.log(`  ✅ Servicio: ${servicio.nombre} (ID: ${servicio.id})`);
+                    });
+                    
+                    // Actualizar input hidden con IDs
+                    const serviciosIdsInput = form.querySelector('[name="servicios_ids"]');
+                    if (serviciosIdsInput) {
+                        serviciosIdsInput.value = consulta.servicios.map(s => s.id).join(',');
+                        console.log(`✅ servicios_ids actualizado: ${serviciosIdsInput.value}`);
+                    }
+                    
+                    // Actualizar UI de servicios si existe la función
+                    if (typeof actualizarServiciosSeleccionados === 'function') {
+                        actualizarServiciosSeleccionados();
+                        console.log('✅ UI de servicios actualizada');
+                    }
+                }).catch(e => console.warn('⚠️ Error al cargar servicios:', e));
+            } else {
+                console.warn('⚠️ serviciosPromise no está disponible');
+            }
+        } else {
+            console.log('ℹ️ No hay servicios para cargar');
+        }
+        
         // ⭐ CARGAR MEDICAMENTOS (si existen)
         if (consulta.medicamentos && consulta.medicamentos.length > 0) {
             console.log(`💊 Cargando ${consulta.medicamentos.length} medicamentos:`, consulta.medicamentos);

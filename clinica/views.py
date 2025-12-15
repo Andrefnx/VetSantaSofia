@@ -704,6 +704,14 @@ def detalle_consulta(request, paciente_id, consulta_id):
         
         veterinario_nombre = f"{consulta.veterinario.nombre} {consulta.veterinario.apellido}".strip()
         
+        # ⭐ Obtener servicios con sus IDs
+        servicios_lista = []
+        for servicio in consulta.servicios.all():
+            servicios_lista.append({
+                'id': servicio.idServicio,
+                'nombre': servicio.nombre
+            })
+        
         data = {
             'success': True,
             'consulta': {
@@ -720,7 +728,8 @@ def detalle_consulta(request, paciente_id, consulta_id):
                 'tratamiento': consulta.tratamiento or '-',
                 'medicamentos': medicamentos,
                 'notas': consulta.notas or '-',
-                'insumos_descontados': consulta.insumos_descontados,  # ⭐ NUEVO: Estado de descuento
+                'insumos_descontados': consulta.insumos_descontados,
+                'servicios': servicios_lista,  # ⭐ Lista de servicios con IDs
             }
         }
         return JsonResponse(data)
@@ -1073,8 +1082,8 @@ def obtener_servicios(request):
                     'id': insumo.idInventario,
                     'nombre': insumo.medicamento,
                     'cantidad': si.cantidad,
-                    'stock_actual': insumo.cantidad,
-                    'unidad': insumo.unidad or 'unidad',
+                    'stock_actual': insumo.stock_actual,
+                    'unidad': getattr(insumo, 'unidad', 'unidad'),
                     'origen': 'catalogo_servicio'  # Marca que viene del catálogo
                 })
             
@@ -1093,6 +1102,11 @@ def obtener_servicios(request):
             'servicios': servicios
         })
     except Exception as e:
+        print('❌ Error en obtener_servicios:')
+        print(f'   Tipo: {type(e).__name__}')
+        print(f'   Mensaje: {str(e)}')
+        import traceback
+        traceback.print_exc()
         return JsonResponse({
             'success': False,
             'error': str(e)
