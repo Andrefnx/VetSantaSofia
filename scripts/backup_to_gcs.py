@@ -42,9 +42,9 @@ backup_path = f"/tmp/{backup_filename}"
 subprocess.run(
     [
         "pg_dump",
-        DATABASE_URL,
-        "-F", "c",          # formato comprimido
-        "-f", backup_path,
+        os.getenv("DATABASE_URL"),
+        "-F", "c",
+        "-f", backup_path
     ],
     check=True
 )

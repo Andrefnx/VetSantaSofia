@@ -4,8 +4,11 @@ set -o errexit
 
 pip install -r requirements.txt
 
-# Recolectar archivos estáticos limpiando la carpeta anterior
-python manage.py collectstatic --no-input --clear
+# Limpiar completamente la carpeta staticfiles
+rm -rf staticfiles
+
+# Recolectar archivos estáticos desde cero
+python manage.py collectstatic --no-input
 
 # Aplicar migraciones
 python manage.py migrate
