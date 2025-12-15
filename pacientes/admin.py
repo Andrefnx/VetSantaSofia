@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 from .models import Propietario, Paciente
 
 
@@ -24,6 +25,19 @@ class PropietarioAdmin(admin.ModelAdmin):
     )
 
     ordering = ('apellido', 'nombre')
+    
+    def save_model(self, request, obj, form, change):
+        """
+        Ensure model validation (clean/full_clean) is called.
+        Django ModelForm already calls full_clean(), but this ensures
+        our custom validation is properly triggered and errors are displayed.
+        """
+        try:
+            obj.full_clean()
+            super().save_model(request, obj, form, change)
+        except ValidationError:
+            # Re-raise to let Django admin handle and display errors normally
+            raise
 
 
 @admin.register(Paciente)
