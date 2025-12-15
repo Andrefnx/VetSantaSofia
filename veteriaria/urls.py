@@ -27,10 +27,8 @@ urlpatterns = [
     path('inventario/', include('inventario.urls')),
     path('servicios/', include('servicios.urls')),
     path('clinica/', include('clinica.urls')),
-    path('hospital/', include('hospital.urls')),
     path('agenda/', include('agenda.urls')),
     path('caja/', include('caja.urls')),
-    path('gestion/', include('gestion.urls')),
     path('ui/preview/', ui_preview, name='ui_preview'),
     path('', include('login.urls')),  # ← ÚLTIMO (porque tiene catch-all)
 ]

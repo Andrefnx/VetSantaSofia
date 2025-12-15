@@ -18,8 +18,7 @@ from servicios.models import Servicio
 
 # Importar solo si existen
 try:
-    from clinica.models import Consulta, Examen, Documento
-    from hospital.models import Hospitalizacion
+    from clinica.models import Consulta, Examen, Documento, Hospitalizacion
     MODELOS_EXTENDIDOS = True
 except ImportError:
     MODELOS_EXTENDIDOS = False
