@@ -134,15 +134,23 @@
 
     <!-- Phone Validator -->
     <script src="{% static 'js/validators/phone.js' %}"></script>
+    
+    <!-- Email Validator -->
+    <script src="{% static 'js/validators/email.js' %}"></script>
+    
     <script>
-        // Initialize phone validation on all inputs with data-phone="true"
+        // Initialize phone and email validation on all inputs with data attributes
         document.addEventListener('DOMContentLoaded', function() {
             // Find all phone inputs
             const phoneInputs = document.querySelectorAll('input[data-phone="true"]');
-            
             phoneInputs.forEach(function(input) {
-                // Attach validator to each input
                 PhoneValidator.attachValidator(input);
+            });
+
+            // Find all email inputs
+            const emailInputs = document.querySelectorAll('input[data-email="true"]');
+            emailInputs.forEach(function(input) {
+                EmailValidator.attachValidator(input);
             });
 
             // Bind validation on form submit
@@ -155,6 +163,15 @@
                     const formPhoneInputs = form.querySelectorAll('input[data-phone="true"]');
                     formPhoneInputs.forEach(function(input) {
                         const result = PhoneValidator.validatePhone(input);
+                        if (!result.isValid && input.value.trim() !== '') {
+                            hasErrors = true;
+                        }
+                    });
+                    
+                    // Validate all email inputs in this form
+                    const formEmailInputs = form.querySelectorAll('input[data-email="true"]');
+                    formEmailInputs.forEach(function(input) {
+                        const result = EmailValidator.validateEmail(input);
                         if (!result.isValid && input.value.trim() !== '') {
                             hasErrors = true;
                         }

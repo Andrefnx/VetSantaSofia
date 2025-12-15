@@ -189,8 +189,8 @@
                     <p><strong>Correo Electrónico:</strong>
                         <span class="view-mode">{{ paciente.propietario.email|default:"No registrado" }}</span>
                         <input type="email" class="form-control edit-mode" name="propietario_email"
-                            value="{{ paciente.propietario.email }}" placeholder="ejemplo@correo.com" style="display:none;">
-                        <small class="text-danger" id="errorEmail" style="display:none;">El correo debe tener un formato válido (ej: ejemplo@correo.com)</small>
+                            value="{{ paciente.propietario.email }}" placeholder="ejemplo@correo.com" 
+                            data-email="true" style="display:none;">
                     </p>
                     <p><strong>Dirección:</strong>
                         <span class="view-mode">{{ paciente.propietario.direccion|default:"No registrada" }}</span>
