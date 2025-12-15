@@ -451,6 +451,7 @@ def detalle_consulta(request, paciente_id, consulta_id):
                 'tratamiento': consulta.tratamiento or '-',
                 'medicamentos': medicamentos,
                 'notas': consulta.notas or '-',
+                'insumos_descontados': consulta.insumos_descontados,  # ⭐ NUEVO: Estado de descuento
             }
         }
         return JsonResponse(data)
@@ -1073,6 +1074,7 @@ def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
             'diagnostico': hospitalizacion.diagnostico_hosp,
             'estado': hospitalizacion.get_estado_display(),
             'observaciones': hospitalizacion.observaciones,
+            'insumos_descontados': hospitalizacion.insumos_descontados,  # ⭐ NUEVO: Estado de descuento
             'insumos': [
                 {
                     'id': getattr(ins, 'idInventario', getattr(ins, 'pk', None)),

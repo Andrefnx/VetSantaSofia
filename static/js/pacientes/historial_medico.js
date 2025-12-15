@@ -648,6 +648,20 @@ function verDetalleConsulta(consultaId) {
                     medicamentosHTML += '</ul></div>';
                 }
                 
+                // ⭐ Badge de estado de insumos
+                let estadoInsumosHTML = '';
+                if (c.insumos_descontados) {
+                    estadoInsumosHTML = `<div class="alert alert-success" style="margin-top: 10px; padding: 8px 12px; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span><strong>Insumos descontados del inventario</strong></span>
+                    </div>`;
+                } else if (c.medicamentos && c.medicamentos.length > 0) {
+                    estadoInsumosHTML = `<div class="alert alert-warning" style="margin-top: 10px; padding: 8px 12px; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span><strong>Insumos pendientes de descuento</strong></span>
+                    </div>`;
+                }
+                
                 document.getElementById('detalleContenido').innerHTML = `
                     <div class="detalle-modal-grid">
                         <div class="detalle-sidebar">
@@ -682,6 +696,7 @@ function verDetalleConsulta(consultaId) {
                                 <div class="detail-section-title"><i class="bi bi-capsule"></i> Tratamiento</div>
                                 <p>${c.tratamiento}</p>
                                 ${medicamentosHTML}
+                                ${estadoInsumosHTML}
                             </div>
                             <div class="detail-section">
                                 <div class="detail-section-title"><i class="bi bi-journal-text"></i> Notas</div>

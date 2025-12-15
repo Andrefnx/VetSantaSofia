@@ -746,6 +746,20 @@ const hospitalizacionesManager = {
                         }
                     });
                     
+                    // ⭐ Badge de estado de insumos
+                    let estadoInsumosHTML = '';
+                    if (hosp.insumos_descontados) {
+                        estadoInsumosHTML = `<div style="margin-top:8px; padding:8px 12px; background:#d1fae5; border:1px solid #86efac; border-radius:6px; font-size:12px; color:#065f46; display:flex; align-items:center; gap:8px;">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span><strong>Insumos descontados del inventario</strong></span>
+                        </div>`;
+                    } else if (todosInsumos.length > 0) {
+                        estadoInsumosHTML = `<div style="margin-top:8px; padding:8px 12px; background:#fef3c7; border:1px solid #fde047; border-radius:6px; font-size:12px; color:#78350f; display:flex; align-items:center; gap:8px;">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span><strong>Insumos pendientes de descuento</strong></span>
+                        </div>`;
+                    }
+                    
                     htmlIzquierda += `
                         <div style="padding:10px 0; margin-bottom:10px; border-bottom:1px solid #e5e7eb;">
                             <h6 style="margin:0 0 8px 0; font-size:14px; font-weight:600; color:#111;"><i class="bi bi-box-seam" style="font-size:13px;"></i> Insumos utilizados</h6>
@@ -756,6 +770,7 @@ const hospitalizacionesManager = {
                                     <strong style="color:#111;">${ins.nombre || 'Insumo'}</strong>${dosis ? ` | <span style="color:#16a34a;">${dosis}</span>` : ''}${count > 1 ? ` | <span style="color:#6b7280;">(x${count})</span>` : ''}
                                 </div>`;
                             }).join('')}
+                            ${estadoInsumosHTML}
                         </div>
                     `;
                 }
