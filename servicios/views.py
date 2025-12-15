@@ -99,6 +99,37 @@ def eliminar_servicio(request, servicio_id):
         try:
             servicio = get_object_or_404(Servicio, idServicio=servicio_id)
             
+            # ⚠️ ADVERTENCIA CRÍTICA: ELIMINACIÓN CON SQL RAW
+            # 
+            # Esta implementación utiliza SQL raw para eliminar servicios directamente
+            # de la base de datos, EVITANDO las protecciones de Django.
+            # 
+            # RIESGOS DE ESTE ENFOQUE:
+            # 1. Bypasea las validaciones y signals de Django
+            # 2. Ignora restricciones de ForeignKey (ON_DELETE settings)
+            # 3. Puede dejar referencias huérfanas en otras tablas (agenda, caja, clínica)
+            # 4. No hay rollback automático si hay errores en otras operaciones
+            # 5. Elimina permanentemente datos que podrían ser valiosos para auditoría
+            # 
+            # IMPACTO EN EL SISTEMA:
+            # - Citas en agenda pueden quedar sin servicio asociado
+            # - Reportes históricos pueden fallar al buscar servicios eliminados
+            # - Análisis de ventas y estadísticas se verán comprometidos
+            # 
+            # RECOMENDACIÓN URGENTE:
+            # ✅ IMPLEMENTAR DESACTIVACIÓN LÓGICA en lugar de eliminación física
+            # ✅ Agregar campo 'activo' (BooleanField) al modelo Servicio
+            # ✅ Filtrar servicios inactivos en formularios y listados
+            # ✅ Mantener integridad de datos históricos
+            # 
+            # IMPLEMENTACIÓN FUTURA RECOMENDADA:
+            # servicio.activo = False
+            # servicio.save()
+            # 
+            # Este código debe ser refactorizado cuando sea posible.
+            # Por ahora, usar con EXTREMA PRECAUCIÓN y solo cuando el servicio
+            # no tenga ninguna referencia en otras tablas.
+            
             # Eliminar directamente usando SQL raw para evitar verificación de relaciones
             with connection.cursor() as cursor:
                 cursor.execute("DELETE FROM Servicio WHERE idServicio = %s", [servicio_id])
