@@ -385,13 +385,13 @@ function openProductoModal(mode, data = {}) {
     const btnGuardar = document.getElementById("btnGuardarProductoModal");
     
     if (mode === "view") {
-        // Modo vista: mostrar botón editar
-        if (btnEditar) btnEditar.classList.remove("d-none");
-        if (btnGuardar) btnGuardar.classList.add("d-none");
+        // Modo vista: sin botones de acción
+        if (btnEditar) btnEditar.style.setProperty("display", "none", "important");
+        if (btnGuardar) btnGuardar.style.setProperty("display", "none", "important");
     } else if (mode === "edit" || mode === "nuevo") {
-        // Modo edición: mostrar botón guardar
-        if (btnEditar) btnEditar.classList.add("d-none");
-        if (btnGuardar) btnGuardar.classList.remove("d-none");
+        // Modo edición/creación: mostrar solo botón guardar
+        if (btnEditar) btnEditar.style.setProperty("display", "none", "important");
+        if (btnGuardar) btnGuardar.style.setProperty("display", "inline-flex", "important");
     }
 
     // Mostrar/ocultar campos según modo

@@ -3,7 +3,6 @@
    Sistema de Diseño Vet Santa Sofía
    ============================= */
 
-<<<<<<< HEAD
 /* Ocultar solo el footer global del layout, sin afectar los footers de modales/cards */
 .main-panel > .footer,
 .main-panel > footer,
@@ -38,9 +37,6 @@ div.page-footer {
     padding-bottom: 0 !important;
     margin-bottom: 0 !important;
 }
-
-=======
->>>>>>> parent of d9f10bd (Hide footer and update primary color theme)
 /* =============================
    VARIABLES GLOBALES - DEFINICIÓN ÚNICA
 ============================= */
@@ -210,7 +206,6 @@ label {
 .btn-neutral i,
 .btn-white-custom i {
     font-size: 15px !important;
-    color: var(--grey-dark) !important;
     transition: color 0.25s ease !important;
 }
 
@@ -252,6 +247,9 @@ label {
     background: var(--primary-color) !important;
     color: var(--bg-white) !important;
     border: none !important;
+    padding: 10px 16px !important;
+    border-radius: var(--radius-md) !important;
+    font-size: 0.9rem !important;
 }
 
 .btn-primary i,
@@ -282,11 +280,6 @@ label {
     border: solid transparent 3px !important;
 }
 
-.btn-secondary i,
-.vet-btn-grey i,
-.btn-grey-custom i {
-    color: var(--grey-dark) !important;
-}
 
 .btn-secondary:hover,
 .vet-btn-grey:hover,
@@ -304,23 +297,30 @@ label {
 }
 
 /* Botón Cancelar: Gris a Rojo en Hover */
-.btn-cancel {
+.btn-cancel,
+.vet-btn-cancel {
     background: var(--grey) !important;
     color: var(--bg-white) !important;
     border: none !important;
+    padding: 10px 16px !important;
+    border-radius: var(--radius-md) !important;
+    font-size: 0.9rem !important;
 }
 
-.btn-cancel i {
+.btn-cancel i,
+.vet-btn-cancel i {
     color: var(--bg-white) !important;
 }
 
-.btn-cancel:hover {
+.btn-cancel:hover,
+.vet-btn-cancel:hover {
     background: var(--danger-color) !important;
     color: var(--bg-white) !important;
     box-shadow: none !important;
 }
 
-.btn-cancel:hover i {
+.btn-cancel:hover i,
+.vet-btn-cancel:hover i {
     color: var(--bg-white) !important;
 }
 
@@ -330,6 +330,9 @@ label {
     background: var(--success-color) !important;
     color: var(--bg-white) !important;
     border: none !important;
+    padding: 10px 16px !important;
+    border-radius: var(--radius-md) !important;
+    font-size: 0.9rem !important;
 }
 
 .btn-success i,
@@ -351,21 +354,27 @@ label {
 /* Botón Peligro */
 .btn-danger,
 .vet-btn-danger,
-.btn-danger-custom {
+.btn-danger-custom,
+.vet-btn-delete {
     background: var(--danger-color) !important;
     color: var(--bg-white) !important;
     border: none !important;
+    padding: 10px 16px !important;
+    border-radius: var(--radius-md) !important;
+    font-size: 0.9rem !important;
 }
 
 .btn-danger i,
 .vet-btn-danger i,
-.btn-danger-custom i {
+.btn-danger-custom i,
+.vet-btn-delete i {
     color: var(--bg-white) !important;
 }
 
 .btn-danger:hover,
 .vet-btn-danger:hover,
-.btn-danger-custom:hover {
+.btn-danger-custom:hover,
+.vet-btn-delete:hover {
     background: var(--danger-hover) !important;
     color: var(--bg-white) !important;
     box-shadow: none !important;
@@ -373,7 +382,8 @@ label {
 
 .btn-danger:hover i,
 .vet-btn-danger:hover i,
-.btn-danger-custom:hover i {
+.btn-danger-custom:hover i,
+.vet-btn-delete:hover i {
     color: var(--bg-white) !important;
 }
 
@@ -463,6 +473,33 @@ textarea::placeholder {
 textarea {
     resize: vertical !important;
     min-height: 100px !important;
+}
+
+/* =============================
+   INPUT GROUP
+============================= */
+
+.input-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0 !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+}
+
+.input-group .form-control {
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+}
+
+.input-group-text {
+    background: var(--bg-light) !important;
+    border: 1px solid var(--border-color) !important;
+    padding: 0.5rem 0.75rem !important;
+    color: var(--text-dark) !important;
+    font-size: 0.9rem !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
 }
 
 /* =============================
@@ -1069,6 +1106,12 @@ table tbody td {
 .d-inline { display: inline !important; }
 .d-inline-block { display: inline-block !important; }
 .d-inline-flex { display: inline-flex !important; }
+
+/* Ocultar botones de modal por defecto hasta que JS los muestre */
+#btnEditarProducto,
+#btnGuardarProductoModal {
+    display: none;
+}
 
 /* Flex utilities */
 .align-items-center { align-items: center !important; }

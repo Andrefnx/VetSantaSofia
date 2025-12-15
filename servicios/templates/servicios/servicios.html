@@ -127,11 +127,7 @@
                             <label class="text-muted small">Duración</label>
                             <div class="field-view mb-0" data-field="duracion">-</div>
                             <div class="input-group field-edit d-none">
-                               <input type="number" min="0" 
-       class="form-control field-edit" 
-       data-field="duracion"
-       placeholder="Ej: 30">
-
+                                <input type="number" min="0" class="form-control field-edit" data-field="duracion" placeholder="Ej: 30">
                                 <span class="input-group-text">min</span>
                             </div>
                         </div>
@@ -148,7 +144,7 @@
                         onclick="guardarServicioEditado()">
                     <i class="bi bi-floppy-fill"></i> Guardar
                 </button>
-                <button type="button" class="vet-btn-grey error" id="btnEliminarServicio"
+                <button type="button" class="vet-btn-delete" id="btnEliminarServicio"
                         onclick="abrirModalEliminarServicio(this)">
                     <i class="bi bi-trash3-fill"></i> Eliminar
                 </button>
@@ -171,7 +167,7 @@
                     <button type="button" class="vet-btn-cancel" onclick="closeEliminarServicioModal()">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
-                    <button type="button" class="vet-btn vet-btn-primary" id="btnConfirmarEliminarServicio">
+                    <button type="button" class="vet-btn-delete" id="btnConfirmarEliminarServicio">
                         <i class="bi bi-trash3-fill"></i> Eliminar
                     </button>
                 </div>

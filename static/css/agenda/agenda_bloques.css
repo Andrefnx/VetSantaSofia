@@ -658,9 +658,15 @@ body {
 
 .vet-modal-footer {
     padding: 16px 26px !important;
-    background: #f7f9f8 !important;
+    background: #f8f9fa !important;
     border-top: 1px solid var(--border-color) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    flex-wrap: wrap !important;
     gap: 10px !important;
+    visibility: visible !important;
+    min-height: auto !important;
     position: sticky !important;
     bottom: 0 !important;
     z-index: 2 !important;

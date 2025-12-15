@@ -135,7 +135,7 @@
     flex: 1 1 auto !important;
 }
 
-.vet-custom-modal button:not(.btn-thin):not(.vet-btn-cancel) {
+.vet-custom-modal button:not(.btn-thin):not(.vet-btn-cancel):not(.vet-btn-delete):not(.vet-btn-primary) {
     cursor: pointer !important;
     border: none !important;
     color: white !important;
@@ -146,9 +146,10 @@
     background: #afe1af !important;
 }
 
-.vet-custom-modal button:not(.btn-thin):not(.vet-btn-cancel):hover {
+.vet-custom-modal button:not(.btn-thin):not(.vet-btn-cancel):not(.vet-btn-delete):not(.vet-btn-primary):hover {
     background: #89c57c !important;
     transition: 0.3s all ease !important;
+}
 }
 
 .vet-btn-grey {

@@ -105,6 +105,7 @@
     display: flex !important;
     align-items: center !important;
     gap: 10px !important;
+    color: white !important;
 }
 
 .vet-custom-modal-title i {
@@ -133,80 +134,7 @@
     flex: 1 1 auto !important;
 }
 
-.vet-custom-modal button:not(.btn-thin):not(.vet-btn-cancel) {
-    cursor: pointer !important;
-    border: none !important;
-    color: white !important;
-    padding: 10px 16px !important;
-    border-radius: 6px !important;
-    font-size: 0.9rem !important;
-    transition: 0.3s all ease !important;
-    background: #afe1af !important;
-}
 
-.vet-custom-modal button:not(.btn-thin):not(.vet-btn-cancel):hover {
-    background: #89c57c !important;
-    transition: 0.3s all ease !important;
-}
-
-.vet-btn-grey {
-    background: #999999 !important;
-    color: white !important;
-}
-
-.vet-btn-grey:hover {
-    background: #888888 !important;
-    color: white !important;
-}
-
-.vet-btn-primary {
-    background: #afe1af !important;
-    color: white !important;
-    border: none !important;
-    padding: 10px 16px !important;
-    border-radius: 6px !important;
-    font-size: 0.9rem !important;
-    cursor: pointer !important;
-    transition: background-color 0.3s ease !important;
-}
-
-.vet-btn-primary:hover {
-    background: #89c57c !important;
-    color: #fff !important;
-}
-
-.vet-btn-grey.error,
-.vet-btn-delete {
-    background: #dc3545 !important;
-    color: white !important;
-    border: none !important;
-    padding: 10px 16px !important;
-    border-radius: 6px !important;
-    font-size: 0.9rem !important;
-    cursor: pointer !important;
-    transition: background-color 0.3s ease !important;
-}
-
-.vet-btn-grey.error:hover,
-.vet-btn-delete:hover {
-    background: #c82333 !important;
-    color: #fff !important;
-}
-
-.vet-btn-grey.success {
-    background: #5cb85c !important;
-    color: white !important;
-}
-
-.vet-btn-grey.success:hover {
-    background: #4cae4c !important;
-    color: #fff !important;
-    transition: 0.3s all ease !important;
-}
-
-.vet-custom-modal button i {
-    font-size: 1rem !important;
-}
 
 .detail-section-title {
     font-weight: 600 !important;
@@ -239,14 +167,6 @@
     gap: 10px !important;
     visibility: visible !important;
     min-height: auto !important;
-}
-
-/* Asegurar que los botones del footer sean visibles aunque haya estilos heredados que los oculten */
-.vet-modal-footer .btn,
-.vet-modal-footer .vet-btn,
-.modal-footer .btn,
-.modal-footer .vet-btn {
-    display: inline-flex !important;
 }
 
 /* =============================
