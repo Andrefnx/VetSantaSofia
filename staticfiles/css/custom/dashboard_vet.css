@@ -1,10 +1,35 @@
 /* Scoped styling for the vet dashboard (non-overlapping) */
 .vetdash-scope {
   --vd-gap: 16px;
-  --vd-border: #e6e8ec;
-  --vd-soft: #f9fafb;
+  --vd-border: #e5e7eb;
+  --vd-border-soft: #eef1f4;
+  --vd-border-list: #edf1f4;
+  --vd-bg: #ffffff;
+  --vd-bg-soft: #fbfcfd;
+  --vd-bg-subtle: #f8fafc;
   --vd-muted: #6b7280;
+  --vd-text: #1f2937;
+  --vd-text-strong: #374151;
+  --vd-label: #4b5563;
+  --vd-shadow-card: 0 3px 10px rgba(0, 0, 0, 0.03);
+  --vd-shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.04);
+  --vd-shadow-btn: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --vd-shadow-badge: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --vd-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --vd-info-bg: #f0f9ff;
+  --vd-info-border: #bae6fd;
+  --vd-info-text: #0284c7;
+  --vd-info-hover: #e0f2fe;
+  --vd-warn-bg: #ffdada;
+  --vd-warn-border: #bb3131;
+  --vd-warn-text: #a53838;
+  --vd-warn-text-strong: #780f0f;
+  --vd-ok-bg: #f0fdf4;
+  --vd-ok-border: #bbf7d0;
+  --vd-ok-text: #15803d;
 }
+
+
 
 .vetdash-scope .row {
   row-gap: var(--vd-gap);
@@ -19,155 +44,654 @@
 }
 
 .vetdash-scope .card.card-round {
-  border: 1px solid var(--vd-border);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
-  border-radius: 12px;
+  border: 1px solid var(--vd-border) !important;
+  box-shadow: var(--vd-shadow-card) !important;
+  border-radius: 12px !important;
+  background: var(--vd-bg) !important;
 }
 
 .vetdash-scope .card.card-round .card-header {
-  padding: 12px 16px;
-  background: var(--vd-soft);
-  border-bottom: 1px solid #eef1f4;
+  padding: 12px 16px !important;
+  background: var(--vd-bg-soft) !important;
+  border-bottom: 1px solid var(--vd-border-soft) !important;
 }
 
 .vetdash-scope .card.card-round .card-body {
-  padding: 14px 16px;
+  padding: 14px 16px !important;
+  background: var(--vd-bg) !important;
+  min-height: 50px;
+}
+
+/* Compact stat cards: enforce 50px height and align contents */
+.vetdash-scope .card.card-round.card-stats .card-body {
+  height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px;
+}
+.vetdash-scope .card.card-round.card-stats .row.align-items-center {
+  flex: 1;
+  align-items: center !important;
+  flex-wrap: nowrap;
+}
+.vetdash-scope .card.card-round.card-stats .col-icon {
+  display: flex !important;
+  align-items: center !important;
+}
+.vetdash-scope .card.card-round.card-stats .numbers {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vetdash-scope .card.card-round.card-stats .numbers p.card-category,
+.vetdash-scope .card.card-round.card-stats .numbers h4.card-title {
+  margin: 0 !important;
+  line-height: 1.2;
+}
+.vetdash-scope .card.card-round.card-stats .numbers h4.card-title {
+  font-size: 1.1rem;
 }
 
 .vetdash-scope .card.card-round .card-head-row {
-  align-items: center;
-  gap: 10px;
+  align-items: center !important;
+  gap: 10px !important;
 }
 
 .vetdash-scope .card.card-round .card-title {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-weight: 700 !important;
 }
 
 .vetdash-scope .card.card-round .card-tools {
-  display: flex;
-  gap: 8px;
+  display: flex !important;
+  gap: 8px !important;
 }
 
 .vetdash-scope .card.card-round .btn.btn-sm,
 .vetdash-scope .card.card-round .btn.btn-xs {
-  padding: 6px 10px;
-  line-height: 1.2;
+  padding: 6px 10px !important;
+  line-height: 1.2 !important;
 }
 
 .vetdash-scope .card.card-round .btn i {
-  margin-right: 6px;
+  margin-right: 6px !important;
 }
 
 .vetdash-scope .badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 9px;
-  border-radius: 12px;
-  font-weight: 600;
-  line-height: 1.2;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 4px 9px !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  box-shadow: var(--vd-shadow-badge) !important;
 }
+
 
 .vetdash-scope .card.card-round table.table thead th {
-  padding: 10px 12px;
-  font-weight: 600;
-  color: #4b5563;
+  padding: 10px 12px !important;
+  font-weight: 600 !important;
+  color: var(--vd-label) !important;
+}
+.card-stats.icon-big.icon-warning {
+    background: white !important;
+}
+.vetdash-scope .card.card-round table.table tbody td {
+  padding: 9px 12px !important;
+  vertical-align: middle !important;
 }
 
-.vetdash-scope .card.card-round table.table tbody td {
-  padding: 9px 12px;
-  vertical-align: middle;
+/* Action buttons in tables: wheel-style icon buttons */
+.vetdash-scope .card.card-round table.table td.text-end .btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
+  padding: 0 !important;
+  border-radius: 10px;
+  box-shadow: var(--vd-shadow-btn);
+  border: 1px solid var(--vd-border);
+  background: var(--vd-bg-subtle);
+}
+.vetdash-scope .card.card-round table.table td.text-end .btn + .btn {
+  margin-left: 6px;
+}
+.vetdash-scope .card.card-round table.table td.text-end .btn i {
+  margin-right: 0 !important;
+  font-size: 1rem;
+}
+.vetdash-scope .card.card-round table.table td.text-end .btn:hover {
+  background: #eef2f7;
+  border-color: #d5d9e0;
+}
+.vetdash-scope .card.card-round table.table td.text-end .btn.btn-warning,
+.vetdash-scope .card.card-round table.table td.text-end .btn.btn-success,
+.vetdash-scope .card.card-round table.table td.text-end .btn.btn-info {
+  color: var(--vd-text);
 }
 
 .vetdash-scope .col-md-4 > .card.card-round {
-  margin-bottom: 16px;
+  margin-bottom: 16px !important;
 }
 
 .vetdash-scope .list-group .list-group-item {
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid #edf1f4;
+  padding: 10px 12px !important;
+  border-radius: 10px !important;
+  border: 1px solid var(--vd-border-list) !important;
 }
 
 .vetdash-scope .list-group .list-group-item + .list-group-item {
-  margin-top: 10px;
+  margin-top: 10px !important;
 }
 
 .vetdash-scope .list-group .list-group-item small {
-  color: var(--vd-muted);
+  color: var(--vd-muted) !important;
 }
 
 .vetdash-scope .alert {
-  padding: 12px 14px;
-  border-radius: 12px;
+  padding: 12px 14px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
 }
 
 .vetdash-scope .alert .alert-heading {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 8px !important;
 }
 
 .vetdash-scope .alert ul {
-  margin-bottom: 0;
-  padding-left: 18px;
+  margin-bottom: 0 !important;
+  padding-left: 18px !important;
 }
 
 .vetdash-scope .vd-pill-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
 }
 
 .vetdash-scope .vd-meta {
-  color: var(--vd-muted);
-  font-size: 0.9rem;
+  color: var(--vd-muted) !important;
+  font-size: 0.9rem !important;
 }
 
 .vetdash-scope .vd-subtle-box {
-  background: #f5f7fb;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 10px 12px;
+  background: #f5f7fb !important;
+  border: 1px solid var(--vd-border) !important;
+  border-radius: 10px !important;
+  padding: 10px 12px !important;
+  box-shadow: var(--vd-shadow-inset) !important;
 }
 
 .vetdash-scope .vd-cta-column {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  align-items: flex-end !important;
 }
 
 .vetdash-scope .vd-cta-column .btn {
-  width: 36px;
-  justify-content: center;
-  padding: 7px 0;
+  width: 36px !important;
+  justify-content: center !important;
+  padding: 7px 0 !important;
 }
 
 .vetdash-scope .vd-stat-body {
-  padding: 12px 14px;
+  padding: 12px 14px !important;
 }
 
 .vetdash-scope .card-stats .numbers p.card-category,
 .vetdash-scope .card-stats .numbers h4.card-title {
-  margin: 0;
+  margin: 0 !important;
 }
 
 .vetdash-scope .card-stats .icon-big {
-  width: 46px;
-  height: 46px;
-  font-size: 1.35rem;
+  width: 46px !important;
+  height: 46px !important;
+  font-size: 1.35rem !important;
 }
 
 .vetdash-scope .vd-gap-sm {
-  margin-bottom: 12px;
+  margin-bottom: 12px !important;
 }
 
 .vetdash-scope .vd-gap-md {
-  margin-bottom: 16px;
+  margin-bottom: 16px !important;
+}
+
+/* Compact wheel actions (agenda) */
+.vetdash-scope .manage-wheel-compact {
+  display: inline-flex;
+  position: relative;
+}
+
+.vetdash-scope .manage-wheel-compact .wheel-trigger {
+  width: 36px;
+  height: 32px;
+  border: 1px solid var(--vd-border);
+  background: var(--vd-bg-subtle);
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--vd-shadow-btn);
+  color: var(--vd-text);
+}
+
+.vetdash-scope .manage-wheel-compact .wheel-trigger:hover {
+  background: #eef2f7;
+  border-color: #d5d9e0;
+}
+
+.vetdash-scope .manage-wheel-compact .manage-options {
+  min-width: 180px;
+  background: var(--vd-bg);
+  border: 1px solid var(--vd-border);
+  border-radius: 10px;
+  box-shadow: var(--vd-shadow-card);
+  overflow: hidden;
+}
+
+.vetdash-scope .manage-wheel-compact .manage-options button {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: none;
+  background: #fff;
+  color: var(--vd-text-strong);
+}
+
+.vetdash-scope .manage-wheel-compact .manage-options button i {
+  margin-right: 8px;
+}
+
+/* Visibility helper for wheel menu */
+.vetdash-scope .manage-wheel-compact .manage-options.show {
+  display: block !important;
+}
+
+/* Hospitalization compact card styles */
+.vetdash-scope .vd-hosp-card {
+  padding: 12px 14px !important;
+  background: var(--vd-bg) !important;
+  border: 1px solid var(--vd-border) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--vd-shadow-soft) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.vetdash-scope .vd-hosp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--vd-text-strong);
+  width: 100%;
+}
+
+.vetdash-scope .vd-hosp-date {
+  flex: 0 0 auto;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.vetdash-scope .vd-hosp-days {
+  flex: 0 0 auto;
+  color: var(--vd-muted);
+  white-space: nowrap;
+}
+
+.vetdash-scope .vd-hosp-divider {
+  margin: 8px 0;
+  border: 0;
+  border-top: 1px solid #eef1f4;
+  width: 100%;
+}
+
+.vetdash-scope .vd-hosp-body {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  width: 100%;
+}
+
+.vetdash-scope .vd-hosp-name {
+  font-weight: 700;
+  color: var(--vd-text);
+  margin-bottom: 4px;
+}
+
+.vetdash-scope .vd-hosp-vet {
+  color: var(--vd-muted);
+  font-size: 0.85rem;
+}
+
+.vetdash-scope .vd-hosp-footer {
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  width: 100%;
+}
+
+/* Footer with add button */
+.vetdash-scope .vd-hosp-footer.vd-hosp-add {
+  background: var(--vd-warn-bg);
+  border: 1px solid var(--vd-warn-border);
+  padding: 8px 10px;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 12px;
+}
+
+.vetdash-scope .vd-hosp-warning-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--vd-warn-text);
+  font-size: 0.85rem;
+  font-weight: 500;
+  flex: 1;
+}
+
+.vetdash-scope .vd-hosp-add-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--vd-warn-text);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.vetdash-scope .vd-hosp-add-link:hover {
+  text-shadow: var(--vd-warn-border) 0 0 5px;
+  text-decoration: none;
+}
+
+/* Footer with data */
+.vetdash-scope .vd-hosp-footer.vd-hosp-data {
+  background: var(--vd-bg-subtle);
+  border: 1px solid var(--vd-border);
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.vetdash-scope .vd-hosp-timestamp {
+  font-size: 0.85rem;
+  color: var(--vd-muted);
+  font-weight: 600;
+  width: 100%;
+}
+
+.vetdash-scope .vd-hosp-vitals-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.vetdash-scope .vd-hosp-vital {
+  font-size: 0.85rem;
+  color: var(--vd-text-strong);
+  font-weight: 500;
+  white-space: nowrap;
+}
+/* ============================================
+   Recepción-specific classes (rd-*)
+   Applied across all dashboards
+   ============================================ */
+
+.vetdash-scope .rd-meta {
+  color: var(--vd-muted) !important;
+  font-size: 0.9rem !important;
+}
+
+.vetdash-scope .rd-caja-card {
+  max-height: calc((100vh - 280px) / 2) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.vetdash-scope .rd-caja-card .card-body {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.vetdash-scope .rd-caja-card .list-group-item {
+  padding: 10px 12px !important;
+  background: var(--vd-bg-subtle) !important;
+  border: 1px solid var(--vd-border) !important;
+  border-radius: 8px !important;
+}
+
+.vetdash-scope .rd-caja-card .list-group-item strong {
+  color: var(--vd-text-strong);
+}
+
+.vetdash-scope .rd-caja-card .list-group-item .text-warning {
+  color: #d97706 !important;
+  font-weight: 700;
+}
+
+.vetdash-scope .rd-quick-actions .btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 12px 16px !important;
+  border-radius: 10px !important;
+  box-shadow: var(--vd-shadow-btn) !important;
+  font-weight: 600 !important;
+  transition: all 0.2s;
+}
+
+.vetdash-scope .rd-quick-actions .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.vetdash-scope .rd-pacientes-card {
+  max-height: calc((100vh - 168px) / 2) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.vetdash-scope .rd-pacientes-card .card-body {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  flex: 1 !important;
+}
+
+.vetdash-scope .rd-pacientes-card .list-group-item {
+  padding: 10px 12px !important;
+  border: 1px solid var(--vd-border) !important;
+  border-radius: 10px !important;
+  transition: all 0.2s;
+}
+
+.vetdash-scope .rd-pacientes-card .list-group-item:hover {
+  background: var(--vd-bg-soft) !important;
+}
+
+.vetdash-scope .rd-pacientes-card .list-group-item > .d-flex {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 16px !important;
+  width: 100% !important;
+}
+
+.vetdash-scope .rd-pacientes-card .list-group-item .flex-grow-1 {
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.vetdash-scope .rd-pacientes-card .list-group-item h6 {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.vetdash-scope .rd-pacientes-card .list-group-item .rd-meta {
+  display: block !important;
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  line-height: 1.4 !important;
+}
+
+.vetdash-scope .rd-ver-ficha-btn {
+  color: var(--vd-muted) !important;
+  border-color: var(--vd-border) !important;
+  background: var(--vd-bg-subtle) !important;
+  font-size: 0.85rem !important;
+  padding: 6px 12px !important;
+  border-radius: 8px !important;
+  transition: all 0.2s;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.vetdash-scope .rd-ver-ficha-btn:hover {
+  background: var(--vd-bg-soft) !important;
+  border-color: var(--vd-label) !important;
+  color: var(--vd-text-strong) !important;
+  transform: translateY(-1px);
+  box-shadow: var(--vd-shadow-btn) !important;
+}
+
+.vetdash-scope .rd-stats-summary {
+  background: var(--vd-bg-soft) !important;
+  border: 1px solid var(--vd-border) !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  box-shadow: var(--vd-shadow-inset) !important;
+}
+
+.vetdash-scope .rd-stats-summary .text-center h4 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.vetdash-scope .rd-stats-summary .text-center small {
+  color: var(--vd-muted);
+  font-size: 0.85rem;
+}
+
+/* Agenda horaria styles */
+.vetdash-scope .agenda-horaria .horario-slot {
+  padding: 12px 14px !important;
+  border: 1px solid var(--vd-border) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--vd-shadow-soft) !important;
+  transition: all 0.2s;
+}
+
+.vetdash-scope .agenda-horaria .horario-slot.slot-libre {
+  background-color: #f0fdf4 !important;
+  border-left: 4px solid #bbf7d0 !important;
+}
+
+.vetdash-scope .agenda-horaria .horario-slot.slot-ocupado {
+  background-color: var(--vd-bg) !important;
+  border-left: 4px solid #3b82f6 !important;
+}
+
+.vetdash-scope .agenda-horaria .cita-info {
+  background-color: var(--vd-bg-subtle) !important;
+  padding: 10px 12px !important;
+  border-radius: 8px !important;
+  margin-top: 8px !important;
+}
+
+.vetdash-scope .rd-agenda-scroll {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 8px !important;
+  padding-right: 16px !important;
+  min-height: 0 !important;
+  display: block !important;
+}
+
+.vetdash-scope .rd-cobros-scroll {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding-right: 4px !important;
+  max-height: 300px !important;
+}
+
+.vetdash-scope .rd-pacientes-scroll {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding-right: 4px !important;
+  max-height: 350px !important;
+}
+
+.vetdash-scope .rd-agenda-scroll::-webkit-scrollbar,
+.vetdash-scope .rd-pacientes-scroll::-webkit-scrollbar,
+.vetdash-scope .rd-cobros-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.vetdash-scope .rd-agenda-scroll::-webkit-scrollbar-track,
+.vetdash-scope .rd-pacientes-scroll::-webkit-scrollbar-track,
+.vetdash-scope .rd-cobros-scroll::-webkit-scrollbar-track {
+  background: var(--vd-bg-subtle);
+  border-radius: 10px;
+}
+
+.vetdash-scope .rd-agenda-scroll::-webkit-scrollbar-thumb,
+.vetdash-scope .rd-pacientes-scroll::-webkit-scrollbar-thumb,
+.vetdash-scope .rd-cobros-scroll::-webkit-scrollbar-thumb {
+  background: var(--vd-border);
+  border-radius: 10px;
+}
+
+.vetdash-scope .rd-agenda-scroll::-webkit-scrollbar-thumb:hover,
+.vetdash-scope .rd-pacientes-scroll::-webkit-scrollbar-thumb:hover,
+.vetdash-scope .rd-cobros-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--vd-label);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .vetdash-scope .rd-quick-actions .btn {
+    padding: 10px 12px !important;
+    font-size: 0.9rem !important;
+  }
+  
+  .vetdash-scope .rd-agenda-scroll {
+    max-height: 400px !important;
+  }
+  
+  .vetdash-scope .rd-pacientes-scroll {
+    max-height: 250px !important;
+  }
+  
+  .vetdash-scope .rd-cobros-scroll {
+    max-height: 200px !important;
+  }
 }

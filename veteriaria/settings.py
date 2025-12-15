@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-dev-only")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False") == "True"
@@ -105,7 +105,6 @@ DATABASES = {
     }
 }
 
-#postgresql://veterinaria_user:rE6lP3TUvymRHnbqJTUJCyZrm1BDlPiL@dpg-d4vkdku3jp1c73enatp0-a.virginia-postgres.render.com/veterinaria_db_xsde
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -153,17 +152,8 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Whitenoise configuration for production
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Force browser to reload static files when they change
-WHITENOISE_IMMUTABLE_FILE_TEST = lambda path, url: False
 
 # Media files (Uploaded files)
 MEDIA_URL = '/media/'
