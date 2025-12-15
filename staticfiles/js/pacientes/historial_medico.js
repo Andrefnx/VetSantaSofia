@@ -1564,35 +1564,48 @@ window.confirmConsulta = async function(consultaId) {
         console.log('📥 Respuesta recibida:', result);
         
         if (result.success) {
-            // ✅ ÉXITO
+            // ✅ ÉXITO - SOLO MOSTRAR SI BACKEND CONFIRMA
             console.log('✅ Consulta confirmada exitosamente');
+            console.log('📊 Estado insumos_descontados:', result.consulta?.insumos_descontados);
             
-            // Desbloquear botón con estado de éxito
-            if (botonConfirmar && window.ValidadorInsumos) {
-                window.ValidadorInsumos.desbloquearBoton(botonConfirmar, true);
-            }
-            
-            // Mostrar mensaje de éxito
-            alert(result.message || '✅ Consulta confirmada exitosamente\n\nLos insumos han sido descontados del inventario.');
-            
-            // Actualizar visualmente el estado
-            actualizarEstadoConsultaVisual(consultaId, true);
-            
-            // Deshabilitar permanentemente el botón
-            if (botonConfirmar) {
+            // Verificar si realmente se descontaron los insumos
+            if (result.consulta && result.consulta.insumos_descontados) {
+                // ✅ Insumos descontados confirmados por backend
+                console.log('✅ Backend confirmó descuento de insumos');
+                
+                // Desbloquear botón con estado de éxito
+                if (botonConfirmar && window.ValidadorInsumos) {
+                    window.ValidadorInsumos.desbloquearBoton(botonConfirmar, true);
+                }
+                
+                // Mostrar mensaje de éxito SOLO si el backend confirma
+                const mensajeExito = result.message || '✅ Consulta confirmada exitosamente\n\n✓ Insumos descontados del inventario correctamente';
+                alert(mensajeExito);
+                
+                // Actualizar visualmente el estado
+                actualizarEstadoConsultaVisual(consultaId, true);
+                
+                // Deshabilitar permanentemente el botón
+                if (botonConfirmar) {
+                    setTimeout(() => {
+                        botonConfirmar.disabled = true;
+                        botonConfirmar.style.opacity = '0.5';
+                        botonConfirmar.style.cursor = 'not-allowed';
+                        botonConfirmar.innerHTML = '<i class="bi bi-check-circle"></i> Confirmada';
+                        botonConfirmar.title = 'Esta consulta ya fue confirmada';
+                    }, 2000);
+                }
+                
+                // Recargar timeline para reflejar cambios
                 setTimeout(() => {
-                    botonConfirmar.disabled = true;
-                    botonConfirmar.style.opacity = '0.5';
-                    botonConfirmar.style.cursor = 'not-allowed';
-                    botonConfirmar.innerHTML = '<i class="bi bi-check-circle"></i> Confirmada';
-                    botonConfirmar.title = 'Esta consulta ya fue confirmada';
-                }, 2000);
-            }
-            
-            // Recargar timeline para reflejar cambios
-            setTimeout(() => {
+                    location.reload();
+                }, 2500);
+            } else {
+                // ⚠️ Backend respondió success pero no confirmó descuento
+                console.warn('⚠️ Backend respondió success pero insumos_descontados no es true');
+                alert('⚠️ Operación completada pero estado inconsistente.\n\nPor favor, recargue la página.');
                 location.reload();
-            }, 2500);
+            }
             
         } else {
             // ❌ ERROR

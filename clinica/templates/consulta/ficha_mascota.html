@@ -393,8 +393,8 @@
                                                             <p class="event-subtitle timeline-item-subtitle">
                                                                 <i class="bi bi-person"></i> {{ consulta.veterinario.nombre }} {{ consulta.veterinario.apellido }}
                                                                 {% if not consulta.insumos_descontados %}
-                                                                <span class="badge bg-warning text-dark ms-2" title="Borrador sin finalizar">
-                                                                    <i class="bi bi-pencil"></i> Borrador
+                                                                <span class="badge bg-warning text-dark ms-2" title="Pendiente de registrar uso de insumos">
+                                                                    <i class="bi bi-clock-history"></i> Pendiente
                                                                 </span>
                                                                 {% endif %}
                                                             </p>
@@ -954,7 +954,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="vet-modal-footer d-flex justify-content-between align-items-center">
                 <div class="d-flex gap-2 align-items-center">
                     <i class="bi bi-info-circle text-muted"></i>
-                    <small class="text-muted" id="estadoConsultaTexto">Borrador - Sin descuento de insumos</small>
+                    <small class="text-muted" id="estadoConsultaTexto">Pendiente de registrar uso de insumos</small>
                 </div>
                 <div class="d-flex gap-2">
                     <button type="button" class="vet-btn vet-btn-grey" id="btnGuardarBorrador">
