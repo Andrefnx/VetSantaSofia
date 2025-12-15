@@ -182,8 +182,8 @@
                         <p><strong>Teléfono:</strong>
                             <span class="view-mode">{{ paciente.propietario.telefono|default:"No registrado" }}</span>
                             <input type="tel" class="form-control edit-mode" name="propietario_telefono"
-                                value="{{ paciente.propietario.telefono }}" placeholder="+569876543210" style="display:none;">
-                            <small class="text-danger" id="errorTelefono" style="display:none;">El teléfono debe tener 9 dígitos (ej: +569876543210 o 987654321)</small>
+                                value="{{ paciente.propietario.telefono }}" placeholder="+569876543210" 
+                                data-phone="true" style="display:none;">
                         </p>
                     </div>
                     <p><strong>Correo Electrónico:</strong>

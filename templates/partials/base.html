@@ -132,6 +132,43 @@
 
     <script src="{% static 'js/base/modals_base.js' %}"></script>
 
+    <!-- Phone Validator -->
+    <script src="{% static 'js/validators/phone.js' %}"></script>
+    <script>
+        // Initialize phone validation on all inputs with data-phone="true"
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find all phone inputs
+            const phoneInputs = document.querySelectorAll('input[data-phone="true"]');
+            
+            phoneInputs.forEach(function(input) {
+                // Attach validator to each input
+                PhoneValidator.attachValidator(input);
+            });
+
+            // Bind validation on form submit
+            const forms = document.querySelectorAll('form');
+            forms.forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    let hasErrors = false;
+                    
+                    // Validate all phone inputs in this form
+                    const formPhoneInputs = form.querySelectorAll('input[data-phone="true"]');
+                    formPhoneInputs.forEach(function(input) {
+                        const result = PhoneValidator.validatePhone(input);
+                        if (!result.isValid && input.value.trim() !== '') {
+                            hasErrors = true;
+                        }
+                    });
+                    
+                    if (hasErrors) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                });
+            });
+        });
+    </script>
+
     {% block extra_js %}{% endblock %}
 </body>
 
