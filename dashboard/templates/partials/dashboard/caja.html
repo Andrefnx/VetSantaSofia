@@ -1,4 +1,4 @@
-{# Caja - Control de visibilidad por rol #}
+﻿{# Caja - Control de visibilidad por rol #}
 {# Contexto esperado: caja_stats, show_cobros_pending_list (booleano) #}
 
 {% load static %}
@@ -93,12 +93,12 @@
             {% endif %}
             
             {% if caja_stats.estado == 'cerrada' %}
-                <button class="vet-btn vet-btn-block mt-3" data-bs-toggle="modal" data-bs-target="#abrirCajaModal">
+                <button class="btn btn-block mt-3" data-bs-toggle="modal" data-bs-target="#abrirCajaModal">
                     <i class="fas fa-unlock me-2"></i>
                     Abrir Caja
                 </button>
             {% else %}
-                <a href="{% url 'caja:cashregister' %}" class="vet-btn vet-btn-block mt-3">
+                <a href="{% url 'caja:cashregister' %}" class="btn btn-block mt-3">
                     <i class="fas fa-eye me-2"></i>
                     Ver Detalles
                 </a>
@@ -109,11 +109,11 @@
 {% elif user.rol == 'veterinario' %}
 
     {# VETERINARIO: Caja oculta - No mostrar nada #}
-    {# El veterinario no tiene acceso a gestión de caja #}
+    {# El veterinario no tiene acceso a gestiÃ³n de caja #}
 
 {% elif user.rol == 'recepcion' %}
 
-    <!-- CAJA RECEPCIÓN: Estado + Acciones operativas -->
+    <!-- CAJA RECEPCIÃ“N: Estado + Acciones operativas -->
     <div class="card vet-card card-round rd-caja-card">
         <div class="card-header">
             <div class="card-head-row">
@@ -137,7 +137,7 @@
             </div>
         </div>
         <div class="card-body">
-            {# Vista Recepción: Detallada con cobros pendientes #}
+            {# Vista RecepciÃ³n: Detallada con cobros pendientes #}
             <div class="rd-stats-summary">
                 <div class="row mb-3">
                     <div class="col-md-6">
@@ -159,8 +159,8 @@
                 {% if caja_stats.estado != 'cerrada' %}
                     <div class="row">
                         <div class="col-md-12">
-                            <h6 class="text-muted">Operación Activa</h6>
-                            <p class="mb-0">Sesión en curso</p>
+                            <h6 class="text-muted">OperaciÃ³n Activa</h6>
+                            <p class="mb-0">SesiÃ³n en curso</p>
                         </div>
                     </div>
                 {% endif %}
@@ -196,12 +196,12 @@
 
             <div class="d-grid gap-2 mt-3">
                 {% if caja_stats.estado == 'cerrada' %}
-                    <button class="vet-btn vet-btn-block" data-bs-toggle="modal" data-bs-target="#abrirCajaModal">
+                    <button class="btn btn-block" data-bs-toggle="modal" data-bs-target="#abrirCajaModal">
                         <i class="fas fa-unlock me-2"></i>
                         Abrir Caja
                     </button>
                 {% else %}
-                    <a href="{% url 'caja:cashregister' %}" class="vet-btn vet-btn-block">
+                    <a href="{% url 'caja:cashregister' %}" class="btn btn-block">
                         <i class="fas fa-cash-register me-2"></i>
                         Ir a Caja
                     </a>
@@ -211,3 +211,4 @@
     </div>
 
 {% endif %}
+

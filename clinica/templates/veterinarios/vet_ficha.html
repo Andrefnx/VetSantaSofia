@@ -1,4 +1,4 @@
-{% extends 'partials/base.html' %}
+﻿{% extends 'partials/base.html' %}
 {% load static %}
 
 {% block title %}Ficha Veterinario{% endblock %}
@@ -156,7 +156,7 @@
         <i class="fas fa-user-md"></i> Nombre del Veterinario
     </h1>
     <div class="edit-mode">
-        <button class="vet-btn vet-btn-primary">
+        <button class="btn btn-primary">
             <i class="bi bi-pencil-square"></i> Editar Ficha
         </button>
     </div>
@@ -166,12 +166,12 @@
 
     <div class="general-information">
         <div class="section personal-info">
-            <h2>Información General</h2>
+            <h2>InformaciÃ³n General</h2>
             <div class="info">
                 <div class="info-row">
                     <p><strong>RUT:</strong> 20776187-7</p>
                     <p><strong>Correo:</strong> veterinario@vet.cl</p>
-                    <p><strong>Teléfono:</strong> +56 9 1234 5678</p>
+                    <p><strong>TelÃ©fono:</strong> +56 9 1234 5678</p>
                     <p><strong>Rol:</strong> Veterinario</p>
                 </div>
                 <p><strong>Especialidad:</strong> Medicina interna</p>
@@ -196,8 +196,8 @@
                                 <th>Especie</th>
                                 <th>Raza</th>
                                 <th>Edad</th>
-                                <th>Última Consulta</th>
-                                <th>Gestión</th>
+                                <th>Ãšltima Consulta</th>
+                                <th>GestiÃ³n</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -205,10 +205,10 @@
                                 <td>Max</td>
                                 <td>Canino</td>
                                 <td>Labrador</td>
-                                <td>5 años</td>
+                                <td>5 aÃ±os</td>
                                 <td>12/10/2024</td>
                                 <td>
-                                    <a href="{% url 'ficha_mascota' %}" class="vet-btn vet-btn-primary btn-sm">
+                                    <a href="{% url 'ficha_mascota' %}" class="btn btn-primary btn-sm">
                                         <i class="bi bi-eye"></i> Ver ficha
                                     </a>
                                 </td>
@@ -217,10 +217,10 @@
                                 <td>Luna</td>
                                 <td>Felino</td>
                                 <td>Siames</td>
-                                <td>3 años</td>
+                                <td>3 aÃ±os</td>
                                 <td>05/09/2024</td>
                                 <td>
-                                    <a href="{% url 'ficha_mascota' %}" class="vet-btn vet-btn-primary btn-sm">
+                                    <a href="{% url 'ficha_mascota' %}" class="btn btn-primary btn-sm">
                                         <i class="bi bi-eye"></i> Ver ficha
                                     </a>
                                 </td>
@@ -245,7 +245,7 @@
                             <div class="calendar-day">J</div>
                             <div class="calendar-day">V</div>
                             <div class="calendar-day">S</div>
-                            <!-- Ejemplo de días del mes (1-31) -->
+                            <!-- Ejemplo de dÃ­as del mes (1-31) -->
                             {% for i in dias %}
     <div class="calendar-date{% if i == 2 %} selected{% endif %}">{{ i }}</div>
 {% endfor %}
@@ -255,7 +255,7 @@
                     <div class="agenda-slots-box">
                         <div class="agenda-slots-group">
                             <div class="agenda-slots-label">
-                                <i class="bi bi-brightness-high"></i> Mañana <span style="font-weight:400;">(09:00 a 12:00 PM)</span>
+                                <i class="bi bi-brightness-high"></i> MaÃ±ana <span style="font-weight:400;">(09:00 a 12:00 PM)</span>
                                 <button class="agenda-add-slot" type="button">+ Add Slots</button>
                             </div>
                             <div class="agenda-slots-list">

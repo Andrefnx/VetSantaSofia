@@ -1,4 +1,4 @@
-{# Hospitalizaciones canonical - Control de visibilidad por rol #}
+﻿{# Hospitalizaciones canonical - Control de visibilidad por rol #}
 {# Contexto esperado: mis_hospitalizaciones (lista de hospitalizaciones del usuario/rol) #}
 
 {% load static %}
@@ -16,7 +16,7 @@
                     Hospitalizaciones Activas
                 </div>
                 <div class="card-tools">
-                    <a href="{% url 'pacientes:pacientes' %}" class="vet-btn vet-btn-sm">
+                    <a href="{% url 'pacientes:pacientes' %}" class="btn btn-sm">
                         <i class="fa fa-list me-1"></i>
                         Ver Todos los Pacientes
                     </a>
@@ -32,7 +32,7 @@
                             <div class="flex-grow-1">
                                 <h6 class="mb-1">
                                     <strong>{{ hosp.paciente.nombre }}</strong>
-                                    <span class="badge badge-secondary ms-2">{{ hosp.dias_hospitalizacion }} días</span>
+                                    <span class="badge badge-secondary ms-2">{{ hosp.dias_hospitalizacion }} dÃ­as</span>
                                 </h6>
                                 <small class="text-muted">
                                     <strong>Veterinario:</strong> {{ hosp.veterinario.nombre }} {{ hosp.veterinario.apellido|default:'' }}<br>
@@ -56,12 +56,12 @@
                             </div>
 
                             <div class="mb-2">
-                                <h6 class="text-muted mb-1">Diagnóstico</h6>
+                                <h6 class="text-muted mb-1">DiagnÃ³stico</h6>
                                 <p class="mb-0">{{ hosp.diagnostico|default:"No registrado" }}</p>
                             </div>
 
                             <div class="mt-2 pt-2 border-top">
-                                <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hosp&hosp_id={{ hosp.id }}#hosp" class="vet-btn vet-btn-sm">
+                                <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hosp&hosp_id={{ hosp.id }}#hosp" class="btn btn-sm">
                                     <i class="fas fa-edit me-1"></i>
                                     Ver Detalles
                                 </a>
@@ -70,7 +70,7 @@
                     </div>
                     {% endfor %}
                     {% if mis_hospitalizaciones|length > 10 %}
-                        <a href="{% url 'pacientes:pacientes' %}" class="vet-btn vet-btn-block">
+                        <a href="{% url 'pacientes:pacientes' %}" class="btn btn-block">
                             Ver todos los pacientes
                         </a>
                     {% endif %}
@@ -95,7 +95,7 @@
                     Mis Hospitalizaciones
                 </div>
                 <div class="card-tools">
-                    <a href="{% url 'pacientes:pacientes' %}" class="vet-btn vet-btn-sm">
+                    <a href="{% url 'pacientes:pacientes' %}" class="btn btn-sm">
                         <i class="fa fa-list me-1"></i>
                         Ver Todos los Pacientes
                     </a>
@@ -103,17 +103,17 @@
             </div>
         </div>
         <div class="card-body">
-            {# Cards expandibles para ver detalle completo (versión veterinario con toda la información clínica) #}
+            {# Cards expandibles para ver detalle completo (versiÃ³n veterinario con toda la informaciÃ³n clÃ­nica) #}
             {% if mis_hospitalizaciones %}
                 <div class="vd-hospitalizaciones-list">
                     {% for hosp in mis_hospitalizaciones %}
                     <div class="vd-hosp-card mb-3 p-3 border rounded" style="border-left: 4px solid #667eea;">
-                        {# Header: Información de ingreso #}
+                        {# Header: InformaciÃ³n de ingreso #}
                         <div class="vd-hosp-header d-flex justify-content-between align-items-start mb-2">
                             <div class="flex-grow-1">
                                 <h6 class="mb-1">
                                     <strong>{{ hosp.paciente.nombre }}</strong>
-                                    <span class="badge badge-secondary ms-2">{{ hosp.dias_hospitalizacion }} días</span>
+                                    <span class="badge badge-secondary ms-2">{{ hosp.dias_hospitalizacion }} dÃ­as</span>
                                 </h6>
                                 <small class="text-muted">
                                     Ingreso: {{ hosp.fecha_ingreso|date:"d/m/Y H:i" }}
@@ -138,7 +138,7 @@
 
                             {% if hosp.diagnostico %}
                             <div class="mb-2">
-                                <h6 class="text-muted mb-1">Diagnóstico</h6>
+                                <h6 class="text-muted mb-1">DiagnÃ³stico</h6>
                                 <p class="mb-0">{{ hosp.diagnostico }}</p>
                             </div>
                             {% endif %}
@@ -158,7 +158,7 @@
                                     {% if hosp.temperatura %}
                                     <div class="col-md-4">
                                         <small class="text-muted">Temperatura</small>
-                                        <p class="mb-0"><strong>{{ hosp.temperatura }}°C</strong></p>
+                                        <p class="mb-0"><strong>{{ hosp.temperatura }}Â°C</strong></p>
                                     </div>
                                     {% endif %}
                                     {% if hosp.pulso %}
@@ -169,7 +169,7 @@
                                     {% endif %}
                                     {% if hosp.frecuencia_respiratoria %}
                                     <div class="col-md-4">
-                                        <small class="text-muted">Respiración</small>
+                                        <small class="text-muted">RespiraciÃ³n</small>
                                         <p class="mb-0"><strong>{{ hosp.frecuencia_respiratoria }} rpm</strong></p>
                                     </div>
                                     {% endif %}
@@ -181,12 +181,12 @@
                             {% if hosp.dias_sin_actualizar > 0 %}
                             <div class="alert alert-warning alert-sm mt-2 mb-0">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
-                                Última actualización hace {{ hosp.dias_sin_actualizar }} día{{ hosp.dias_sin_actualizar|pluralize }}
+                                Ãšltima actualizaciÃ³n hace {{ hosp.dias_sin_actualizar }} dÃ­a{{ hosp.dias_sin_actualizar|pluralize }}
                             </div>
                             {% endif %}
 
                             <div class="mt-2 pt-2 border-top">
-                                <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hosp&hosp_id={{ hosp.id }}#hosp" class="vet-btn vet-btn-sm">
+                                <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hosp&hosp_id={{ hosp.id }}#hosp" class="btn btn-sm">
                                     <i class="fas fa-edit me-1"></i>
                                     Actualizar
                                 </a>
@@ -206,7 +206,7 @@
 
 {% elif user.rol == 'recepcion' %}
 
-    <!-- HOSPITALIZACIONES RECEPCIÓN: Solo estado (sin acciones clínicas) -->
+    <!-- HOSPITALIZACIONES RECEPCIÃ“N: Solo estado (sin acciones clÃ­nicas) -->
     <div class="card vet-card card-round">
         <div class="card-header">
             <div class="card-head-row">
@@ -215,7 +215,7 @@
                     Pacientes Hospitalizados
                 </div>
                 <div class="card-tools">
-                    <a href="{% url 'pacientes:pacientes' %}" class="vet-btn vet-btn-sm">
+                    <a href="{% url 'pacientes:pacientes' %}" class="btn btn-sm">
                         <i class="fa fa-list me-1"></i>
                         Ver Todos los Pacientes
                     </a>
@@ -268,3 +268,4 @@
         button.style.opacity = isVisible ? '0.5' : '1';
     }
 </script>
+

@@ -1,4 +1,4 @@
-{% extends "partials/base_table.html" %}
+﻿{% extends "partials/base_table.html" %}
 {% load static %}
 
 {% block title %}Inventario{% endblock %}
@@ -6,7 +6,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/custom/style_inventario.css' %}" type="text/css" media="all">
 <style>
-/* Estilos para botones de acción de stock */
+/* Estilos para botones de acciÃ³n de stock */
 .btn-stock-action {
     width: 40px !important;
     height: 40px !important;
@@ -18,7 +18,7 @@
     border-radius: 6px !important;
 }
 
-/* Estilos para las pestañas de estado */
+/* Estilos para las pestaÃ±as de estado */
 .tabs-estado {
     display: flex;
     gap: 0.5rem;
@@ -62,7 +62,7 @@
 {% endblock %}
 
 {% block table_tabs %}
-<!-- Pestañas de estado -->
+<!-- PestaÃ±as de estado -->
 <div class="tabs-estado" style="margin: 1rem 0; padding: 0 1rem;">
     <button type="button" class="tab-estado {% if estado_actual != 'archivados' %}active{% endif %}" 
             onclick="cambiarEstadoProductos('activos')">
@@ -76,7 +76,7 @@
 {% endblock %}
 
 {% block table_buttons %}
-<button type="button" class="vet-btn vet-btn-primary" onclick="abrirModalNuevoProducto()">
+<button type="button" class="btn btn-primary" onclick="abrirModalNuevoProducto()">
     <i class="fas fa-plus"></i> Nuevo Producto
 </button>
 {% endblock %}
@@ -86,9 +86,9 @@
 <th>Especie</th>
 <th>Precio</th>
 <th>Stock</th>
-<th>Último Movimiento</th>
+<th>Ãšltimo Movimiento</th>
 <th>Tipo</th>
-<th>Gestión</th>
+<th>GestiÃ³n</th>
 {% endblock %}
 
 {% block table_rows %}
@@ -183,10 +183,10 @@
             
             <div class="vet-modal-body" style="max-height: 70vh; overflow-y: auto;">
                 
-                <!-- SECCIÓN: IDENTIFICACIÓN GENERAL -->
+                <!-- SECCIÃ“N: IDENTIFICACIÃ“N GENERAL -->
                 <div class="detail-section">
                     <h4 class="detail-section-title">
-                        <i class="fas fa-info-circle"></i> Identificación General
+                        <i class="fas fa-info-circle"></i> IdentificaciÃ³n General
                     </h4>
                     <div class="row">
                         <!-- Nombre Comercial -->
@@ -194,11 +194,11 @@
                             <label class="form-label fw-bold">Nombre Comercial</label>
                             <div class="field-view" data-field="nombre_comercial">-</div>
                             <div class="field-edit d-none" data-field="nombre_comercial">
-                                <input type="text" class="form-control" data-field="nombre_comercial" placeholder="Ej: Antibiótico Amoxicilina">
+                                <input type="text" class="form-control" data-field="nombre_comercial" placeholder="Ej: AntibiÃ³tico Amoxicilina">
                             </div>
                         </div>
 
-                        <!-- ⭐ MARCA (NUEVO) -->
+                        <!-- â­ MARCA (NUEVO) -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Marca</label>
                             <div class="field-view" data-field="marca">-</div>
@@ -212,7 +212,7 @@
                             <label class="form-label fw-bold">SKU</label>
                             <div class="field-view" data-field="sku">-</div>
                             <div class="field-edit d-none" data-field="sku">
-                                <input type="text" class="form-control" data-field="sku" placeholder="Código interno">
+                                <input type="text" class="form-control" data-field="sku" placeholder="CÃ³digo interno">
                             </div>
                         </div>
 
@@ -236,18 +236,18 @@
                             <label class="form-label fw-bold">Tipo</label>
                             <div class="field-view" data-field="tipo">-</div>
                             <div class="field-edit d-none" data-field="tipo">
-                                <input type="text" class="form-control" data-field="tipo" placeholder="Ej: Antibiótico, Antiparasitario">
+                                <input type="text" class="form-control" data-field="tipo" placeholder="Ej: AntibiÃ³tico, Antiparasitario">
                             </div>
                         </div>
 
-                        <!-- ⭐ FORMATO (NUEVO) -->
+                        <!-- â­ FORMATO (NUEVO) -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Formato</label>
                             <div class="field-view" data-field="formato">-</div>
                             <div class="field-edit d-none" data-field="formato">
                                 <select class="form-select" data-field="formato" id="formatoSelect">
                                     <option value="">Seleccionar...</option>
-                                    <option value="liquido">Líquido</option>
+                                    <option value="liquido">LÃ­quido</option>
                                     <option value="pastilla">Pastilla</option>
                                     <option value="pipeta">Pipeta</option>
                                     <option value="inyectable">Inyectable</option>
@@ -258,21 +258,21 @@
                             </div>
                         </div>
 
-                        <!-- Descripción -->
+                        <!-- DescripciÃ³n -->
                         <div class="col-md-12 mb-3">
-                            <label class="form-label fw-bold">Descripción</label>
+                            <label class="form-label fw-bold">DescripciÃ³n</label>
                             <div class="field-view" data-field="descripcion">-</div>
                             <div class="field-edit d-none" data-field="descripcion">
-                                <textarea class="form-control" data-field="descripcion" rows="2" placeholder="Descripción del producto"></textarea>
+                                <textarea class="form-control" data-field="descripcion" rows="2" placeholder="DescripciÃ³n del producto"></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- SECCIÓN: INFORMACIÓN COMERCIAL -->
+                <!-- SECCIÃ“N: INFORMACIÃ“N COMERCIAL -->
                 <div class="detail-section">
                     <h4 class="detail-section-title">
-                        <i class="fas fa-dollar-sign"></i> Información Comercial
+                        <i class="fas fa-dollar-sign"></i> InformaciÃ³n Comercial
                     </h4>
                     <div class="row">
                         <!-- Precio Venta -->
@@ -298,7 +298,7 @@
                     </div>
                 </div>
 
-                <!-- ⭐ SECCIÓN: DOSIS (MEJORADA CON FORMATOS) -->
+                <!-- â­ SECCIÃ“N: DOSIS (MEJORADA CON FORMATOS) -->
                 <div class="detail-section">
                     <h4 class="detail-section-title">
                         <i class="fas fa-prescription-bottle"></i> Dosis
@@ -316,10 +316,10 @@
                         </div>
                     </div>
 
-                    <!-- EDICIÓN: Campos según formato -->
+                    <!-- EDICIÃ“N: Campos segÃºn formato -->
                     <div class="field-edit d-none">
                         
-                        <!-- PARA LÍQUIDOS E INYECTABLES -->
+                        <!-- PARA LÃQUIDOS E INYECTABLES -->
                         <div class="row campo-dosis campo-dosis-liquido d-none">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-bold">Dosis (ml)</label>
@@ -347,7 +347,7 @@
                             </div>
                         </div>
 
-                        <!-- PESO DE REFERENCIA (COMÚN) -->
+                        <!-- PESO DE REFERENCIA (COMÃšN) -->
                         <div class="row campo-peso-kg">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-bold">Peso Referencia (kg)</label>
@@ -356,22 +356,22 @@
                             </div>
                         </div>
 
-                        <!-- ⭐ RANGO DE PESO (NUEVO) -->
+                        <!-- â­ RANGO DE PESO (NUEVO) -->
                         <div class="row campo-rango-peso">
                             <div class="col-md-12 mb-2">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" data-field="tiene_rango_peso" id="tieneRangoPeso">
                                     <label class="form-check-label fw-bold" for="tieneRangoPeso">
-                                        Tiene rango de peso específico
+                                        Tiene rango de peso especÃ­fico
                                     </label>
                                 </div>
                             </div>
                             <div class="col-md-4 mb-3 campo-rango-valores d-none">
-                                <label class="form-label">Peso Mínimo (kg)</label>
+                                <label class="form-label">Peso MÃ­nimo (kg)</label>
                                 <input type="number" class="form-control" data-field="peso_min_kg" step="0.1" placeholder="0.0">
                             </div>
                             <div class="col-md-4 mb-3 campo-rango-valores d-none">
-                                <label class="form-label">Peso Máximo (kg)</label>
+                                <label class="form-label">Peso MÃ¡ximo (kg)</label>
                                 <input type="number" class="form-control" data-field="peso_max_kg" step="0.1" placeholder="0.0">
                             </div>
                         </div>
@@ -379,7 +379,7 @@
                     </div>
                 </div>
 
-                <!-- SECCIÓN: PRECAUCIONES -->
+                <!-- SECCIÃ“N: PRECAUCIONES -->
                 <div class="detail-section">
                     <h4 class="detail-section-title">
                         <i class="fas fa-exclamation-triangle"></i> Precauciones y Contraindicaciones
@@ -409,7 +409,7 @@
                     </div>
                 </div>
 
-                <!-- SECCIÓN: INVENTARIO (METADATA - SOLO LECTURA) -->
+                <!-- SECCIÃ“N: INVENTARIO (METADATA - SOLO LECTURA) -->
                 <div class="detail-section">
                     <h4 class="detail-section-title">
                         <i class="fas fa-history"></i> Historial de Inventario
@@ -420,11 +420,11 @@
                             <div class="field-readonly" data-field="fecha_creacion_formatted">-</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Último Ingreso</label>
+                            <label class="form-label fw-bold">Ãšltimo Ingreso</label>
                             <div class="field-readonly" data-field="ultimo_ingreso_formatted">-</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Último Movimiento</label>
+                            <label class="form-label fw-bold">Ãšltimo Movimiento</label>
                             <div class="field-readonly" data-field="ultimo_movimiento_formatted">-</div>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -442,10 +442,10 @@
 
             <!-- Footer con botones -->
             <div class="vet-modal-footer">
-                <button type="button" class="vet-btn vet-btn-grey" id="btnEditarProducto" onclick="switchToEditModeProducto()">
+                <button type="button" class="btn btn-grey" id="btnEditarProducto" onclick="switchToEditModeProducto()">
                     <i class="bi bi-pencil-fill"></i> Editar
                 </button>
-                <button type="button" class="vet-btn vet-btn-primary" id="btnGuardarProductoModal" onclick="guardarProducto()">
+                <button type="button" class="btn btn-primary" id="btnGuardarProductoModal" onclick="guardarProducto()">
                     <i class="bi bi-floppy-fill"></i> Guardar
                 </button>
             </div>
@@ -453,7 +453,7 @@
     </div>
 </div>
 
-<!-- Modal: Confirmar Eliminación -->
+<!-- Modal: Confirmar EliminaciÃ³n -->
 <div class="vet-modal-overlay hide" id="modalEliminarProducto">
     <div class="vet-modal-compact">
         <div class="vet-modal-content">
@@ -462,12 +462,12 @@
                 <i class="bi bi-x" onclick="closeEliminarProductoModal()"></i>
             </div>
             <div class="vet-modal-body">
-                <p id="eliminarProductoMensaje" class="text-center mb-4">¿Estás seguro que deseas eliminar este producto?</p>
+                <p id="eliminarProductoMensaje" class="text-center mb-4">Â¿EstÃ¡s seguro que deseas eliminar este producto?</p>
                 <div style="display: flex; justify-content: center; gap: 10px;">
-                    <button type="button" class="vet-btn-cancel" onclick="closeEliminarProductoModal()">
+                    <button type="button" class="btn-cancel" onclick="closeEliminarProductoModal()">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
-                    <button type="button" class="vet-btn-delete" id="btnConfirmarEliminarProducto" onclick="eliminarProductoConfirmado()">
+                    <button type="button" class="btn-delete" id="btnConfirmarEliminarProducto" onclick="eliminarProductoConfirmado()">
                         <i class="bi bi-trash3-fill"></i> Eliminar
                     </button>
                 </div>
@@ -492,20 +492,20 @@
                 <div class="mb-4">
                     <label class="form-label fw-bold">Cantidad</label>
                     <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="vet-btn vet-btn-primary btn-stock-action" onclick="restarStockInput()" aria-label="Restar">
+                        <button type="button" class="btn btn-primary btn-stock-action" onclick="restarStockInput()" aria-label="Restar">
                             <i class="fas fa-minus"></i>
                         </button>
                         <input type="number" class="form-control" id="inputStockOperacion" placeholder="0" style="text-align: center;">
-                        <button type="button" class="vet-btn vet-btn-primary btn-stock-action" onclick="sumarStockInput()" aria-label="Sumar">
+                        <button type="button" class="btn btn-primary btn-stock-action" onclick="sumarStockInput()" aria-label="Sumar">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
                 </div>
                 <div class="vet-modal-footer">
-                    <button type="button" class="vet-btn-cancel" onclick="closeVetModal('modalModificarStock')">
+                    <button type="button" class="btn-cancel" onclick="closeVetModal('modalModificarStock')">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
-                    <button type="button" class="vet-btn vet-btn-primary" onclick="guardarStock()">
+                    <button type="button" class="btn btn-primary" onclick="guardarStock()">
                         <i class="bi bi-floppy-fill"></i> Guardar
                     </button>
                 </div>
@@ -528,10 +528,10 @@
                 <div class="mb-3">
                     <label class="form-label fw-bold">
                         <i class="fas fa-exclamation-triangle" style="color: #dc2626;"></i> 
-                        Stock Mínimo (Rojo)
+                        Stock MÃ­nimo (Rojo)
                     </label>
                     <input type="number" class="form-control" id="inputStockMinimo" placeholder="Ej: 10" min="0">
-                    <small class="text-muted">Cuando el stock llegue a este nivel o menos, se marcará en rojo</small>
+                    <small class="text-muted">Cuando el stock llegue a este nivel o menos, se marcarÃ¡ en rojo</small>
                 </div>
                 
                 <div class="mb-3">
@@ -540,19 +540,19 @@
                         Stock Medio (Naranja)
                     </label>
                     <input type="number" class="form-control" id="inputStockMedio" placeholder="Ej: 20" min="0">
-                    <small class="text-muted">Cuando el stock esté entre el mínimo y este nivel, se marcará en naranja</small>
+                    <small class="text-muted">Cuando el stock estÃ© entre el mÃ­nimo y este nivel, se marcarÃ¡ en naranja</small>
                 </div>
                 
                 <div class="mb-3" style="color: #6b7280; font-size: 0.9rem;">
                     <i class="fas fa-info-circle" style="color: #10b981;"></i>
                     <strong>Stock Alto (Verde):</strong>
-                    Se marcará automáticamente cuando el stock supere el nivel medio.
+                    Se marcarÃ¡ automÃ¡ticamente cuando el stock supere el nivel medio.
                 </div>
                 <div class="vet-modal-footer">
-                    <button type="button" class="vet-btn-cancel" onclick="closeVetModal('modalConfigNiveles')">
+                    <button type="button" class="btn-cancel" onclick="closeVetModal('modalConfigNiveles')">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
-                    <button type="button" class="vet-btn vet-btn-primary" onclick="guardarNivelesStock()">
+                    <button type="button" class="btn btn-primary" onclick="guardarNivelesStock()">
                         <i class="bi bi-floppy-fill"></i> Guardar
                     </button>
                 </div>
@@ -570,13 +570,13 @@
                 <i class="bi bi-x vet-close-btn" onclick="closeArchivarProductoModal()"></i>
             </div>
             <div class="vet-modal-body">
-                <p id="archivarProductoMensaje" class="text-center mb-4">¿Estás seguro que deseas archivar este producto? Podrás restaurarlo desde la pestaña de archivados.</p>
+                <p id="archivarProductoMensaje" class="text-center mb-4">Â¿EstÃ¡s seguro que deseas archivar este producto? PodrÃ¡s restaurarlo desde la pestaÃ±a de archivados.</p>
                 
                 <div class="vet-modal-footer">
-                    <button type="button" class="vet-btn-cancel" onclick="closeArchivarProductoModal()">
+                    <button type="button" class="btn-cancel" onclick="closeArchivarProductoModal()">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
-                    <button type="button" class="vet-btn vet-btn-primary" id="btnConfirmarArchivarProducto">
+                    <button type="button" class="btn btn-primary" id="btnConfirmarArchivarProducto">
                         <i class="fas fa-archive"></i> <span id="btnTextoArchivar">Archivar</span>
                     </button>
                 </div>

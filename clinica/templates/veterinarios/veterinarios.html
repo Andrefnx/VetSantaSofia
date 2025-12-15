@@ -1,4 +1,4 @@
-{% extends "partials/base_table.html" %}
+﻿{% extends "partials/base_table.html" %}
 {% load static %}
 
 {% block title %}Veterinarios{% endblock %}
@@ -22,12 +22,12 @@
         <ul class="vet-custom-select-dropdown">
             <li data-value="">Todos</li>
             <li data-value="veterinario">Veterinario</li>
-            <li data-value="administracion">Administración</li>
-            <li data-value="recepcion">Recepción</li>
+            <li data-value="administracion">AdministraciÃ³n</li>
+            <li data-value="recepcion">RecepciÃ³n</li>
         </ul>
         <input type="hidden" id="filterRol" value="">
     </div>
-    <!-- Puedes agregar más filtros aquí -->
+    <!-- Puedes agregar mÃ¡s filtros aquÃ­ -->
 </div>
 {% endblock %}
 
@@ -41,9 +41,9 @@
 <th>Nombre</th>
 <th>RUT</th>
 <th>Correo</th>
-<th>Teléfono</th>
+<th>TelÃ©fono</th>
 <th>Rol</th>
-<th>Gestión</th>
+<th>GestiÃ³n</th>
 {% endblock %}
 
 {% block table_rows %}
@@ -73,11 +73,11 @@
     </td>
 </tr>
 <tr>
-    <td>Martín González</td>
+    <td>MartÃ­n GonzÃ¡lez</td>
     <td>18543210-5</td>
     <td>martin@vet.cl</td>
     <td>+56 9 8765 4321</td>
-    <td>Administración</td>
+    <td>AdministraciÃ³n</td>
     <td>
         <div class="manage-wheel">
             <button type="button" onclick="toggleWheel(this)">
@@ -125,7 +125,7 @@
                         <input type="email" class="form-control" name="correo" data-email="true" required>
                     </div>
                     <div class="mb-3">
-                        <label>Teléfono</label>
+                        <label>TelÃ©fono</label>
                         <input type="text" class="form-control" name="telefono">
                     </div>
                     <div class="mb-3">
@@ -133,14 +133,14 @@
                         <select class="form-control" name="rol" required>
                             <option value="">Selecciona...</option>
                             <option value="veterinario">Veterinario</option>
-                            <option value="administracion">Administración</option>
-                            <option value="recepcion">Recepción</option>
+                            <option value="administracion">AdministraciÃ³n</option>
+                            <option value="recepcion">RecepciÃ³n</option>
                         </select>
                     </div>
                 </form>
             </div>
             <div class="vet-modal-body" style="text-align:right;">
-                <button type="button" class="vet-btn-grey success" onclick="saveNewVeterinario()">
+                <button type="button" class="btn-grey success" onclick="saveNewVeterinario()">
                     <i class="bi bi-floppy-fill"></i> Guardar
                 </button>
             </div>
@@ -161,7 +161,7 @@
             </div>
             <div class="vet-modal-body" style="max-height: 70vh; overflow-y: auto;">
                 <div class="detail-section mb-4">
-                    <h6 class="detail-section-title"><i class="fas fa-id-card"></i> Identificación</h6>
+                    <h6 class="detail-section-title"><i class="fas fa-id-card"></i> IdentificaciÃ³n</h6>
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="text-muted small">Nombre</label>
@@ -184,7 +184,7 @@
                     <h6 class="detail-section-title"><i class="fas fa-phone"></i> Contacto</h6>
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="text-muted small">Teléfono</label>
+                            <label class="text-muted small">TelÃ©fono</label>
                             <p class="field-view fw-bold mb-0" data-field="telefono">-</p>
                             <input class="field-edit form-control d-none" data-field="telefono">
                         </div>
@@ -194,22 +194,22 @@
                             <select class="field-edit form-control d-none" data-field="rol">
                                 <option value="">Selecciona...</option>
                                 <option value="veterinario">Veterinario</option>
-                                <option value="administracion">Administración</option>
-                                <option value="recepcion">Recepción</option>
+                                <option value="administracion">AdministraciÃ³n</option>
+                                <option value="recepcion">RecepciÃ³n</option>
                             </select>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="vet-modal-body" style="border-top:1px solid #eee; text-align:right;">
-                <button type="button" class="vet-btn-grey" id="btnEditarVeterinario" onclick="switchToEditModeVeterinario()">
+                <button type="button" class="btn-grey" id="btnEditarVeterinario" onclick="switchToEditModeVeterinario()">
                     <i class="bi bi-pencil-fill"></i> Editar
                 </button>
-                <button type="button" class="vet-btn-grey d-none" id="btnGuardarVeterinario"
+                <button type="button" class="btn-grey d-none" id="btnGuardarVeterinario"
                     onclick="guardarVeterinarioEditado()">
                     <i class="bi bi-floppy-fill"></i> Guardar
                 </button>
-                <button type="button" class="vet-btn-grey error" id="btnEliminarVeterinario"
+                <button type="button" class="btn-grey error" id="btnEliminarVeterinario"
                     onclick="abrirModalEliminarVeterinario(this)">
                     <i class="bi bi-trash3-fill"></i> Eliminar
                 </button>
@@ -227,10 +227,10 @@
                 <i class="bi bi-x" style="margin-left:auto;cursor:pointer;" onclick="closeEliminarVeterinarioModal()"></i>
             </div>
             <div class="vet-modal-body">
-                <p id="eliminarVeterinarioMensaje">¿Estás seguro que deseas eliminar este veterinario?</p>
+                <p id="eliminarVeterinarioMensaje">Â¿EstÃ¡s seguro que deseas eliminar este veterinario?</p>
             </div>
             <div class="vet-modal-body" style="text-align:right;">
-                <button type="button" class="vet-btn-grey error" id="btnConfirmarEliminarVeterinario">
+                <button type="button" class="btn-grey error" id="btnConfirmarEliminarVeterinario">
                     <i class="bi bi-trash3-fill"></i> Eliminar
                 </button>
             </div>
@@ -240,5 +240,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Aquí puedes agregar JS específico para veterinarios si lo necesitas -->
+<!-- AquÃ­ puedes agregar JS especÃ­fico para veterinarios si lo necesitas -->
 {% endblock %}
