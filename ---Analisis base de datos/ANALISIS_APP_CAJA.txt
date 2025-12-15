@@ -1,0 +1,518 @@
+═══════════════════════════════════════════════════════════════════════════════
+  ANÁLISIS DIAGNÓSTICO: APP CAJA
+  Sistema de Facturación y Cobros - Veterinaria Santa Sofía
+═══════════════════════════════════════════════════════════════════════════════
+
+📅 Fecha de análisis: [Análisis actual]
+🎯 Propósito: Diagnóstico de modelos, uso real y dependencias
+⚠️  Modalidad: SOLO LECTURA - Sin modificaciones de código
+
+═══════════════════════════════════════════════════════════════════════════════
+  1. MODELOS IDENTIFICADOS
+═══════════════════════════════════════════════════════════════════════════════
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ SISTEMA LEGACY (OBSOLETO - EN DESUSO)                                      │
+└────────────────────────────────────────────────────────────────────────────┘
+
+📦 Modelo: Caja
+   └─ Ubicación: caja/models.py (líneas 8-25)
+   └─ Propósito original: Representar sesiones de caja (apertura/cierre)
+   └─ Campos principales:
+      • usuario (FK a User)
+      • fecha_apertura (DateTimeField)
+      • fecha_cierre (DateTimeField, nullable)
+      • monto_inicial (DecimalField)
+      • monto_final (DecimalField, nullable)
+      • observaciones (TextField)
+
+📦 Modelo: MovimientoCaja
+   └─ Ubicación: caja/models.py (líneas 28-61)
+   └─ Propósito original: Registrar ingresos/egresos en sesiones de caja
+   └─ Campos principales:
+      • caja (FK a Caja)
+      • tipo (CharField: 'ingreso' / 'egreso')
+      • monto (DecimalField)
+      • concepto (CharField)
+      • metodo_pago (CharField)
+      • descripcion (TextField)
+      • fecha (DateTimeField, auto_now_add)
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ SISTEMA MODERNO (EN USO ACTIVO)                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+📦 Modelo: SesionCaja
+   └─ Ubicación: caja/models.py (líneas 67-113)
+   └─ Propósito: Control diario de caja con apertura/cierre
+   └─ Campos principales:
+      • fecha_apertura (DateTimeField, auto_now_add)
+      • fecha_cierre (DateTimeField, nullable)
+      • usuario_apertura (FK a User)
+      • usuario_cierre (FK a User, nullable)
+      • monto_inicial (DecimalField)
+      • monto_final (DecimalField, nullable)
+      • monto_contado (DecimalField, nullable) - Arqueo físico
+      • diferencia (DecimalField, nullable) - Descuadre detectado
+      • esta_cerrada (BooleanField, default=False)
+      • observaciones_apertura (TextField)
+      • observaciones_cierre (TextField)
+   └─ Relaciones:
+      • ventas: Venta.sesion (reverse OneToMany)
+   └─ Métodos:
+      • calcular_monto_final(): Suma ventas pagadas de la sesión
+
+📦 Modelo: Venta
+   └─ Ubicación: caja/models.py (líneas 116-241)
+   └─ Propósito: Representar facturas/cobros (pendientes o pagados)
+   └─ Campos principales:
+      • numero (CharField, auto-generado: "V{YYYYMMDD}-{contador}")
+      • tipo_origen (CharField: 'consulta', 'hospitalizacion', 'venta_libre')
+      • estado (CharField: 'pendiente', 'pagado', 'cancelado')
+      • paciente (FK a Paciente, nullable)
+      • consulta (OneToOneField a Consulta, nullable)
+      • hospitalizacion (OneToOneField a Hospitalizacion, nullable)
+      • fecha_creacion (DateTimeField, auto_now_add)
+      • fecha_pago (DateTimeField, nullable)
+      • metodo_pago (CharField: 'efectivo', 'tarjeta', 'transferencia')
+      • sesion (FK a SesionCaja, nullable)
+      • usuario_creacion (FK a User)
+      • usuario_cobro (FK a User, nullable)
+      • subtotal (DecimalField)
+      • descuento (DecimalField, default=0)
+      • total (DecimalField)
+      • observaciones (TextField)
+   └─ Relaciones:
+      • detalles: DetalleVenta.venta (reverse OneToMany)
+      • auditoria: AuditoriaCaja.venta (reverse OneToMany)
+   └─ Métodos clave:
+      • save(): Genera número de venta automático en formato V{YYYYMMDD}-{contador}
+      • calcular_totales(): Recalcula subtotal y total desde DetalleVenta
+   └─ Integración:
+      • Se crea automáticamente desde clinica.Consulta (signal)
+      • Se crea automáticamente desde clinica.Hospitalizacion (signal)
+
+📦 Modelo: DetalleVenta
+   └─ Ubicación: caja/models.py (líneas 244-297)
+   └─ Propósito: Líneas de factura (servicios e insumos)
+   └─ Campos principales:
+      • venta (FK a Venta)
+      • tipo (CharField: 'servicio' / 'insumo')
+      • servicio (FK a Servicio, nullable)
+      • insumo (FK a Insumo, nullable)
+      • descripcion (CharField) - Texto del ítem
+      • cantidad (DecimalField)
+      • precio_unitario (DecimalField)
+      • subtotal (DecimalField, auto-calculado)
+      • stock_descontado (BooleanField, default=False)
+      • fecha_descuento_stock (DateTimeField, nullable)
+      • peso_paciente (DecimalField, nullable) - Para cálculo de dosis
+      • dosis_calculada_ml (DecimalField, nullable)
+      • ml_contenedor (DecimalField, nullable)
+      • calculo_automatico (BooleanField, default=False)
+   └─ Métodos:
+      • save(): Calcula subtotal automáticamente (cantidad × precio_unitario)
+   └─ Regla crítica:
+      • stock_descontado marca si ya se descontó inventario (solo en pago)
+
+📦 Modelo: AuditoriaCaja
+   └─ Ubicación: caja/models.py (líneas 300-340)
+   └─ Propósito: Registro de auditoría completo de todas las operaciones
+   └─ Campos principales:
+      • venta (FK a Venta, nullable)
+      • sesion (FK a SesionCaja, nullable)
+      • fecha (DateTimeField, auto_now_add)
+      • usuario (FK a User)
+      • accion (CharField: 'crear_venta', 'agregar_detalle', 'eliminar_detalle',
+                         'modificar_detalle', 'aplicar_descuento', 'confirmar_pago',
+                         'cancelar_venta', 'abrir_sesion', 'cerrar_sesion')
+      • descripcion (TextField) - Descripción legible
+      • datos_anteriores (JSONField, nullable) - Snapshot "antes"
+      • datos_nuevos (JSONField, nullable) - Snapshot "después"
+   └─ Uso: Trazabilidad completa de cambios financieros
+
+═══════════════════════════════════════════════════════════════════════════════
+  2. USO REAL DEL SISTEMA
+═══════════════════════════════════════════════════════════════════════════════
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ FLUJO PRINCIPAL: COBRO DESDE CONSULTA                                      │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Ubicación: caja/services.py (crear_cobro_pendiente_desde_consulta)
+Disparador: Signal post_save en clinica.Consulta (clinica/signals.py)
+
+Pasos automáticos:
+1. Se guarda una Consulta con servicios/insumos
+2. Signal detecta que no tiene Venta asociada
+3. Llama a crear_cobro_pendiente_desde_consulta()
+4. Crea Venta en estado 'pendiente' con OneToOne a Consulta
+5. Agrega DetalleVenta por cada servicio de la consulta
+6. Agrega DetalleVenta por cada insumo de ConsultaInsumo (con cálculo de dosis)
+7. Llama a venta.calcular_totales()
+8. Registra auditoría en AuditoriaCaja
+
+Resultado: La consulta queda con una factura pendiente de pago automáticamente
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ FLUJO PRINCIPAL: COBRO DESDE HOSPITALIZACIÓN                               │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Ubicación: caja/services.py (crear_cobro_pendiente_desde_hospitalizacion)
+Disparador: Signal post_save cuando Hospitalizacion.estado == 'alta'
+
+Pasos automáticos:
+1. Se da de alta una Hospitalización (estado='alta')
+2. Signal detecta que no tiene Venta asociada
+3. Llama a crear_cobro_pendiente_desde_hospitalizacion()
+4. Crea Venta en estado 'pendiente' con OneToOne a Hospitalizacion
+5. Agrega DetalleVenta por cada HospitalizacionInsumo
+6. Por cada Cirugia de la hospitalización:
+   • Agrega servicio de cirugía (si tiene)
+   • Agrega cada CirugiaInsumo como DetalleVenta
+7. Llama a venta.calcular_totales()
+8. Registra auditoría
+
+Resultado: Al dar de alta, se genera factura con TODOS los gastos del internamiento
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ FLUJO: PROCESAMIENTO DE PAGO                                               │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Ubicación: caja/services.py (procesar_pago)
+
+Pasos críticos:
+1. Verifica que Venta.estado == 'pendiente'
+2. Verifica que SesionCaja esté abierta
+3. Cambia estado de Venta a 'pagado'
+4. Asigna metodo_pago, fecha_pago, usuario_cobro, sesion
+5. **DESCUENTA STOCK DE INVENTARIO** (descontar_stock_insumo)
+   └─ Por cada DetalleVenta tipo='insumo':
+      • Verifica stock disponible
+      • Descuenta Insumo.stock_actual
+      • Marca DetalleVenta.stock_descontado = True
+      • Marca fecha_descuento_stock
+6. Registra auditoría
+
+⚠️ REGLA CRÍTICA: El stock SOLO se descuenta aquí, NUNCA antes
+   └─ Esto permite editar ventas pendientes sin afectar inventario
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ FLUJO: SESIONES DE CAJA                                                    │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Ubicación: caja/services.py (abrir_sesion_caja, cerrar_sesion_caja)
+
+Apertura:
+1. Verifica que no haya otra sesión abierta
+2. Crea SesionCaja con monto_inicial
+3. Registra auditoría
+
+Cierre:
+1. Verifica que no haya ventas pendientes en la sesión
+2. Usuario ingresa monto_contado (arqueo físico)
+3. Calcula monto_final desde ventas pagadas
+4. Calcula diferencia = monto_contado - monto_final
+5. Marca sesion.esta_cerrada = True
+6. Registra auditoría
+
+Uso: Control diario de efectivo, detección de descuadres
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ FLUJO: VENTA LIBRE                                                         │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Ubicación: caja/services.py (crear_venta_libre)
+
+Propósito: Venta directa sin consulta ni hospitalización
+Pasos:
+1. Crea Venta con tipo_origen='venta_libre'
+2. Agrega servicios e insumos manualmente
+3. Calcula totales
+4. Registra auditoría
+
+Uso: Venta de productos sin atención médica
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ SISTEMA LEGACY: Caja / MovimientoCaja                                      │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Ubicación: caja/views.py (cashregister, apertura_cierre, etc.)
+
+Estado: OBSOLETO - Aún tiene vistas funcionales pero no integrado con sistema moderno
+Funciones:
+- cashregister(): Vista de caja registradora legacy
+- apertura_cierre(): Apertura/cierre de Caja (modelo legacy)
+- procesar_venta(): Descuenta stock directamente (sin Venta intermedia)
+- registrar_movimiento(): Crea MovimientoCaja
+
+Problema: No está integrado con SesionCaja/Venta moderno
+
+═══════════════════════════════════════════════════════════════════════════════
+  3. DEPENDENCIAS CON OTRAS APPS
+═══════════════════════════════════════════════════════════════════════════════
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ DEPENDENCIAS DIRECTAS (FK / OneToOne)                                      │
+└────────────────────────────────────────────────────────────────────────────┘
+
+caja → clinica (CRÍTICA):
+   • Venta.consulta (OneToOneField a Consulta)
+   • Venta.hospitalizacion (OneToOneField a Hospitalizacion)
+   └─ Uso: Vinculación automática de cobros con atención médica
+
+caja → pacientes (CRÍTICA):
+   • Venta.paciente (FK a Paciente)
+   └─ Uso: Asignar factura a dueño del paciente
+
+caja → servicios (CRÍTICA):
+   • DetalleVenta.servicio (FK a Servicio)
+   └─ Uso: Facturar servicios veterinarios (consultas, cirugías, etc.)
+
+caja → inventario (CRÍTICA):
+   • DetalleVenta.insumo (FK a Insumo)
+   └─ Uso: Facturar medicamentos/insumos y descontar stock
+
+caja → cuentas (CRÍTICA):
+   • SesionCaja.usuario_apertura / usuario_cierre (FK a User)
+   • Venta.usuario_creacion / usuario_cobro (FK a User)
+   • AuditoriaCaja.usuario (FK a User)
+   └─ Uso: Trazabilidad de quién opera la caja
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ DEPENDENCIAS INVERSAS (Otras apps usan caja)                               │
+└────────────────────────────────────────────────────────────────────────────┘
+
+clinica → caja (Signal crítico):
+   • clinica/signals.py: Importa crear_cobro_pendiente_desde_consulta
+   • Signal post_save en Consulta llama a crear_cobro_pendiente_desde_consulta
+   • Signal post_save en Hospitalizacion llama a crear_cobro_pendiente_desde_hospitalizacion
+   └─ Uso: Creación automática de cobros pendientes
+
+dashboard → caja (Reportes):
+   • dashboard/views.py: Importa SesionCaja, Venta, DetalleVenta
+   └─ Uso: Estadísticas de ventas, ingresos diarios, top servicios
+
+pacientes → caja (Historial):
+   • Paciente tiene reverse FK 'ventas'
+   └─ Uso: Historial de facturas del paciente
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ INTEGRACIÓN CON INVENTARIO                                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Flujo: caja/services.py → descontar_stock_insumo()
+
+Regla crítica: El stock SOLO se descuenta cuando se PAGA la venta
+1. Venta se crea en estado 'pendiente' → stock NO se toca
+2. Usuario confirma pago → llama a procesar_pago()
+3. procesar_pago() descuenta stock de cada DetalleVenta tipo='insumo'
+4. Actualiza Insumo.stock_actual, tipo_ultimo_movimiento='salida'
+5. Marca DetalleVenta.stock_descontado = True
+
+Beneficio: Permite editar ventas pendientes sin afectar inventario
+
+═══════════════════════════════════════════════════════════════════════════════
+  4. SOLAPAMIENTOS Y MODELOS DUPLICADOS
+═══════════════════════════════════════════════════════════════════════════════
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ SISTEMA DUAL: LEGACY vs MODERNO                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+🔴 DUPLICACIÓN DETECTADA:
+
+┌─────────────────────┬──────────────────────┬─────────────────────────────┐
+│ CONCEPTO            │ MODELO LEGACY        │ MODELO MODERNO              │
+├─────────────────────┼──────────────────────┼─────────────────────────────┤
+│ Sesión de caja      │ Caja                 │ SesionCaja                  │
+│ Movimientos         │ MovimientoCaja       │ Venta + DetalleVenta        │
+│ Control de stock    │ Descuento directo    │ Descuento en pago           │
+│ Auditoría           │ No tiene             │ AuditoriaCaja (completo)    │
+│ Integración clínica │ No tiene             │ Signal automático           │
+│ Número de venta     │ No tiene             │ Auto-generado V{fecha}-{n}  │
+└─────────────────────┴──────────────────────┴─────────────────────────────┘
+
+Estado actual:
+• Sistema LEGACY (Caja/MovimientoCaja): Tiene vistas funcionales en views.py
+• Sistema MODERNO (SesionCaja/Venta): Tiene vistas en views_cobros.py
+• Ambos sistemas coexisten pero NO están integrados
+
+Problema:
+- Si se usa views.py (legacy), no se crean registros en Venta/SesionCaja
+- Si se usa views_cobros.py (moderno), no se crean registros en Caja/MovimientoCaja
+- No hay migración de datos entre sistemas
+
+Rutas:
+• caja/urls.py: Rutas del sistema legacy (cashregister, apertura_cierre, etc.)
+• caja/urls_cobros.py: Rutas del sistema moderno (dashboard_caja, lista_cobros_pendientes, etc.)
+
+Templates:
+• Legacy: cash_register.html, apertura_cierre.html, reporte.html
+• Moderno: dashboard_caja.html (en caja/templates/caja/)
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ CONCLUSIÓN: DOS SISTEMAS PARALELOS                                         │
+└────────────────────────────────────────────────────────────────────────────┘
+
+El sistema moderno (SesionCaja/Venta) es:
+✅ Más completo (auditoría, números de venta, descuentos)
+✅ Integrado con clinica (creación automática de cobros)
+✅ Control de stock más robusto (solo descuenta en pago)
+✅ Mejor trazabilidad (AuditoriaCaja)
+
+El sistema legacy (Caja/MovimientoCaja):
+❌ Sin integración con clinica
+❌ Sin auditoría
+❌ Descuento de stock inmediato (riesgoso)
+❌ Sin números de venta
+❌ No permite editar ventas
+
+Pero ambos están activos en el código.
+
+═══════════════════════════════════════════════════════════════════════════════
+  5. CLASIFICACIÓN DE RIESGO
+═══════════════════════════════════════════════════════════════════════════════
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ 🔴 MODELOS CRÍTICOS - NO ELIMINAR                                          │
+└────────────────────────────────────────────────────────────────────────────┘
+
+SesionCaja - 🔴 CRÍTICA
+   Motivo: Control diario de caja, requerido por auditoría
+   Uso activo: Integrado con dashboard, usado en views_cobros.py
+   Dependencias: Venta.sesion (todas las ventas pagadas se asocian a sesión)
+   Riesgo de eliminación: ALTO - Pérdida de control de efectivo
+
+Venta - 🔴 CRÍTICA
+   Motivo: Centro del sistema de facturación
+   Uso activo: Creación automática desde clinica (signals)
+   Dependencias: 
+      • clinica.Consulta.venta (OneToOne reverse)
+      • clinica.Hospitalizacion.venta (OneToOne reverse)
+      • DetalleVenta.venta (todos los detalles)
+      • AuditoriaCaja.venta (toda la auditoría)
+      • dashboard importa para reportes
+   Riesgo de eliminación: MUY ALTO - Colapso del sistema de cobros
+
+DetalleVenta - 🔴 CRÍTICA
+   Motivo: Líneas de factura, control de qué se cobró
+   Uso activo: Usado en crear_cobro_pendiente_*, procesar_pago
+   Dependencias: Venta.detalles (todas las ventas tienen detalles)
+   Riesgo de eliminación: MUY ALTO - Pérdida de detalle de cobros
+
+AuditoriaCaja - 🔴 CRÍTICA
+   Motivo: Trazabilidad legal de operaciones financieras
+   Uso activo: Registrada en todas las operaciones de services.py
+   Dependencias: Usado en reportes y auditoría interna
+   Riesgo de eliminación: ALTO - Pérdida de auditoría legal
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ 🟢 MODELOS CANDIDATOS A ELIMINAR                                           │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Caja - 🟢 CANDIDATO A ELIMINAR
+   Motivo: Reemplazado completamente por SesionCaja
+   Uso actual: Solo usado en views.py (legacy)
+   Alternativa moderna: SesionCaja tiene los mismos campos + mejoras
+   Riesgo de eliminación: BAJO - Si se migran datos a SesionCaja
+
+MovimientoCaja - 🟢 CANDIDATO A ELIMINAR
+   Motivo: Reemplazado por Venta + DetalleVenta
+   Uso actual: Solo usado en views.py (legacy)
+   Alternativa moderna: DetalleVenta con más detalles
+   Riesgo de eliminación: BAJO - Si se migran datos a Venta/DetalleVenta
+
+Condiciones para eliminar legacy:
+1. Migrar datos de Caja → SesionCaja
+2. Migrar datos de MovimientoCaja → Venta/DetalleVenta
+3. Eliminar rutas de urls.py (sistema legacy)
+4. Eliminar views.py (vistas legacy)
+5. Eliminar templates legacy (cash_register.html, apertura_cierre.html)
+6. Actualizar forms.py (eliminar AperturaCajaForm, CierreCajaForm)
+
+═══════════════════════════════════════════════════════════════════════════════
+  6. CONCLUSIÓN FINAL
+═══════════════════════════════════════════════════════════════════════════════
+
+ESTADO ACTUAL:
+--------------
+La app 'caja' es el CENTRO FINANCIERO del sistema VetSantaSofia. Maneja toda
+la facturación, cobros, control de caja y descuento de inventario.
+
+ARQUITECTURA:
+------------
+Sistema DUAL con dos arquitecturas paralelas:
+
+1. SISTEMA MODERNO (SesionCaja/Venta/DetalleVenta/AuditoriaCaja):
+   • Ubicación: models.py (líneas 67-340), services.py, views_cobros.py
+   • Estado: EN USO ACTIVO
+   • Integración: Automática con clinica via signals
+   • Características:
+     ✅ Creación automática de cobros desde consultas/hospitalizaciones
+     ✅ Números de venta auto-generados (V{YYYYMMDD}-{contador})
+     ✅ Edición de ventas pendientes
+     ✅ Descuento de stock SOLO en pago (no antes)
+     ✅ Auditoría completa (AuditoriaCaja con JSONField)
+     ✅ Control de sesiones de caja con arqueo
+     ✅ Detección de descuadres (diferencia)
+     ✅ Manejo de descuentos
+     ✅ Múltiples métodos de pago
+
+2. SISTEMA LEGACY (Caja/MovimientoCaja):
+   • Ubicación: models.py (líneas 8-61), views.py
+   • Estado: OBSOLETO - Funcional pero no integrado
+   • Características:
+     ❌ Sin integración con clinica
+     ❌ Sin auditoría
+     ❌ Descuento de stock inmediato (riesgoso)
+     ❌ Sin números de venta
+     ❌ No permite editar ventas
+
+FLUJO OPERATIVO REAL:
+----------------------
+1. Veterinario crea Consulta con servicios/insumos
+2. Signal en clinica detecta guardado
+3. Llama a caja.services.crear_cobro_pendiente_desde_consulta()
+4. Se crea Venta automáticamente en estado 'pendiente'
+5. Se agregan DetalleVenta por cada servicio/insumo
+6. Recepción procesa pago llamando a caja.services.procesar_pago()
+7. Se descuenta stock de inventario
+8. Se registra pago en SesionCaja activa
+9. Se genera auditoría completa
+
+Mismo flujo para Hospitalizacion al dar de alta.
+
+DEPENDENCIAS CRÍTICAS:
+---------------------
+• clinica: Consulta/Hospitalizacion crean Venta automáticamente
+• inventario: Descuento de stock en pago
+• servicios: Precios de servicios veterinarios
+• pacientes: Asignación de facturas
+• dashboard: Reportes de ventas
+• cuentas: Usuarios que operan caja
+
+CLASIFICACIÓN DE RIESGO:
+-----------------------
+🔴 CRÍTICOS (NO ELIMINAR):
+   • SesionCaja: Control diario de caja
+   • Venta: Centro del sistema de facturación
+   • DetalleVenta: Detalle de qué se cobró
+   • AuditoriaCaja: Trazabilidad legal
+
+🟢 CANDIDATOS A ELIMINAR (Requieren migración de datos):
+   • Caja: Reemplazado por SesionCaja
+   • MovimientoCaja: Reemplazado por Venta/DetalleVenta
+
+RECOMENDACIÓN OPERATIVA:
+-----------------------
+El sistema de caja moderno está bien diseñado y funcionando. Los modelos legacy
+(Caja/MovimientoCaja) pueden eliminarse SI se migran los datos históricos primero.
+
+Prioridad: 🔴 MÁXIMA
+La app 'caja' es absolutamente crítica para la operación diaria. Cualquier
+problema en esta app detiene la facturación y cobros de toda la veterinaria.
+
+═══════════════════════════════════════════════════════════════════════════════
+  FIN DEL ANÁLISIS
+═══════════════════════════════════════════════════════════════════════════════

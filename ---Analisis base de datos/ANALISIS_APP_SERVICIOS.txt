@@ -1,0 +1,405 @@
+================================================================================
+ANÁLISIS DIAGNÓSTICO: APP SERVICIOS
+================================================================================
+Proyecto: VetSantaSofia
+Fecha: 15 de diciembre de 2025
+Modo: Solo análisis - Sin modificaciones
+
+================================================================================
+1. MODELOS - ARQUITECTURA Y ROL FUNCIONAL
+================================================================================
+
+1.1. Servicio
+-------------
+Ubicación: servicios/models.py (líneas 11-66)
+
+Definición:
+Catálogo maestro de servicios veterinarios disponibles en la clínica.
+
+Campos principales:
+- nombre: Identificación del servicio
+- categoria: Clasificación (consultas, diagnóstico, procedimientos, cirugías)
+- precio: Valor monetario para facturación
+- duracion: Minutos necesarios (múltiplo de 15)
+- descripcion: Información adicional
+
+Propiedades calculadas:
+- blocks_required: Convierte duración a bloques de 15 min para agenda
+
+Validaciones:
+- Duración > 0
+- Duración múltiplo de 15 (para sistema de bloques de agenda)
+
+Rol funcional real:
+✓ Catálogo: Define servicios ofrecidos (consultas, cirugías, vacunas, etc.)
+✓ Pricing: Fuente única de precios para facturación
+✓ Planificación: Cálculo de tiempo para agenda/citas
+✓ Metadata: Categorización para reportes y filtros
+
+Vistas que lo usan:
+┌─────────────────────────────┬─────────┬──────────────────────────────┐
+│ Vista                       │ App     │ Función                      │
+├─────────────────────────────┼─────────┼──────────────────────────────┤
+│ servicios()                 │ servicios│ Lista todos los servicios   │
+│ crear_servicio()            │ servicios│ CRUD - Crear                │
+│ editar_servicio()           │ servicios│ CRUD - Editar               │
+│ eliminar_servicio()         │ servicios│ CRUD - Eliminar (SQL raw)   │
+│ agenda()                    │ agenda  │ Servicios para agendar      │
+│ historial_medico()          │ clinica │ Servicios en citas pasadas  │
+│ crear_consulta()            │ clinica │ Vincula servicios           │
+│ crear_cobro_desde_consulta()│ caja    │ Genera líneas de venta      │
+│ crear_cobro_desde_hosp()    │ caja    │ Factura cirugías            │
+└─────────────────────────────┴─────────┴──────────────────────────────┘
+
+Dependencias de otras apps (ForeignKey):
+
+1. agenda.Cita → servicio (SET_NULL, nullable)
+   Impacto: Citas asocian UN servicio
+   Uso: Reserva de agenda, cálculo de duración
+
+2. clinica.Cirugia → servicio (SET_NULL, nullable)
+   Impacto: Cirugías referencian servicio para facturación
+   Uso: Precio de cirugía, descripción estándar
+
+3. caja.DetalleVenta → servicio (SET_NULL, nullable)
+   Impacto: Líneas de factura que cobran servicios
+   Uso: Precio, descripción, cálculo de totales
+
+4. clinica.Consulta → servicios (ManyToMany)
+   Impacto: Una consulta puede incluir VARIOS servicios
+   Uso: Registro de servicios prestados, facturación múltiple
+
+Impacto en operaciones críticas:
+✓ Agenda: Sin servicio, citas funcionan pero pierden duración/precio
+✓ Clínica: Consultas pueden existir sin servicios (opcional)
+⚠ Caja: Eliminar servicio pierde referencia pero precio ya está copiado
+⚠ Inventario: A través de ServicioInsumo, puede romper planificación
+
+
+1.2. ServicioInsumo
+-------------------
+Ubicación: servicios/models.py (líneas 73-81)
+
+Definición:
+Tabla intermedia que define qué insumos/medicamentos requiere cada servicio.
+
+Relaciones:
+- servicio → ForeignKey(Servicio, CASCADE)
+- insumo → ForeignKey(Insumo, PROTECT)
+- cantidad → IntegerField
+
+Rol funcional real:
+✓ Planificación: Define inventario requerido para realizar un servicio
+✓ Control de stock: Permite calcular insumos necesarios
+✓ Referencia: Plantilla de materiales
+
+⚠ IMPORTANTE - Uso REAL en el sistema:
+- Solo lectura/referencia: No hay código que use esto automáticamente
+- No integrado: No valida stock al agendar servicios
+- No automatiza: No descuenta insumos al completar servicio
+
+Vistas que lo usan:
+- crear_servicio(): Crea registros al asociar insumos
+- editar_servicio(): Borra y recrea registros
+
+Estado: PASIVO - Modelo poblado pero sin lógica de negocio activa
+
+================================================================================
+2. USO REAL EN EL SISTEMA
+================================================================================
+
+2.1. Dónde se CREA
+------------------
+┌────────────────┬────────────────────────────────┬─────────────────┐
+│ Operación      │ Vista                          │ Acción          │
+├────────────────┼────────────────────────────────┼─────────────────┤
+│ Gestión manual │ servicios/views.py::crear()    │ POST JSON admin │
+│ Gestión manual │ servicios/views.py::editar()   │ PUT JSON admin  │
+└────────────────┴────────────────────────────────┴─────────────────┘
+
+NO se crean servicios automáticamente en flujos operativos.
+
+
+2.2. Dónde se EDITA
+-------------------
+┌────────────────┬────────────────────────────────┬─────────────────┐
+│ Operación      │ Vista                          │ Acción          │
+├────────────────┼────────────────────────────────┼─────────────────┤
+│ Modificación   │ servicios/views.py::editar()   │ Actualiza datos │
+│ Eliminación    │ servicios/views.py::eliminar() │ Usa SQL raw     │
+└────────────────┴────────────────────────────────┴─────────────────┘
+
+⚠ CRÍTICO: La eliminación usa cursor.execute("DELETE FROM Servicio") 
+para bypassear protecciones de ForeignKey. Esto puede dejar referencias 
+huérfanas en:
+- Citas sin servicio (manejado por SET_NULL)
+- Cirugías sin referencia de precio (manejado por SET_NULL)
+- Ventas con servicio_id NULL pero precio copiado (tolerado)
+
+
+2.3. Dónde se LEE/USA
+---------------------
+
+▸ Agenda (Reservas de citas)
+  Archivo: agenda/views.py línea 89
+  
+  servicios = Servicio.objects.all().order_by('categoria', 'nombre')
+  
+  Uso: Select dropdown para elegir servicio al agendar
+  Relación: Cita.servicio → opcional, permite calcular duración
+  Datos usados: duracion, precio, nombre
+
+
+▸ Clínica (Consultas y Cirugías)
+  Archivos: clinica/views.py líneas 241-305, clinica/models.py
+
+  Integración Consulta:
+  - Consulta tiene servicios = ManyToManyField(Servicio)
+  - Al crear consulta, se vinculan servicios seleccionados
+  - Mapeo automático: categoría servicio → tipo_consulta
+    Ejemplo: Categoría "vacuna" → tipo_consulta='vacuna'
+
+  Integración Cirugía:
+  - Cirugia tiene servicio = ForeignKey(Servicio, SET_NULL)
+  - Se usa para obtener precio de cirugía
+  - Campo tipo_cirugia se copia de servicio.nombre
+
+
+▸ Caja (Facturación)
+  Archivo: caja/services.py líneas 131-138
+
+  Flujo de facturación:
+  1. Consulta/Cirugía vincula servicios
+  2. Caja genera Venta y DetalleVenta
+  3. Cada servicio se convierte en línea de venta:
+     - tipo='servicio'
+     - servicio=<FK>
+     - descripcion=servicio.nombre (COPIADO)
+     - precio_unitario=servicio.precio (COPIADO)
+
+  Protección de datos:
+  ✓ Al copiar precio/descripción a DetalleVenta, la venta es inmutable
+  ✓ Eliminar o editar servicio NO afecta ventas históricas
+
+
+▸ Dashboard (Reportes)
+  Archivo: dashboard/views.py línea 131
+  
+  select_related('servicio') en queries de citas
+  Usado para mostrar "Servicio prestado" en reportes
+
+
+2.4. Signals y lógica implícita
+--------------------------------
+Archivo verificado: No existe servicios/signals.py
+
+Conclusión: NO hay lógica automática tipo:
+✗ Descuento de inventario al usar servicio
+✗ Notificaciones al cambiar precio
+✗ Validaciones en cascada
+
+Todo el procesamiento es EXPLÍCITO en vistas.
+
+================================================================================
+3. SOLAPAMIENTOS Y DUPLICACIÓN
+================================================================================
+
+3.1. Solapamiento con otros modelos
+------------------------------------
+
+▸ clinica.Consulta.tipo_consulta vs Servicio.categoria
+
+┌─────────────────┬──────────────────────┬────────────────────────┐
+│ Campo           │ Naturaleza           │ Uso                    │
+├─────────────────┼──────────────────────┼────────────────────────┤
+│ tipo_consulta   │ CharField con choices│ Clasificación médica   │
+│ servicio.cat... │ CharField libre      │ Clasificación comercial│
+└─────────────────┴──────────────────────┴────────────────────────┘
+
+Solapamiento parcial:
+- Hay mapeo automático: servicio "vacuna" → tipo_consulta='vacuna'
+- Pero tipo_consulta tiene más opciones (urgencia, control, etc.)
+- NO son redundantes: tipo_consulta es médico, categoria es comercial
+
+
+▸ Cirugia.tipo_cirugia vs Servicio.nombre
+
+┌──────────────┬──────────────┬──────────────────┐
+│ Campo        │ Origen       │ Mutabilidad      │
+├──────────────┼──────────────┼──────────────────┤
+│ tipo_cirugia │ Manual       │ Texto libre      │
+│ servicio...  │ FK opcional  │ Catálogo         │
+└──────────────┴──────────────┴──────────────────┘
+
+Comportamiento:
+- Si cirugía vincula servicio: tipo_cirugia toma servicio.nombre
+- Si cirugía es manual: tipo_cirugia es texto libre
+- NO hay sincronización automática
+
+¿Es solapamiento? NO - Es flexibilidad para cirugías ad-hoc
+
+
+3.2. ¿Legacy o Activo?
+----------------------
+Estado: ✅ ACTIVO Y FUNDAMENTAL
+
+Evidencia de uso actual:
+1. CRUD completo en templates (servicios/servicios.html)
+2. JavaScript de modal activo (modal_servicios.js)
+3. Integración en 4 apps críticas (agenda, clinica, caja, dashboard)
+4. Relaciones FK/M2M desde modelos activos
+5. Facturación depende de precios de servicio
+
+NO es legacy:
+✓ No hay comentarios de deprecación
+✓ Migraciones recientes (0002_initial.py con relaciones)
+✓ Uso consistente en flujos operativos
+
+================================================================================
+4. RIESGO Y CLASIFICACIÓN
+================================================================================
+
+Nivel de criticidad: 🔴 CRÍTICA
+
+Justificación:
+
+▸ Impacto en operaciones
+  - Agenda: Citas sin servicio pierden estimación de duración
+  - Facturación: Sin servicio, no hay precio de referencia
+  - Reportes: Dashboard pierde clasificación de servicios
+
+▸ Dependencias técnicas
+  
+  Servicio (MAESTRO)
+     ↓ FK (agenda)
+     Cita
+     
+     ↓ FK (clinica)
+     Cirugia
+     
+     ↓ M2M (clinica)
+     Consulta
+     
+     ↓ FK (caja)
+     DetalleVenta → Venta → SesionCaja
+
+Eliminar app servicios causaría:
+✗ Pérdida de catálogo comercial
+✗ Precios inconsistentes en facturación
+✗ Agenda sin metadatos de duración
+✗ Migración masiva para reemplazar FKs
+
+▸ Protección existente
+  ✓ Caja copia precio/descripción (ventas históricas seguras)
+  ✓ FKs con SET_NULL (no rompen registros)
+  ⚠ Pero eliminación forzada con SQL raw bypassea protecciones
+
+
+Sensibilidad a cambios:
+┌───────────────────────────┬────────────┬──────────────────────┐
+│ Operación                 │ Riesgo     │ Razón                │
+├───────────────────────────┼────────────┼──────────────────────┤
+│ Agregar campo             │ 🟢 Bajo    │ Solo migración       │
+│ Cambiar precio servicio   │ 🟠 Medio   │ NO afecta pasadas    │
+│ Eliminar servicio         │ 🔴 Alto    │ SQL raw peligroso    │
+│ Cambiar categoría         │ 🟡 Bajo    │ Afecta mapeo futuro  │
+│ Modificar duración        │ 🟢 Bajo    │ Solo agenda futura   │
+└───────────────────────────┴────────────┴──────────────────────┘
+
+================================================================================
+5. CONCLUSIONES Y RECOMENDACIONES
+================================================================================
+
+5.1. Veredicto: MANTENER
+-------------------------
+Razones:
+1. Modelo central: Catálogo maestro de servicios comerciales
+2. Integración profunda: 4 apps dependen de él
+3. Sin redundancia real: No duplica funcionalidad de otros modelos
+4. Activo y necesario: Usado en flujos operativos diarios
+
+
+5.2. Refactorización futura (solo análisis)
+--------------------------------------------
+Si en el futuro se considerara mejorar:
+
+▸ Problema 1: Eliminación insegura
+  Archivo: servicios/views.py líneas 100-106
+  
+  # ACTUAL: Bypassea protecciones
+  with connection.cursor() as cursor:
+      cursor.execute("DELETE FROM Servicio WHERE idServicio = %s")
+  
+  Riesgo: Puede dejar FKs huérfanos si algo falla en SET_NULL
+  
+  Evaluación futura:
+  - Validar que no haya citas futuras con ese servicio
+  - Usar servicio.delete() natural de Django
+  - O marcar como inactivo en vez de eliminar
+
+
+▸ Problema 2: ServicioInsumo no usado
+  Estado: Modelo poblado pero sin lógica
+  
+  Evaluación futura:
+  - Si nunca se usa: considerar eliminar relación con Insumo
+  - Si se quiere usar: implementar validación de stock al agendar
+  - Si se mantiene pasivo: documentar que es solo referencia
+
+
+▸ Problema 3: Validación de duración
+  Actual: Solo valida en clean(), no en cascada
+  
+  Evaluación futura:
+  - Al editar duración, verificar que no rompa citas agendadas
+  - O permitir ajustar automáticamente citas futuras
+
+
+5.3. Calidad del modelo: 🟢 BUENA
+----------------------------------
+Fortalezas:
+✓ Campos bien definidos
+✓ Validaciones de negocio presentes
+✓ Property blocks_required útil para agenda
+✓ Meta correcta (ordering, verbose_name)
+✓ Timestamps automáticos
+
+Debilidades menores:
+⚠ Campo categoria es CharField libre (podría ser choices)
+⚠ No tiene flag activo (marcado lógico vs eliminación física)
+
+
+5.4. Documentación recomendada
+-------------------------------
+Si se documenta la app, incluir:
+
+Para desarrolladores:
+- Servicio es catálogo maestro de precios
+- Duración DEBE ser múltiplo de 15
+- Precio se copia a DetalleVenta (editar NO afecta ventas pasadas)
+- ServicioInsumo es solo referencia, no automatiza inventario
+
+Para usuarios:
+- Cambiar precio NO afecta cobros anteriores
+- Eliminar servicio puede afectar reportes históricos
+- Categoría se usa para clasificar consultas automáticamente
+
+================================================================================
+RESUMEN EJECUTIVO
+================================================================================
+┌─────────────────┬────────────────────────────────────────────────┐
+│ Aspecto         │ Evaluación                                     │
+├─────────────────┼────────────────────────────────────────────────┤
+│ Estado          │ ✅ Activo, usado diariamente                   │
+│ Criticidad      │ 🔴 Crítica - Central al sistema                │
+│ Duplicación     │ ✅ No hay duplicidad real                      │
+│ Calidad técnica │ 🟢 Buena, con mejoras menores posibles         │
+│ Riesgo eliminar │ 🔴 Alto - Requiere refactor masivo             │
+│ Recomendación   │ MANTENER                                       │
+└─────────────────┴────────────────────────────────────────────────┘
+
+Acción: No tocar. Es pieza fundamental del sistema.
+
+================================================================================
+FIN DEL ANÁLISIS DIAGNÓSTICO
+================================================================================

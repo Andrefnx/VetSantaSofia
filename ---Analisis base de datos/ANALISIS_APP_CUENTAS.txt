@@ -1,0 +1,386 @@
+================================================================================
+                    ANÁLISIS DE LA APP "CUENTAS"
+================================================================================
+Fecha: 15 de Diciembre de 2025
+Sistema: VetSantaSofia - Sistema de Gestión Veterinaria
+================================================================================
+
+================================================================================
+1. MODELOS DE LA APP
+================================================================================
+
+MODELO: CustomUser (Modelo Principal)
+--------------------------------------
+Archivo: cuentas/models.py
+
+DESCRIPCIÓN:
+Modelo de autenticación customizado que extiende AbstractBaseUser y 
+PermissionsMixin. Reemplaza completamente al modelo User de Django estándar. 
+Es el núcleo del sistema de usuarios y personal de la clínica.
+
+CAMPOS PRINCIPALES:
+- rut (CharField, unique) - Campo de login principal
+- username (CharField, unique, auto-generado) - Generado automáticamente desde RUT sin guiones
+- nombre, apellido (CharField)
+- correo (EmailField, unique)
+- telefono, direccion (CharField, opcional)
+- tipo_contrato (CharField, opcional)
+- rol (CharField, choices) - VALORES: 'administracion', 'veterinario', 'recepcion'
+- is_staff, is_active, is_superuser (BooleanField) - Permisos Django
+- date_joined (DateTimeField)
+
+MANAGER PERSONALIZADO: CustomUserManager
+- Normaliza RUT automáticamente (elimina puntos, espacios, agrega guión)
+- Genera username automático desde RUT
+- Implementa create_user() y create_superuser()
+
+PROPIEDADES/MÉTODOS:
+- nombre_completo (property) - Retorna nombre + apellido
+- get_rol_display_custom() - Retorna "Administración" para superusuarios
+- save() - Override para normalizar RUT y generar username antes de guardar
+
+================================================================================
+2. USO REAL DEL MODELO
+================================================================================
+
+DÓNDE SE CREAN LOS REGISTROS
+-----------------------------
+
+1. VIA ADMIN DE DJANGO
+   - cuentas/admin.py - CustomUserAdmin registrado
+   - Permite crear/editar usuarios desde /admin/cuentas/customuser/
+
+2. VIA REGISTRO PÚBLICO
+   - login/views.py línea 159-171 - función register_view()
+   - Endpoint: /register/
+   - Crea usuarios con User.objects.create_user()
+   - Asigna is_staff=True si tipo_contrato='administracion'
+
+3. VIA COMMAND MANAGEMENT
+   - cuentas/management/commands/generar_usernames.py
+   - Comando: python manage.py generar_usernames
+   - Genera usernames para usuarios existentes sin username
+
+DÓNDE SE EDITAN LOS REGISTROS
+------------------------------
+
+1. ADMIN DE DJANGO
+   - Edición completa de campos, permisos, grupos
+   
+2. VISTA DE VETERINARIOS (NO IMPLEMENTADA completamente)
+   - clinica/templates/veterinarios/veterinarios.html
+   - Tiene modales HTML para editar pero SIN backend conectado
+   - Funciones JS: abrirModalNuevoVeterinario(), switchToEditModeVeterinario()
+   - ESTADO: NO IMPLEMENTADAS
+
+DÓNDE SE LEEN/CONSULTAN LOS REGISTROS
+--------------------------------------
+
+A. AUTENTICACIÓN Y LOGIN
+   - login/views.py - login_view() 
+     * Busca usuario por RUT (normalizado)
+     * Verifica password con user.check_password()
+   
+   - cuentas/auth_backend.py - RUTAuthBackend
+   - cuentas/backends.py - RutBackend
+     * Backend de autenticación que busca por RUT normalizado
+
+B. AGENDA (referencias a veterinarios)
+   - agenda/views.py líneas 77-83
+     * CustomUser.objects.filter(rol='veterinario', is_active=True)
+     * Filtra solo veterinarios para asignar citas
+     * Si el usuario logueado es veterinario (no admin), solo ve su propia agenda
+
+   - agenda/models.py
+     * HorarioFijoVeterinario.veterinario (FK a CustomUser, limit_choices_to={'rol': 'veterinario'})
+     * DisponibilidadVeterinario.veterinario (FK a CustomUser, limit_choices_to={'rol': 'veterinario'})
+     * DisponibilidadBloquesDia.veterinario (FK a CustomUser, limit_choices_to={'rol': 'veterinario'})
+     * Cita.veterinario (FK a CustomUser, limit_choices_to={'rol': 'veterinario'})
+
+C. CLÍNICA (asignación de consultas, cirugías, hospitalizaciones)
+   - clinica/views.py
+     * Línea 86: CustomUser.objects.filter(rol='veterinario') - Para ficha de paciente
+     * Línea 508-529: Estrategia de fallback para obtener veterinarios:
+       1. Primero filtra por rol='veterinario'
+       2. Si no hay, excluye admin/recepción
+       3. Si aún no hay, usa todos los usuarios
+     * Línea 641: Endpoint API /clinica/api/veterinarios/ - Retorna JSON de veterinarios
+
+   - clinica/models.py
+     * Consulta.veterinario (FK a AUTH_USER_MODEL)
+     * Hospitalizacion.veterinario (FK a AUTH_USER_MODEL)
+     * Cirugia.veterinario_cirujano (FK a AUTH_USER_MODEL, related_name='cirugias_realizadas')
+     * RegistroDiario.veterinario (FK a AUTH_USER_MODEL)
+     * InsumoConsulta.confirmado_por (FK a AUTH_USER_MODEL)
+     * InsumoCirugia.confirmado_por (FK a AUTH_USER_MODEL)
+     * InsumoHospitalizacion.confirmado_por (FK a AUTH_USER_MODEL)
+
+D. PACIENTES
+   - pacientes/views.py línea 185
+     * CustomUser.objects.filter(rol='veterinario') - Para dropdown de veterinarios
+
+   - pacientes/models.py línea 7
+     * User = get_user_model() - Referencia indirecta a CustomUser
+
+E. CAJA
+   - caja/models.py
+     * Caja.usuario (FK a AUTH_USER_MODEL, on_delete=CASCADE)
+     * Cobro.usuario (FK a AUTH_USER_MODEL, on_delete=PROTECT)
+
+   - caja/views.py
+     * Líneas 21, 58: Control de acceso por rol:
+       if not (request.user.is_superuser or request.user.is_staff or 
+               request.user.rol in ['recepcion', 'administracion'])
+
+F. INVENTARIO
+   - inventario/models.py línea 67
+     * Insumo.usuario_ultimo_movimiento (FK a AUTH_USER_MODEL, SET_NULL)
+
+   - inventario/views.py línea 20
+     * Control de acceso: if request.user.rol not in ['administracion', 'veterinario']
+
+G. DASHBOARD
+   - dashboard/views.py líneas 47-54
+     * Busca veterinario activo: CustomUser.objects.filter(rol='veterinario', is_active=True).first()
+     * Verifica si usuario es admin: usuario.rol == 'administracion' or usuario.is_superuser
+
+H. SCRIPTS DE INICIALIZACIÓN
+   - agenda/management/commands/inicializar_horarios.py
+   - agenda/management/commands/regenerar_disponibilidades.py
+   - agenda/management/commands/inicializar_agenda.py
+   - Todos importan from cuentas.models import CustomUser para obtener veterinarios
+
+================================================================================
+3. SOLAPAMIENTO CON OTRAS APPS
+================================================================================
+
+CONCLUSIÓN: NO HAY SOLAPAMIENTO
+
+VERIFICACIÓN:
+- NO existe otro modelo de Usuario o Personal en el sistema
+- NO existe modelo "Veterinario" separado
+- NO existe modelo "Empleado" o "Staff" en otra app
+- La app gestion tiene modelos legacy (Cliente, Mascota, Consulta) pero NO tiene modelo de usuarios
+- La app hospital tiene Hospitalizacion pero referencia a pacientes.Paciente, no a usuarios
+
+ES EL ÚNICO MODELO DE USUARIOS DEL SISTEMA
+
+CustomUser es el modelo central de autenticación y personal. Todas las apps que 
+necesitan referenciar usuarios utilizan:
+- settings.AUTH_USER_MODEL en ForeignKeys
+- get_user_model() para importar dinámicamente
+- from cuentas.models import CustomUser directamente
+
+================================================================================
+4. NIVEL DE RIESGO
+================================================================================
+
+🔴 CRÍTICA - NO TOCAR
+
+RAZONES:
+
+1. ES EL AUTH_USER_MODEL DEL PROYECTO
+   - Definido en veteriaria/settings.py línea 158: AUTH_USER_MODEL = 'cuentas.CustomUser'
+   - NO SE PUEDE cambiar sin migración extremadamente compleja y riesgosa
+
+2. SISTEMA DE AUTENTICACIÓN COMPLETO DEPENDE DE ELLA
+   - 2 backends personalizados de autenticación
+   - Login por RUT en lugar de username/email
+   - Sistema de permisos Django integrado
+
+3. MÚLTIPLES FOREIGNKEYS EN TODA LA BASE DE DATOS
+   - agenda: 4 modelos (HorarioFijoVeterinario, DisponibilidadVeterinario, DisponibilidadBloquesDia, Cita)
+   - clinica: 7 modelos (Consulta, Hospitalizacion, Cirugia, RegistroDiario, InsumoConsulta, InsumoCirugia, InsumoHospitalizacion)
+   - caja: 2 modelos (Caja, Cobro)
+   - inventario: 1 modelo (Insumo)
+   - Total: 14+ modelos con ForeignKey a CustomUser
+
+4. CONTROL DE ACCESO BASADO EN CAMPO rol
+   - Toda la lógica de permisos usa request.user.rol en lugar de grupos Django
+   - Cambiar estructura requeriría refactorizar decenas de vistas
+
+5. MIGRACIONES EXISTENTES DEPENDEN DE ELLA
+   - Múltiples migraciones en todas las apps referencian settings.AUTH_USER_MODEL
+   - Es el modelo base de la migración inicial (0001_initial.py)
+
+================================================================================
+5. DEPENDENCIAS CRÍTICAS CON OTRAS APPS
+================================================================================
+
+Apps que DEPENDEN críticamente de cuentas.CustomUser:
+
+┌─────────────┬────────────────────┬───────────────────┬──────────────────┐
+│ App         │ Nivel Dependencia  │ Modelos Afectados │ Tipo de Uso      │
+├─────────────┼────────────────────┼───────────────────┼──────────────────┤
+│ agenda      │ 🔴 CRÍTICA        │ 4 modelos         │ FK, filtros rol  │
+│ clinica     │ 🔴 CRÍTICA        │ 7 modelos         │ FK, API, control │
+│ caja        │ 🔴 CRÍTICA        │ 2 modelos         │ FK CASCADE/PROT  │
+│ login       │ 🔴 CRÍTICA        │ -                 │ Auth, registro   │
+│ dashboard   │ 🟠 ALTA           │ -                 │ Filtros por rol  │
+│ pacientes   │ 🟠 ALTA           │ -                 │ Dropdowns vets   │
+│ inventario  │ 🟡 MEDIA          │ 1 modelo          │ FK SET_NULL      │
+└─────────────┴────────────────────┴───────────────────┴──────────────────┘
+
+================================================================================
+6. CAMPOS O MODELOS POCO USADOS
+================================================================================
+
+CAMPOS CON USO LIMITADO:
+
+1. tipo_contrato
+   - Solo usado en registro (login/views.py)
+   - Se asigna pero raramente se consulta
+   - Parece redundante con el campo rol
+
+2. direccion
+   - Campo opcional
+   - Solo se captura en registro
+   - No se usa en ninguna vista o lógica de negocio
+
+3. telefono
+   - Campo opcional
+   - Se captura pero no se usa en vistas
+   - No se muestra en interfaces de usuario
+
+CAMPOS SUBUTILIZADOS PERO IMPORTANTES:
+
+- is_staff y is_superuser
+  * Usados en control de acceso pero no de forma consistente
+  * En algunos lugares se verifica is_superuser, en otros rol == 'administracion'
+  * Genera inconsistencias en permisos
+
+================================================================================
+7. PROBLEMAS DETECTADOS
+================================================================================
+
+A. VISTA DE VETERINARIOS NO FUNCIONAL
+   - clinica/templates/veterinarios/veterinarios.html
+   - Tiene interfaz completa con modales CRUD
+   - NO tiene endpoints backend para:
+     * Crear veterinario
+     * Editar veterinario
+     * Eliminar veterinario
+     * Listar veterinarios (usa datos hardcodeados en HTML)
+
+B. INCONSISTENCIA EN AUTENTICACIÓN
+   - 2 backends diferentes:
+     * cuentas.auth_backend.RUTAuthBackend
+     * cuentas.backends.RutBackend
+   - veteriaria/settings.py línea 170-173 define ambos
+
+C. ESTRATEGIA DE FALLBACK FRÁGIL
+   - clinica/views.py líneas 517-529
+   - Si no hay veterinarios con rol='veterinario', usa TODOS los usuarios
+   - Esto puede causar asignación incorrecta de citas/consultas
+
+D. CONTROL DE ACCESO NO ESTANDARIZADO
+   - Mezcla de is_staff, is_superuser y rol
+   - No usa grupos de Django (groups)
+   - Dificulta mantenimiento y auditoría de permisos
+
+================================================================================
+8. DATOS DE USO
+================================================================================
+
+Campos del modelo CustomUser usados en el sistema:
+
+┌────────────────┬────────────────────────────┬─────────────┐
+│ Campo          │ Uso                        │ Frecuencia  │
+├────────────────┼────────────────────────────┼─────────────┤
+│ rut            │ Login, identificación      │ 🔴 MUY ALTO │
+│ username       │ Backend auth, internal     │ 🟠 ALTO     │
+│ nombre         │ Display en UI, dropdowns   │ 🔴 MUY ALTO │
+│ apellido       │ Display en UI, dropdowns   │ 🔴 MUY ALTO │
+│ correo         │ Registro, validación       │ 🟠 ALTO     │
+│ rol            │ Control de acceso, filtros │ 🔴 MUY ALTO │
+│ is_staff       │ Permisos Django admin      │ 🟡 MEDIO    │
+│ is_superuser   │ Permisos máximos           │ 🟡 MEDIO    │
+│ is_active      │ Filtro de usuarios         │ 🟠 ALTO     │
+│ telefono       │ Opcional, poco usado       │ 🟢 BAJO     │
+│ direccion      │ Opcional, poco usado       │ 🟢 BAJO     │
+│ tipo_contrato  │ Registro, redundante       │ 🟢 BAJO     │
+└────────────────┴────────────────────────────┴─────────────┘
+
+================================================================================
+9. CONCLUSIÓN DE LA APP
+================================================================================
+
+ESTADO ACTUAL:
+La app cuentas es EL PILAR CENTRAL del sistema. Es el modelo de autenticación 
+customizado que reemplaza al User estándar de Django.
+
+¿DEBE QUEDARSE TAL CUAL?
+✅ SÍ - Debe quedarse con su estructura actual porque:
+- Es el AUTH_USER_MODEL del proyecto
+- Tiene migraciones aplicadas en producción
+- 14+ modelos dependen de ella con ForeignKeys
+- Cambiar esto requeriría recrear toda la base de datos
+
+¿DEBE REFACTORIZARSE EN EL FUTURO?
+🟠 SÍ, PERO CON CUIDADO - Solo refactorizaciones menores:
+
+CANDIDATOS PARA MEJORA (sin tocar modelo):
+1. Consolidar backends de autenticación (eliminar duplicado)
+2. Estandarizar control de acceso (usar solo rol o migrar a grupos Django)
+3. Implementar endpoints backend para CRUD de veterinarios
+4. Agregar índices en campo rol para mejorar performance
+5. Documentar claramente uso de is_staff vs rol
+
+NO HACER:
+❌ Renombrar el modelo
+❌ Cambiar AUTH_USER_MODEL
+❌ Eliminar campos (pueden tener datos en producción)
+❌ Cambiar tipo de campos existentes
+❌ Eliminar la app
+
+¿PUEDE ELIMINARSE?
+❌ ABSOLUTAMENTE NO
+- Es imposible eliminar el modelo de autenticación
+- Django requiere un modelo User
+- Toda la lógica de login, permisos y sesiones depende de él
+- Eliminarla rompería completamente el sistema
+
+================================================================================
+10. RECOMENDACIONES FINALES
+================================================================================
+
+PRIORIDAD ALTA - Para implementar PRONTO:
+1. ✅ Implementar backend para CRUD de veterinarios en /clinica/
+2. ✅ Consolidar backends de autenticación (elegir uno solo)
+3. ✅ Documentar uso de roles vs permisos Django
+4. ✅ Agregar índice en campo rol:
+   indexes = [models.Index(fields=['rol'])]
+
+PRIORIDAD MEDIA - Para planificar:
+1. Evaluar migración de campo rol a Django Groups
+2. Unificar control de acceso en decoradores/mixins reutilizables
+3. Eliminar campos telefono, direccion o darles uso real
+4. Decidir si tipo_contrato debe eliminarse o usarse más
+
+PRIORIDAD BAJA - Consideraciones futuras:
+1. Agregar modelo VeterinarioProfile con especialidades, horarios preferidos, etc.
+2. Implementar sistema de permisos granular (ej: permisos por tipo de consulta)
+3. Agregar auditoría de cambios en usuarios (logs de modificaciones)
+
+================================================================================
+11. RESUMEN EJECUTIVO
+================================================================================
+
+┌─────────────────────┬────────────────────────────────────────────┐
+│ Aspecto             │ Evaluación                                 │
+├─────────────────────┼────────────────────────────────────────────┤
+│ Nivel de Riesgo     │ 🔴 CRÍTICA - NO TOCAR                     │
+│ Dependencias        │ 14+ modelos en 7 apps                      │
+│ Solapamiento        │ ✅ Ninguno (es único)                      │
+│ Estado              │ 🟢 Funcional pero con deuda técnica menor  │
+│ Acción recomendada  │ 🛠️ Mantener + refactorizar vistas        │
+└─────────────────────┴────────────────────────────────────────────┘
+
+VEREDICTO FINAL:
+La app cuentas debe mantenerse intacta a nivel de modelo. Solo se deben hacer 
+mejoras en las vistas, endpoints de API y lógica de control de acceso, SIN 
+tocar la estructura del modelo CustomUser.
+
+================================================================================
+FIN DEL ANÁLISIS
+================================================================================
