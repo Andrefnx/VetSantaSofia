@@ -255,8 +255,11 @@ label {
     background: var(--primary-color) !important;
     color: var(--bg-white) !important;
     border: none !important;
+    padding: 0.625rem 1rem !important;
     border-radius: var(--radius-md) !important;
     font-size: 0.9rem !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s ease !important;
 }
 
 .btn-primary i,
@@ -309,9 +312,11 @@ label {
     background: var(--grey) !important;
     color: var(--bg-white) !important;
     border: none !important;
-    padding: 10px 16px !important;
+    padding: 0.625rem 1rem !important;
     border-radius: var(--radius-md) !important;
     font-size: 0.9rem !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s ease !important;
 }
 
 .btn-cancel i,
