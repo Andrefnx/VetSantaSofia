@@ -2221,18 +2221,27 @@ body {
     top: 0;
     left: 0;
     min-width: 260px;
+    width: auto;
+    max-width: fit-content;
     height: 100vh;
     background: #1a2035;
     z-index: 1000;
-    transition: width 0.3s ease, transform 0.3s ease;
+    transition: min-width 0.35s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
     display: flex;
     flex-direction: column;
 }
 
+.vet-sidebar:not(.collapsed) {
+    overflow: visible;
+}
+
 .vet-sidebar.collapsed,
 html.sidebar-is-collapsed .vet-sidebar {
+    min-width: 70px;
+    max-width: 70px;
     width: 70px;
+    overflow: hidden;
 }
 
 /* Sidebar Header */
@@ -2249,7 +2258,6 @@ html.sidebar-is-collapsed .vet-sidebar {
 .vet-sidebar-logo {
     display: flex;
     align-items: center;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
     opacity: 1;
     visibility: visible;
 }
@@ -2264,7 +2272,6 @@ html.sidebar-is-collapsed .vet-sidebar {
 .vet-sidebar-toggle-container {
     display: flex;
     align-items: center;
-    transition: margin 0.3s ease;
 }
 
 .vet-sidebar.collapsed .vet-sidebar-toggle-container {
@@ -2297,6 +2304,10 @@ html.sidebar-is-collapsed .vet-sidebar {
 .vet-sidebar-wrapper {
     flex: 1;
     overflow-y: auto;
+    overflow-x: visible;
+}
+
+.vet-sidebar.collapsed .vet-sidebar-wrapper {
     overflow-x: hidden;
 }
 
@@ -2335,27 +2346,37 @@ html.sidebar-is-collapsed .vet-sidebar {
     padding: 12px 20px;
     color: #b9babf;
     text-decoration: none;
-    transition: all 0.2s ease;
-    white-space: nowrap;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    white-space: normal;
+}
+
+.vet-sidebar.collapsed .vet-nav-link {
+    justify-content: center;
+    padding: 12px 10px;
 }
 
 .vet-nav-link i {
     font-size: 1.2rem;
     min-width: 30px;
     color: #b9babf;
+    flex-shrink: 0;
     transition: color 0.2s ease;
+}
+
+.vet-sidebar.collapsed .vet-nav-link i {
+    margin: 0;
 }
 
 .vet-nav-link span {
     margin-left: 10px;
     font-size: 0.95rem;
     font-weight: 400;
-    transition: opacity 0.3s ease;
+    flex: 1;
+    word-wrap: break-word;
 }
 
 .vet-sidebar.collapsed .vet-nav-link span {
-    opacity: 0;
-    visibility: hidden;
+    display: none;
 }
 
 .vet-nav-link:hover {
@@ -2408,7 +2429,6 @@ html.sidebar-is-collapsed .vet-sidebar {
     color: var(--primary-color);
     text-transform: uppercase;
     letter-spacing: 1px;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .vet-sidebar.collapsed .vet-nav-section-title {
@@ -2422,9 +2442,9 @@ html.sidebar-is-collapsed .vet-sidebar {
 
 /* Main Panel Adjustment */
 .main-panel {
-    margin-left: 260px !important;
-    transition: margin-left 0.3s ease !important;
-    width: calc(100% - 260px) !important;
+    margin-left: var(--sidebar-width, 260px) !important;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    width: calc(100% - var(--sidebar-width, 260px)) !important;
     position: relative;
     min-height: 100vh;
 }
