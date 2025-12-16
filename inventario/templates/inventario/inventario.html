@@ -3,6 +3,10 @@
 
 {% block title %}Inventario{% endblock %}
 
+{% block table_title %}
+<i class="bi bi-box-seam"></i> Inventario
+{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/custom/style_inventario.css' %}" type="text/css" media="all">
 <style>
@@ -52,10 +56,6 @@
     margin-right: 0.5rem;
 }
 </style>
-{% endblock %}
-
-{% block table_title %}
-<i class="fas fa-boxes"></i> Inventario
 {% endblock %}
 
 {% block table_filters %}
