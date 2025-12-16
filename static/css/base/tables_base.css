@@ -358,6 +358,7 @@
 }
 .manage-options {
     display: none;
+    position: fixed;
     min-width: 180px;
     background: #fff;
     border: 1.5px solid var(--primary-color);
@@ -369,7 +370,7 @@
 }
 
 .manage-options.show {
-    display: flex;
+    display: flex !important;
     animation: fadeInWheel 0.18s;
 }
 .manage-options button {
