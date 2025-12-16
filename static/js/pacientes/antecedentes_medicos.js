@@ -24,10 +24,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Mostrar/ocultar elementos
             infoAntecedentes.querySelectorAll('.view-mode').forEach(el => el.style.display = 'none');
-            infoAntecedentes.querySelectorAll('textarea.edit-mode').forEach(el => el.style.display = 'block');
+            infoAntecedentes.querySelectorAll('textarea.edit-mode').forEach(el => el.style.setProperty('display', 'block', 'important'));
             
-            btnEditarAntecedentes.style.display = 'none';
-            btnEditAntecedentesActions.style.display = 'flex';
+            btnEditarAntecedentes.style.setProperty('display', 'none', 'important');
+            btnEditAntecedentesActions.style.setProperty('display', 'flex', 'important');
         });
 
         // Cancelar edición
@@ -48,8 +48,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 infoAntecedentes.querySelectorAll('.view-mode').forEach(el => el.style.display = 'inline');
                 infoAntecedentes.querySelectorAll('textarea.edit-mode').forEach(el => el.style.display = 'none');
                 
-                btnEditarAntecedentes.style.display = 'block';
-                btnEditAntecedentesActions.style.display = 'none';
+                btnEditarAntecedentes.style.setProperty('display', 'inline-block', 'important');
+                btnEditAntecedentesActions.style.setProperty('display', 'none', 'important');
             });
         }
 
@@ -96,8 +96,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         infoAntecedentes.querySelectorAll('.view-mode').forEach(el => el.style.display = 'inline');
                         infoAntecedentes.querySelectorAll('textarea.edit-mode').forEach(el => el.style.display = 'none');
                         
-                        btnEditarAntecedentes.style.display = 'block';
-                        btnEditAntecedentesActions.style.display = 'none';
+                        btnEditarAntecedentes.style.setProperty('display', 'inline-block', 'important');
+                        btnEditAntecedentesActions.style.setProperty('display', 'none', 'important');
                         
                         // También actualizar en el modal si está abierto
                         actualizarAntecedentesModal(data);
