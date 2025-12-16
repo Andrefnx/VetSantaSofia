@@ -15,9 +15,20 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    {% csrf_token %}
-    <div class="general-container">
+<div class="container-fluid p-0">
+    <!-- Encabezado -->
+    <div class="p-1-5">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+                <h1 class="page-title"><i class="bi bi-clipboard2-pulse"></i> Ficha Clínica: {{ paciente.nombre }}</h1>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="p-1-5">
+        {% csrf_token %}
+        <div class="general-container">
         <div class="general-information">
             <div class="section personal-info">
                 <div class="section-header-with-edit">
@@ -1153,6 +1164,9 @@
         </form>
     </div>
 </div>
+
+    </div> <!-- Cierre p-1-5 contenido -->
+</div> <!-- Cierre container-fluid -->
 
 {% endblock %}
 
