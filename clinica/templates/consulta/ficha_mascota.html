@@ -739,39 +739,6 @@
 
 <!-- ⭐ MODALES (sin cambios) -->
 
-<script>
-// Toggle edición de Antecedentes en la ficha (no modal)
-document.addEventListener('DOMContentLoaded', function() {
-    const btnEditar = document.getElementById('btnEditarAntecedentes');
-    const acciones = document.getElementById('btnEditAntecedentesActions');
-    const contenedor = document.getElementById('infoAntecedentes');
-    const btnCancelar = document.getElementById('btnCancelarAntecedentes');
-    const btnGuardar = document.getElementById('btnGuardarAntecedentes');
-
-    if (!btnEditar || !acciones || !contenedor) return;
-
-    const setEditMode = (editing) => {
-        // Mostrar/ocultar acciones
-        acciones.style.display = editing ? 'flex' : 'none';
-        // Ocultar/mostrar el lápiz mientras se edita
-        btnEditar.style.display = editing ? 'none' : 'inline-flex';
-        // Alternar clase de edición; el CSS controla qué se muestra
-        contenedor.classList.toggle('edit-mode-active', editing);
-    };
-
-    // Inicial: solo texto
-    setEditMode(false);
-
-    btnEditar.addEventListener('click', () => setEditMode(true));
-    btnCancelar?.addEventListener('click', () => setEditMode(false));
-
-    // Guardar: mantener UI coherente; envío se maneja por backend o JS existente
-    btnGuardar?.addEventListener('click', () => {
-        // Aquí podrías recopilar datos si existe flujo de guardado específico
-        setEditMode(false);
-    });
-});
-</script>
 <!-- Modal Detalle Consulta -->
 <div id="detalleConsultaModal" class="vet-modal-overlay hide">
     <div class="vet-custom-modal">
