@@ -1,0 +1,1308 @@
+/* ============================================================
+   CONFIGURAR NIVELES DE STOCK
+============================================================ */
+function openConfigNivelesModal(btn) {
+    // Buscar el TR de manera robusta (misma lógica que abrirModalProducto)
+    let tr = btn.closest("tr");
+    
+    // Si no se encuentra con closest, intentar desde el botón padre
+    if (!tr) {
+        const manageWheel = btn.closest('.manage-wheel');
+        if (manageWheel) {
+            tr = manageWheel.closest('tr');
+        }
+    }
+    
+    // Si el botón tiene referencia al row original (del wheel clonado)
+    if (!tr && btn.__originalRow) {
+        tr = btn.__originalRow;
+    }
+    
+    // Si aún no se encuentra, buscar el TR que contiene el manage-wheel
+    if (!tr) {
+        const allRows = document.querySelectorAll('tbody tr[data-id]');
+        for (const row of allRows) {
+            if (row.contains(btn) || row.querySelector('.manage-wheel') === btn.closest('.manage-wheel')) {
+                tr = row;
+                break;
+            }
+        }
+    }
+    
+    if (!tr) {
+        console.error('No se encontró la fila de la tabla para el botón');
+        return;
+    }
+
+    const idInventario = tr.getAttribute("data-id");
+    const nombreProducto = tr.querySelector("td:nth-child(1)")?.textContent.trim() || "Producto";
+    
+    // Obtener datos actuales del producto
+    fetch(`/inventario/${idInventario}/detalle/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.insumo) {
+                // Poblar el modal con los datos actuales
+                document.getElementById('idProductoNiveles').value = idInventario;
+                document.getElementById('productoNombreNiveles').textContent = nombreProducto;
+                document.getElementById('inputStockMinimo').value = data.insumo.stock_minimo || 10;
+                document.getElementById('inputStockMedio').value = data.insumo.stock_medio || 20;
+                
+                // Abrir el modal
+                const modal = document.getElementById('modalConfigNiveles');
+                if (modal) {
+                    modal.classList.remove('hide');
+                    modal.classList.add('show');
+                }
+            } else {
+                alert("Error al cargar datos del producto");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Error al cargar el producto: " + error.message);
+        });
+}
+
+function guardarNivelesStock() {
+    const idProducto = document.getElementById('idProductoNiveles').value;
+    const stockMinimo = parseFloat(document.getElementById('inputStockMinimo').value);
+    const stockMedio = parseFloat(document.getElementById('inputStockMedio').value);
+    
+    // Validación básica
+    if (!stockMinimo || !stockMedio) {
+        alert("Por favor, ingresa ambos valores");
+        return;
+    }
+    
+    if (stockMinimo >= stockMedio) {
+        alert("El stock mínimo debe ser menor al stock medio");
+        return;
+    }
+    
+    // Enviar datos al servidor
+    fetch(`/inventario/${idProducto}/actualizar-niveles/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            stock_minimo: stockMinimo,
+            stock_medio: stockMedio
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Mostrar notificación de éxito
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #10b981;
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 999999;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            `;
+            notification.innerHTML = '<i class="fas fa-check-circle"></i> Niveles de stock actualizados correctamente';
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transition = 'opacity 0.3s';
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 2500);
+            
+            closeVetModal('modalConfigNiveles');
+            setTimeout(() => location.reload(), 600); // Recargar para ver cambios de color
+        } else {
+            alert("Error al guardar: " + (data.error || "Error desconocido"));
+        }
+    })
+    .catch(error => {
+        console.error("❌ Error:", error);
+        alert("Error al guardar niveles: " + error.message);
+    });
+}
+
+function closeVetModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('show');
+        modal.classList.add('hide');
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+/* ============================================================
+   CREAR PRODUCTO
+============================================================ */
+function abrirModalNuevoProducto() {
+    const data = {
+        nombre_comercial: "",
+        marca: "",
+        categoria: "",
+        sku: "",
+        tipo: "",
+        formato: "",
+        codigo_barra: "",
+        presentacion: "",
+        especie: "",
+        descripcion: "",
+        unidad_medida: "",
+        precio_venta: "",
+        stock_actual: "",
+        stock_minimo: "",
+        stock_maximo: "",
+        almacenamiento: "",
+        precauciones: "",
+        contraindicaciones: "",
+        efectos_adversos: "",
+        
+        // Dosis líquidos
+        dosis_ml: "",
+        ml_contenedor: "",
+        
+        // Dosis pastillas
+        cantidad_pastillas: "",
+        
+        // Dosis pipetas
+        unidades_pipeta: "",
+        
+        // Peso
+        peso_kg: "",
+        tiene_rango_peso: false,
+        peso_min_kg: "",
+        peso_max_kg: "",
+    };
+
+    openProductoModal("nuevo", data);
+}
+
+/* ============================================================
+   FUNCIÓN AUXILIAR PARA NORMALIZAR NÚMEROS
+============================================================ */
+function normalizarNumero(valor) {
+    if (!valor && valor !== 0) return '';
+    return valor.toString().replace(',', '.');
+}
+
+function parseNumeroSeguro(valor) {
+    if (!valor && valor !== 0) return '';
+    const normalizado = valor.toString().replace(',', '.');
+    const numero = parseFloat(normalizado);
+    return isNaN(numero) ? '' : numero;
+}
+
+/* ============================================================
+   VER / EDITAR PRODUCTO
+============================================================ */
+function abrirModalProducto(btn, mode) {
+    // Buscar el TR de manera robusta
+    let tr = btn.closest("tr");
+    
+    // Si no se encuentra con closest, intentar desde el botón padre
+    if (!tr) {
+        const manageWheel = btn.closest('.manage-wheel');
+        if (manageWheel) {
+            tr = manageWheel.closest('tr');
+        }
+    }
+    
+    // Si el botón tiene referencia al row original (del wheel clonado)
+    if (!tr && btn.__originalRow) {
+        tr = btn.__originalRow;
+    }
+    
+    // Si aún no se encuentra, buscar el TR que contiene el manage-wheel
+    if (!tr) {
+        const allRows = document.querySelectorAll('tbody tr[data-id]');
+        for (const row of allRows) {
+            if (row.contains(btn) || row.querySelector('.manage-wheel') === btn.closest('.manage-wheel')) {
+                tr = row;
+                break;
+            }
+        }
+    }
+    
+    if (!tr) {
+        console.error('❌ No se encontró la fila de la tabla para el botón:', btn);
+        console.error('❌ Este error no debería ocurrir. Verifica gestion_wheel.js');
+        return;
+    }
+
+    const idInventario = tr.getAttribute("data-id");
+    console.log('📦 Cargando producto ID:', idInventario);
+
+    fetch(`/inventario/${idInventario}/detalle/`)
+        .then(response => {
+            console.log('📡 Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('📊 Datos recibidos:', data);
+            
+            if (data.success && data.insumo) {
+                openProductoModal(mode, data.insumo);
+            } else {
+                alert("No se encontraron datos del producto");
+            }
+        })
+        .catch(error => {
+            console.error("❌ Error completo:", error);
+            alert("Error al cargar el producto: " + error.message);
+        });
+}
+
+/* ============================================================
+   ABRIR MODAL PRINCIPAL
+============================================================ */
+function openProductoModal(mode, data = {}) {
+    console.log('🔧 Abriendo modal en modo:', mode);
+    console.log('📋 Datos recibidos:', data);
+    
+    const modalId = 'modalProducto';
+    const modal = document.getElementById(modalId);
+    
+    if (!modal) {
+        console.error("❌ No se encuentra el modal:", modalId);
+        return;
+    }
+    
+    // 🔍 LOG DE CAMPOS DE DOSIS RECIBIDOS DEL SERVIDOR
+    console.log('📊 Valores de dosis del servidor:', {
+        dosis_ml: data.dosis_ml,
+        ml_contenedor: data.ml_contenedor,
+        cantidad_pastillas: data.cantidad_pastillas,
+        unidades_pipeta: data.unidades_pipeta,
+        peso_kg: data.peso_kg,
+        formato: data.formato
+    });
+    
+    // Mapear datos
+    const mappedData = {
+        idInventario: data.idInventario,
+        nombre_comercial: data.medicamento || data.nombre_comercial || "",
+        marca: data.marca || "",
+        sku: data.sku || "",
+        tipo: data.tipo || "",
+        formato: data.formato || "",
+        descripcion: data.descripcion || "",
+        especie: data.especie || "",
+        precio_venta: data.precio_venta || "",
+        stock_actual: data.stock_actual || 0,
+        
+        // Dosis líquidos
+        dosis_ml: data.dosis_ml || "",
+        ml_contenedor: data.ml_contenedor || "",
+        
+        // Dosis pastillas
+        cantidad_pastillas: data.cantidad_pastillas || "",
+        
+        // Dosis pipetas
+        unidades_pipeta: data.unidades_pipeta || "",
+        
+        // Peso
+        peso_kg: data.peso_kg || "",
+        tiene_rango_peso: data.tiene_rango_peso || false,
+        peso_min_kg: data.peso_min_kg || "",
+        peso_max_kg: data.peso_max_kg || "",
+        
+        precauciones: data.precauciones || "",
+        contraindicaciones: data.contraindicaciones || "",
+        efectos_adversos: data.efectos_adversos || "",
+        
+        fecha_creacion_formatted: data.fecha_creacion_formatted || "",
+        ultimo_ingreso_formatted: data.ultimo_ingreso_formatted || "",
+        ultimo_movimiento_formatted: data.ultimo_movimiento_formatted || "",
+        tipo_ultimo_movimiento_display: data.tipo_ultimo_movimiento_display || "",
+        usuario_ultimo_movimiento: data.usuario_ultimo_movimiento || "",
+        
+        dosis_display: data.dosis_display || "-",
+        categoria: data.categoria || "",
+        codigo_barra: data.codigo_barra || "",
+        presentacion: data.presentacion || "",
+        unidad_medida: data.unidad_medida || "",
+        almacenamiento: data.almacenamiento || "",
+        stock_minimo: data.stock_minimo || "",
+        stock_maximo: data.stock_maximo || "",
+        precio_compra: data.precio_compra || "",
+        stock: data.stock || "",
+        proveedor: data.proveedor || "",
+        especie: data.especie || "todos",
+    };
+    
+    console.log('🗺️ Datos mapeados:', mappedData);
+    
+    // ⭐ ACTUALIZAR VISTA DE DOSIS (usando la función del dosis_calculator.js)
+    const dosisFormulaView = modal.querySelector('[data-field="dosis_formula_view"]');
+    if (dosisFormulaView) {
+        dosisFormulaView.textContent = mappedData.dosis_display;
+        console.log('✅ dosis_formula_view:', mappedData.dosis_display);
+    }
+
+    // ⚡ Contenido del Envase - Label y valor dinámicos según formato
+    const mlContenedorView = modal.querySelector('[data-field="ml_contenedor_view"]');
+    const labelContenidoEnvase = modal.querySelector('#labelContenidoEnvase');
+    
+    if (mlContenedorView) {
+        const formato = mappedData.formato ? mappedData.formato.toLowerCase() : '';
+        
+        switch(formato) {
+            case 'liquido':
+            case 'inyectable':
+                if (labelContenidoEnvase) labelContenidoEnvase.textContent = 'Contenido del Envase (ml)';
+                mlContenedorView.textContent = mappedData.ml_contenedor ? `${mappedData.ml_contenedor} ml` : '-';
+                break;
+                
+            case 'pastilla':
+                if (labelContenidoEnvase) labelContenidoEnvase.textContent = 'Pastillas por Envase';
+                mlContenedorView.textContent = mappedData.cantidad_pastillas ? `${mappedData.cantidad_pastillas} pastillas` : '-';
+                break;
+                
+            case 'pipeta':
+                if (labelContenidoEnvase) labelContenidoEnvase.textContent = 'Unidades por Envase';
+                mlContenedorView.textContent = mappedData.unidades_pipeta ? `${mappedData.unidades_pipeta} pipetas` : '-';
+                break;
+                
+            case 'polvo':
+                if (labelContenidoEnvase) labelContenidoEnvase.textContent = 'Contenido del Envase (g)';
+                mlContenedorView.textContent = mappedData.ml_contenedor ? `${mappedData.ml_contenedor} g` : '-';
+                break;
+                
+            case 'crema':
+                if (labelContenidoEnvase) labelContenidoEnvase.textContent = 'Contenido del Envase (g)';
+                mlContenedorView.textContent = mappedData.ml_contenedor ? `${mappedData.ml_contenedor} g` : '-';
+                break;
+                
+            case 'otro':
+                if (labelContenidoEnvase) labelContenidoEnvase.textContent = 'Contenido del Envase';
+                mlContenedorView.textContent = mappedData.ml_contenedor ? `${mappedData.ml_contenedor} unidades` : '-';
+                break;
+                
+            default:
+                if (labelContenidoEnvase) labelContenidoEnvase.textContent = 'Contenido del Envase';
+                mlContenedorView.textContent = '-';
+                break;
+        }
+    }
+
+    if (mode === "edit" || mode === "view") {
+        modal.dataset.originalData = JSON.stringify(mappedData);
+    }
+
+    // Títulos y botones
+    const titulo = document.getElementById("modalProductoTitulo");
+    if (titulo) {
+        titulo.textContent = mode === "nuevo" ? "Nuevo Producto" : mode === "edit" ? "Editar Producto" : "Detalles del Producto";
+    }
+
+    // ⭐ CONFIGURAR BOTONES SEGÚN MODO
+    const btnEditar = document.getElementById("btnEditarProducto");
+    const btnGuardar = document.getElementById("btnGuardarProductoModal");
+    const btnCancelar = document.getElementById("btnCancelarProducto");
+    
+    console.log(`🔄 Configurando botones para modo: ${mode}`);
+    
+    if (mode === "view") {
+        // Modo vista: solo botón Editar visible
+        if (btnEditar) btnEditar.style.setProperty("display", "inline-flex", "important");
+        if (btnGuardar) btnGuardar.style.setProperty("display", "none", "important");
+        if (btnCancelar) btnCancelar.style.setProperty("display", "none", "important");
+    } else if (mode === "edit" || mode === "nuevo") {
+        // Modo edición/creación: mostrar Guardar y Cancelar, ocultar Editar
+        if (btnEditar) btnEditar.style.setProperty("display", "none", "important");
+        if (btnGuardar) btnGuardar.style.setProperty("display", "inline-flex", "important");
+        if (btnCancelar) btnCancelar.style.setProperty("display", mode === "edit" ? "inline-flex" : "none", "important");
+    }
+
+    // Mostrar/ocultar campos según modo
+    modal.querySelectorAll(".field-view").forEach((f) => {
+        if (!f.classList.contains('field-readonly')) {
+            f.classList.toggle("d-none", mode === "edit" || mode === "nuevo");
+        }
+    });
+
+    modal.querySelectorAll(".field-edit").forEach((f) => {
+        f.classList.toggle("d-none", mode === "view");
+    });
+
+    // Rellenar campos normales
+    Object.keys(mappedData).forEach((key) => {
+        const value = mappedData[key];
+        
+        // Campos de vista
+        if (!['dosis_ml', 'peso_kg', 'ml_contenedor', 'cantidad_pastillas', 'unidades_pipeta', 
+              'peso_min_kg', 'peso_max_kg', 'tiene_rango_peso'].includes(key)) {
+            const viewEl = modal.querySelector(`.field-view[data-field="${key}"]`);
+            if (viewEl && !viewEl.classList.contains('field-readonly')) {
+                viewEl.textContent = value || "-";
+            }
+        }
+
+        // Campos editables
+        const editEl = modal.querySelector(`input[data-field="${key}"], select[data-field="${key}"], textarea[data-field="${key}"]`);
+        if (editEl) {
+            if (editEl.type === 'checkbox') {
+                editEl.checked = Boolean(value);
+            } else if (editEl.tagName === "SELECT") {
+                editEl.value = value || "";
+            } else {
+                editEl.value = value || "";
+            }
+        }
+        
+        // También buscar dentro de .field-edit
+        const fieldEditDiv = modal.querySelector(`.field-edit[data-field="${key}"]`);
+        if (fieldEditDiv) {
+            const input = fieldEditDiv.querySelector('input, select, textarea');
+            if (input) {
+                if (input.type === 'checkbox') {
+                    input.checked = Boolean(value);
+                } else if (input.tagName === "SELECT") {
+                    input.value = value || "";
+                } else {
+                    input.value = value || "";
+                }
+            }
+        }
+    });
+    
+    // Campos de solo lectura (metadata)
+    const camposSoloLectura = [
+        'fecha_creacion_formatted',
+        'ultimo_ingreso_formatted',
+        'ultimo_movimiento_formatted',
+        'tipo_ultimo_movimiento_display',
+        'usuario_ultimo_movimiento'
+    ];
+    
+    camposSoloLectura.forEach(key => {
+        const readonlyEl = modal.querySelector(`.field-readonly[data-field="${key}"]`);
+        if (readonlyEl) {
+            readonlyEl.textContent = mappedData[key] || "-";
+        }
+    });
+
+    // Guardar ID
+    if (mappedData.idInventario) {
+        modal.dataset.idinventario = mappedData.idInventario;
+    } else {
+        delete modal.dataset.idinventario;
+    }
+    
+    // ⭐ Inicializar eventos de formato (dosis_calculator.js)
+    if (typeof inicializarEventosFormato === 'function') {
+        inicializarEventosFormato(modal);
+    }
+    
+    // ⭐ Actualizar campos de dosis según formato actual
+    if (mappedData.formato && typeof actualizarCamposDosis === 'function') {
+        // Pasar flag para NO limpiar valores durante la carga inicial
+        actualizarCamposDosis(mappedData.formato, modal, false); // false = no limpiar
+    }
+    
+    // ⭐ CARGAR VALORES DE DOSIS EN LOS CAMPOS VISIBLES (después de mostrar/ocultar)
+    // Esto asegura que los valores se carguen en los inputs correctos según el formato
+    const camposDosisData = {
+        dosis_ml: mappedData.dosis_ml,
+        ml_contenedor: mappedData.ml_contenedor,
+        cantidad_pastillas: mappedData.cantidad_pastillas,
+        unidades_pipeta: mappedData.unidades_pipeta,
+        peso_kg: mappedData.peso_kg
+    };
+    
+    console.log('📊 Cargando campos de dosis:', camposDosisData);
+    
+    Object.keys(camposDosisData).forEach(key => {
+        const value = camposDosisData[key];
+        if (value !== null && value !== undefined && value !== '') {
+            // Buscar el input VISIBLE (no oculto)
+            const inputVisible = modal.querySelector(`.campo-dosis:not(.d-none) input[data-field="${key}"]`);
+            if (inputVisible) {
+                inputVisible.value = value;
+                console.log(`✅ Cargando ${key} = ${value} en campo visible`);
+            } else {
+                // Si no está en campo-dosis visible, buscar en peso_kg (siempre visible)
+                const inputPeso = modal.querySelector(`input[data-field="${key}"]`);
+                if (inputPeso) {
+                    inputPeso.value = value;
+                    console.log(`✅ Cargando ${key} = ${value}`);
+                }
+            }
+        } else {
+            console.warn(`⚠️ Campo ${key} está vacío o nulo:`, value);
+        }
+    });
+
+    console.log('🎉 Abriendo modal...');
+    openVetModal(modalId);
+}
+
+/* ============================================================
+   CAMBIAR A MODO EDICIÓN
+============================================================ */
+function switchToEditModeProducto() {
+    const modal = document.getElementById('modalProducto');
+    
+    console.log('✏️ Cambiando de modo VER a EDITAR');
+    
+    // Guardar estado actual como backup para cancelar
+    const datosBackup = {};
+    modal.querySelectorAll('input[data-field], select[data-field], textarea[data-field]').forEach(input => {
+        const field = input.getAttribute('data-field');
+        if (input.type === 'checkbox') {
+            datosBackup[field] = input.checked;
+        } else {
+            datosBackup[field] = input.value;
+        }
+    });
+    modal.dataset.backupData = JSON.stringify(datosBackup);
+    console.log('💾 Backup guardado para cancelar');
+
+    // Ocultar campos de vista
+    modal.querySelectorAll(".field-view").forEach((f) => {
+        if (!f.classList.contains('field-readonly')) {
+            f.classList.add("d-none");
+        }
+    });
+
+    // Mostrar campos de edición
+    modal.querySelectorAll(".field-edit").forEach((f) => {
+        f.classList.remove("d-none");
+    });
+
+    // Cambiar botones
+    const btnGuardar = document.getElementById("btnGuardarProductoModal");
+    const btnCancelar = document.getElementById("btnCancelarProducto");
+    const btnEditar = document.getElementById("btnEditarProducto");
+
+    if (btnGuardar) btnGuardar.style.setProperty("display", "inline-flex", "important");
+    if (btnCancelar) btnCancelar.style.setProperty("display", "inline-flex", "important");
+    if (btnEditar) btnEditar.style.setProperty("display", "none", "important");
+    
+    // Cambiar título
+    const titulo = document.getElementById("modalProductoTitulo");
+    if (titulo) {
+        titulo.textContent = "Editar Producto";
+    }
+    
+    // ⭐ Actualizar campos de dosis según formato
+    const formatoActual = modal.querySelector('select[data-field="formato"]')?.value;
+    if (formatoActual && typeof actualizarCamposDosis === 'function') {
+        actualizarCamposDosis(formatoActual, modal, false); // false = no limpiar
+    }
+    
+    console.log('✅ Estado del modal: EDITAR');
+}
+
+/* ============================================================
+   CAMBIAR A MODO VISTA
+============================================================ */
+function switchToViewModeProducto() {
+    const modal = document.getElementById('modalProducto');
+    
+    console.log('👁️ Cambiando de modo EDITAR a VER');
+    
+    // Ocultar campos de edición
+    modal.querySelectorAll(".field-edit").forEach((f) => {
+        f.classList.add("d-none");
+    });
+
+    // Mostrar campos de vista
+    modal.querySelectorAll(".field-view").forEach((f) => {
+        if (!f.classList.contains('field-readonly')) {
+            f.classList.remove("d-none");
+        }
+    });
+    
+    // ⭐ CAMBIAR BOTONES
+    const btnGuardar = document.getElementById("btnGuardarProductoModal");
+    const btnCancelar = document.getElementById("btnCancelarProducto");
+    const btnEditar = document.getElementById("btnEditarProducto");
+
+    if (btnGuardar) btnGuardar.style.setProperty("display", "none", "important");
+    if (btnCancelar) btnCancelar.style.setProperty("display", "none", "important");
+    if (btnEditar) btnEditar.style.setProperty("display", "inline-flex", "important");
+    
+    // Cambiar título
+    const titulo = document.getElementById("modalProductoTitulo");
+    if (titulo) {
+        titulo.textContent = "Detalles del Producto";
+    }
+    
+    console.log('✅ Estado del modal: VER');
+}
+
+/* ============================================================
+   CANCELAR EDICIÓN (Volver a modo VER sin guardar)
+============================================================ */
+function cancelarEdicionProducto() {
+    const modal = document.getElementById('modalProducto');
+    
+    console.log('❌ Cancelando edición, restaurando valores originales');
+    
+    // Restaurar valores desde el backup
+    if (modal.dataset.backupData) {
+        const datosBackup = JSON.parse(modal.dataset.backupData);
+        
+        Object.keys(datosBackup).forEach(field => {
+            const value = datosBackup[field];
+            const input = modal.querySelector(`input[data-field="${field}"], select[data-field="${field}"], textarea[data-field="${field}"]`);
+            
+            if (input) {
+                if (input.type === 'checkbox') {
+                    input.checked = Boolean(value);
+                } else {
+                    input.value = value;
+                }
+            }
+            
+            // También buscar en campos dentro de .campo-dosis
+            const inputDosis = modal.querySelector(`.campo-dosis input[data-field="${field}"]`);
+            if (inputDosis) {
+                inputDosis.value = value;
+            }
+        });
+        
+        console.log('✅ Valores restaurados desde backup');
+        delete modal.dataset.backupData;
+    }
+    
+    // Volver a modo vista
+    switchToViewModeProducto();
+}
+
+/* ============================================================
+   GUARDAR PRODUCTO
+============================================================ */
+async function guardarProducto() {
+    console.log('💾 Intentando guardar producto...');
+    
+    const modal = document.getElementById('modalProducto');
+    const idInventario = modal?.dataset?.idinventario;
+    
+    // ⭐ URL CORREGIDA - Según tus rutas en urls.py
+    const url = idInventario 
+        ? `/inventario/${idInventario}/editar/` 
+        : '/inventario/crear/';
+    
+    console.log('💾 Modo:', idInventario ? 'Editar' : 'Crear');
+    console.log('🆔 ID:', idInventario);
+    
+    // Función para buscar campos por data-field o ID
+    const getFieldValue = (fieldName, defaultValue = '') => {
+        let element = null;
+        
+        // 🔍 PRIORIDAD 1: Campos de dosis en secciones VISIBLES (más importante)
+        if (['dosis_ml', 'ml_contenedor', 'cantidad_pastillas', 'unidades_pipeta'].includes(fieldName)) {
+            // Buscar SOLO en campos-dosis VISIBLES primero
+            element = modal.querySelector(`.campo-dosis:not(.d-none) input[data-field="${fieldName}"]`);
+            console.log(`🔎 [PRIORIDAD] Buscando ${fieldName} en .campo-dosis VISIBLE:`, element ? `ENCONTRADO (valor: "${element.value}")` : 'NO ENCONTRADO');
+            
+            if (!element) {
+                // Si no hay visible, buscar en TODOS y tomar el que tenga valor
+                const todosLosCampos = modal.querySelectorAll(`.campo-dosis input[data-field="${fieldName}"]`);
+                console.log(`🔎 Todos los inputs con data-field="${fieldName}":`, todosLosCampos.length);
+                
+                for (let campo of todosLosCampos) {
+                    if (campo.value && campo.value.trim() !== '') {
+                        element = campo;
+                        console.log(`✅ Usando campo oculto con valor:`, campo.value);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // PRIORIDAD 2: Búsqueda por ID
+        if (!element) {
+            element = document.getElementById(fieldName);
+        }
+        
+        // PRIORIDAD 3: Búsqueda general por data-field
+        if (!element) {
+            element = modal.querySelector(`input[data-field="${fieldName}"], select[data-field="${fieldName}"], textarea[data-field="${fieldName}"]`);
+        }
+        
+        // PRIORIDAD 4: Búsqueda en field-edit
+        if (!element) {
+            const fieldEdit = modal.querySelector(`.field-edit[data-field="${fieldName}"]`);
+            if (fieldEdit) {
+                element = fieldEdit.querySelector('input, select, textarea');
+            }
+        }
+        
+        if (!element) {
+            const camposOpcionales = ['precio_compra', 'stock_minimo', 'stock_maximo', 'proveedor', 
+                                     'categoria', 'codigo_barra', 'presentacion', 'unidad_medida', 
+                                     'almacenamiento', 'precauciones', 'contraindicaciones', 'efectos_adversos'];
+            
+            if (!camposOpcionales.includes(fieldName)) {
+                console.warn(`⚠️ Campo no encontrado: ${fieldName}`);
+            }
+            return defaultValue;
+        }
+        
+        const valor = element.value?.trim() || defaultValue;
+        console.log(`🔎 Campo ${fieldName}:`, valor, '(elemento:', element.getAttribute('data-field'), ')');
+        return valor;
+    };
+    
+    const getNumberValue = (fieldName, defaultValue = null) => {
+        const value = getFieldValue(fieldName);
+        if (!value && value !== 0) return defaultValue;
+        const num = parseFloat(value);
+        return isNaN(num) ? defaultValue : num;
+    };
+    
+    const getIntValue = (fieldName, defaultValue = null) => {
+        const value = getFieldValue(fieldName);
+        if (!value && value !== 0) return defaultValue;
+        const num = parseInt(value);
+        return isNaN(num) ? defaultValue : num;
+    };
+    
+    const getCheckboxValue = (fieldName) => {
+        let element = document.getElementById(fieldName);
+        
+        if (!element) {
+            element = modal.querySelector(`input[data-field="${fieldName}"][type="checkbox"]`);
+        }
+        
+        if (!element) {
+            const fieldEdit = modal.querySelector(`.field-edit[data-field="${fieldName}"]`);
+            if (fieldEdit) {
+                element = fieldEdit.querySelector('input[type="checkbox"]');
+            }
+        }
+        
+        return element ? element.checked : false;
+    };
+    
+    // Recopilar datos
+    const formData = {
+        medicamento: getFieldValue('nombre_comercial'),
+        nombre_comercial: getFieldValue('nombre_comercial'),
+        marca: getFieldValue('marca'),
+        sku: getFieldValue('sku'),
+        tipo: getFieldValue('tipo'),
+        formato: getFieldValue('formato'),
+        descripcion: getFieldValue('descripcion'),
+        especie: getFieldValue('especie', 'todos'),
+        precio_venta: getNumberValue('precio_venta', 0),
+        stock_actual: getIntValue('stock_actual', 0),
+        peso_kg: getNumberValue('peso_kg'),
+        tiene_rango_peso: getCheckboxValue('tiene_rango_peso'),
+        peso_min_kg: getNumberValue('peso_min_kg'),
+        peso_max_kg: getNumberValue('peso_max_kg'),
+    };
+    
+    // Campos opcionales
+    const camposOpcionales = {
+        precio_compra: getNumberValue('precio_compra'),
+        stock_minimo: getIntValue('stock_minimo'),
+        stock_maximo: getIntValue('stock_maximo'),
+        proveedor: getFieldValue('proveedor'),
+        categoria: getFieldValue('categoria'),
+        codigo_barra: getFieldValue('codigo_barra'),
+        presentacion: getFieldValue('presentacion'),
+        unidad_medida: getFieldValue('unidad_medida'),
+        almacenamiento: getFieldValue('almacenamiento'),
+        precauciones: getFieldValue('precauciones'),
+        contraindicaciones: getFieldValue('contraindicaciones'),
+        efectos_adversos: getFieldValue('efectos_adversos'),
+    };
+    
+    Object.keys(camposOpcionales).forEach(key => {
+        if (camposOpcionales[key] !== null && camposOpcionales[key] !== '') {
+            formData[key] = camposOpcionales[key];
+        }
+    });
+    
+    // ⭐ CAMPOS SEGÚN FORMATO - dosis_ml siempre es "dosis por peso"
+    const formato = formData.formato?.toLowerCase() || '';
+    console.log('📦 Formato detectado:', formato);
+    
+    // REGLA: dosis_ml SIEMPRE es la dosis por kg/peso (ml/kg, pastillas/kg, unidades/kg)
+    // Contenido del envase va en campos específicos según formato
+    
+    switch (formato) {
+        case 'liquido':
+        case 'inyectable':
+            formData.dosis_ml = getNumberValue('dosis_ml');          // ml por kg
+            formData.ml_contenedor = getNumberValue('ml_contenedor'); // ml por envase
+            console.log('💧 Líquido - Dosis:', formData.dosis_ml, 'ml/kg | Envase:', formData.ml_contenedor, 'ml');
+            break;
+            
+        case 'pastilla':
+        case 'comprimido':
+        case 'tableta':
+            formData.dosis_ml = getNumberValue('dosis_ml');              // pastillas por kg (reutiliza dosis_ml)
+            formData.cantidad_pastillas = getIntValue('cantidad_pastillas'); // pastillas por envase
+            console.log('💊 Pastilla - Dosis:', formData.dosis_ml, 'pastillas/kg | Envase:', formData.cantidad_pastillas, 'pastillas');
+            break;
+            
+        case 'pipeta':
+            formData.dosis_ml = getNumberValue('dosis_ml');            // pipetas por kg (reutiliza dosis_ml)
+            formData.unidades_pipeta = getIntValue('unidades_pipeta'); // pipetas por envase
+            console.log('💉 Pipeta - Dosis:', formData.dosis_ml, 'pipetas/kg | Envase:', formData.unidades_pipeta, 'pipetas');
+            break;
+            
+        case 'polvo':
+            formData.dosis_ml = getNumberValue('dosis_ml');          // gramos por kg (reutiliza dosis_ml)
+            formData.ml_contenedor = getNumberValue('ml_contenedor'); // gramos por envase (reutiliza ml_contenedor)
+            console.log('🧪 Polvo - Dosis:', formData.dosis_ml, 'g/kg | Envase:', formData.ml_contenedor, 'g');
+            break;
+            
+        case 'crema':
+        case 'gel':
+            formData.dosis_ml = getNumberValue('dosis_ml');          // gramos por kg (reutiliza dosis_ml)
+            formData.ml_contenedor = getNumberValue('ml_contenedor'); // gramos por envase (reutiliza ml_contenedor)
+            console.log('🧴 Crema/Gel - Dosis:', formData.dosis_ml, 'g/kg | Envase:', formData.ml_contenedor, 'g');
+            break;
+            
+        case 'otro':
+            formData.dosis_ml = getNumberValue('dosis_ml');          // unidades por kg (genérico)
+            formData.ml_contenedor = getNumberValue('ml_contenedor'); // unidades por envase (genérico)
+            console.log('📦 Otro - Dosis:', formData.dosis_ml, 'unidades/kg | Envase:', formData.ml_contenedor, 'unidades');
+            break;
+            
+        default:
+            console.warn('⚠️ Formato no reconocido:', formato);
+    }
+    
+    // 🔍 LOG DE DEPURACIÓN AGRUPADO
+    console.group('📊 VALORES PRE-SUBMIT');
+    console.log('🏷️  Formato:', formato);
+    console.log('💉 dosis_ml (dosis por kg):', formData.dosis_ml || 'N/A');
+    console.log('⚖️  peso_kg (peso referencia):', formData.peso_kg || 'N/A');
+    console.log('💧 ml_contenedor:', formData.ml_contenedor || 'N/A');
+    console.log('💊 cantidad_pastillas:', formData.cantidad_pastillas || 'N/A');
+    console.log('💉 unidades_pipeta:', formData.unidades_pipeta || 'N/A');
+    console.groupEnd();
+    
+    console.log('📤 Datos completos a enviar:', formData);
+    
+    // Validación
+    if (!formData.nombre_comercial) {
+        alert('⚠️ El nombre del medicamento es obligatorio');
+        return;
+    }
+    
+    if (!formData.formato) {
+        alert('⚠️ Debe seleccionar un formato');
+        return;
+    }
+    
+    console.log('🌐 URL:', url);
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        console.log('📡 Response status:', response.status);
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const textResponse = await response.text();
+            console.error('❌ Respuesta no es JSON:', textResponse.substring(0, 500));
+            throw new Error('La URL no devuelve JSON. Verifica la ruta en Django.');
+        }
+        
+        const result = await response.json();
+        console.log('📊 Resultado:', result);
+        
+        if (result.success) {
+            alert('✅ Producto guardado correctamente');
+            closeVetModal('modalProducto');
+            location.reload();
+        } else {
+            alert(`❌ Error: ${result.error || 'No se pudo guardar'}`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        alert(`Error: ${error.message}`);
+    }
+}
+
+/* ============================================================
+   ACTUALIZAR FILA EN LA TABLA
+============================================================ */
+function actualizarFilaTabla(insumoId, data) {
+    const fila = document.querySelector(`tr[data-id="${insumoId}"]`);
+    if (!fila) return;
+    
+    console.log('🔄 Actualizando fila de la tabla para ID:', insumoId);
+    
+    if (fila.cells[0]) fila.cells[0].textContent = data.nombre_comercial;
+    if (fila.cells[1]) fila.cells[1].textContent = data.especie || '-';
+    if (fila.cells[2]) {
+        const precio = parseFloat(data.precio_venta) || 0;
+        fila.cells[2].textContent = `$${precio.toLocaleString('es-CL')}`;
+    }
+    if (fila.cells[3]) {
+        const stockBadge = fila.cells[3].querySelector('.vet-badge');
+        if (stockBadge) stockBadge.textContent = data.stock_actual || 0;
+    }
+    if (fila.cells[4] && data.ultimo_movimiento_formatted) {
+        fila.cells[4].textContent = data.ultimo_movimiento_formatted;
+    }
+    if (fila.cells[5] && data.tipo_ultimo_movimiento_display) {
+        fila.cells[5].textContent = data.tipo_ultimo_movimiento_display;
+    }
+    
+    console.log('✅ Fila actualizada');
+}
+
+/* ============================================================
+   ELIMINAR PRODUCTO
+============================================================ */
+function abrirModalEliminarProducto(btn) {
+    // Buscar el TR de manera más robusta
+    let tr = btn.closest("tr");
+    
+    if (!tr) {
+        const manageWheel = btn.closest('.manage-wheel');
+        if (manageWheel) {
+            tr = manageWheel.closest('tr');
+        }
+    }
+    
+    if (!tr) {
+        const allRows = document.querySelectorAll('tbody tr[data-id]');
+        for (const row of allRows) {
+            if (row.contains(btn) || row.querySelector('.manage-wheel') === btn.closest('.manage-wheel')) {
+                tr = row;
+                break;
+            }
+        }
+    }
+    
+    const modal = document.getElementById("modalProducto");
+
+    productoAEliminarId = tr
+        ? tr.getAttribute("data-id")
+        : modal.dataset.idinventario;
+
+    const nombre = tr
+        ? tr.cells[0].textContent.trim()
+        : modal.querySelector('[data-field="nombre_comercial"]')?.textContent.trim() || 'este producto';
+
+    document.getElementById("eliminarProductoMensaje").textContent =
+        `¿Seguro que deseas eliminar "${nombre}"?`;
+
+    openVetModal("modalEliminarProducto");
+}
+
+function eliminarProductoConfirmado() {
+    if (!productoAEliminarId) {
+        console.error('No hay producto seleccionado para eliminar');
+        return;
+    }
+
+    console.log('Eliminando producto ID:', productoAEliminarId);
+    
+    fetch(`/inventario/${productoAEliminarId}/eliminar/`, {
+        method: "POST",
+        headers: { 
+            "Content-Type": "application/json",
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        
+        if (data.success) {
+            // Mostrar mensaje de éxito
+            alert(data.message || 'Producto eliminado exitosamente');
+            
+            // Cerrar modal
+            closeEliminarProductoModal();
+            
+            // Recargar página para actualizar la tabla
+            location.reload();
+        } else {
+            // Mostrar error específico
+            alert('Error: ' + (data.error || 'No se pudo eliminar el producto'));
+            closeEliminarProductoModal();
+        }
+    })
+    .catch(error => {
+        console.error('Error en la petición:', error);
+        alert('Error de conexión al intentar eliminar el producto');
+        closeEliminarProductoModal();
+    });
+}
+
+/* ============================================================
+   MODIFICAR STOCK
+============================================================ */
+let stockActualTemp = 0;
+let stockOriginal = 0;
+let productoIdStock = null;
+
+function openModificarStockModal(btn) {
+    // Buscar el TR de manera más robusta
+    let tr = btn.closest("tr");
+    
+    if (!tr) {
+        const manageWheel = btn.closest('.manage-wheel');
+        if (manageWheel) {
+            tr = manageWheel.closest('tr');
+        }
+    }
+    
+    if (!tr) {
+        const allRows = document.querySelectorAll('tbody tr[data-id]');
+        for (const row of allRows) {
+            if (row.contains(btn) || row.querySelector('.manage-wheel') === btn.closest('.manage-wheel')) {
+                tr = row;
+                break;
+            }
+        }
+    }
+    
+    if (!tr) {
+        console.error('❌ No se encontró la fila para modificar stock');
+        console.error('❌ Este error no debería ocurrir. Verifica gestion_wheel.js');
+        return;
+    }
+
+    productoIdStock = tr.getAttribute("data-id");
+    stockActualTemp = parseInt(tr.cells[3].textContent.replace(/\D/g, "")) || 0;
+    stockOriginal = stockActualTemp;
+
+    document.getElementById("stockActualValor").textContent = stockActualTemp;
+    document.getElementById("inputStockOperacion").value = "";
+
+    openVetModal("modalModificarStock");
+}
+
+// Sumar la cantidad ingresada al stock temporal
+function sumarStockInput() {
+    const input = document.getElementById("inputStockOperacion");
+    let cantidad = parseInt(input.value, 10) || 0;
+    stockActualTemp += cantidad;
+    document.getElementById("stockActualValor").textContent = stockActualTemp;
+    input.value = "";
+}
+
+// Restar la cantidad ingresada al stock temporal
+function restarStockInput() {
+    const input = document.getElementById("inputStockOperacion");
+    let cantidad = parseInt(input.value, 10) || 0;
+    stockActualTemp -= cantidad;
+    if (stockActualTemp < 0) stockActualTemp = 0;
+    document.getElementById("stockActualValor").textContent = stockActualTemp;
+    input.value = "";
+}
+
+// ⭐ GUARDAR STOCK (CORREGIDO)
+function guardarStock() {
+    if (!productoIdStock) return;
+
+    // ⭐ URL CORREGIDA
+    fetch(`/inventario/${productoIdStock}/modificar-stock/`, {
+        method: "POST",
+        headers: { 
+            "Content-Type": "application/json",
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ stock_actual: stockActualTemp }),
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            console.log('📦 Stock actualizado:', result.debug);
+            
+            if (result.debug) {
+                if (result.debug.tipo_movimiento_display) {
+                    const tipoMovElement = document.getElementById('tipo_movimiento');
+                    if (tipoMovElement) {
+                        tipoMovElement.textContent = result.debug.tipo_movimiento_display;
+                    }
+                }
+                
+                if (result.debug.ultimo_movimiento) {
+                    const fechaMovElement = document.getElementById('ultimo_movimiento');
+                    if (fechaMovElement) {
+                        fechaMovElement.textContent = result.debug.ultimo_movimiento;
+                    }
+                }
+                
+                if (result.debug.usuario) {
+                    const usuarioElement = document.getElementById('usuario_ultimo_movimiento');
+                    if (usuarioElement) {
+                        usuarioElement.textContent = result.debug.usuario;
+                    }
+                }
+
+                if (result.debug.tipo_movimiento_display) {
+                    const tableCells = document.querySelectorAll('.tipo-movimiento-cell');
+                    tableCells.forEach(cell => {
+                        if (cell.dataset.id === productoIdStock) {
+                            cell.textContent = result.debug.tipo_movimiento_display;
+                        }
+                    });
+                }
+            }
+            
+            alert(result.message);
+            closeVetModal('modalModificarStock');
+            location.reload();
+        } else {
+            alert('Error: ' + result.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al actualizar el stock');
+    });
+}
+
+/* ============================================================
+   CERRAR MODAL ELIMINAR PRODUCTO
+============================================================ */
+function closeEliminarProductoModal() {
+    closeVetModal('modalEliminarProducto');
+}
+
+/* ============================================================
+   FUNCIÓN PARA OBTENER CSRF TOKEN
+============================================================ */
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+/* ============================================================
+   CAMBIAR ESTADO DE PESTAÑAS (ACTIVOS/ARCHIVADOS)
+============================================================ */
+function cambiarEstadoProductos(estado) {
+    window.location.href = `/inventario/?estado=${estado}`;
+}
+
+/* ============================================================
+   MODAL ARCHIVAR/RESTAURAR PRODUCTO
+============================================================ */
+function abrirModalArchivarProducto(button, productoId, esRestaurar = false) {
+    const modal = document.getElementById('modalArchivarProducto');
+    const titulo = document.getElementById('tituloArchivar');
+    const mensaje = document.getElementById('archivarProductoMensaje');
+    const btnTexto = document.getElementById('btnTextoArchivar');
+    const modalTitle = modal.querySelector('.vet-custom-modal-title');
+    
+    if (esRestaurar) {
+        titulo.textContent = 'Restaurar Producto';
+        mensaje.textContent = '¿Estás seguro que deseas restaurar este producto? Volverá a aparecer en la lista de activos.';
+        btnTexto.textContent = 'Restaurar';
+        modalTitle.style.background = '#2e7d32';
+    } else {
+        titulo.textContent = 'Archivar Producto';
+        mensaje.textContent = '¿Estás seguro que deseas archivar este producto? Podrás restaurarlo desde la pestaña de archivados.';
+        btnTexto.textContent = 'Archivar';
+        modalTitle.style.background = '#f57c00';
+    }
+    
+    modal.classList.remove('hide');
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
+    document.getElementById('btnConfirmarArchivarProducto').setAttribute('data-producto-id', productoId);
+}
+
+function closeArchivarProductoModal() {
+    const modal = document.getElementById('modalArchivarProducto');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.classList.add('hide');
+    }, 350);
+}
+
+/* ============================================================
+   EVENT LISTENER PARA CONFIRMAR ARCHIVAR/RESTAURAR
+============================================================ */
+document.addEventListener('DOMContentLoaded', function() {
+    const btnConfirmar = document.getElementById('btnConfirmarArchivarProducto');
+    if (btnConfirmar) {
+        btnConfirmar.addEventListener('click', function() {
+            const productoId = this.getAttribute('data-producto-id');
+            
+            if (!productoId) {
+                alert('Error: No se encontró el ID del producto');
+                return;
+            }
+            
+            fetch(`/inventario/restaurar/${productoId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    closeArchivarProductoModal();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 400);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al procesar la solicitud');
+            });
+        });
+    }
+});

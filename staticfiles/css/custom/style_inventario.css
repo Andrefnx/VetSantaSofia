@@ -1,0 +1,518 @@
+:root {
+    --primary-color: #afe1af;
+    --primary-hover: #89c57c;
+    --text-dark: #103012;
+    --bg-light: #f8f9fa;
+    --border-color: #e0e0e0;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+
+/* Estilos para el Modal de Lotes */
+#batchesModal .modal-header {
+    background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
+    color: white;
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+}
+
+#batchesModal .modal-header .modal-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#batchesModal .modal-header .modal-title i {
+    font-size: 1.3rem;
+}
+
+#batchesModal .modal-header .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+#batchesModal .modal-header .btn-close:hover {
+    opacity: 1;
+}
+
+#batchesModal .modal-body {
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+}
+
+#batchesModal .batch-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+#batchesModal .batch-item {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #e0e0e0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+#batchesModal .batch-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+#batchesModal .batch-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+}
+
+#batchesModal .batch-value {
+    font-size: 0.95rem;
+    color: #212529;
+    font-weight: 500;
+}
+
+#batchesModal .batch-value.fw-bold {
+    color: #212529;
+    font-size: 1rem;
+}
+
+#batchesModal .batch-value.text-success {
+    color: #28a745 !important;
+    font-weight: 600;
+}
+
+#batchesModal .batch-value.text-warning {
+    color: #ffc107 !important;
+    font-weight: 600;
+}
+
+#batchesModal .batch-value.text-danger {
+    color: #dc3545 !important;
+    font-weight: 600;
+}
+
+#batchesModal .modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+}
+
+#batchesModal .modal-footer .btn {
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+#batchesModal .modal-footer .btn-secondary {
+    background-color: #6c757d;
+    border: none;
+}
+
+#batchesModal .modal-footer .btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+#batchesModal .modal-footer .btn-primary {
+    background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
+    border: none;
+}
+
+#batchesModal .modal-footer .btn-primary:hover {
+    background: linear-gradient(135deg, #9dd59d 0%, #78b56b 100%);
+}
+
+/* Mensaje cuando no hay lotes */
+#batchesModal .text-muted {
+    font-size: 1rem;
+    color: #6c757d !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #batchesModal .batch-item {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    #batchesModal .modal-header {
+        padding: 1rem;
+    }
+    
+    #batchesModal .modal-body {
+        padding: 1rem;
+    }
+    
+    #batchesModal .modal-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    #batchesModal .modal-footer .btn {
+        width: 100%;
+    }
+}
+
+/* Animación de entrada para los lotes */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#batchesModal .batch-item {
+    animation: slideInUp 0.3s ease;
+}
+
+#batchesModal .batch-item:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+#batchesModal .batch-item:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+#batchesModal .batch-item:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+#batchesModal .batch-item:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+/* ====== ESTILOS PARA MODAL DE DETALLES ====== */
+#detailsModal .modal-body {
+    background-color: #f0f2f5;
+    padding: 1.5rem;
+}
+
+#detailsModal .detail-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e0e0e0;
+    position: relative;
+    overflow: hidden;
+}
+
+#detailsModal .detail-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: #e0e0e0;
+}
+
+#detailsModal .detail-section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    padding-left: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+}
+
+#detailsModal .detail-section-title i {
+    font-size: 1.3rem;
+    color: #6c757d;
+}
+
+#detailsModal .detail-section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: #e0e0e0;
+}
+
+#detailsModal label.text-muted {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #6c757d !important;
+    margin-bottom: 0.35rem;
+    display: block;
+}
+
+#detailsModal .detail-section p {
+    font-size: 0.95rem;
+    color: #2c3e50;
+    line-height: 1.6;
+    padding: 0.5rem 0.75rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+}
+
+#detailsModal .detail-section p.fw-bold {
+    background: #f8f9fa;
+    border-left: 3px solid #e0e0e0;
+}
+
+/* Colores específicos para valores importantes */
+#detailsModal .text-primary {
+    color: #212529 !important;
+    font-size: 1.1rem;
+}
+
+#detailsModal .text-success {
+    color: #212529 !important;
+    font-size: 1.1rem;
+}
+
+#detailsModal .text-info {
+    color: #212529 !important;
+    font-size: 1.1rem;
+}
+
+/* Responsive para modal de detalles */
+@media (max-width: 768px) {
+    #detailsModal .detail-section {
+        padding: 1rem;
+    }
+    
+    #detailsModal .detail-section-title {
+        font-size: 1rem;
+    }
+    
+    #detailsModal .modal-body {
+        padding: 1rem;
+    }
+}
+
+/* Estilos para el header del modal de detalles */
+#detailsModal .modal-header {
+    background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
+    color: white;
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+}
+
+#detailsModal .modal-header .modal-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+#detailsModal .modal-header .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+#detailsModal .modal-header .btn-close:hover {
+    opacity: 1;
+}
+
+#detailsModal .modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+#detailsModal .modal-footer .btn {
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+#detailsModal .modal-footer .btn-primary {
+    background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
+    border: none;
+}
+
+#detailsModal .modal-footer .btn-primary:hover {
+    background: linear-gradient(135deg, #9dd59d 0%, #78b56b 100%);
+}
+
+/* Animación de entrada para las secciones */
+@keyframes slideInDetail {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#detailsModal .detail-section {
+    animation: slideInDetail 0.4s ease;
+}
+
+#detailsModal .detail-section:nth-child(1) { animation-delay: 0.05s; }
+#detailsModal .detail-section:nth-child(2) { animation-delay: 0.1s; }
+#detailsModal .detail-section:nth-child(3) { animation-delay: 0.15s; }
+#detailsModal .detail-section:nth-child(4) { animation-delay: 0.2s; }
+#detailsModal .detail-section:nth-child(5) { animation-delay: 0.25s; }
+#detailsModal .detail-section:nth-child(6) { animation-delay: 0.3s; }
+#detailsModal .detail-section:nth-child(7) { animation-delay: 0.35s; }
+#detailsModal .detail-section:nth-child(8) { animation-delay: 0.4s; }
+
+/* ====== ESTILOS PARA FORMULARIOS EN MODALES ====== */
+#editModal .form-control,
+#editModal .form-select,
+#addProductModal .form-control,
+#addProductModal .form-select,
+#addStockModal .form-control,
+#addStockModal .form-select {
+    font-size: 0.95rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+}
+
+#editModal .form-control:focus,
+#editModal .form-select:focus,
+#addProductModal .form-control:focus,
+#addProductModal .form-select:focus,
+#addStockModal .form-control:focus,
+#addStockModal .form-select:focus {
+    border-color: #afe1af;
+    box-shadow: 0 0 0 3px rgba(175, 225, 175, 0.15);
+}
+
+#editModal textarea.form-control,
+#addProductModal textarea.form-control,
+#addStockModal textarea.form-control {
+    resize: vertical;
+    min-height: 60px;
+}
+
+#editModal .modal-header,
+#addProductModal .modal-header,
+#addStockModal .modal-header {
+    background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
+    color: white;
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+}
+
+#editModal .modal-header .modal-title,
+#addProductModal .modal-header .modal-title,
+#addStockModal .modal-header .modal-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+#editModal .modal-header .btn-close,
+#addProductModal .modal-header .btn-close,
+#addStockModal .modal-header .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+#editModal .modal-header .btn-close:hover,
+#addProductModal .modal-header .btn-close:hover,
+#addStockModal .modal-header .btn-close:hover {
+    opacity: 1;
+}
+
+#editModal .modal-footer,
+#addProductModal .modal-footer,
+#addStockModal .modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+#editModal .modal-footer .btn,
+#addProductModal .modal-footer .btn,
+#addStockModal .modal-footer .btn {
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+#editModal .btn-primary,
+#addProductModal .btn-success,
+#addStockModal .btn-success {
+    background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
+    border: none;
+}
+
+#editModal .btn-primary:hover,
+#addProductModal .btn-success:hover,
+#addStockModal .btn-success:hover {
+    background: linear-gradient(135deg, #9dd59d 0%, #78b56b 100%);
+}
+
+/* ====== ESTILOS PARA MODAL HEADER GRADIENT ====== */
+.modal-header-gradient {
+    background: linear-gradient(135deg, #afe1af 0%, #89c57c 100%);
+    color: white;
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+}
+
+.modal-header-gradient .modal-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: white;
+}
+
+.modal-header-gradient .btn-close-white {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+.modal-header-gradient .btn-close-white:hover {
+    opacity: 1;
+}
+
+/* ====== ESTILOS PARA CAMPOS DE SOLO LECTURA (METADATA) ====== */
+.metadata-box {
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-size: 0.75rem;
+}
+
+.metadata-box label {
+    font-size: 0.65rem !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d !important;
+    margin-bottom: 0.25rem;
+}
+
+.metadata-box p {
+    font-size: 0.75rem !important;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    padding: 0.25rem 0.5rem !important;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+    min-height: auto !important;
+}
+
+.metadata-box p:last-child {
+    margin-bottom: 0;
+}

@@ -55,6 +55,7 @@ div.page-footer {
     --warning-hover: #e0a800;
     --info-color: #74bd74;
     --info-hover: #6c8e6b;
+    --subtle: #f1fff3;
     
     /* COLORES NEUTRALES */
     --text-dark: #103012;
@@ -82,7 +83,7 @@ div.page-footer {
     --z-popover: 10;
 
     /* LAYOUT */
-    --sidebar-width: 260px;
+    --sidebar-width: min-260px;
     --sidebar-width-collapsed: 70px;
     
 
@@ -116,6 +117,14 @@ h1 {
     color: var(--text-dark);
     margin-bottom: 1.5rem;
     margin-left: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+h1 i {
+    font-size: 1.6rem;
+    color: var(--primary-color);
 }
 
 h2 {
@@ -205,7 +214,6 @@ label {
 .btn-neutral i,
 .btn-white-custom i {
     font-size: 15px !important;
-    color: var(--grey-dark) !important;
     transition: color 0.25s ease !important;
 }
 
@@ -247,9 +255,11 @@ label {
     background: var(--primary-color) !important;
     color: var(--bg-white) !important;
     border: none !important;
-    padding: 10px 16px !important;
+    padding: 0.625rem 1rem !important;
     border-radius: var(--radius-md) !important;
     font-size: 0.9rem !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s ease !important;
 }
 
 .btn-primary i,
@@ -280,11 +290,6 @@ label {
     border: solid transparent 3px !important;
 }
 
-.btn-secondary i,
-.vet-btn-grey i,
-.btn-grey-custom i {
-    color: var(--grey-dark) !important;
-}
 
 .btn-secondary:hover,
 .vet-btn-grey:hover,
@@ -307,9 +312,11 @@ label {
     background: var(--grey) !important;
     color: var(--bg-white) !important;
     border: none !important;
-    padding: 10px 16px !important;
+    padding: 0.625rem 1rem !important;
     border-radius: var(--radius-md) !important;
     font-size: 0.9rem !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s ease !important;
 }
 
 .btn-cancel i,
@@ -638,17 +645,6 @@ textarea {
     border-color: var(--primary-color);
 }
 
-.vet-search {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--bg-white);
-    border: 1.5px solid var(--border-color);
-    border-radius: 10px;
-    padding: 8px 14px;
-    transition: all 0.3s ease;
-    min-width: fit-content;
-}
 
 .vet-search:focus-within {
     border-color: var(--primary-color);
@@ -676,9 +672,8 @@ textarea {
     align-items: center !important;
     justify-content: space-between !important;
     gap: 2rem !important;
-    background: var(--bg-white) !important;
-    padding: 1.5rem !important;
-    border-radius: var(--radius-xl) !important;
+    padding-bottom: 10px;
+    border-bottom: var(--info-hover) 2px solid !important;
     margin-bottom: 2rem !important;
     flex-wrap: wrap !important;
 }
@@ -814,10 +809,10 @@ table tbody td {
 .vet-modal-overlay {
     position: fixed !important;
     top: 0 !important;
-    left: var(--sidebar-width, 260px) !important;
+    left: var(--sidebar-width, min-260px) !important;
     right: 0 !important;
     bottom: 0 !important;
-    width: calc(100% - var(--sidebar-width, 260px)) !important;
+    width: calc(100% - var(--sidebar-width, min-260px)) !important;
     height: 100vh !important;
     background: rgba(0, 0, 0, 0.5) !important;
     display: flex !important;
@@ -2227,10 +2222,11 @@ body {
     left: 0;
     min-width: 260px;
     width: auto;
+    max-width: fit-content;
     height: 100vh;
     background: #1a2035;
     z-index: 1000;
-    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: min-width 0.35s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -2243,7 +2239,8 @@ body {
 .vet-sidebar.collapsed,
 html.sidebar-is-collapsed .vet-sidebar {
     min-width: 70px;
-    width: 70px !important;
+    max-width: 70px;
+    width: 70px;
     overflow: hidden;
 }
 
@@ -2308,10 +2305,16 @@ html.sidebar-is-collapsed .vet-sidebar {
     flex: 1;
     overflow-y: auto;
     overflow-x: visible;
+    display: flex;
+    flex-direction: column;
 }
 
 .vet-sidebar.collapsed .vet-sidebar-wrapper {
     overflow-x: hidden;
+}
+
+.vet-sidebar-content {
+    flex: 1;
 }
 
 .vet-sidebar-wrapper::-webkit-scrollbar {
@@ -2360,7 +2363,6 @@ html.sidebar-is-collapsed .vet-sidebar {
 
 .vet-nav-link i {
     font-size: 1.2rem;
-    min-width: 30px;
     color: #b9babf;
     flex-shrink: 0;
     transition: color 0.2s ease;
@@ -2395,7 +2397,7 @@ html.sidebar-is-collapsed .vet-sidebar {
 .vet-nav-item.active .vet-nav-link {
     background: rgba(175, 225, 175, 0.15);
     color: #fff;
-    border-left: 4px solid var(--primary-color);
+    border-left: solid var(--primary-color);
 }
 
 .vet-nav-item.active .vet-nav-link i {
@@ -2410,6 +2412,85 @@ html.sidebar-is-collapsed .vet-sidebar {
     margin-top: 15px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     padding-top: 15px;
+}
+
+/* Sidebar User Section */
+.vet-sidebar-user {
+    margin-top: auto;
+    padding: 15px 0;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.vet-sidebar-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin-bottom: 15px;
+}
+
+.vet-user-info {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #fff;
+    gap: 10px;
+}
+
+.vet-user-info i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    flex-shrink: 0;
+    min-width: 30px;
+}
+
+.vet-user-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    flex: 1;
+    word-wrap: break-word;
+}
+
+.vet-logout-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #ff6b6b;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    gap: 10px;
+}
+
+.vet-logout-link i {
+    font-size: 1.2rem;
+    min-width: 30px;
+    flex-shrink: 0;
+}
+
+.vet-logout-link span {
+    font-size: 0.95rem;
+    font-weight: 500;
+    flex: 1;
+}
+
+.vet-logout-link:hover {
+    background: rgba(255, 107, 107, 0.15);
+    color: #ff4757;
+}
+
+/* Collapsed state para user section */
+.vet-sidebar.collapsed .vet-user-info,
+.vet-sidebar.collapsed .vet-logout-link {
+    justify-content: center;
+    padding: 12px 10px;
+}
+
+.vet-sidebar.collapsed .vet-user-name,
+.vet-sidebar.collapsed .vet-logout-link span {
+    display: none;
+}
+
+.vet-sidebar.collapsed .vet-user-info i,
+.vet-sidebar.collapsed .vet-logout-link i {
+    margin: 0;
 }
 
 .vet-nav-section-icon {
@@ -2490,21 +2571,153 @@ html.sidebar-is-collapsed .main-panel {
     padding-bottom: 20px !important;
 }
 
+.bg-warning-subtle {
+    background-color: var(--subtle) !important;
+}
 
 /* Responsive */
 @media (max-width: 991px) {
+    /* Sidebar colapsada por defecto en mobile */
     .vet-sidebar {
-        transform: translateX(-100%);
+        position: fixed !important;
+        left: 0;
+        top: 0;
+        z-index: 2000;
+        min-width: 70px !important;
+        max-width: 70px !important;
+        width: 70px !important;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden !important;
     }
     
+    /* Ocultar logo en mobile */
+    .vet-sidebar .vet-sidebar-logo {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        overflow: hidden !important;
+    }
+    
+    /* Centrar botón toggle */
+    .vet-sidebar .vet-sidebar-toggle-container {
+        margin: 0 auto !important;
+    }
+    
+    /* Ocultar texto de navegación */
+    .vet-sidebar .vet-nav-link span {
+        display: none !important;
+    }
+    
+    /* Ocultar títulos de sección */
+    .vet-sidebar .vet-nav-section {
+        display: none !important;
+    }
+    
+    /* Centrar iconos */
+    .vet-sidebar .vet-nav-link {
+        justify-content: center !important;
+        padding: 12px 10px !important;
+    }
+    
+    /* User section en mobile colapsado */
+    .vet-sidebar .vet-user-info,
+    .vet-sidebar .vet-logout-link {
+        justify-content: center !important;
+        padding: 12px 10px !important;
+    }
+    
+    .vet-sidebar .vet-user-name,
+    .vet-sidebar .vet-logout-link span {
+        display: none !important;
+    }
+    
+    .vet-sidebar .vet-user-info i,
+    .vet-sidebar .vet-logout-link i {
+        margin: 0 !important;
+    }
+    
+    /* Expandir cuando tiene clase mobile-open */
     .vet-sidebar.mobile-open {
-        transform: translateX(0);
+        min-width: 260px !important;
+        max-width: 260px !important;
+        width: 260px !important;
     }
     
-    .main-panel,
-    .main-panel.sidebar-collapsed {
+    .vet-sidebar.mobile-open .vet-sidebar-logo {
+        opacity: 1 !important;
+        visibility: visible !important;
+        width: auto !important;
+    }
+    
+    .vet-sidebar.mobile-open .vet-nav-link span {
+        display: inline !important;
+    }
+    
+    .vet-sidebar.mobile-open .vet-nav-section {
+        display: flex !important;
+    }
+    
+    .vet-sidebar.mobile-open .vet-nav-link {
+        justify-content: flex-start !important;
+        padding: 12px 20px !important;
+    }
+    
+    .vet-sidebar.mobile-open .vet-sidebar-toggle-container {
+        margin: 0 !important;
+    }
+    
+    /* User section expandido en mobile */
+    .vet-sidebar.mobile-open .vet-user-info,
+    .vet-sidebar.mobile-open .vet-logout-link {
+        justify-content: flex-start !important;
+        padding: 12px 20px !important;
+    }
+    
+    .vet-sidebar.mobile-open .vet-user-name,
+    .vet-sidebar.mobile-open .vet-logout-link span {
+        display: inline !important;
+    }
+    
+    /* Main panel ajustado para sidebar colapsada */
+    .main-panel {
+        margin-left: 70px !important;
+        width: calc(100% - 70px) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .vet-sidebar.mobile-open ~ .main-panel {
+        margin-left: 260px !important;
+        width: calc(100% - 260px) !important;
+    }
+    
+    #main-content {
         margin-left: 0 !important;
-        width: 100% !important;
+        width: 100%;
+    }
+    
+    .container-fluid {
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }
+    
+    /* Forzar visibilidad del nombre de usuario en topbar mobile */
+    .navbar-nav.topbar-nav {
+        display: flex !important;
+    }
+    
+    .topbar-user {
+        display: block !important;
+    }
+    
+    .topbar-user .profile-pic {
+        display: flex !important;
+    }
+    
+    .topbar-user .profile-username {
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
 }
 
