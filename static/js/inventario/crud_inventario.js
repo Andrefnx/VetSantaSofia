@@ -425,15 +425,20 @@ function openProductoModal(mode, data = {}) {
     // ⭐ CONFIGURAR BOTONES SEGÚN MODO
     const btnEditar = document.getElementById("btnEditarProducto");
     const btnGuardar = document.getElementById("btnGuardarProductoModal");
+    const btnCancelar = document.getElementById("btnCancelarProducto");
+    
+    console.log(`🔄 Configurando botones para modo: ${mode}`);
     
     if (mode === "view") {
-        // Modo vista: sin botones de acción
-        if (btnEditar) btnEditar.style.setProperty("display", "none", "important");
+        // Modo vista: solo botón Editar visible
+        if (btnEditar) btnEditar.style.setProperty("display", "inline-flex", "important");
         if (btnGuardar) btnGuardar.style.setProperty("display", "none", "important");
+        if (btnCancelar) btnCancelar.style.setProperty("display", "none", "important");
     } else if (mode === "edit" || mode === "nuevo") {
-        // Modo edición/creación: mostrar solo botón guardar
+        // Modo edición/creación: mostrar Guardar y Cancelar, ocultar Editar
         if (btnEditar) btnEditar.style.setProperty("display", "none", "important");
         if (btnGuardar) btnGuardar.style.setProperty("display", "inline-flex", "important");
+        if (btnCancelar) btnCancelar.style.setProperty("display", mode === "edit" ? "inline-flex" : "none", "important");
     }
 
     // Mostrar/ocultar campos según modo
@@ -564,13 +569,21 @@ function openProductoModal(mode, data = {}) {
 ============================================================ */
 function switchToEditModeProducto() {
     const modal = document.getElementById('modalProducto');
-    const data = JSON.parse(modal.dataset.originalData || '{}');
     
-    console.log('✏️ Cambiando a modo edición con datos:', data);
-
-    if (data.idInventario) {
-        modal.dataset.idinventario = data.idInventario;
-    }
+    console.log('✏️ Cambiando de modo VER a EDITAR');
+    
+    // Guardar estado actual como backup para cancelar
+    const datosBackup = {};
+    modal.querySelectorAll('input[data-field], select[data-field], textarea[data-field]').forEach(input => {
+        const field = input.getAttribute('data-field');
+        if (input.type === 'checkbox') {
+            datosBackup[field] = input.checked;
+        } else {
+            datosBackup[field] = input.value;
+        }
+    });
+    modal.dataset.backupData = JSON.stringify(datosBackup);
+    console.log('💾 Backup guardado para cancelar');
 
     // Ocultar campos de vista
     modal.querySelectorAll(".field-view").forEach((f) => {
@@ -584,46 +597,14 @@ function switchToEditModeProducto() {
         f.classList.remove("d-none");
     });
 
-    // Rellenar campos editables
-    Object.keys(data).forEach((key) => {
-        const value = data[key];
-        
-        // Buscar input directo
-        let element = modal.querySelector(`input[data-field="${key}"], select[data-field="${key}"], textarea[data-field="${key}"]`);
-        
-        if (element) {
-            if (element.type === 'checkbox') {
-                element.checked = Boolean(value);
-            } else if (element.tagName === "SELECT") {
-                element.value = value || "";
-            } else {
-                element.value = value || "";
-            }
-            return;
-        }
-        
-        // Buscar dentro de .field-edit
-        const fieldEditDiv = modal.querySelector(`.field-edit[data-field="${key}"]`);
-        if (fieldEditDiv) {
-            const input = fieldEditDiv.querySelector('input, select, textarea');
-            if (input) {
-                if (input.type === 'checkbox') {
-                    input.checked = Boolean(value);
-                } else if (input.tagName === "SELECT") {
-                    input.value = value || "";
-                } else {
-                    input.value = value || "";
-                }
-            }
-        }
-    });
-
     // Cambiar botones
     const btnGuardar = document.getElementById("btnGuardarProductoModal");
+    const btnCancelar = document.getElementById("btnCancelarProducto");
     const btnEditar = document.getElementById("btnEditarProducto");
 
-    if (btnGuardar) btnGuardar.classList.remove("d-none");
-    if (btnEditar) btnEditar.classList.add("d-none");
+    if (btnGuardar) btnGuardar.style.setProperty("display", "inline-flex", "important");
+    if (btnCancelar) btnCancelar.style.setProperty("display", "inline-flex", "important");
+    if (btnEditar) btnEditar.style.setProperty("display", "none", "important");
     
     // Cambiar título
     const titulo = document.getElementById("modalProductoTitulo");
@@ -632,11 +613,12 @@ function switchToEditModeProducto() {
     }
     
     // ⭐ Actualizar campos de dosis según formato
-    if (data.formato && typeof actualizarCamposDosis === 'function') {
-        actualizarCamposDosis(data.formato, modal);
+    const formatoActual = modal.querySelector('select[data-field="formato"]')?.value;
+    if (formatoActual && typeof actualizarCamposDosis === 'function') {
+        actualizarCamposDosis(formatoActual, modal, false); // false = no limpiar
     }
     
-    console.log('✅ Modo edición activado');
+    console.log('✅ Estado del modal: EDITAR');
 }
 
 /* ============================================================
@@ -645,7 +627,7 @@ function switchToEditModeProducto() {
 function switchToViewModeProducto() {
     const modal = document.getElementById('modalProducto');
     
-    console.log('👁️ Cambiando a modo vista');
+    console.log('👁️ Cambiando de modo EDITAR a VER');
     
     // Ocultar campos de edición
     modal.querySelectorAll(".field-edit").forEach((f) => {
@@ -661,10 +643,59 @@ function switchToViewModeProducto() {
     
     // ⭐ CAMBIAR BOTONES
     const btnGuardar = document.getElementById("btnGuardarProductoModal");
+    const btnCancelar = document.getElementById("btnCancelarProducto");
     const btnEditar = document.getElementById("btnEditarProducto");
 
-    if (btnGuardar) btnGuardar.classList.add("d-none");
-    if (btnEditar) btnEditar.classList.remove("d-none");
+    if (btnGuardar) btnGuardar.style.setProperty("display", "none", "important");
+    if (btnCancelar) btnCancelar.style.setProperty("display", "none", "important");
+    if (btnEditar) btnEditar.style.setProperty("display", "inline-flex", "important");
+    
+    // Cambiar título
+    const titulo = document.getElementById("modalProductoTitulo");
+    if (titulo) {
+        titulo.textContent = "Detalles del Producto";
+    }
+    
+    console.log('✅ Estado del modal: VER');
+}
+
+/* ============================================================
+   CANCELAR EDICIÓN (Volver a modo VER sin guardar)
+============================================================ */
+function cancelarEdicionProducto() {
+    const modal = document.getElementById('modalProducto');
+    
+    console.log('❌ Cancelando edición, restaurando valores originales');
+    
+    // Restaurar valores desde el backup
+    if (modal.dataset.backupData) {
+        const datosBackup = JSON.parse(modal.dataset.backupData);
+        
+        Object.keys(datosBackup).forEach(field => {
+            const value = datosBackup[field];
+            const input = modal.querySelector(`input[data-field="${field}"], select[data-field="${field}"], textarea[data-field="${field}"]`);
+            
+            if (input) {
+                if (input.type === 'checkbox') {
+                    input.checked = Boolean(value);
+                } else {
+                    input.value = value;
+                }
+            }
+            
+            // También buscar en campos dentro de .campo-dosis
+            const inputDosis = modal.querySelector(`.campo-dosis input[data-field="${field}"]`);
+            if (inputDosis) {
+                inputDosis.value = value;
+            }
+        });
+        
+        console.log('✅ Valores restaurados desde backup');
+        delete modal.dataset.backupData;
+    }
+    
+    // Volver a modo vista
+    switchToViewModeProducto();
 }
 
 /* ============================================================

@@ -498,10 +498,16 @@
 
             <!-- Footer con botones -->
             <div class="vet-modal-footer">
+                <!-- Botón EDITAR: solo visible en modo VER -->
                 <button type="button" class="vet-btn vet-btn-grey" id="btnEditarProducto" onclick="switchToEditModeProducto()">
                     <i class="bi bi-pencil-fill"></i> Editar
                 </button>
-                <button type="button" class="vet-btn vet-btn-primary" id="btnGuardarProductoModal" onclick="guardarProducto()">
+                
+                <!-- Botones GUARDAR y CANCELAR: solo visibles en modo EDICIÓN -->
+                <button type="button" class="vet-btn vet-btn-secondary" id="btnCancelarProducto" onclick="cancelarEdicionProducto()" style="display: none;">
+                    <i class="bi bi-x-circle-fill"></i> Cancelar
+                </button>
+                <button type="button" class="vet-btn vet-btn-primary" id="btnGuardarProductoModal" onclick="guardarProducto()" style="display: none;">
                     <i class="bi bi-floppy-fill"></i> Guardar
                 </button>
             </div>

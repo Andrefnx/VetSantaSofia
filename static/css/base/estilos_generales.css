@@ -255,7 +255,6 @@ label {
     background: var(--primary-color) !important;
     color: var(--bg-white) !important;
     border: none !important;
-    padding: 10px 16px !important;
     border-radius: var(--radius-md) !important;
     font-size: 0.9rem !important;
 }
