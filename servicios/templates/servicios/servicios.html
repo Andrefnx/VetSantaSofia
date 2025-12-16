@@ -1,4 +1,4 @@
-﻿{% extends "partials/base_table.html" %}
+{% extends "partials/base_table.html" %}
 {% load static %}
 
 {% block title %}Servicios Veterinarios{% endblock %}
@@ -21,10 +21,10 @@
 
 {% block table_columns %}
 <th>Servicio</th>
-<th>CategorÃ­a</th>
+<th>Categoría</th>
 <th>Precio</th>
-<th>DuraciÃ³n</th>
-<th>GestiÃ³n</th>
+<th>Duración</th>
+<th>Gestión</th>
 {% endblock %}
 
 {% block table_rows %}
@@ -79,10 +79,10 @@
             </div>
             <div class="vet-modal-body" style="max-height: 70vh; overflow-y: auto;">
 
-                <!-- IDENTIFICACIÃ“N GENERAL -->
+                <!-- IDENTIFICACIÓN GENERAL -->
                 <div class="detail-section mb-4">
                     <h6 class="detail-section-title">
-                        <i class="fas fa-tag"></i> IdentificaciÃ³n General
+                        <i class="fas fa-tag"></i> Identificación General
                     </h6>
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -91,30 +91,30 @@
                             <input class="field-edit form-control d-none" data-field="nombre">
                         </div>
                         <div class="col-md-6">
-                            <label class="text-muted small">CategorÃ­a</label>
+                            <label class="text-muted small">Categoría</label>
                             <p class="field-view mb-0" data-field="categoria">-</p>
                             <select class="field-edit form-control d-none" data-field="categoria">
                                 <option value="">Selecciona...</option>
                                 <option value="Servicios Veterinarios Comunes">Servicios Veterinarios Comunes</option>
-                                <option value="Servicios de DiagnÃ³stico">Servicios de DiagnÃ³stico</option>
-                                <option value="Procedimientos clÃ­nicos">Procedimientos clÃ­nicos</option>
-                                <option value="CirugÃ­a">CirugÃ­a</option>
+                                <option value="Servicios de Diagnóstico">Servicios de Diagnóstico</option>
+                                <option value="Procedimientos clínicos">Procedimientos clínicos</option>
+                                <option value="Cirugía">Cirugía</option>
                                 <option value="Servicios Complementarios">Servicios Complementarios</option>
                                 <option value="Otro">Otro</option>
                             </select>
                         </div>
                         <div class="col-md-12">
-                            <label class="text-muted small">DescripciÃ³n</label>
+                            <label class="text-muted small">Descripción</label>
                             <p class="field-view mb-0" data-field="descripcion">-</p>
                             <textarea class="field-edit form-control d-none" data-field="descripcion"></textarea>
                         </div>
                     </div>
                 </div>
 
-                <!-- INFORMACIÃ“N COMERCIAL -->
+                <!-- INFORMACIÓN COMERCIAL -->
                 <div class="detail-section mb-4">
                     <h6 class="detail-section-title">
-                        <i class="fas fa-dollar-sign"></i> InformaciÃ³n Comercial
+                        <i class="fas fa-dollar-sign"></i> Información Comercial
                     </h6>
                     <div class="row g-3">
                         <div class="col-md-4">
@@ -124,7 +124,7 @@
                                    data-field="precio">
                         </div>
                         <div class="col-md-4">
-                            <label class="text-muted small">DuraciÃ³n</label>
+                            <label class="text-muted small">Duración</label>
                             <div class="field-view mb-0" data-field="duracion">-</div>
                             <div class="input-group field-edit d-none">
                                 <input type="number" min="0" class="form-control field-edit" data-field="duracion" placeholder="Ej: 30">
@@ -136,15 +136,15 @@
 
             </div>
             <div class="vet-modal-body" style="border-top:1px solid #eee; text-align:right;">
-                <button type="button" class="btn-grey" id="btnEditarServicio"
+                <button type="button" class="vet-btn-grey" id="btnEditarServicio"
                         onclick="switchToEditModeServicio()">
                     <i class="bi bi-pencil-fill"></i> Editar
                 </button>
-                <button type="button" class="btn-grey d-none" id="btnGuardarServicio"
+                <button type="button" class="vet-btn-grey d-none" id="btnGuardarServicio"
                         onclick="guardarServicioEditado()">
                     <i class="bi bi-floppy-fill"></i> Guardar
                 </button>
-                <button type="button" class="btn-delete" id="btnEliminarServicio"
+                <button type="button" class="vet-btn-delete" id="btnEliminarServicio"
                         onclick="abrirModalEliminarServicio(this)">
                     <i class="bi bi-trash3-fill"></i> Eliminar
                 </button>
@@ -153,7 +153,7 @@
     </div>
 </div>
 
-<!-- Modal: Eliminar Servicio (Compacto UI estÃ¡ndar) -->
+<!-- Modal: Eliminar Servicio (Compacto UI estándar) -->
 <div class="vet-modal-overlay hide" id="modalEliminarServicio">
     <div class="vet-modal-compact">
         <div class="vet-modal-content">
@@ -162,12 +162,12 @@
                 <i class="bi bi-x" onclick="closeEliminarServicioModal()"></i>
             </div>
             <div class="vet-modal-body">
-                <p id="eliminarServicioMensaje" class="text-center mb-4">Â¿EstÃ¡s seguro que deseas eliminar este servicio?</p>
+                <p id="eliminarServicioMensaje" class="text-center mb-4">¿Estás seguro que deseas eliminar este servicio?</p>
                 <div class="vet-modal-footer">
-                    <button type="button" class="btn-cancel" onclick="closeEliminarServicioModal()">
+                    <button type="button" class="vet-btn-cancel" onclick="closeEliminarServicioModal()">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
-                    <button type="button" class="btn-delete" id="btnConfirmarEliminarServicio">
+                    <button type="button" class="vet-btn-delete" id="btnConfirmarEliminarServicio">
                         <i class="bi bi-trash3-fill"></i> Eliminar
                     </button>
                 </div>
@@ -181,4 +181,3 @@
 {% block extra_js %}
 <script src="{% static 'js/servicios/crud_servicios.js' %}"></script>
 {% endblock %}
-

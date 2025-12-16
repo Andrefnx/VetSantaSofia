@@ -1,4 +1,4 @@
-﻿{% extends 'partials/base.html' %}
+{% extends 'partials/base.html' %}
 {% load static %}
 {% block title %}Ficha de {{ paciente.nombre }}{% endblock %}
 
@@ -20,8 +20,8 @@
         <div class="general-information">
             <div class="section personal-info">
                 <div class="section-header-with-edit">
-                    <h2>InformaciÃ³n General</h2>
-                    <button class="btn-edit-icon" id="btnEditarFicha" title="Editar informaciÃ³n">
+                    <h2>Información General</h2>
+                    <button class="btn-edit-icon" id="btnEditarFicha" title="Editar información">
                         <i class="bi bi-pencil"></i>
                     </button>
                     <!-- Botones Guardar / Cancelar (ocultos inicialmente) -->
@@ -42,12 +42,12 @@
                         </p>
                     </div>
 
-                    <!-- Indicador de HospitalizaciÃ³n Activa -->
+                    <!-- Indicador de Hospitalización Activa -->
                     <div id="indicadorHospitalizacion" style="display: none; margin-bottom: 15px;">
                         <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; border-radius: 4px; display: flex; align-items: center; gap: 10px;">
                             <i class="bi bi-hospital" style="font-size: 20px; color: #ffc107;"></i>
                             <div>
-                                <strong style="color: #856404;">ðŸ¥ Paciente Hospitalizado</strong>
+                                <strong style="color: #856404;">🏥 Paciente Hospitalizado</strong>
                                 <div style="font-size: 13px; color: #856404;" id="detallesHospitalizacion"></div>
 
                             </div>
@@ -78,7 +78,7 @@
                         </p>
                     </div>
 
-                    <!-- SecciÃ³n de Edad con diseÃ±o especial -->
+                    <!-- Sección de Edad con diseño especial -->
                     <div class="edad-section">
                         <p><strong>Edad:</strong> <span class="view-mode">{{ paciente.edad_formateada }}</span></p>
 
@@ -101,7 +101,7 @@
                                 </label>
                                 <div id="edadEstimadaInputs" {% if paciente.fecha_nacimiento %}style="display:none;"{% endif %}>
                                     <input type="number" class="form-control" name="edad"
-                                        value="{{ paciente.edad_anos|default:'' }}" placeholder="AÃ±os" min="0">
+                                        value="{{ paciente.edad_anos|default:'' }}" placeholder="Años" min="0">
                                     <input type="number" class="form-control" name="edad_meses"
                                         value="{{ paciente.edad_meses|default:'' }}" placeholder="Meses" min="0" max="11">
                                 </div>
@@ -115,7 +115,7 @@
                         </p>
                     </div>
 
-                    <!-- SecciÃ³n de Observaciones -->
+                    <!-- Sección de Observaciones -->
                     {% if paciente.observaciones %}
                     <div class="info-row">
                         <p><strong>Observaciones:</strong> <span class="view-mode">{{ paciente.observaciones }}</span>
@@ -146,10 +146,10 @@
                 <div class="info" id="infoResponsable">
                     <div class="info-row">
                         <div>
-                            <p><strong>DueÃ±o:</strong>
+                            <p><strong>Dueño:</strong>
                                 <span class="view-mode">{{ paciente.propietario.nombre_completo }}</span>
                             </p>
-                            <!-- En modo ediciÃ³n: mostrar nombre y apellido como inputs -->
+                            <!-- En modo edición: mostrar nombre y apellido como inputs -->
                             <div id="camposNombreEditable" style="display:none;" class="edit-mode-container">
                                 <input type="hidden" name="propietario_id" value="{{ paciente.propietario.id }}">
                                 <input type="text" class="form-control edit-mode" name="propietario_nombre_edit"
@@ -175,29 +175,29 @@
                                     placeholder="Apellido" style="margin-bottom: 8px;">
                                 <input type="hidden" name="propietario_id" value="">
                                 <small style="display: block; margin-top: 5px;">
-                                    <a href="#" id="enlaceVoltearAlSelect" style="font-size: 0.85rem;">â† Volver al listado</a>
+                                    <a href="#" id="enlaceVoltearAlSelect" style="font-size: 0.85rem;">← Volver al listado</a>
                                 </small>
                             </div>
                         </div>
-                        <p><strong>TelÃ©fono:</strong>
+                        <p><strong>Teléfono:</strong>
                             <span class="view-mode">{{ paciente.propietario.telefono|default:"No registrado" }}</span>
                             <input type="tel" class="form-control edit-mode" name="propietario_telefono"
                                 value="{{ paciente.propietario.telefono }}" placeholder="+569876543210" 
                                 data-phone="true" style="display:none;">
                         </p>
                     </div>
-                    <p><strong>Correo ElectrÃ³nico:</strong>
+                    <p><strong>Correo Electrónico:</strong>
                         <span class="view-mode">{{ paciente.propietario.email|default:"No registrado" }}</span>
                         <input type="email" class="form-control edit-mode" name="propietario_email"
                             value="{{ paciente.propietario.email }}" placeholder="ejemplo@correo.com" 
                             data-email="true" style="display:none;">
                     </p>
-                    <p><strong>DirecciÃ³n:</strong>
+                    <p><strong>Dirección:</strong>
                         <span class="view-mode">{{ paciente.propietario.direccion|default:"No registrada" }}</span>
                         <textarea class="form-control edit-mode" name="propietario_direccion" style="display:none;">{{ paciente.propietario.direccion }}</textarea>
                     </p>
                     
-                    <!-- LÃNEA SEPARADORA Y ENLACE "CAMBIAR DE RESPONSABLE" -->
+                    <!-- LÍNEA SEPARADORA Y ENLACE "CAMBIAR DE RESPONSABLE" -->
                     <hr style="display:none;" class="edit-mode" id="separadorCambiarResponsable">
                     <div style="display:none; text-align: center; margin-top: 15px;" class="edit-mode" id="enlaceCambiarResponsable">
                         <small>
@@ -210,11 +210,11 @@
             {% if user.rol != 'recepcion' %}
             <div class="section resumen-clinico antecedentes-compact">
                 <div class="section-header-with-edit">
-                    <h2>Antecedentes MÃ©dicos CrÃ­ticos</h2>
+                    <h2>Antecedentes Médicos Críticos</h2>
                     <button class="btn-edit-icon" id="btnEditarAntecedentes" title="Editar antecedentes">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <!-- Acciones de ediciÃ³n (mismo patrÃ³n que Responsable) -->
+                    <!-- Acciones de edición (mismo patrón que Responsable) -->
                     <div id="btnEditAntecedentesActions" style="display:none;">
                         <button class="btn-edit-icon btn-cancel" id="btnCancelarAntecedentes" title="Cancelar">
                             <i class="bi bi-x-lg"></i>
@@ -232,7 +232,7 @@
                             <textarea class="form-control edit-mode" name="alergias" style="display:none;">{{ paciente.alergias }}</textarea>
                         </p>
                         <p>
-                            <strong>Enfermedades CrÃ³nicas:</strong>
+                            <strong>Enfermedades Crónicas:</strong>
                             <span class="view-mode">{{ paciente.enfermedades_cronicas|default:"No registradas" }}</span>
                             <textarea class="form-control edit-mode" name="enfermedades_cronicas" style="display:none;">{{ paciente.enfermedades_cronicas }}</textarea>
                         </p>
@@ -244,7 +244,7 @@
                             <textarea class="form-control edit-mode" name="medicamentos_actuales" style="display:none;">{{ paciente.medicamentos_actuales }}</textarea>
                         </p>
                         <p>
-                            <strong>CirugÃ­as Previas:</strong>
+                            <strong>Cirugías Previas:</strong>
                             <span class="view-mode">{{ paciente.cirugia_previa|default:"Ninguna registrada" }}</span>
                             <textarea class="form-control edit-mode" name="cirugia_previa" style="display:none;">{{ paciente.cirugia_previa }}</textarea>
                         </p>
@@ -255,11 +255,11 @@
 
             {% if user.rol != 'recepcion' %}
             <div class="section resumen-clinico">
-                <h2>Resumen ClÃ­nico</h2>
+                <h2>Resumen Clínico</h2>
                 <div class="info">
                     <div class="info-row">
-                        <p><strong>Ãšltimo peso registrado:</strong> {{ paciente.ultimo_peso|default:"No registrado" }} kg</p>
-                        <p><strong>Ãšltimo control:</strong>
+                        <p><strong>Último peso registrado:</strong> {{ paciente.ultimo_peso|default:"No registrado" }} kg</p>
+                        <p><strong>Último control:</strong>
                             {% if paciente.consultas.first %}
                             {{ paciente.consultas.first.fecha|date:"d/m/Y H:i" }}
                             {% else %}
@@ -275,7 +275,7 @@
 
         <div class="section tabs-section">
             <div class="tabs-nav">
-                <button class="tab-btn active" data-tab="historial">Historial ClÃ­nico</button>
+                <button class="tab-btn active" data-tab="historial">Historial Clínico</button>
                 <button class="tab-btn" data-tab="hosp">Hospitalizaciones</button>
                 {% if user.rol != 'recepcion' %}
                 <button class="tab-btn" data-tab="docs">Documentos</button>
@@ -287,7 +287,7 @@
                         <!-- Contenido Principal -->
                         <div class="historial-main">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                <h3 class="mb-0">Historial ClÃ­nico 
+                                <h3 class="mb-0">Historial Clínico 
                                     <small style="color: #6b7280; font-size: 0.8rem; font-weight: normal;">
                                         ({{ citas_agendadas|length }} cita{{ citas_agendadas|length|pluralize }} agendada{{ citas_agendadas|length|pluralize }})
                                     </small>
@@ -505,16 +505,16 @@
 
                         <!-- Barra Lateral Derecha -->
                         <div class="historial-sidebar">
-                            <!-- Botones de AcciÃ³n -->
+                            <!-- Botones de Acción -->
                             <div class="sidebar-actions">
                                 {% if user.rol != 'recepcion' %}
-                                <button class="btn btn-primary" id="btnNuevaConsulta" style="width: 100%; margin-bottom: 8px;">
+                                <button class="vet-btn vet-btn-primary" id="btnNuevaConsulta" style="width: 100%; margin-bottom: 8px;">
                                     <i class="bi bi-clipboard2-plus"></i> Nueva Consulta
                                 </button>
-                                <button class="btn btn-warning" id="btnNuevaHospitalizacion" style="width: 100%; margin-bottom: 8px;">
-                                    <i class="bi bi-hospital"></i> HospitalizaciÃ³n
+                                <button class="vet-btn vet-btn-warning" id="btnNuevaHospitalizacion" style="width: 100%; margin-bottom: 8px;">
+                                    <i class="bi bi-hospital"></i> Hospitalización
                                 </button>
-                                <button class="btn btn-success" id="btnAgendarCitaModal" style="width: 100%; display: none;">
+                                <button class="vet-btn vet-btn-success" id="btnAgendarCitaModal" style="width: 100%; display: none;">
                                     <i class="bi bi-calendar-plus"></i> Agendar Cita
                                 </button>
                                 {% endif %}
@@ -528,7 +528,7 @@
                                 <div class="sidebar-search">
                                     <i class="bi bi-search"></i>
                                     <input type="text" id="searchHistorial" class="form-control form-control-sm"
-                                        placeholder="DiagnÃ³stico, veterinario...">
+                                        placeholder="Diagnóstico, veterinario...">
                                 </div>
                             </div>
 
@@ -570,7 +570,7 @@
                                                         <option value="11">Dic</option>
                                                     </select>
                                                     <select id="selectYear" name="selectYear" class="calendar-select">
-                                                        <option value="">AÃ±o</option>
+                                                        <option value="">Año</option>
                                                     </select>
                                                 </div>
                                                 <button class="calendar-nav" id="btnNextMonth">
@@ -605,9 +605,9 @@
                         <div class="historial-main" style="flex: 1;">
                             <h3 style="margin-bottom: 1.5rem;">Registro de Hospitalizaciones</h3>
                             
-                            <!-- Contenedor dinÃ¡mico para hospitalizaciones -->
+                            <!-- Contenedor dinámico para hospitalizaciones -->
                             <div id="hospitalizacionesContainer">
-                                <!-- Se carga dinÃ¡micamente via JavaScript -->
+                                <!-- Se carga dinámicamente via JavaScript -->
                             </div>
                         </div>
 
@@ -619,7 +619,7 @@
                                 <div class="sidebar-search">
                                     <i class="bi bi-search"></i>
                                     <input type="text" id="searchHospitalizacion" class="form-control form-control-sm"
-                                        placeholder="Motivo, diagnÃ³stico...">
+                                        placeholder="Motivo, diagnóstico...">
                                 </div>
                             </div>
 
@@ -661,7 +661,7 @@
                                                         <option value="12">Dic</option>
                                                     </select>
                                                     <select id="selectHospYear" class="calendar-select">
-                                                        <option value="">AÃ±o</option>
+                                                        <option value="">Año</option>
                                                     </select>
                                                 </div>
                                                 <button class="calendar-nav" id="btnHospNextMonth">
@@ -698,7 +698,7 @@
                     <div class="documentos">
                         <h3>Documentos</h3>
                         <div style="margin-bottom: 1rem;">
-                            <label class="btn btn-primary" style="cursor:pointer;">
+                            <label class="vet-btn vet-btn-primary" style="cursor:pointer;">
                                 <i class="bi bi-paperclip"></i> Adjuntar Documento
                                 <input type="file" id="inputDocumento" name="adjuntar_documento" style="display:none;"
                                     onchange="subirDocumento(this, {{ paciente.id }})">
@@ -737,10 +737,10 @@
     </div>
 </div>
 
-<!-- â­ MODALES (sin cambios) -->
+<!-- ⭐ MODALES (sin cambios) -->
 
 <script>
-// Toggle ediciÃ³n de Antecedentes en la ficha (no modal)
+// Toggle edición de Antecedentes en la ficha (no modal)
 document.addEventListener('DOMContentLoaded', function() {
     const btnEditar = document.getElementById('btnEditarAntecedentes');
     const acciones = document.getElementById('btnEditAntecedentesActions');
@@ -753,9 +753,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const setEditMode = (editing) => {
         // Mostrar/ocultar acciones
         acciones.style.display = editing ? 'flex' : 'none';
-        // Ocultar/mostrar el lÃ¡piz mientras se edita
+        // Ocultar/mostrar el lápiz mientras se edita
         btnEditar.style.display = editing ? 'none' : 'inline-flex';
-        // Alternar clase de ediciÃ³n; el CSS controla quÃ© se muestra
+        // Alternar clase de edición; el CSS controla qué se muestra
         contenedor.classList.toggle('edit-mode-active', editing);
     };
 
@@ -765,9 +765,9 @@ document.addEventListener('DOMContentLoaded', function() {
     btnEditar.addEventListener('click', () => setEditMode(true));
     btnCancelar?.addEventListener('click', () => setEditMode(false));
 
-    // Guardar: mantener UI coherente; envÃ­o se maneja por backend o JS existente
+    // Guardar: mantener UI coherente; envío se maneja por backend o JS existente
     btnGuardar?.addEventListener('click', () => {
-        // AquÃ­ podrÃ­as recopilar datos si existe flujo de guardado especÃ­fico
+        // Aquí podrías recopilar datos si existe flujo de guardado específico
         setEditMode(false);
     });
 });
@@ -782,7 +782,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="vet-modal-body">
             <div class="row g-3">
                 <div class="col-md-8" id="detalleContenido">
-                    <!-- Detalles dinÃ¡micos -->
+                    <!-- Detalles dinámicos -->
                 </div>
             </div>
         </div>
@@ -798,10 +798,10 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <form id="formNuevaConsulta">
             <div class="vet-modal-body">
-                <!-- Fila compacta con MÃ©dico Tratante, Fecha y Tipo de Consulta -->
+                <!-- Fila compacta con Médico Tratante, Fecha y Tipo de Consulta -->
                 <div class="header-info-compact">
                     <div class="info-item">
-                        <span class="info-label">MÃ©dico:</span>
+                        <span class="info-label">Médico:</span>
                         <span class="info-value" id="medicoTratante">{{ user.nombre }} {{ user.apellido }}</span>
                     </div>
                     <div class="info-item">
@@ -821,11 +821,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <!-- â­ ANTECEDENTES MÃ‰DICOS CRÃTICOS - PRIMERO -->
+                        <!-- ⭐ ANTECEDENTES MÉDICOS CRÍTICOS - PRIMERO -->
                         <div class="detail-section" style="border-top: 2px solid #ffc107; padding-top: 1rem; margin-top: 0; position: relative;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                                 <div class="detail-section-title" style="margin: 0; color: #dc3545;">
-                                    <i class="bi bi-exclamation-triangle"></i> Antecedentes MÃ©dicos
+                                    <i class="bi bi-exclamation-triangle"></i> Antecedentes Médicos
                                 </div>
                                 <i class="bi bi-pencil" id="btnEditarAntecedentesModal" style="cursor: pointer; font-size: 1.1rem; color: #495057; padding: 0.25rem 0.5rem; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#e9ecef'; this.style.color='#212529';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#495057';" role="button" tabindex="0"></i>
                             </div>
@@ -833,11 +833,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             <!-- Vista de antecedentes -->
                             <div id="antecedentesVista">
                                 <div id="antecedentesContenido" style="font-size: 0.9rem; line-height: 1.6;">
-                                    <!-- Se llena dinÃ¡micamente -->
+                                    <!-- Se llena dinámicamente -->
                                 </div>
                             </div>
 
-                            <!-- Formulario de ediciÃ³n -->
+                            <!-- Formulario de edición -->
                             <div id="antecedentesEdicionModal" style="display:none; margin-top: 1rem; padding: 1rem; background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%); border-radius: 6px; border: 1px solid #e9ecef;">
                                 <div style="display: grid; grid-template-columns: 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
                                     <div>
@@ -848,7 +848,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </div>
                                     <div>
                                         <label class="form-label form-label-sm" style="font-weight: 600; font-size: 0.85rem; color: #495057; margin-bottom: 0.35rem; display: block;">
-                                            <i class="bi bi-heart-pulse" style="color: #ffc107; margin-right: 0.25rem;"></i> Enfermedades CrÃ³nicas
+                                            <i class="bi bi-heart-pulse" style="color: #ffc107; margin-right: 0.25rem;"></i> Enfermedades Crónicas
                                         </label>
                                         <textarea class="form-control form-control-sm" id="antecedentesEnfermedades" placeholder="Ej: diabetes, artritis" rows="2" style="font-size: 0.85rem;"></textarea>
                                     </div>
@@ -862,9 +862,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </div>
                                     <div>
                                         <label class="form-label form-label-sm" style="font-weight: 600; font-size: 0.85rem; color: #495057; margin-bottom: 0.35rem; display: block;">
-                                            <i class="bi bi-scissors" style="color: #6c757d; margin-right: 0.25rem;"></i> CirugÃ­as Previas
+                                            <i class="bi bi-scissors" style="color: #6c757d; margin-right: 0.25rem;"></i> Cirugías Previas
                                         </label>
-                                        <textarea class="form-control form-control-sm" id="antecedenteCirugias" placeholder="Ej: esterilizaciÃ³n 2023" rows="2" style="font-size: 0.85rem;"></textarea>
+                                        <textarea class="form-control form-control-sm" id="antecedenteCirugias" placeholder="Ej: esterilización 2023" rows="2" style="font-size: 0.85rem;"></textarea>
                                     </div>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.75rem; border-top: 1px solid #dee2e6;">
@@ -889,7 +889,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <input type="text" class="form-control" name="peso" id="pesoConsulta" required>
                         </div>
                         <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-heart-pulse"></i> Frec. CardÃ­aca</div>
+                            <div class="detail-section-title"><i class="bi bi-heart-pulse"></i> Frec. Cardíaca</div>
                             <input type="text" class="form-control" name="frecuencia_cardiaca">
                         </div>
                         <div class="detail-section">
@@ -903,42 +903,42 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <div class="col-md-9">
                         <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-clipboard2-check"></i> DiagnÃ³stico</div>
+                            <div class="detail-section-title"><i class="bi bi-clipboard2-check"></i> Diagnóstico</div>
                             <textarea class="form-control" name="diagnostico" rows="5"></textarea>
                         </div>
                         
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-capsule"></i> Tratamiento</div>
                             <div class="tratamiento-container">
-                                <textarea class="form-control" name="tratamiento" rows="6" placeholder="DescripciÃ³n del tratamiento..."></textarea>
+                                <textarea class="form-control" name="tratamiento" rows="6" placeholder="Descripción del tratamiento..."></textarea>
                                 
-                                <!-- â­ INSUMOS DEL SERVICIO (Solo lectura) -->
+                                <!-- ⭐ INSUMOS DEL SERVICIO (Solo lectura) -->
                                 <div id="insumosServicioContainer" style="display: none; margin-bottom: 16px; padding: 12px; background: #f0f9ff; border: 1px solid #bfdbfe; border-radius: 6px;">
                                     <div style="font-weight: 600; font-size: 0.9rem; color: #1e40af; margin-bottom: 8px;">
                                         <i class="bi bi-box-seam"></i> Insumos requeridos por el servicio
                                     </div>
                                     <div id="insumosServicioLista" style="font-size: 0.85rem; color: #1e3a8a;">
-                                        <!-- Se llena dinÃ¡micamente con JS -->
+                                        <!-- Se llena dinámicamente con JS -->
                                     </div>
                                     <small style="display: block; margin-top: 8px; font-size: 11px; color: #64748b;">
-                                        <i class="bi bi-info-circle"></i> Estos insumos estÃ¡n predefinidos en el catÃ¡logo del servicio y se incluirÃ¡n automÃ¡ticamente.
+                                        <i class="bi bi-info-circle"></i> Estos insumos están predefinidos en el catálogo del servicio y se incluirán automáticamente.
                                     </small>
                                 </div>
                                 
                                 <div class="inventario-selector-compact">
                                     <input type="text" class="form-control form-control-sm" id="searchInventario" placeholder="Buscar medicamento adicional...">
                                     <div class="inventario-list-compact" id="inventarioList">
-                                        <!-- Lista dinÃ¡mica -->
+                                        <!-- Lista dinámica -->
                                     </div>
                                 </div>
                                 
                                 <div class="insumos-utilizados">
                                     <div class="insumos-title">Insumos adicionales:</div>
                                     <div id="insumosSeleccionados">
-                                        <!-- Tags dinÃ¡micos -->
+                                        <!-- Tags dinámicos -->
                                     </div>
                                     <small class="info-note" style="display: block; margin-top: 8px; font-size: 12px; color: #6b7280;">
-                                        <i class="bi bi-info-circle"></i> Los insumos seleccionados se descuentan automÃ¡ticamente del stock al guardar la consulta.
+                                        <i class="bi bi-info-circle"></i> Los insumos seleccionados se descuentan automáticamente del stock al guardar la consulta.
                                     </small>
                                 </div>
                             </div>
@@ -957,10 +957,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     <small class="text-muted" id="estadoConsultaTexto">Pendiente de registrar uso de insumos</small>
                 </div>
                 <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-grey" id="btnGuardarBorrador">
+                    <button type="button" class="vet-btn vet-btn-grey" id="btnGuardarBorrador">
                         <i class="bi bi-file-earmark"></i> Guardar borrador
                     </button>
-                    <button type="button" class="btn btn-success" id="btnFinalizarConsulta">
+                    <button type="button" class="vet-btn vet-btn-success" id="btnFinalizarConsulta">
                         <i class="bi bi-check-circle"></i> Finalizar consulta
                     </button>
                 </div>
@@ -994,10 +994,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="detail-section-title"><i class="bi bi-list-task"></i> Tipo de Cita</div>
                             <select class="form-control" name="tipo" required>
                                 <option value="">Seleccione tipo</option>
-                                <option value="hospitalizacion">HospitalizaciÃ³n</option>
+                                <option value="hospitalizacion">Hospitalización</option>
                                 <option value="consulta">Consulta general</option>
                                 <option value="control">Control</option>
-                                <option value="vacunacion">VacunaciÃ³n</option>
+                                <option value="vacunacion">Vacunación</option>
                             </select>
                         </div>
                         <div class="detail-section">
@@ -1009,7 +1009,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="vet-modal-footer d-flex justify-content-between align-items-center">
                 <span></span>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="vet-btn vet-btn-primary">
                     <i class="bi bi-calendar-plus"></i> Agendar
                 </button>
             </div>
@@ -1021,18 +1021,18 @@ document.addEventListener('DOMContentLoaded', function() {
      MODALES DE HOSPITALIZACIONES
      ============================================ -->
 
-<!-- Modal Detalles HospitalizaciÃ³n (DOS COLUMNAS) -->
+<!-- Modal Detalles Hospitalización (DOS COLUMNAS) -->
 <div id="detallesHospitalizacionModal" class="vet-modal-overlay hide">
     <div class="vet-custom-modal modal-compact modal-compact-wide">
         <div class="vet-custom-modal-title">
-            <h3 style="margin:0;"><i class="bi bi-hospital"></i> Detalles de HospitalizaciÃ³n</h3>
+            <h3 style="margin:0;"><i class="bi bi-hospital"></i> Detalles de Hospitalización</h3>
             <i class="bi bi-x" onclick="document.getElementById('detallesHospitalizacionModal').classList.remove('show'); document.getElementById('detallesHospitalizacionModal').classList.add('hide');" tabindex="0" role="button" aria-label="Cerrar"></i>
         </div>
         <div class="vet-modal-body hosp-detail-body">
-            <!-- COLUMNA IZQUIERDA: InformaciÃ³n General -->
+            <!-- COLUMNA IZQUIERDA: Información General -->
             <div class="hosp-detail-left">
                 <div id="detallesIzquierda">
-                    <!-- Se llena dinÃ¡micamente -->
+                    <!-- Se llena dinámicamente -->
                 </div>
             </div>
             
@@ -1041,30 +1041,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div id="insumosHospitalizacionContainer" class="hosp-compact-spacer"></div>
                 <h5 style="margin-top: 0;"><i class="bi bi-calendar-day"></i> Registros Diarios</h5>
                 <div id="registrosDiariosContainer">
-                    <!-- Se llena dinÃ¡micamente -->
+                    <!-- Se llena dinámicamente -->
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Nueva HospitalizaciÃ³n -->
+<!-- Modal Nueva Hospitalización -->
 <div id="nuevaHospitalizacionModal" class="vet-modal-overlay hide">
     <div class="vet-custom-modal modal-compact">
         <div class="vet-custom-modal-title">
-            <h3 style="margin:0;"><i class="bi bi-hospital"></i> Nueva HospitalizaciÃ³n</h3>
+            <h3 style="margin:0;"><i class="bi bi-hospital"></i> Nueva Hospitalización</h3>
             <i class="bi bi-x" id="closeHospitalizacionModal" tabindex="0" role="button" aria-label="Cerrar"></i>
         </div>
         <form id="formNuevaHospitalizacion">
             <div class="vet-modal-body modal-compact-body">
                 <div class="detail-section">
                     <div class="detail-section-title"><i class="bi bi-exclamation-circle"></i> Motivo del Ingreso</div>
-                    <textarea class="form-control" name="motivo" required rows="3" placeholder="Ej: PiÃ³metra, ObstrucciÃ³n urinaria..."></textarea>
+                    <textarea class="form-control" name="motivo" required rows="3" placeholder="Ej: Piómetra, Obstrucción urinaria..."></textarea>
                 </div>
                 
                 <div class="detail-section">
-                    <div class="detail-section-title"><i class="bi bi-stethoscope"></i> DiagnÃ³stico</div>
-                    <textarea class="form-control" name="diagnostico" rows="3" placeholder="DiagnÃ³stico preliminar..."></textarea>
+                    <div class="detail-section-title"><i class="bi bi-stethoscope"></i> Diagnóstico</div>
+                    <textarea class="form-control" name="diagnostico" rows="3" placeholder="Diagnóstico preliminar..."></textarea>
                 </div>
                 
                 <div class="detail-section">
@@ -1073,30 +1073,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             <div class="vet-modal-footer d-flex justify-content-end align-items-center">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-lg"></i> Crear HospitalizaciÃ³n
+                <button type="submit" class="vet-btn vet-btn-primary">
+                    <i class="bi bi-check-lg"></i> Crear Hospitalización
                 </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Modal CirugÃ­a -->
+<!-- Modal Cirugía -->
 <div id="cirugiaModal" class="vet-modal-overlay hide">
     <div class="vet-custom-modal">
         <div class="vet-custom-modal-title">
-            <h3 style="margin:0;"><i class="bi bi-tools"></i> Registrar CirugÃ­a</h3>
+            <h3 style="margin:0;"><i class="bi bi-tools"></i> Registrar Cirugía</h3>
             <i class="bi bi-x" onclick="document.getElementById('cirugiaModal').classList.remove('show'); document.getElementById('cirugiaModal').classList.add('hide');" tabindex="0" role="button" aria-label="Cerrar"></i>
         </div>
         <form id="formCirugia">
             <div class="vet-modal-body">
                 <div class="row g-4">
-                    <!-- Columna izquierda: datos de la cirugÃ­a -->
+                    <!-- Columna izquierda: datos de la cirugía -->
                     <div class="col-md-6">
                         <div class="row g-2">
                             <div class="col-8">
                                 <div class="detail-section">
-                                    <div class="detail-section-title">Tipo de CirugÃ­a</div>
+                                    <div class="detail-section-title">Tipo de Cirugía</div>
                                     <select class="form-control" name="servicio_cirugia" id="servicioCirugia" required>
                                         <!-- SIN OPCIONES HARDCODEADAS -->
                                     </select>
@@ -1104,14 +1104,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                             <div class="col-4">
                                 <div class="detail-section">
-                                    <div class="detail-section-title">DuraciÃ³n (min)</div>
+                                    <div class="detail-section-title">Duración (min)</div>
                                     <input type="number" class="form-control" name="duracion_minutos" id="duracionCirugia" readonly placeholder="Auto">
                                 </div>
                             </div>
                         </div>
 
                         <div class="detail-section">
-                            <div class="detail-section-title">DescripciÃ³n (automÃ¡tica)</div>
+                            <div class="detail-section-title">Descripción (automática)</div>
                             <textarea class="form-control descripcion-auto" name="descripcion" required rows="2" readonly></textarea>
                         </div>
 
@@ -1129,7 +1129,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                         <div class="detail-section">
                             <div class="detail-section-title">Notas</div>
-                            <textarea class="form-control" name="notas" rows="2" placeholder="Notas adicionales sobre la cirugÃ­a..."></textarea>
+                            <textarea class="form-control" name="notas" rows="2" placeholder="Notas adicionales sobre la cirugía..."></textarea>
                         </div>
 
                         <div class="detail-section">
@@ -1152,16 +1152,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         <hr class="section-divider">
 
                         <div class="detail-section">
-                            <!-- â­ INSUMOS DEL SERVICIO DE CIRUGÃA (Solo lectura) -->
+                            <!-- ⭐ INSUMOS DEL SERVICIO DE CIRUGÍA (Solo lectura) -->
                             <div id="insumosServicioCirugiaContainer" style="display: none; margin-bottom: 16px; padding: 12px; background: #f0f9ff; border: 1px solid #bfdbfe; border-radius: 6px;">
                                 <div style="font-weight: 600; font-size: 0.9rem; color: #1e40af; margin-bottom: 8px;">
-                                    <i class="bi bi-box-seam"></i> Insumos requeridos por la cirugÃ­a
+                                    <i class="bi bi-box-seam"></i> Insumos requeridos por la cirugía
                                 </div>
                                 <div id="insumosServicioCirugiaLista" style="font-size: 0.85rem; color: #1e3a8a;">
-                                    <!-- Se llena dinÃ¡micamente con JS -->
+                                    <!-- Se llena dinámicamente con JS -->
                                 </div>
                                 <small style="display: block; margin-top: 8px; font-size: 11px; color: #64748b;">
-                                    <i class="bi bi-info-circle"></i> Estos insumos estÃ¡n predefinidos en el catÃ¡logo del servicio.
+                                    <i class="bi bi-info-circle"></i> Estos insumos están predefinidos en el catálogo del servicio.
                                 </small>
                             </div>
                             
@@ -1176,8 +1176,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             <div class="vet-modal-footer d-flex justify-content-end">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-save"></i> Guardar CirugÃ­a
+                <button type="submit" class="vet-btn vet-btn-primary">
+                    <i class="bi bi-save"></i> Guardar Cirugía
                 </button>
             </div>
         </form>
@@ -1197,7 +1197,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="col-md-6">
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-thermometer-half"></i> Temperatura</div>
-                            <input type="number" class="form-control" name="temperatura" step="0.1" placeholder="Â°C">
+                            <input type="number" class="form-control" name="temperatura" step="0.1" placeholder="°C">
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -1211,7 +1211,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-heart-pulse"></i> Frec. CardÃ­aca</div>
+                            <div class="detail-section-title"><i class="bi bi-heart-pulse"></i> Frec. Cardíaca</div>
                             <input type="number" class="form-control" name="frecuencia_cardiaca" placeholder="lpm">
                         </div>
                     </div>
@@ -1229,7 +1229,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             <div class="vet-modal-footer d-flex justify-content-end">
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="vet-btn vet-btn-primary">
                     <i class="bi bi-plus-circle"></i> Guardar Registro
                 </button>
             </div>
@@ -1237,7 +1237,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<!-- Modal Alta MÃ©dica -->
+<!-- Modal Alta Médica -->
 <div id="altaMedicaModal" class="vet-modal-overlay hide">
     <div class="vet-custom-modal">
         <div class="vet-custom-modal-title">
@@ -1247,7 +1247,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <form id="formAltaMedica">
             <div class="vet-modal-body">
                 <div class="detail-section">
-                    <div class="detail-section-title"><i class="bi bi-stethoscope"></i> DiagnÃ³stico Final (opcional)</div>
+                    <div class="detail-section-title"><i class="bi bi-stethoscope"></i> Diagnóstico Final (opcional)</div>
                     <textarea class="form-control" name="diagnostico_final" rows="3"></textarea>
                 </div>
                 
@@ -1262,12 +1262,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 
                 <div class="detail-section">
-                    <div class="detail-section-title"><i class="bi bi-calendar-check"></i> PrÃ³xima RevisiÃ³n (opcional)</div>
+                    <div class="detail-section-title"><i class="bi bi-calendar-check"></i> Próxima Revisión (opcional)</div>
                     <input type="date" class="form-control" name="proxima_revision">
                 </div>
             </div>
             <div class="vet-modal-footer d-flex justify-content-end">
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="vet-btn vet-btn-primary">
                     <i class="bi bi-check-lg"></i> Completar Alta
                 </button>
             </div>
@@ -1278,7 +1278,7 @@ document.addEventListener('DOMContentLoaded', function() {
 {% endblock %}
 
 {% block extra_js %}
-<!-- â­ VARIABLES GLOBALES - DEBE IR PRIMERO ANTES DE OTROS SCRIPTS -->
+<!-- ⭐ VARIABLES GLOBALES - DEBE IR PRIMERO ANTES DE OTROS SCRIPTS -->
 <script>
 // Variables globales para servicios - DEFINIR PRIMERO
 window.todosLosServicios = [];
@@ -1286,10 +1286,10 @@ window.serviciosPromise = null;
 window.medicamentosSeleccionados = [];
 window.serviciosSeleccionadosArray = [];
 
-console.log('âœ… Variables globales inicializadas');
+console.log('✅ Variables globales inicializadas');
 </script>
 
-<!-- âœ… Validador de Insumos (debe cargar PRIMERO) -->
+<!-- ✅ Validador de Insumos (debe cargar PRIMERO) -->
 <script src="{% static 'js/utils/validator_insumos.js' %}"></script>
 
 <script src="{% static 'js/pacientes/hospitalizaciones.js' %}"></script>
@@ -1300,9 +1300,9 @@ console.log('âœ… Variables globales inicializadas');
 <script src="{% static 'js/pacientes/historial_medico.js' %}"></script>
 
 <script>
-// Cargar servicios despuÃ©s de que el DOM estÃ© listo
+// Cargar servicios después de que el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('ðŸ”„ DOMContentLoaded - Iniciando carga de servicios');
+    console.log('🔄 DOMContentLoaded - Iniciando carga de servicios');
     window.serviciosPromise = cargarServicios();
 });
 
@@ -1311,11 +1311,11 @@ function cargarServicios() {
         .then(response => response.json())
         .then(data => {
             if (data.success && data.servicios) {
-                // Filtrar cirugÃ­as
+                // Filtrar cirugías
                 todosLosServicios = data.servicios.filter(servicio => 
                     servicio.categoria !== 'cirugia'
                 );
-                console.log('âœ… Servicios cargados:', todosLosServicios.length);
+                console.log('✅ Servicios cargados:', todosLosServicios.length);
             }
             return todosLosServicios;
         })
@@ -1325,14 +1325,14 @@ function cargarServicios() {
         });
 }
 
-// Variables para mÃºltiples servicios
+// Variables para múltiples servicios
 let serviciosSeleccionadosArray = [];
 
 // Buscador de servicios
 const buscarServicio = document.getElementById('buscarServicio');
 const resultadosServicio = document.getElementById('resultadosServicio');
 
-// AÃ±adir estilos
+// Añadir estilos
 document.addEventListener('DOMContentLoaded', function() {
     const style = document.createElement('style');
     style.textContent = `
@@ -1374,7 +1374,7 @@ if (buscarServicio) {
             return;
         }
         
-        // Filtrar servicios que no estÃ©n ya seleccionados
+        // Filtrar servicios que no estén ya seleccionados
         const serviciosFiltrados = todosLosServicios.filter(servicio =>
             !serviciosSeleccionadosArray.some(s => s.id === servicio.idServicio) &&
             (servicio.nombre.toLowerCase().includes(termino) ||
@@ -1408,7 +1408,7 @@ if (buscarServicio) {
 }
 
 function agregarServicio(id, nombre) {
-    // Verificar que no estÃ© ya agregado
+    // Verificar que no esté ya agregado
     if (serviciosSeleccionadosArray.some(s => s.id === id)) {
         return;
     }
@@ -1420,13 +1420,13 @@ function agregarServicio(id, nombre) {
     serviciosSeleccionadosArray.push({ 
         id, 
         nombre,
-        insumos: servicioCompleto?.insumos || []  // â­ Incluir insumos del servicio
+        insumos: servicioCompleto?.insumos || []  // ⭐ Incluir insumos del servicio
     });
     
     // Actualizar vista
     actualizarServiciosSeleccionados();
     
-    // â­ Mostrar insumos del servicio
+    // ⭐ Mostrar insumos del servicio
     mostrarInsumosServicios();
     
     // Limpiar buscador
@@ -1438,7 +1438,7 @@ function eliminarServicio(id) {
     serviciosSeleccionadosArray = serviciosSeleccionadosArray.filter(s => s.id !== id);
     actualizarServiciosSeleccionados();
     
-    // â­ Actualizar insumos del servicio
+    // ⭐ Actualizar insumos del servicio
     mostrarInsumosServicios();
 }
 
@@ -1464,7 +1464,7 @@ function actualizarServiciosSeleccionados() {
     }
 }
 
-// â­ NUEVA FUNCIÃ“N: Mostrar insumos predefinidos de los servicios
+// ⭐ NUEVA FUNCIÓN: Mostrar insumos predefinidos de los servicios
 function mostrarInsumosServicios() {
     const container = document.getElementById('insumosServicioContainer');
     const lista = document.getElementById('insumosServicioLista');
@@ -1503,8 +1503,8 @@ function mostrarInsumosServicios() {
     let html = '<div class="alert alert-info d-flex align-items-start mb-3" role="alert">';
     html += '<i class="bi bi-info-circle-fill me-2 mt-1" style="font-size: 1.2rem;"></i>';
     html += '<div>';
-    html += '<strong>Insumos mÃ©dicos de los servicios seleccionados</strong><br>';
-    html += '<small class="text-muted">Estos medicamentos e insumos se utilizarÃ¡n en la consulta</small>';
+    html += '<strong>Insumos médicos de los servicios seleccionados</strong><br>';
+    html += '<small class="text-muted">Estos medicamentos e insumos se utilizarán en la consulta</small>';
     html += '</div>';
     html += '</div>';
     
@@ -1559,7 +1559,7 @@ function mostrarInsumosServicios() {
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid #dbeafe; background: white; border-radius: 4px; margin-bottom: 4px;">
                 <div style="flex: 1;">
                     <strong style="color: #1e3a8a;">${insumo.nombre}</strong>
-                    <small style="color: #64748b; margin-left: 8px;">Ã— ${insumo.cantidad} ${insumo.unidad || 'unidad(es)'}</small>
+                    <small style="color: #64748b; margin-left: 8px;">× ${insumo.cantidad} ${insumo.unidad || 'unidad(es)'}</small>
                 </div>
                 <div class="${stockClass}" style="font-size: 0.85rem; font-weight: 600;">
                     <i class="bi bi-${stockIcon}"></i> Stock: ${insumo.stock_actual}
@@ -1569,7 +1569,7 @@ function mostrarInsumosServicios() {
     }).join('');
 }
 
-// FunciÃ³n para subir documento
+// Función para subir documento
 function subirDocumento(input, pacienteId) {
     const archivo = input.files[0];
     if (!archivo) return;
@@ -1632,7 +1632,7 @@ function subirDocumento(input, pacienteId) {
             `;
             lista.appendChild(nuevoItem);
             
-            // Mostrar mensaje de Ã©xito
+            // Mostrar mensaje de éxito
             mostrarMensaje('Documento subido correctamente', 'success');
         } else {
             mostrarMensaje(data.message || 'Error al subir documento', 'error');
@@ -1649,9 +1649,9 @@ function subirDocumento(input, pacienteId) {
     });
 }
 
-// FunciÃ³n para eliminar documento
+// Función para eliminar documento
 function eliminarDocumento(documentoId) {
-    if (!confirm('Â¿EstÃ¡ seguro de eliminar este documento?')) {
+    if (!confirm('¿Está seguro de eliminar este documento?')) {
         return;
     }
     
@@ -1695,7 +1695,7 @@ function eliminarDocumento(documentoId) {
     });
 }
 
-// FunciÃ³n auxiliar para mostrar mensajes
+// Función auxiliar para mostrar mensajes
 function mostrarMensaje(mensaje, tipo) {
     const alertClass = tipo === 'success' ? 'alert-success' : 'alert-danger';
     const icono = tipo === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill';
@@ -1710,7 +1710,7 @@ function mostrarMensaje(mensaje, tipo) {
     
     document.body.appendChild(alerta);
     
-    // Auto-cerrar despuÃ©s de 5 segundos
+    // Auto-cerrar después de 5 segundos
     setTimeout(() => {
         alerta.remove();
     }, 5000);

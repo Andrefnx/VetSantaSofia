@@ -1,4 +1,4 @@
-﻿{% extends 'partials/base.html' %}
+{% extends 'partials/base.html' %}
 {% load static %}
 
 {% block title %}Agenda Veterinaria{% endblock %}
@@ -97,9 +97,9 @@
 
         <!-- Bloques de Agenda -->
         <div class="col-md-9">
-            <!-- TÃ­tulo y botÃ³n recargar -->
+            <!-- Título y botón recargar -->
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3><i class="fas fa-calendar-alt"></i> <span id="fechaTitulo">Agenda del dÃ­a</span></h3>
+                <h3><i class="fas fa-calendar-alt"></i> <span id="fechaTitulo">Agenda del día</span></h3>
                 <div class="d-flex gap-2 align-items-center">
                     <button class="btn btn-secondary btn-sm" id="btnNavIzq" style="display: none;">
                         <i class="fas fa-chevron-left"></i>
@@ -123,7 +123,7 @@
             <!-- Mensaje cuando no hay vets disponibles -->
             <div id="agendaSinVets" class="text-center py-5" style="display: none;">
                 <i class="fas fa-calendar-times fa-3x mb-3 text-muted"></i>
-                <p class="text-muted">No hay veterinarios disponibles este dÃ­a</p>
+                <p class="text-muted">No hay veterinarios disponibles este día</p>
             </div>
 
             <!-- Contenedor de agendas de veterinarios -->
@@ -145,12 +145,12 @@
                         <!-- Estado individual -->
                         <div id="estadoVet{{ vet.id }}" style="display: none;" class="text-center py-3">
                             <i class="fas fa-calendar-times fa-2x mb-2 text-danger"></i>
-                            <p class="text-danger"><small>No trabaja este dÃ­a</small></p>
+                            <p class="text-danger"><small>No trabaja este día</small></p>
                         </div>
                         
                         <!-- Grid de bloques -->
                         <div id="agendaBloques{{ vet.id }}" class="agenda-bloques-grid" style="display: none;">
-                            <!-- Se llena dinÃ¡micamente con JS -->
+                            <!-- Se llena dinámicamente con JS -->
                         </div>
                     </div>
                 </div>
@@ -248,11 +248,11 @@
         <div class="vet-modal-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span class="modal-helper"><i class="bi bi-info-circle"></i>Selecciona servicio y paciente.</span>
             <div class="d-flex gap-2">
-                <button class="btn btn-grey" type="button" onclick="cerrarModalAgendarDirecta()">
+                <button class="vet-btn vet-btn-grey" type="button" onclick="cerrarModalAgendarDirecta()">
                     <i class="bi bi-x-lg"></i>
                     Cancelar
                 </button>
-                <button class="btn btn-primary" type="button" onclick="confirmarAgendarCitaDirecta()">
+                <button class="vet-btn vet-btn-primary" type="button" onclick="confirmarAgendarCitaDirecta()">
                     <i class="bi bi-check2-circle"></i>
                     Confirmar Cita
                 </button>
@@ -261,7 +261,7 @@
     </div>
 </div>
 
-<!-- Modal de confirmaciÃ³n antigua (mantener por compatibilidad) -->
+<!-- Modal de confirmación antigua (mantener por compatibilidad) -->
 <div id="confirmarCitaModal" class="vet-modal-overlay hide" onclick="cerrarModalConfirmarCita()">
     <div class="vet-modal-compact" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
         <div class="vet-custom-modal-title">
@@ -292,11 +292,11 @@
         <div class="vet-modal-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span class="modal-helper"><i class="bi bi-info-circle"></i>Verifica bloques seleccionados antes de confirmar.</span>
             <div class="d-flex gap-2">
-                <button class="btn btn-grey" type="button" onclick="cerrarModalConfirmarCita()">
+                <button class="vet-btn vet-btn-grey" type="button" onclick="cerrarModalConfirmarCita()">
                     <i class="bi bi-x-lg"></i>
                     Cancelar
                 </button>
-                <button class="btn btn-primary" type="button" onclick="confirmarAgendarCita()">
+                <button class="vet-btn vet-btn-primary" type="button" onclick="confirmarAgendarCita()">
                     <i class="bi bi-check2-circle"></i>
                     Confirmar Cita
                 </button>
@@ -347,7 +347,7 @@
     </div>
 </div>
 
-<!-- Modal: Confirmar CancelaciÃ³n de Cita -->
+<!-- Modal: Confirmar Cancelación de Cita -->
 <div class="vet-modal-overlay hide" id="modalConfirmarCancelacionCita">
     <div class="vet-modal-compact">
         <div class="vet-modal-content">
@@ -356,12 +356,12 @@
                 <i class="bi bi-x" onclick="cerrarModalConfirmarCancelacion()"></i>
             </div>
             <div class="vet-modal-body">
-                <p id="confirmarCancelacionMensaje" class="text-center mb-4">Â¿EstÃ¡s seguro que deseas cancelar esta cita?</p>
+                <p id="confirmarCancelacionMensaje" class="text-center mb-4">¿Estás seguro que deseas cancelar esta cita?</p>
                 <div class="vet-modal-footer">
                     <button type="button" class="btn btn-cancel" onclick="cerrarModalConfirmarCancelacion()">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
-                    <button type="button" class="btn btn-primary" id="btnConfirmarCancelacionCita" onclick="confirmarCancelacionCita()">
+                    <button type="button" class="vet-btn vet-btn-primary" id="btnConfirmarCancelacionCita" onclick="confirmarCancelacionCita()">
                         <i class="bi bi-trash3-fill"></i> Eliminar
                     </button>
                 </div>
@@ -393,13 +393,13 @@
 
                     <div class="mb-2">
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="m-0" style="font-weight: 700;">Horarios por dÃ­a de la semana</label>
+                            <label class="m-0" style="font-weight: 700;">Horarios por día de la semana</label>
                             <button type="button" id="btnAplicarTodo" class="btn btn-success btn-sm" onclick="aplicarHorariosATodo()">
                                 <i class="fas fa-clipboard-check"></i> Aplicar a todo
                             </button>
                         </div>
                         <div id="diasSemana" class="dias-semana-container">
-                            <!-- Los dÃ­as de la semana se generan aquÃ­ -->
+                            <!-- Los días de la semana se generan aquí -->
                         </div>
                     </div>
                 </form>
@@ -407,7 +407,7 @@
             </div>
         </div>
         <div class="vet-modal-footer d-flex justify-content-end align-items-center">
-            <button type="button" class="btn btn-primary" onclick="guardarHorarioSemanal()">
+            <button type="button" class="vet-btn vet-btn-primary" onclick="guardarHorarioSemanal()">
                 <i class="bi bi-save"></i>
                 Guardar Horario
             </button>
@@ -426,4 +426,3 @@
 <script src="{% static 'agenda/js/agenda_bloques.js' %}"></script>
 <script src="{% static 'agenda/js/horario_semanal.js' %}"></script>
 {% endblock %}
-

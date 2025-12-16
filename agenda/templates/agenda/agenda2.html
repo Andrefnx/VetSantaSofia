@@ -1,4 +1,4 @@
-﻿{% extends 'partials/base.html' %}
+{% extends 'partials/base.html' %}
 {% load static %}
 
 {% block title %}Agenda{% endblock %}
@@ -9,7 +9,7 @@
         <i class="bi bi-calendar3"></i> Agenda
     </h1>
     <div class="edit-mode">
-        <button class="btn btn-primary">
+        <button class="vet-btn vet-btn-primary">
             <i class="bi bi-pencil-square"></i> Editar Ficha
         </button>
     </div>
@@ -55,11 +55,11 @@
                     <!-- PANEL LATERAL -->
                     <aside class="agenda-sidebar">
               
-                        <!-- Calendario pequeÃ±o -->
+                        <!-- Calendario pequeño -->
                         
-                        <!-- CategorÃ­as -->
+                        <!-- Categorías -->
                         <div class="agenda-categories">
-                            <h4>CategorÃ­as</h4>
+                            <h4>Categorías</h4>
                             <label><input type="checkbox" checked> Consultas</label>
                             <label><input type="checkbox" checked> Vacunas</label>
                             <label><input type="checkbox" checked> Controles</label>
@@ -70,14 +70,14 @@
                     <!-- PANEL PRINCIPAL -->
                     <main class="agenda-main">
 
-                        <!-- Encabezado del dÃ­a -->
+                        <!-- Encabezado del día -->
                         <div class="agenda-main-header">
                             <button class="day-nav" id="dayPrev"><i class="bi bi-chevron-left"></i></button>
                             <h2 id="currentDay">15 de Marzo 2025</h2>
                             <button class="day-nav" id="dayNext"><i class="bi bi-chevron-right"></i></button>
                         </div>
 
-                        <!-- GRID DE HORAS DEL DÃA -->
+                        <!-- GRID DE HORAS DEL DÍA -->
                         <div class="daily-grid scrollable-daily-grid">
                             {% for hour in horas %}
                             <div class="hour-block">
@@ -96,9 +96,9 @@
                                         {% elif hour == "09" and q == "15" %}
                                             {# Bloque ocupado por la cita anterior (Consulta 30min) #}
                                         {% elif hour == "10" and q == "00" %}
-                                            <div class="quarter-block has-appointment cita-vacunacion" title="VacunaciÃ³n">
+                                            <div class="quarter-block has-appointment cita-vacunacion" title="Vacunación">
                                                 <div class="cita-info">
-                                                    <span class="cita-tipo">VacunaciÃ³n</span>
+                                                    <span class="cita-tipo">Vacunación</span>
                                                     <span class="cita-mascota">Luna</span>
                                                     <span class="cita-especie">Felino</span>
                                                     <span class="cita-vet">Dr. Carlos</span>
@@ -107,9 +107,9 @@
                                             
                                         {% elif hour == "10" and q == "15" %}
                                             <div class="quarter-block-group">
-                                                <div class="quarter-block has-appointment cita-vacunacion" title="VacunaciÃ³n">
+                                                <div class="quarter-block has-appointment cita-vacunacion" title="Vacunación">
                                                     <div class="cita-info">
-                                                        <span class="cita-tipo">VacunaciÃ³n</span>
+                                                        <span class="cita-tipo">Vacunación</span>
                                                         <span class="cita-mascota">Luna</span>
                                                         <span class="cita-especie">Felino</span>
                                                         <span class="cita-vet">Dr. Carlos</span>
@@ -127,7 +127,7 @@
                                         {% elif hour == "10" and q == "30" %}
                                             {# Bloque ocupado por la cita anterior (Control 30min) #}
                                         {% elif hour == "10" and q == "45" %}
-                                            {# VacÃ­o #}
+                                            {# Vacío #}
                                             <div class="quarter-block" data-hour="{{ hour }}" data-minute="{{ q }}">
                                                 <span class="quarter-label">{{ hour }}:{{ q }}</span>
                                                 <span class="add-icon"><i class="bi bi-plus-circle"></i></span>
@@ -145,7 +145,7 @@
                         </div>
                     </main>
 
-                    <!-- PANEL DE INFORMACIÃ“N (DETALLE DE CITA) -->
+                    <!-- PANEL DE INFORMACIÓN (DETALLE DE CITA) -->
                     <aside class="agenda-sidebar-right">
                         <h3>Detalle de Cita</h3>
 
@@ -158,15 +158,15 @@
                                 <strong>Mascota:</strong> Rocky<br>
                                 <strong>Especie:</strong> Canino<br>
                                 <strong>Raza:</strong> Labrador Retriever<br>
-                                <strong>Edad:</strong> 3 aÃ±os<br>
+                                <strong>Edad:</strong> 3 años<br>
                                 <strong>Sexo:</strong> Macho<br>
                                 <a href="/ficha/mascota/123" class="vet-link" target="_blank">
                                     <i class="bi bi-card-list"></i> Ver ficha de mascota
                                 </a>
                             </div>
                              <div class="appt-section appt-owner-info">
-                                <strong>DueÃ±o:</strong> Juan PÃ©rez<br>
-                                <strong>TelÃ©fono:</strong> <a href="tel:+56912345678">+56 9 1234 5678</a><br>
+                                <strong>Dueño:</strong> Juan Pérez<br>
+                                <strong>Teléfono:</strong> <a href="tel:+56912345678">+56 9 1234 5678</a><br>
                                 <strong>Correo:</strong> <a href="mailto:juan.perez@email.com">juan.perez@email.com</a>
                             </div>
                             <div class="appt-section appt-vet-info">
@@ -186,13 +186,13 @@
                 <div class="monthly-calendar-view">
                     <div class="monthly-calendar-table">
                         <div class="monthly-calendar-days-row">
-                            <span>Lunes</span><span>Martes</span><span>MiÃ©rcoles</span><span>Jueves</span><span>Viernes</span><span>SÃ¡bado</span><span>Domingo</span>
+                            <span>Lunes</span><span>Martes</span><span>Miércoles</span><span>Jueves</span><span>Viernes</span><span>Sábado</span><span>Domingo</span>
                         </div>
                         <div id="monthlyCalendarGrid" class="monthly-calendar-grid"></div>
                     </div>
                     <div class="monthly-calendar-legend">
                         <span class="legend-item legend-workorder">Consulta</span>
-                        <span class="legend-item legend-movein">VacunaciÃ³n</span>
+                        <span class="legend-item legend-movein">Vacunación</span>
                         <span class="legend-item legend-moveout">Control</span>
                         <span class="legend-item legend-note">Nota</span>
                     </div>
@@ -219,7 +219,7 @@
         </div>
         <div class="vet-modal-body">
             <div class="row g-3">
-                <!-- Columna izquierda: Datos fisiolÃ³gicos -->
+                <!-- Columna izquierda: Datos fisiológicos -->
                 <div class="col-md-4" id="detalleDatosMascota">
                     <div class="detail-section">
                         <div class="detail-section-title"><i class="bi bi-thermometer-half"></i> Temperatura</div>
@@ -230,7 +230,7 @@
                         <p id="detallePeso">-</p>
                     </div>
                     <div class="detail-section">
-                        <div class="detail-section-title"><i class="bi bi-heart-pulse"></i> Frec. CardÃ­aca</div>
+                        <div class="detail-section-title"><i class="bi bi-heart-pulse"></i> Frec. Cardíaca</div>
                         <p id="detalleFC">-</p>
                     </div>
                     <div class="detail-section">
@@ -244,16 +244,16 @@
                 </div>
                 <!-- Columna derecha: Detalles de consulta -->
                 <div class="col-md-8" id="detalleContenido">
-                    <!-- AquÃ­ se llenarÃ¡n los detalles dinÃ¡micamente -->
+                    <!-- Aquí se llenarán los detalles dinámicamente -->
                 </div>
             </div>
         </div>
         <div class="vet-modal-footer d-flex justify-content-between align-items-center">
-            <button id="editarConsultaBtn" class="btn btn-grey" title="Editar consulta">
+            <button id="editarConsultaBtn" class="vet-btn vet-btn-grey" title="Editar consulta">
                 <i class="bi bi-pencil-square"></i> Editar consulta
             </button>
-            <button class="btn btn-primary" id="btnAgendarCita">
-                <i class="bi bi-calendar-plus"></i> Agendar prÃ³xima cita
+            <button class="vet-btn vet-btn-primary" id="btnAgendarCita">
+                <i class="bi bi-calendar-plus"></i> Agendar próxima cita
             </button>
         </div>
     </div>
@@ -269,7 +269,7 @@
         <form id="formNuevaConsulta">
             <div class="vet-modal-body">
                 <div class="row g-3">
-                    <!-- Columna izquierda: Datos fisiolÃ³gicos -->
+                    <!-- Columna izquierda: Datos fisiológicos -->
                     <div class="col-md-4">
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-thermometer-half"></i> Temperatura</div>
@@ -280,7 +280,7 @@
                             <input type="text" class="form-control" name="peso" required>
                         </div>
                         <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-heart-pulse"></i> Frec. CardÃ­aca</div>
+                            <div class="detail-section-title"><i class="bi bi-heart-pulse"></i> Frec. Cardíaca</div>
                             <input type="text" class="form-control" name="fc">
                         </div>
                         <div class="detail-section">
@@ -295,7 +295,7 @@
                     <!-- Columna derecha: Detalles de consulta -->
                     <div class="col-md-8">
                         <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-person-badge"></i> MÃ©dico Tratante</div>
+                            <div class="detail-section-title"><i class="bi bi-person-badge"></i> Médico Tratante</div>
                             <input type="text" class="form-control" name="medico"
                                 value="{{ user.nombre }} {{ user.apellido }}" readonly>
                         </div>
@@ -304,16 +304,16 @@
                             <input type="text" class="form-control" name="fecha" value="{% now 'd/m/Y' %}" readonly>
                         </div>
                         <div class="detail-section">
-                            <div class="detail-section-title"><i class="bi bi-clipboard2-check"></i> DiagnÃ³stico</div>
+                            <div class="detail-section-title"><i class="bi bi-clipboard2-check"></i> Diagnóstico</div>
                             <input type="text" class="form-control" name="diagnostico">
                         </div>
                         <div class="detail-section">
                             <div class="detail-section-title"><i class="bi bi-capsule"></i> Tratamiento</div>
                             <input type="text" class="form-control" name="tratamiento">
                         </div>
-                        <!-- ExÃ¡menes oculto -->
+                        <!-- Exámenes oculto -->
                         <div class="detail-section d-none">
-                            <div class="detail-section-title"><i class="bi bi-file-earmark-medical"></i> ExÃ¡menes</div>
+                            <div class="detail-section-title"><i class="bi bi-file-earmark-medical"></i> Exámenes</div>
                             <input type="text" class="form-control" name="examenes" placeholder="Separar por coma">
                         </div>
                         <div class="detail-section">
@@ -329,7 +329,7 @@
             </div>
             <div class="vet-modal-footer d-flex justify-content-between align-items-center">
                 <span></span>
-                <button type="submit" class="btn btn-primary" id="btnAgendarNuevaCita">
+                <button type="submit" class="vet-btn vet-btn-primary" id="btnAgendarNuevaCita">
                     <i class="bi bi-calendar-plus"></i> Agendar y guardar en historial
                 </button>
             </div>
@@ -362,10 +362,10 @@
                             <div class="detail-section-title"><i class="bi bi-list-task"></i> Tipo de Cita</div>
                             <select class="form-control" name="tipo" required>
                                 <option value="">Seleccione tipo</option>
-                                <option value="hospitalizacion">HospitalizaciÃ³n</option>
+                                <option value="hospitalizacion">Hospitalización</option>
                                 <option value="consulta">Consulta general</option>
                                 <option value="control">Control</option>
-                                <option value="vacunacion">VacunaciÃ³n</option>
+                                <option value="vacunacion">Vacunación</option>
                             </select>
                         </div>
                         <div class="detail-section">
@@ -377,7 +377,7 @@
             </div>
             <div class="vet-modal-footer d-flex justify-content-between align-items-center">
                 <span></span>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="vet-btn vet-btn-primary">
                     <i class="bi bi-calendar-plus"></i> Agendar
                 </button>
             </div>
@@ -391,4 +391,3 @@
 <script src="{% static 'js/base/calendar.js' %}"></script>
 <script src="{% static 'agenda/js/agenda.js' %}"></script>
 {% endblock %}
-
