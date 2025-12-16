@@ -1751,23 +1751,49 @@ function calcularEnvasesRequeridos(insumo, pesoPacienteKg, diasTratamiento = 1) 
 
 /**
  * Obtener todos los insumos usados (servicio + adicionales)
+ * MEJORADO: Usa datos disponibles incluso si medicamentosDisponibles no está cargado
  */
 function obtenerInsumosUsados() {
     const insumosUsados = [];
 
     // 1. Obtener insumos de los servicios seleccionados
     if (window.serviciosSeleccionadosArray && window.serviciosSeleccionadosArray.length > 0) {
+        const pesoInput = document.getElementById('pesoConsulta');
+        const pesoPaciente = pesoInput && pesoInput.value ? parseFloat(pesoInput.value) : null;
+        
         window.serviciosSeleccionadosArray.forEach(servicio => {
             if (servicio.insumos && servicio.insumos.length > 0) {
                 servicio.insumos.forEach(insumoServicio => {
-                    // Buscar el insumo completo en medicamentosDisponibles
-                    const insumoCompleto = medicamentosDisponibles.find(m => m.id === insumoServicio.id);
+                    // Intentar buscar el insumo completo en medicamentosDisponibles
+                    let insumoCompleto = null;
+                    if (typeof medicamentosDisponibles !== 'undefined' && medicamentosDisponibles.length > 0) {
+                        insumoCompleto = medicamentosDisponibles.find(m => m.id === insumoServicio.id);
+                    }
+                    
+                    // Si no está disponible, usar los datos del servicio
+                    if (!insumoCompleto) {
+                        insumoCompleto = insumoServicio;
+                    }
+                    
                     if (insumoCompleto) {
+                        // Calcular dosis para insumos de servicio
+                        let dosisCalculadaTexto = null;
+                        if (pesoPaciente && pesoPaciente > 0) {
+                            const resultado = calcularEnvasesRequeridos(insumoCompleto, pesoPaciente, 1);
+                            if (resultado && resultado.dosis_calculada) {
+                                const unidad = resultado.detalle?.unidad_dosis || 'unidades';
+                                const unidadEnvase = resultado.detalle?.unidad_envase || 'envase';
+                                const envases = resultado.envases_requeridos;
+                                dosisCalculadaTexto = `${resultado.dosis_calculada.toFixed(2)} ${unidad} (${envases} ${unidadEnvase}${envases !== 1 ? 's' : ''})`;
+                            }
+                        }
+                        
                         insumosUsados.push({
                             origen: 'servicio',
                             servicio_nombre: servicio.nombre,
                             insumo: insumoCompleto,
-                            cantidad_servicio: insumoServicio.cantidad || 1
+                            cantidad_servicio: insumoServicio.cantidad || 1,
+                            dosis_calculada: dosisCalculadaTexto
                         });
                     }
                 });
@@ -1778,7 +1804,26 @@ function obtenerInsumosUsados() {
     // 2. Obtener insumos adicionales seleccionados manualmente
     if (window.medicamentosSeleccionados && window.medicamentosSeleccionados.length > 0) {
         window.medicamentosSeleccionados.forEach(medSel => {
-            const insumoCompleto = medicamentosDisponibles.find(m => m.id === medSel.id);
+            let insumoCompleto = null;
+            
+            // Intentar buscar el insumo completo en medicamentosDisponibles
+            if (typeof medicamentosDisponibles !== 'undefined' && medicamentosDisponibles.length > 0) {
+                insumoCompleto = medicamentosDisponibles.find(m => m.id === medSel.id);
+            }
+            
+            // Si no está disponible, construir objeto con los datos que tenemos
+            if (!insumoCompleto) {
+                insumoCompleto = {
+                    id: medSel.id,
+                    nombre: medSel.nombre,
+                    formato: medSel.formato,
+                    precio_venta: 0, // No tenemos el precio, usar 0
+                    // Intentar reconstruir otros datos si están disponibles
+                    dosis_ml: medSel.dosis_base,
+                    peso_kg: medSel.peso_referencia
+                };
+            }
+            
             if (insumoCompleto) {
                 insumosUsados.push({
                     origen: 'adicional',
@@ -1824,74 +1869,131 @@ function calcularYMostrarTotalConsulta() {
         console.log('');
     } else {
         console.log('💊 INSUMOS UTILIZADOS:');
-        console.log('');
+        console.log('────────────────────────────────────────────────────────────');
         
         insumosUsados.forEach((item, index) => {
             const insumo = item.insumo;
             
-            // Calcular envases requeridos
-            const resultadoCalculo = calcularEnvasesRequeridos(insumo, pesoPaciente, 1);
-            const precioUnitario = insumo.precio_venta ? parseFloat(insumo.precio_venta) : 0;
-            const subtotal = resultadoCalculo.envases_requeridos * precioUnitario;
-            totalInsumos += subtotal;
-
-            // Mostrar información del insumo
-            console.log(`- ${insumo.nombre}`);
-            console.log(`  Origen: ${item.origen === 'servicio' ? `Servicio (${item.servicio_nombre})` : 'Adicional'}`);
-            console.log(`  Formato: ${insumo.formato || 'N/A'}`);
+            // USAR DIRECTAMENTE la dosis ya calculada (ej: "17 pipetas (4 cajas)")
+            let dosisTexto = item.dosis_calculada || 'Dosis no calculada';
+            let dosisTotal = 1;
+            let unidad = 'unidades';
+            let envases = 1;
             
-            // Detalles del cálculo
-            if (resultadoCalculo.calculo_automatico) {
-                const unidadDosis = insumo.formato === 'liquido' || insumo.formato === 'inyectable' ? 'ml' : 
-                                   insumo.formato === 'pastilla' || insumo.formato === 'comprimido' ? 'pastillas' :
-                                   insumo.formato === 'pipeta' ? 'pipetas' : 'unidades';
-                
-                console.log(`  Dosis total: ${resultadoCalculo.dosis_calculada.toFixed(2)} ${unidadDosis}`);
-                console.log(`  Contenido por envase: ${resultadoCalculo.contenido_envase.toFixed(2)} ${unidadDosis}`);
-                console.log(`  Envases requeridos: ${resultadoCalculo.envases_requeridos} (calculado: ${(resultadoCalculo.dosis_calculada / resultadoCalculo.contenido_envase).toFixed(2)})`);
-            } else {
-                console.log(`  Envases requeridos: ${resultadoCalculo.envases_requeridos} (cálculo manual)`);
-                console.log(`  Nota: ${resultadoCalculo.detalle}`);
+            // Solo parsear si existe, para extraer valores numéricos (NO para recalcular)
+            if (item.dosis_calculada) {
+                const match = item.dosis_calculada.match(/^([\d.]+)\s+(\w+)(?:\s+\((\d+)\s+(?:envase|caja|frasco|ampolla)s?\))?/i);
+                if (match) {
+                    dosisTotal = parseFloat(match[1]);
+                    unidad = match[2];
+                    if (match[3]) {
+                        envases = parseInt(match[3]);
+                    }
+                }
+            }
+
+            // OBTENER PRECIO del inventario
+            let precioUnitario = 0;
+            
+            // Primero intentar del objeto insumo
+            if (insumo.precio_venta) {
+                precioUnitario = Number(insumo.precio_venta) || 0;
             }
             
+            // Si no, buscar en medicamentosDisponibles
+            if (precioUnitario === 0 && typeof medicamentosDisponibles !== 'undefined') {
+                const insumoInventario = medicamentosDisponibles.find(m => 
+                    m.id === insumo.id || m.idInventario === insumo.id
+                );
+                if (insumoInventario && insumoInventario.precio_venta) {
+                    precioUnitario = Number(insumoInventario.precio_venta) || 0;
+                }
+            }
+
+            // CALCULAR SUBTOTAL
+            const subtotal = envases * precioUnitario;
+            totalInsumos += subtotal;
+
+            // OBTENER CONTENIDO POR ENVASE (solo para mostrar, no para calcular)
+            const formato = insumo.formato ? insumo.formato.toLowerCase() : '';
+            let contenidoPorEnvase = null;
+            
+            if (formato === 'liquido' || formato === 'inyectable') {
+                contenidoPorEnvase = insumo.ml_contenedor ? Number(insumo.ml_contenedor) : null;
+            } else if (formato === 'pastilla' || formato === 'comprimido' || formato === 'tableta') {
+                contenidoPorEnvase = insumo.cantidad_pastillas ? Number(insumo.cantidad_pastillas) : null;
+            } else if (formato === 'pipeta') {
+                contenidoPorEnvase = insumo.unidades_pipeta ? Number(insumo.unidades_pipeta) : null;
+            }
+
+            // MOSTRAR EN CONSOLA (usando dosis calculada directamente)
+            console.log(`- ${insumo.nombre}`);
+            console.log(`  Formato: ${insumo.formato || 'N/A'}`);
+            console.log(`  Dosis calculada: ${dosisTexto}`);
             console.log(`  Precio unitario: $${precioUnitario.toFixed(0)}`);
-            console.log(`  Subtotal: $${subtotal.toFixed(0)} (${resultadoCalculo.envases_requeridos} × $${precioUnitario.toFixed(0)})`);
+            console.log(`  Subtotal: $${subtotal.toFixed(0)}`);
             console.log('');
         });
 
-        console.log(`💰 TOTAL INSUMOS: $${totalInsumos.toFixed(0)}`);
+        console.log('💰 TOTAL INSUMOS: $' + totalInsumos.toFixed(0));
         console.log('');
     }
 
     // ===== SECCIÓN 2: SERVICIOS =====
     let totalServicios = 0;
+    let serviciosDetectados = [];
 
-    if (!window.serviciosSeleccionadosArray || window.serviciosSeleccionadosArray.length === 0) {
+    // Intentar detectar servicios desde múltiples fuentes
+    if (window.serviciosSeleccionadosArray && window.serviciosSeleccionadosArray.length > 0) {
+        serviciosDetectados = window.serviciosSeleccionadosArray;
+    } else {
+        // Intentar obtener desde el formulario
+        const serviciosIdsInput = document.getElementById('serviciosIds');
+        if (serviciosIdsInput && serviciosIdsInput.value) {
+            const idsArray = serviciosIdsInput.value.split(',').filter(id => id.trim());
+            if (idsArray.length > 0 && window.todosLosServicios) {
+                serviciosDetectados = idsArray.map(id => {
+                    const servicioCompleto = window.todosLosServicios.find(s => s.idServicio == id);
+                    return servicioCompleto ? { 
+                        id: servicioCompleto.idServicio, 
+                        nombre: servicioCompleto.nombre 
+                    } : null;
+                }).filter(s => s !== null);
+            }
+        }
+    }
+
+    if (serviciosDetectados.length === 0) {
         console.log('🏥 No hay servicios seleccionados');
         console.log('');
     } else {
-        console.log('🏥 SERVICIOS SELECCIONADOS:');
-        console.log('');
+        console.log('🏥 SERVICIOS:');
+        console.log('────────────────────────────────────────────────────────────');
         
-        window.serviciosSeleccionadosArray.forEach((servicio, index) => {
-            const servicioCompleto = window.todosLosServicios.find(s => s.idServicio === servicio.id);
-            const precio = servicioCompleto && servicioCompleto.precio ? parseFloat(servicioCompleto.precio) : 0;
+        serviciosDetectados.forEach((servicio, index) => {
+            let precio = 0;
             
-            console.log(`- ${servicio.nombre}`);
-            console.log(`  Precio: $${precio.toFixed(0)}`);
-            console.log('');
+            // Intentar obtener precio del servicio completo
+            if (window.todosLosServicios && window.todosLosServicios.length > 0) {
+                const servicioCompleto = window.todosLosServicios.find(s => 
+                    s.idServicio === servicio.id || s.idServicio == servicio.id
+                );
+                precio = servicioCompleto && servicioCompleto.precio ? parseFloat(servicioCompleto.precio) : 0;
+            }
             
+            console.log(`- ${servicio.nombre}: $${precio.toFixed(0)}`);
             totalServicios += precio;
         });
 
-        console.log(`💰 TOTAL SERVICIOS: $${totalServicios.toFixed(0)}`);
+        console.log('');
+        console.log('💰 TOTAL SERVICIOS: $' + totalServicios.toFixed(0));
         console.log('');
     }
 
     // ===== TOTAL FINAL =====
     const totalFinal = totalInsumos + totalServicios;
     console.log('═══════════════════════════════════════════════════════════');
-    console.log(`🎯 TOTAL FINAL DE LA CONSULTA: $${totalFinal.toFixed(0)}`);
+    console.log('🎯 TOTAL FINAL CONSULTA: $' + totalFinal.toFixed(0));
     console.log('═══════════════════════════════════════════════════════════');
     console.log('');
 }

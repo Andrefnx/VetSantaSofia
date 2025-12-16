@@ -265,11 +265,8 @@ def eliminar_insumo(request, insumo_id):
     
     try:
         with connection.cursor() as cursor:
-            # Desactivar foreign keys temporalmente (SQLite)
-            cursor.execute("PRAGMA foreign_keys = OFF")
-            
-            # 1. Verificar existencia
-            cursor.execute("SELECT medicamento FROM inventario WHERE idInventario = %s", [insumo_id])
+            # 1. Verificar existencia (usando comillas dobles para preservar case en PostgreSQL)
+            cursor.execute('SELECT medicamento FROM inventario WHERE "idInventario" = %s', [insumo_id])
             row = cursor.fetchone()
             
             if not row:
@@ -297,11 +294,8 @@ def eliminar_insumo(request, insumo_id):
             
             # 3. Si está en uso, ARCHIVAR en lugar de eliminar
             if relaciones:
-                cursor.execute("UPDATE inventario SET archivado = 1 WHERE idInventario = %s", [insumo_id])
+                cursor.execute('UPDATE inventario SET archivado = true WHERE "idInventario" = %s', [insumo_id])
                 print(f"📁 Archivado (en uso en: {", ".join(relaciones)}): {nombre_insumo}")
-                
-                # Reactivar foreign keys
-                cursor.execute("PRAGMA foreign_keys = ON")
                 
                 return JsonResponse({
                     'success': True,
@@ -310,11 +304,8 @@ def eliminar_insumo(request, insumo_id):
                 })
             
             # 4. Si NO está en uso, eliminar permanentemente
-            cursor.execute("DELETE FROM inventario WHERE idInventario = %s", [insumo_id])
+            cursor.execute('DELETE FROM inventario WHERE "idInventario" = %s', [insumo_id])
             print(f"✅ Eliminado permanentemente: {nombre_insumo}")
-            
-            # Reactivar foreign keys
-            cursor.execute("PRAGMA foreign_keys = ON")
             
             return JsonResponse({
                 'success': True,

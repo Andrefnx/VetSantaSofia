@@ -194,55 +194,63 @@ function calcularDosisPersonalizada(producto, pesoPaciente) {
     switch(formato) {
         case 'liquido':
         case 'inyectable':
-            contenidoEnvase = parseFloat(producto.ml_contenedor);
-            if (!contenidoEnvase || contenidoEnvase <= 0) {
-                console.warn('❌ ml_contenedor no definido para líquido/inyectable');
-                return null;
-            }
-            // dosis_total = dosis_base * factor_peso
+            // Siempre calcular dosis_total primero
             dosisTotal = dosisBase * factorPeso;
             unidadDosis = 'ml';
             unidadEnvase = formato === 'inyectable' ? 'ampolla' : 'frasco';
+            
+            // Luego manejar ml_contenedor (con fallback)
+            contenidoEnvase = parseFloat(producto.ml_contenedor);
+            if (!contenidoEnvase || contenidoEnvase <= 0) {
+                console.warn('⚠️ ml_contenedor no definido, usando fallback (1 envase)');
+                contenidoEnvase = dosisTotal; // Fallback: 1 envase = dosis total
+            }
             break;
             
         case 'pastilla':
         case 'comprimido':
         case 'tableta':
-            contenidoEnvase = parseFloat(producto.cantidad_pastillas);
-            if (!contenidoEnvase || contenidoEnvase <= 0) {
-                console.warn('❌ cantidad_pastillas no definido para pastilla');
-                return null;
-            }
-            // dosis_total = dosis_base * factor_peso
+            // Siempre calcular dosis_total primero
             dosisTotal = dosisBase * factorPeso;
             unidadDosis = 'pastillas';
             unidadEnvase = 'envase';
+            
+            // Luego manejar cantidad_pastillas (con fallback)
+            contenidoEnvase = parseFloat(producto.cantidad_pastillas);
+            if (!contenidoEnvase || contenidoEnvase <= 0) {
+                console.warn('⚠️ cantidad_pastillas no definido, usando fallback (1 envase)');
+                contenidoEnvase = dosisTotal; // Fallback: 1 envase = dosis total
+            }
             break;
             
         case 'pipeta':
-            contenidoEnvase = parseFloat(producto.unidades_pipeta);
-            if (!contenidoEnvase || contenidoEnvase <= 0) {
-                console.warn('❌ unidades_pipeta no definido para pipeta');
-                return null;
-            }
-            // dosis_total = dosis_base * factor_peso
+            // Siempre calcular dosis_total primero
             dosisTotal = dosisBase * factorPeso;
             unidadDosis = 'pipetas';
             unidadEnvase = 'caja';
+            
+            // Luego manejar unidades_pipeta (con fallback)
+            contenidoEnvase = parseFloat(producto.unidades_pipeta);
+            if (!contenidoEnvase || contenidoEnvase <= 0) {
+                console.warn('⚠️ unidades_pipeta no definido, usando fallback (1 envase)');
+                contenidoEnvase = dosisTotal; // Fallback: 1 envase = dosis total
+            }
             break;
             
         case 'polvo':
         case 'crema':
         case 'gel':
-            contenidoEnvase = parseFloat(producto.ml_contenedor);
-            if (!contenidoEnvase || contenidoEnvase <= 0) {
-                console.warn('❌ ml_contenedor no definido para polvo/crema/gel');
-                return null;
-            }
-            // dosis_total = dosis_base * factor_peso
+            // Siempre calcular dosis_total primero
             dosisTotal = dosisBase * factorPeso;
             unidadDosis = 'gr';
             unidadEnvase = 'envase';
+            
+            // Luego manejar ml_contenedor (con fallback)
+            contenidoEnvase = parseFloat(producto.ml_contenedor);
+            if (!contenidoEnvase || contenidoEnvase <= 0) {
+                console.warn('⚠️ ml_contenedor no definido, usando fallback (1 envase)');
+                contenidoEnvase = dosisTotal; // Fallback: 1 envase = dosis total
+            }
             break;
             
         default:
