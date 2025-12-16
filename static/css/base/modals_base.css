@@ -173,12 +173,10 @@
    FORZAR SIDEBAR Y NAVBAR DEBAJO
 ============================= */
 
-.sidebar,
-.sidebar *,
-.sidebar-wrapper,
-.sidebar-content,
-.sidenav,
-nav.sidebar {
+.vet-sidebar,
+.vet-sidebar *,
+.vet-sidebar-wrapper,
+.vet-sidebar-content {
     z-index: 1 !important;
 }
 

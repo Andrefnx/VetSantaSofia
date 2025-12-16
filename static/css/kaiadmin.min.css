@@ -9084,9 +9084,9 @@ label.error {
    }
 
    .navbar-header {
-      position: absolute;
+      position: relative;
       width: 100%;
-      transform: translate3d(0, -200px, 0) !important;
+      transform: none !important;
       transition: all .5s
    }
 

@@ -79,33 +79,51 @@
     }
 
     /* Responsive */
-    @media (max-width: 768px) {
+    @media (max-width: 991px) {
         .navbar-header-left {
             display: none !important;
         }
+        
+        /* Forzar visibilidad del área de usuario en mobile */
+        .navbar-nav.topbar-nav {
+            display: flex !important;
+            margin-left: auto !important;
+        }
+        
+        .nav-item.topbar-user {
+            display: block !important;
+        }
+        
+        /* Asegurar que el nombre de usuario sea visible en mobile */
+        .topbar-user .profile-pic {
+            display: flex !important;
+            align-items: center !important;
+        }
+        
+        .topbar-user .profile-username {
+            display: inline-block !important;
+            margin-left: 8px !important;
+        }
+        
+        .topbar-user .profile-username .fw-bold {
+            font-size: 0.9rem !important;
+            color: #374151 !important;
+        }
+        
+        /* Ajustar contenedor del navbar */
+        .navbar-header .container-fluid {
+            padding-right: 15px !important;
+        }
+    }
+    
+    /* Asegurar visibilidad general del nombre de usuario */
+    .topbar-user .profile-username {
+        display: inline-block;
+        margin-left: 8px;
     }
 </style>
 <div class="main-header">
-    <div class="main-header-logo">
-        <!-- Logo Header -->
-        <div class="logo-header" data-background-color="dark">
-            <a href="{% url 'dashboard:dashboard' %}" class="logo">
-                <img src="{% static 'img/logo.png' %}" alt="navbar brand" class="navbar-brand" height="40" />
-            </a>
-            <div class="nav-toggle">
-                <button class="btn btn-toggle toggle-sidebar">
-                    <i class="gg-menu-right"></i>
-                </button>
-                <button class="btn btn-toggle sidenav-toggler">
-                    <i class="gg-menu-left"></i>
-                </button>
-            </div>
-            <button class="topbar-toggler more">
-                <i class="gg-more-vertical-alt"></i>
-            </button>
-        </div>
-        <!-- End Logo Header -->
-    </div>
+
     <!-- Navbar Header (simplified) -->
     <nav class="navbar navbar-header navbar-header-transparent navbar-expand-lg border-bottom">
         <div class="container-fluid">
