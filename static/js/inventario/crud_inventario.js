@@ -294,6 +294,16 @@ function openProductoModal(mode, data = {}) {
         return;
     }
     
+    // 🔍 LOG DE CAMPOS DE DOSIS RECIBIDOS DEL SERVIDOR
+    console.log('📊 Valores de dosis del servidor:', {
+        dosis_ml: data.dosis_ml,
+        ml_contenedor: data.ml_contenedor,
+        cantidad_pastillas: data.cantidad_pastillas,
+        unidades_pipeta: data.unidades_pipeta,
+        peso_kg: data.peso_kg,
+        formato: data.formato
+    });
+    
     // Mapear datos
     const mappedData = {
         idInventario: data.idInventario,
@@ -508,8 +518,42 @@ function openProductoModal(mode, data = {}) {
     
     // ⭐ Actualizar campos de dosis según formato actual
     if (mappedData.formato && typeof actualizarCamposDosis === 'function') {
-        actualizarCamposDosis(mappedData.formato, modal);
+        // Pasar flag para NO limpiar valores durante la carga inicial
+        actualizarCamposDosis(mappedData.formato, modal, false); // false = no limpiar
     }
+    
+    // ⭐ CARGAR VALORES DE DOSIS EN LOS CAMPOS VISIBLES (después de mostrar/ocultar)
+    // Esto asegura que los valores se carguen en los inputs correctos según el formato
+    const camposDosisData = {
+        dosis_ml: mappedData.dosis_ml,
+        ml_contenedor: mappedData.ml_contenedor,
+        cantidad_pastillas: mappedData.cantidad_pastillas,
+        unidades_pipeta: mappedData.unidades_pipeta,
+        peso_kg: mappedData.peso_kg
+    };
+    
+    console.log('📊 Cargando campos de dosis:', camposDosisData);
+    
+    Object.keys(camposDosisData).forEach(key => {
+        const value = camposDosisData[key];
+        if (value !== null && value !== undefined && value !== '') {
+            // Buscar el input VISIBLE (no oculto)
+            const inputVisible = modal.querySelector(`.campo-dosis:not(.d-none) input[data-field="${key}"]`);
+            if (inputVisible) {
+                inputVisible.value = value;
+                console.log(`✅ Cargando ${key} = ${value} en campo visible`);
+            } else {
+                // Si no está en campo-dosis visible, buscar en peso_kg (siempre visible)
+                const inputPeso = modal.querySelector(`input[data-field="${key}"]`);
+                if (inputPeso) {
+                    inputPeso.value = value;
+                    console.log(`✅ Cargando ${key} = ${value}`);
+                }
+            }
+        } else {
+            console.warn(`⚠️ Campo ${key} está vacío o nulo:`, value);
+        }
+    });
 
     console.log('🎉 Abriendo modal...');
     openVetModal(modalId);
@@ -642,12 +686,40 @@ async function guardarProducto() {
     
     // Función para buscar campos por data-field o ID
     const getFieldValue = (fieldName, defaultValue = '') => {
-        let element = document.getElementById(fieldName);
+        let element = null;
         
+        // 🔍 PRIORIDAD 1: Campos de dosis en secciones VISIBLES (más importante)
+        if (['dosis_ml', 'ml_contenedor', 'cantidad_pastillas', 'unidades_pipeta'].includes(fieldName)) {
+            // Buscar SOLO en campos-dosis VISIBLES primero
+            element = modal.querySelector(`.campo-dosis:not(.d-none) input[data-field="${fieldName}"]`);
+            console.log(`🔎 [PRIORIDAD] Buscando ${fieldName} en .campo-dosis VISIBLE:`, element ? `ENCONTRADO (valor: "${element.value}")` : 'NO ENCONTRADO');
+            
+            if (!element) {
+                // Si no hay visible, buscar en TODOS y tomar el que tenga valor
+                const todosLosCampos = modal.querySelectorAll(`.campo-dosis input[data-field="${fieldName}"]`);
+                console.log(`🔎 Todos los inputs con data-field="${fieldName}":`, todosLosCampos.length);
+                
+                for (let campo of todosLosCampos) {
+                    if (campo.value && campo.value.trim() !== '') {
+                        element = campo;
+                        console.log(`✅ Usando campo oculto con valor:`, campo.value);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // PRIORIDAD 2: Búsqueda por ID
+        if (!element) {
+            element = document.getElementById(fieldName);
+        }
+        
+        // PRIORIDAD 3: Búsqueda general por data-field
         if (!element) {
             element = modal.querySelector(`input[data-field="${fieldName}"], select[data-field="${fieldName}"], textarea[data-field="${fieldName}"]`);
         }
         
+        // PRIORIDAD 4: Búsqueda en field-edit
         if (!element) {
             const fieldEdit = modal.querySelector(`.field-edit[data-field="${fieldName}"]`);
             if (fieldEdit) {
@@ -666,7 +738,9 @@ async function guardarProducto() {
             return defaultValue;
         }
         
-        return element.value?.trim() || defaultValue;
+        const valor = element.value?.trim() || defaultValue;
+        console.log(`🔎 Campo ${fieldName}:`, valor, '(elemento:', element.getAttribute('data-field'), ')');
+        return valor;
     };
     
     const getNumberValue = (fieldName, defaultValue = null) => {
@@ -740,24 +814,67 @@ async function guardarProducto() {
         }
     });
     
-    // Campos según formato
+    // ⭐ CAMPOS SEGÚN FORMATO - dosis_ml siempre es "dosis por peso"
     const formato = formData.formato?.toLowerCase() || '';
     console.log('📦 Formato detectado:', formato);
     
-    if (formato === 'liquido' || formato === 'inyectable') {
-        formData.dosis_ml = getNumberValue('dosis_ml');
-        formData.ml_contenedor = getNumberValue('ml_contenedor');
-        console.log('💧 Dosis líquido:', formData.dosis_ml, 'ml');
-    } else if (formato === 'pastilla' || formato === 'comprimido' || formato === 'tableta') {
-        formData.cantidad_pastillas = getIntValue('cantidad_pastillas');
-        console.log('💊 Cantidad pastillas:', formData.cantidad_pastillas);
-    } else if (formato === 'pipeta') {
-        formData.unidades_pipeta = getIntValue('unidades_pipeta');
-        console.log('💉 Unidades pipeta:', formData.unidades_pipeta);
-    } else if (formato === 'polvo' || formato === 'crema' || formato === 'gel') {
-        formData.dosis_ml = getNumberValue('dosis_ml');
-        console.log('🧪 Dosis:', formData.dosis_ml, 'gr');
+    // REGLA: dosis_ml SIEMPRE es la dosis por kg/peso (ml/kg, pastillas/kg, unidades/kg)
+    // Contenido del envase va en campos específicos según formato
+    
+    switch (formato) {
+        case 'liquido':
+        case 'inyectable':
+            formData.dosis_ml = getNumberValue('dosis_ml');          // ml por kg
+            formData.ml_contenedor = getNumberValue('ml_contenedor'); // ml por envase
+            console.log('💧 Líquido - Dosis:', formData.dosis_ml, 'ml/kg | Envase:', formData.ml_contenedor, 'ml');
+            break;
+            
+        case 'pastilla':
+        case 'comprimido':
+        case 'tableta':
+            formData.dosis_ml = getNumberValue('dosis_ml');              // pastillas por kg (reutiliza dosis_ml)
+            formData.cantidad_pastillas = getIntValue('cantidad_pastillas'); // pastillas por envase
+            console.log('💊 Pastilla - Dosis:', formData.dosis_ml, 'pastillas/kg | Envase:', formData.cantidad_pastillas, 'pastillas');
+            break;
+            
+        case 'pipeta':
+            formData.dosis_ml = getNumberValue('dosis_ml');            // pipetas por kg (reutiliza dosis_ml)
+            formData.unidades_pipeta = getIntValue('unidades_pipeta'); // pipetas por envase
+            console.log('💉 Pipeta - Dosis:', formData.dosis_ml, 'pipetas/kg | Envase:', formData.unidades_pipeta, 'pipetas');
+            break;
+            
+        case 'polvo':
+            formData.dosis_ml = getNumberValue('dosis_ml');          // gramos por kg (reutiliza dosis_ml)
+            formData.ml_contenedor = getNumberValue('ml_contenedor'); // gramos por envase (reutiliza ml_contenedor)
+            console.log('🧪 Polvo - Dosis:', formData.dosis_ml, 'g/kg | Envase:', formData.ml_contenedor, 'g');
+            break;
+            
+        case 'crema':
+        case 'gel':
+            formData.dosis_ml = getNumberValue('dosis_ml');          // gramos por kg (reutiliza dosis_ml)
+            formData.ml_contenedor = getNumberValue('ml_contenedor'); // gramos por envase (reutiliza ml_contenedor)
+            console.log('🧴 Crema/Gel - Dosis:', formData.dosis_ml, 'g/kg | Envase:', formData.ml_contenedor, 'g');
+            break;
+            
+        case 'otro':
+            formData.dosis_ml = getNumberValue('dosis_ml');          // unidades por kg (genérico)
+            formData.ml_contenedor = getNumberValue('ml_contenedor'); // unidades por envase (genérico)
+            console.log('📦 Otro - Dosis:', formData.dosis_ml, 'unidades/kg | Envase:', formData.ml_contenedor, 'unidades');
+            break;
+            
+        default:
+            console.warn('⚠️ Formato no reconocido:', formato);
     }
+    
+    // 🔍 LOG DE DEPURACIÓN AGRUPADO
+    console.group('📊 VALORES PRE-SUBMIT');
+    console.log('🏷️  Formato:', formato);
+    console.log('💉 dosis_ml (dosis por kg):', formData.dosis_ml || 'N/A');
+    console.log('⚖️  peso_kg (peso referencia):', formData.peso_kg || 'N/A');
+    console.log('💧 ml_contenedor:', formData.ml_contenedor || 'N/A');
+    console.log('💊 cantidad_pastillas:', formData.cantidad_pastillas || 'N/A');
+    console.log('💉 unidades_pipeta:', formData.unidades_pipeta || 'N/A');
+    console.groupEnd();
     
     console.log('📤 Datos completos a enviar:', formData);
     

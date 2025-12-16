@@ -113,14 +113,22 @@ class Insumo(models.Model):
         
         if self.formato == 'liquido' and self.dosis_ml:
             return f"{self.dosis_ml} ml{rango_peso}"
-        elif self.formato == 'pastilla' and self.cantidad_pastillas:
-            pastilla_texto = "pastilla" if self.cantidad_pastillas == 1 else "pastillas"
-            return f"{self.cantidad_pastillas} {pastilla_texto}{rango_peso}"
-        elif self.formato == 'pipeta' and self.unidades_pipeta:
-            unidad_texto = "unidad" if self.unidades_pipeta == 1 else "unidades"
-            return f"{self.unidades_pipeta} {unidad_texto}{rango_peso}"
+        elif self.formato == 'pastilla' and self.dosis_ml:
+            # Usar dosis_ml (dosis por kg) NO cantidad_pastillas (contenido del envase)
+            pastilla_texto = "pastilla" if self.dosis_ml == 1 else "pastillas"
+            return f"{self.dosis_ml} {pastilla_texto}{rango_peso}"
+        elif self.formato == 'pipeta' and self.dosis_ml:
+            # Usar dosis_ml (dosis por kg) NO unidades_pipeta (contenido del envase)
+            unidad_texto = "unidad" if self.dosis_ml == 1 else "unidades"
+            return f"{self.dosis_ml} {unidad_texto}{rango_peso}"
         elif self.formato == 'inyectable' and self.dosis_ml:
             return f"{self.dosis_ml} ml{rango_peso}"
+        elif self.formato == 'polvo' and self.dosis_ml:
+            return f"{self.dosis_ml} g{rango_peso}"
+        elif self.formato == 'crema' and self.dosis_ml:
+            return f"{self.dosis_ml} g{rango_peso}"
+        elif self.formato == 'otro' and self.dosis_ml:
+            return f"{self.dosis_ml} unidades{rango_peso}"
         
         return "-"
     
