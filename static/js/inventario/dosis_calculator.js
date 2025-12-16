@@ -63,6 +63,7 @@ function obtenerTextoRangoPeso(data) {
 
 /**
  * Actualiza los campos de dosis según el formato seleccionado
+ * SOLO controla visibilidad, NO calcula ni modifica stock
  * @param {string} formato - Formato del producto
  * @param {HTMLElement} modal - Elemento del modal
  */
@@ -71,37 +72,64 @@ function actualizarCamposDosis(formato, modal) {
     
     console.log('🔧 Actualizando campos de dosis para formato:', formato);
     
-    // Ocultar todos los campos de dosis
+    // Ocultar TODOS los campos de dosis y limpiar sus valores
     const camposDosis = modal.querySelectorAll('.campo-dosis');
-    camposDosis.forEach(campo => campo.classList.add('d-none'));
+    camposDosis.forEach(campo => {
+        campo.classList.add('d-none');
+        // Limpiar inputs dentro del campo oculto
+        const inputs = campo.querySelectorAll('input[type="number"]');
+        inputs.forEach(input => {
+            input.value = '';
+        });
+    });
     
     // Mostrar campos según formato
     switch(formato) {
         case 'liquido':
         case 'inyectable':
+            // Mostrar: dosis_ml, peso_kg, ml_contenedor
             mostrarCampo(modal, '.campo-dosis-liquido');
-            mostrarCampo(modal, '.campo-ml-contenedor');
             mostrarCampo(modal, '.campo-peso-kg');
             console.log('✅ Mostrando campos para líquido/inyectable');
             break;
             
         case 'pastilla':
+            // Mostrar: dosis_ml (como pastillas/kg), peso_kg, cantidad_pastillas
             mostrarCampo(modal, '.campo-dosis-pastilla');
             mostrarCampo(modal, '.campo-peso-kg');
             console.log('✅ Mostrando campos para pastilla');
             break;
             
         case 'pipeta':
+            // Mostrar: dosis_ml (como pipetas/kg), peso_kg, unidades_pipeta
             mostrarCampo(modal, '.campo-dosis-pipeta');
             mostrarCampo(modal, '.campo-peso-kg');
             console.log('✅ Mostrando campos para pipeta');
             break;
             
         case 'polvo':
-        case 'crema':
-            mostrarCampo(modal, '.campo-dosis-liquido');
+            // Mostrar: dosis_ml (como g/kg), peso_kg, ml_contenedor (como gramos)
+            mostrarCampo(modal, '.campo-dosis-polvo');
             mostrarCampo(modal, '.campo-peso-kg');
-            console.log('✅ Mostrando campos para polvo/crema');
+            console.log('✅ Mostrando campos para polvo');
+            break;
+            
+        case 'crema':
+            // Mostrar: dosis_ml (como g/kg), peso_kg, ml_contenedor (como gramos)
+            mostrarCampo(modal, '.campo-dosis-crema');
+            mostrarCampo(modal, '.campo-peso-kg');
+            console.log('✅ Mostrando campos para crema');
+            break;
+            
+        case 'otro':
+            // Mostrar: dosis_ml (como unidades/kg), peso_kg, ml_contenedor (genérico)
+            mostrarCampo(modal, '.campo-dosis-otro');
+            mostrarCampo(modal, '.campo-peso-kg');
+            console.log('✅ Mostrando campos para otro (formato genérico)');
+            break;
+            
+        default:
+            console.warn('⚠️ Formato no reconocido:', formato);
             break;
     }
     

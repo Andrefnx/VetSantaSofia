@@ -356,17 +356,49 @@ function openProductoModal(mode, data = {}) {
         console.log('✅ dosis_formula_view:', mappedData.dosis_display);
     }
 
-    // ML Contenedor vista (solo para líquidos)
+    // ⚡ Contenido del Envase - Label y valor dinámicos según formato
     const mlContenedorView = modal.querySelector('[data-field="ml_contenedor_view"]');
+    const labelContenidoEnvase = modal.querySelector('#labelContenidoEnvase');
+    
     if (mlContenedorView) {
-        if (mappedData.formato === 'liquido' || mappedData.formato === 'inyectable') {
-            if (mappedData.ml_contenedor) {
-                mlContenedorView.textContent = `${mappedData.ml_contenedor} ml`;
-            } else {
-                mlContenedorView.textContent = "-";
-            }
-        } else {
-            mlContenedorView.textContent = "N/A";
+        const formato = mappedData.formato ? mappedData.formato.toLowerCase() : '';
+        
+        switch(formato) {
+            case 'liquido':
+            case 'inyectable':
+                if (labelContenidoEnvase) labelContenidoEnvase.textContent = 'Contenido del Envase (ml)';
+                mlContenedorView.textContent = mappedData.ml_contenedor ? `${mappedData.ml_contenedor} ml` : '-';
+                break;
+                
+            case 'pastilla':
+                if (labelContenidoEnvase) labelContenidoEnvase.textContent = 'Pastillas por Envase';
+                mlContenedorView.textContent = mappedData.cantidad_pastillas ? `${mappedData.cantidad_pastillas} pastillas` : '-';
+                break;
+                
+            case 'pipeta':
+                if (labelContenidoEnvase) labelContenidoEnvase.textContent = 'Unidades por Envase';
+                mlContenedorView.textContent = mappedData.unidades_pipeta ? `${mappedData.unidades_pipeta} pipetas` : '-';
+                break;
+                
+            case 'polvo':
+                if (labelContenidoEnvase) labelContenidoEnvase.textContent = 'Contenido del Envase (g)';
+                mlContenedorView.textContent = mappedData.ml_contenedor ? `${mappedData.ml_contenedor} g` : '-';
+                break;
+                
+            case 'crema':
+                if (labelContenidoEnvase) labelContenidoEnvase.textContent = 'Contenido del Envase (g)';
+                mlContenedorView.textContent = mappedData.ml_contenedor ? `${mappedData.ml_contenedor} g` : '-';
+                break;
+                
+            case 'otro':
+                if (labelContenidoEnvase) labelContenidoEnvase.textContent = 'Contenido del Envase';
+                mlContenedorView.textContent = mappedData.ml_contenedor ? `${mappedData.ml_contenedor} unidades` : '-';
+                break;
+                
+            default:
+                if (labelContenidoEnvase) labelContenidoEnvase.textContent = 'Contenido del Envase';
+                mlContenedorView.textContent = '-';
+                break;
         }
     }
 

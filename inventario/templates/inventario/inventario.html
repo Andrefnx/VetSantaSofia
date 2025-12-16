@@ -311,7 +311,7 @@
                             <div class="field-view" data-field="dosis_formula_view">-</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">ML en Contenedor</label>
+                            <label class="form-label fw-bold" id="labelContenidoEnvase">Contenido del Envase</label>
                             <div class="field-view" data-field="ml_contenedor_view">-</div>
                         </div>
                     </div>
@@ -322,28 +322,84 @@
                         <!-- PARA LÍQUIDOS E INYECTABLES -->
                         <div class="row campo-dosis campo-dosis-liquido d-none">
                             <div class="col-md-4 mb-3">
-                                <label class="form-label fw-bold">Dosis (ml)</label>
+                                <label class="form-label fw-bold">Dosis por kg (ml/kg)</label>
                                 <input type="number" class="form-control" data-field="dosis_ml" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Cantidad de ml por cada kg de peso</small>
                             </div>
                             <div class="col-md-4 mb-3 campo-ml-contenedor">
-                                <label class="form-label fw-bold">ML Contenedor</label>
+                                <label class="form-label fw-bold">Contenido del envase (ml)</label>
                                 <input type="number" class="form-control" data-field="ml_contenedor" step="0.01" placeholder="0.00">
+                                <small class="text-muted">ML que trae 1 frasco/ampolla</small>
                             </div>
                         </div>
 
                         <!-- PARA PASTILLAS -->
                         <div class="row campo-dosis campo-dosis-pastilla d-none">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Cantidad de Pastillas</label>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Dosis por kg (pastillas/kg)</label>
+                                <input type="number" class="form-control" data-field="dosis_ml" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Cantidad de pastillas por cada kg de peso</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Pastillas por envase</label>
                                 <input type="number" class="form-control" data-field="cantidad_pastillas" placeholder="0">
+                                <small class="text-muted">Cantidad de pastillas que trae 1 blister/caja</small>
                             </div>
                         </div>
 
                         <!-- PARA PIPETAS -->
                         <div class="row campo-dosis campo-dosis-pipeta d-none">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Unidades de Pipeta</label>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Dosis por kg (pipetas/kg)</label>
+                                <input type="number" class="form-control" data-field="dosis_ml" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Cantidad de pipetas por cada kg de peso</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Unidades por envase</label>
                                 <input type="number" class="form-control" data-field="unidades_pipeta" placeholder="0">
+                                <small class="text-muted">Cantidad de pipetas que trae 1 caja</small>
+                            </div>
+                        </div>
+
+                        <!-- PARA POLVO -->
+                        <div class="row campo-dosis campo-dosis-polvo d-none">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Dosis por kg (g/kg)</label>
+                                <input type="number" class="form-control" data-field="dosis_ml" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Cantidad de gramos por cada kg de peso</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Contenido del envase (g)</label>
+                                <input type="number" class="form-control" data-field="ml_contenedor" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Gramos que trae 1 sobre/frasco</small>
+                            </div>
+                        </div>
+
+                        <!-- PARA CREMA -->
+                        <div class="row campo-dosis campo-dosis-crema d-none">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Dosis por kg (g/kg)</label>
+                                <input type="number" class="form-control" data-field="dosis_ml" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Cantidad de gramos por cada kg de peso</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Contenido del envase (g)</label>
+                                <input type="number" class="form-control" data-field="ml_contenedor" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Gramos que trae 1 tubo/pote</small>
+                            </div>
+                        </div>
+
+                        <!-- PARA OTRO (FORMATO GENÉRICO) -->
+                        <div class="row campo-dosis campo-dosis-otro d-none">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Dosis por kg (unidades/kg)</label>
+                                <input type="number" class="form-control" data-field="dosis_ml" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Cantidad de unidades por cada kg de peso</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Contenido del envase (unidades)</label>
+                                <input type="number" class="form-control" data-field="ml_contenedor" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Unidades genéricas que trae 1 envase</small>
                             </div>
                         </div>
 
@@ -352,7 +408,7 @@
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-bold">Peso Referencia (kg)</label>
                                 <input type="number" class="form-control" data-field="peso_kg" step="0.01" placeholder="0.00">
-                                <small class="text-muted">Peso de referencia para la dosis</small>
+                                <small class="text-muted">Peso del animal para la dosis indicada. Ej: si la dosis es 2ml para 10kg, ingrese 10</small>
                             </div>
                         </div>
 

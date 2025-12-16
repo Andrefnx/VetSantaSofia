@@ -435,7 +435,7 @@ textarea.is-invalid:focus {
 =========================== */
 
 .tabs-section {
-    max-height: calc(100vh - 120px); /* Límite de altura con margen */
+    max-height: 92vh; /* Límite de altura con margen */
     display: flex;
     flex-direction: column;
     overflow: hidden; /* Ocultar desbordamiento del contenedor principal */
