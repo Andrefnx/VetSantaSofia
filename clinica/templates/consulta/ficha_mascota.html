@@ -1594,6 +1594,315 @@ function mostrarMensaje(mensaje, tipo) {
         alerta.remove();
     }, 5000);
 }
+
+/* ============================================================
+   CALCULADORA DE COSTOS DE CONSULTA
+   Calcula envases y costos según peso del paciente
+============================================================ */
+
+/**
+ * Calcular envases requeridos según formato del insumo
+ * Replica la lógica de calcular_envases_requeridos() del modelo Python
+ */
+function calcularEnvasesRequeridos(insumo, pesoPacienteKg, diasTratamiento = 1) {
+    const resultado = {
+        envases_requeridos: 1,
+        calculo_automatico: false,
+        detalle: '',
+        dosis_calculada: 0,
+        contenido_envase: 0
+    };
+
+    // Validar datos de entrada
+    if (!pesoPacienteKg || pesoPacienteKg <= 0) {
+        resultado.detalle = 'Peso del paciente no válido';
+        return resultado;
+    }
+
+    if (!insumo.formato) {
+        resultado.detalle = 'Formato no definido - requiere cálculo manual';
+        return resultado;
+    }
+
+    // PASO 1: Determinar CONTENIDO de 1 ENVASE según formato
+    let contenidoEnvase = null;
+    const formato = insumo.formato.toLowerCase();
+
+    if (formato === 'liquido' || formato === 'inyectable') {
+        if (insumo.ml_contenedor) {
+            contenidoEnvase = parseFloat(insumo.ml_contenedor);
+        }
+    } else if (formato === 'pastilla' || formato === 'comprimido' || formato === 'tableta') {
+        if (insumo.cantidad_pastillas) {
+            contenidoEnvase = parseFloat(insumo.cantidad_pastillas);
+        }
+    } else if (formato === 'pipeta') {
+        if (insumo.unidades_pipeta) {
+            contenidoEnvase = parseFloat(insumo.unidades_pipeta);
+        }
+    } else if (formato === 'polvo' || formato === 'crema' || formato === 'otro') {
+        if (insumo.ml_contenedor) {
+            contenidoEnvase = parseFloat(insumo.ml_contenedor);
+        }
+    }
+
+    if (!contenidoEnvase || contenidoEnvase <= 0) {
+        resultado.detalle = `Contenido del envase no definido para formato '${formato}'`;
+        return resultado;
+    }
+
+    resultado.contenido_envase = contenidoEnvase;
+
+    // PASO 2: Calcular DOSIS TOTAL requerida
+    let dosisTotal = 0;
+
+    if (formato === 'liquido' || formato === 'inyectable') {
+        if (!insumo.dosis_ml) {
+            resultado.detalle = 'Dosis (ml) no definida - requiere cálculo manual';
+            return resultado;
+        }
+
+        // Calcular dosis según peso
+        if (insumo.peso_kg && insumo.peso_kg > 0) {
+            // dosis_ml es "por X kg", calcular proporcionalmente
+            const factorPeso = pesoPacienteKg / parseFloat(insumo.peso_kg);
+            const dosisDiaria = parseFloat(insumo.dosis_ml) * factorPeso;
+            dosisTotal = dosisDiaria * diasTratamiento;
+        } else {
+            // dosis_ml es fija
+            const dosisDiaria = parseFloat(insumo.dosis_ml);
+            dosisTotal = dosisDiaria * diasTratamiento;
+        }
+    } else if (formato === 'pastilla' || formato === 'comprimido' || formato === 'tableta') {
+        // Si hay peso de referencia, ajustar
+        if (insumo.peso_kg && insumo.peso_kg > 0) {
+            // Verificar rango de peso si existe
+            if (insumo.tiene_rango_peso) {
+                if (insumo.peso_min_kg && pesoPacienteKg < parseFloat(insumo.peso_min_kg)) {
+                    resultado.detalle = `Peso del paciente (${pesoPacienteKg} kg) menor al mínimo recomendado (${insumo.peso_min_kg} kg)`;
+                    return resultado;
+                }
+                if (insumo.peso_max_kg && pesoPacienteKg > parseFloat(insumo.peso_max_kg)) {
+                    resultado.detalle = `Peso del paciente (${pesoPacienteKg} kg) mayor al máximo recomendado (${insumo.peso_max_kg} kg)`;
+                    return resultado;
+                }
+            }
+        }
+
+        // Asumir que cantidad_pastillas es la dosis diaria
+        const dosisDiaria = insumo.cantidad_pastillas ? parseFloat(insumo.cantidad_pastillas) : 1;
+        dosisTotal = dosisDiaria * diasTratamiento;
+    } else if (formato === 'pipeta') {
+        // Verificar rango de peso si existe
+        if (insumo.tiene_rango_peso) {
+            if (insumo.peso_min_kg && pesoPacienteKg < parseFloat(insumo.peso_min_kg)) {
+                resultado.detalle = `Peso del paciente (${pesoPacienteKg} kg) menor al mínimo recomendado (${insumo.peso_min_kg} kg)`;
+                return resultado;
+            }
+            if (insumo.peso_max_kg && pesoPacienteKg > parseFloat(insumo.peso_max_kg)) {
+                resultado.detalle = `Peso del paciente (${pesoPacienteKg} kg) mayor al máximo recomendado (${insumo.peso_max_kg} kg)`;
+                return resultado;
+            }
+        }
+
+        // Pipetas: típicamente 1 unidad por aplicación
+        dosisTotal = 1 * diasTratamiento;
+    } else {
+        // Para otros formatos: usar dosis_ml como referencia
+        if (insumo.dosis_ml) {
+            const dosisDiaria = parseFloat(insumo.dosis_ml);
+            dosisTotal = dosisDiaria * diasTratamiento;
+        } else {
+            resultado.detalle = 'Dosis no definida para formato genérico - requiere cálculo manual';
+            return resultado;
+        }
+    }
+
+    resultado.dosis_calculada = dosisTotal;
+
+    // PASO 3: Calcular ENVASES REQUERIDOS (siempre redondear hacia arriba)
+    if (dosisTotal > 0 && contenidoEnvase > 0) {
+        const envasesCalculados = dosisTotal / contenidoEnvase;
+        const envasesRequeridos = Math.ceil(envasesCalculados); // SIEMPRE redondear hacia arriba
+
+        resultado.envases_requeridos = envasesRequeridos;
+        resultado.calculo_automatico = true;
+        resultado.detalle = `Dosis total: ${dosisTotal.toFixed(2)} unidades | Contenido por envase: ${contenidoEnvase.toFixed(2)} | Envases: ${envasesRequeridos} (calculado: ${envasesCalculados.toFixed(2)})`;
+    } else {
+        resultado.detalle = 'No se pudo calcular automáticamente - valores insuficientes';
+    }
+
+    return resultado;
+}
+
+/**
+ * Obtener todos los insumos usados (servicio + adicionales)
+ */
+function obtenerInsumosUsados() {
+    const insumosUsados = [];
+
+    // 1. Obtener insumos de los servicios seleccionados
+    if (window.serviciosSeleccionadosArray && window.serviciosSeleccionadosArray.length > 0) {
+        window.serviciosSeleccionadosArray.forEach(servicio => {
+            if (servicio.insumos && servicio.insumos.length > 0) {
+                servicio.insumos.forEach(insumoServicio => {
+                    // Buscar el insumo completo en medicamentosDisponibles
+                    const insumoCompleto = medicamentosDisponibles.find(m => m.id === insumoServicio.id);
+                    if (insumoCompleto) {
+                        insumosUsados.push({
+                            origen: 'servicio',
+                            servicio_nombre: servicio.nombre,
+                            insumo: insumoCompleto,
+                            cantidad_servicio: insumoServicio.cantidad || 1
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    // 2. Obtener insumos adicionales seleccionados manualmente
+    if (window.medicamentosSeleccionados && window.medicamentosSeleccionados.length > 0) {
+        window.medicamentosSeleccionados.forEach(medSel => {
+            const insumoCompleto = medicamentosDisponibles.find(m => m.id === medSel.id);
+            if (insumoCompleto) {
+                insumosUsados.push({
+                    origen: 'adicional',
+                    insumo: insumoCompleto,
+                    peso_usado: medSel.peso || medSel.peso_paciente,
+                    dosis_calculada: medSel.dosis
+                });
+            }
+        });
+    }
+
+    return insumosUsados;
+}
+
+/**
+ * Calcular y mostrar el valor total de la consulta en consola
+ */
+function calcularYMostrarTotalConsulta() {
+    console.log('');
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('🧾 DETALLE INSUMOS CONSULTA');
+    console.log('═══════════════════════════════════════════════════════════');
+
+    // Obtener peso del paciente
+    const pesoInput = document.getElementById('pesoConsulta');
+    const pesoPaciente = pesoInput && pesoInput.value ? parseFloat(pesoInput.value) : null;
+
+    if (!pesoPaciente || pesoPaciente <= 0) {
+        console.warn('⚠️ No se pudo obtener el peso del paciente para el cálculo');
+        console.log('');
+        return;
+    }
+
+    console.log(`🐾 Peso del paciente: ${pesoPaciente} kg`);
+    console.log('');
+
+    // ===== SECCIÓN 1: INSUMOS =====
+    const insumosUsados = obtenerInsumosUsados();
+    let totalInsumos = 0;
+
+    if (insumosUsados.length === 0) {
+        console.log('💊 No hay insumos seleccionados');
+        console.log('');
+    } else {
+        console.log('💊 INSUMOS UTILIZADOS:');
+        console.log('');
+        
+        insumosUsados.forEach((item, index) => {
+            const insumo = item.insumo;
+            
+            // Calcular envases requeridos
+            const resultadoCalculo = calcularEnvasesRequeridos(insumo, pesoPaciente, 1);
+            const precioUnitario = insumo.precio_venta ? parseFloat(insumo.precio_venta) : 0;
+            const subtotal = resultadoCalculo.envases_requeridos * precioUnitario;
+            totalInsumos += subtotal;
+
+            // Mostrar información del insumo
+            console.log(`- ${insumo.nombre}`);
+            console.log(`  Origen: ${item.origen === 'servicio' ? `Servicio (${item.servicio_nombre})` : 'Adicional'}`);
+            console.log(`  Formato: ${insumo.formato || 'N/A'}`);
+            
+            // Detalles del cálculo
+            if (resultadoCalculo.calculo_automatico) {
+                const unidadDosis = insumo.formato === 'liquido' || insumo.formato === 'inyectable' ? 'ml' : 
+                                   insumo.formato === 'pastilla' || insumo.formato === 'comprimido' ? 'pastillas' :
+                                   insumo.formato === 'pipeta' ? 'pipetas' : 'unidades';
+                
+                console.log(`  Dosis total: ${resultadoCalculo.dosis_calculada.toFixed(2)} ${unidadDosis}`);
+                console.log(`  Contenido por envase: ${resultadoCalculo.contenido_envase.toFixed(2)} ${unidadDosis}`);
+                console.log(`  Envases requeridos: ${resultadoCalculo.envases_requeridos} (calculado: ${(resultadoCalculo.dosis_calculada / resultadoCalculo.contenido_envase).toFixed(2)})`);
+            } else {
+                console.log(`  Envases requeridos: ${resultadoCalculo.envases_requeridos} (cálculo manual)`);
+                console.log(`  Nota: ${resultadoCalculo.detalle}`);
+            }
+            
+            console.log(`  Precio unitario: $${precioUnitario.toFixed(0)}`);
+            console.log(`  Subtotal: $${subtotal.toFixed(0)} (${resultadoCalculo.envases_requeridos} × $${precioUnitario.toFixed(0)})`);
+            console.log('');
+        });
+
+        console.log(`💰 TOTAL INSUMOS: $${totalInsumos.toFixed(0)}`);
+        console.log('');
+    }
+
+    // ===== SECCIÓN 2: SERVICIOS =====
+    let totalServicios = 0;
+
+    if (!window.serviciosSeleccionadosArray || window.serviciosSeleccionadosArray.length === 0) {
+        console.log('🏥 No hay servicios seleccionados');
+        console.log('');
+    } else {
+        console.log('🏥 SERVICIOS SELECCIONADOS:');
+        console.log('');
+        
+        window.serviciosSeleccionadosArray.forEach((servicio, index) => {
+            const servicioCompleto = window.todosLosServicios.find(s => s.idServicio === servicio.id);
+            const precio = servicioCompleto && servicioCompleto.precio ? parseFloat(servicioCompleto.precio) : 0;
+            
+            console.log(`- ${servicio.nombre}`);
+            console.log(`  Precio: $${precio.toFixed(0)}`);
+            console.log('');
+            
+            totalServicios += precio;
+        });
+
+        console.log(`💰 TOTAL SERVICIOS: $${totalServicios.toFixed(0)}`);
+        console.log('');
+    }
+
+    // ===== TOTAL FINAL =====
+    const totalFinal = totalInsumos + totalServicios;
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log(`🎯 TOTAL FINAL DE LA CONSULTA: $${totalFinal.toFixed(0)}`);
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('');
+}
+
+// Agregar el cálculo al evento de los botones de guardar
+document.addEventListener('DOMContentLoaded', function() {
+    const btnGuardarBorrador = document.getElementById('btnGuardarBorrador');
+    const btnFinalizarConsulta = document.getElementById('btnFinalizarConsulta');
+
+    // Agregar listener al botón de guardar borrador
+    if (btnGuardarBorrador) {
+        btnGuardarBorrador.addEventListener('click', function() {
+            console.log('📝 Guardando borrador - Calculando costos...');
+            setTimeout(() => calcularYMostrarTotalConsulta(), 100);
+        });
+    }
+
+    // Agregar listener al botón de finalizar consulta
+    if (btnFinalizarConsulta) {
+        btnFinalizarConsulta.addEventListener('click', function() {
+            console.log('✅ Finalizando consulta - Calculando costos...');
+            setTimeout(() => calcularYMostrarTotalConsulta(), 100);
+        });
+    }
+});
 </script>
 
 {% endblock %}
