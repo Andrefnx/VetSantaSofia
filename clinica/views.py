@@ -243,7 +243,7 @@ def ficha_paciente(request, paciente_id):
         Cita.objects.filter(paciente=paciente, fecha__gte=hoy)
         .exclude(estado__in=['completada', 'realizada'])
         .select_related('veterinario', 'servicio')
-        .order_by('fecha', 'hora_inicio')
+        .order_by('-fecha', '-hora_inicio')  # Orden descendente para mostrar más recientes primero
     )
     print(f"\n📊 Citas filtradas (fecha__gte={hoy}): {citas_agendadas.count()}", file=sys.stderr)
     
@@ -262,9 +262,11 @@ def ficha_paciente(request, paciente_id):
     
     print(f"{'='*80}\n", file=sys.stderr)
 
-    orden_timeline = request.GET.get('orden_timeline', 'desc').lower()
-    if orden_timeline not in ['asc', 'desc']:
-        orden_timeline = 'desc'
+    # FORZAR ORDEN DESCENDENTE SIEMPRE (más recientes primero)
+    orden_timeline = 'desc'
+    
+    print(f"\n🔍 DEBUG ORDEN: FORZADO A DESC - orden_timeline = '{orden_timeline}'", file=sys.stderr)
+    print(f"🔍 DEBUG ORDEN: reverse={orden_timeline == 'desc'}\n", file=sys.stderr)
 
     timeline_items = []
     for cita in citas_agendadas:
@@ -273,7 +275,7 @@ def ficha_paciente(request, paciente_id):
             'tipo': 'cita',
             'obj': cita,
             'fecha': event_dt.date(),
-            'sort_key': (event_dt.date(), event_dt.time()),
+            'sort_key': event_dt,
         })
 
     for consulta in consultas:
@@ -282,16 +284,19 @@ def ficha_paciente(request, paciente_id):
             'tipo': 'consulta',
             'obj': consulta,
             'fecha': event_dt.date(),
-            'sort_key': (event_dt.date(), event_dt.time()),
+            'sort_key': event_dt,
         })
 
-    timeline_items = sorted(timeline_items, key=lambda item: item['sort_key'], reverse=(orden_timeline == 'desc'))
-    try:
-        print(f"🔎 timeline_items count (ficha_paciente): {len(timeline_items)}", file=sys.stderr)
-        for i, it in enumerate(timeline_items[:5]):
-            print(f"   [{i}] tipo={it['tipo']} sort_key={it['sort_key'][0]} {it['sort_key'][1]}", file=sys.stderr)
-    except Exception:
-        pass
+    # ORDENAR DESCENDENTE (más recientes primero) con reverse=True  
+    timeline_items = sorted(timeline_items, key=lambda x: x['sort_key'], reverse=True)
+    
+    print(f"\n✅ ORDEN FINAL ficha_paciente (después de sorted reverse=True):", file=sys.stderr)
+    for i, it in enumerate(timeline_items):
+        obj = it['obj']
+        if it['tipo'] == 'cita':
+            print(f"   [{i+1}] CITA: {obj.fecha} {obj.hora_inicio}", file=sys.stderr)
+        else:
+            print(f"   [{i+1}] CONSULTA: {obj.fecha}", file=sys.stderr)
 
     context = {
         'paciente': paciente,
@@ -1013,7 +1018,7 @@ def ficha_mascota(request, pk):
         Cita.objects.filter(paciente=paciente, fecha__gte=hoy)
         .exclude(estado__in=['completada', 'realizada'])
         .select_related('veterinario', 'servicio')
-        .order_by('fecha', 'hora_inicio')
+        .order_by('-fecha', '-hora_inicio')  # Orden descendente para mostrar más recientes primero
     )
 
     # Si el usuario es veterinario (y no administrador), solo mostrar sus citas agendadas
@@ -1026,9 +1031,11 @@ def ficha_mascota(request, pk):
         print(f"###   Cita ID {cita.id}: {cita.fecha} {cita.hora_inicio} - Vet: {cita.veterinario.nombre}")
     print("###" + "="*77 + "\n", flush=True)
     
-    orden_timeline = request.GET.get('orden_timeline', 'desc').lower()
-    if orden_timeline not in ['asc', 'desc']:
-        orden_timeline = 'desc'
+    # FORZAR ORDEN DESCENDENTE SIEMPRE (más recientes primero)
+    orden_timeline = 'desc'
+    
+    print(f"\n🔍 DEBUG ORDEN: FORZADO A DESC - orden_timeline = '{orden_timeline}'", file=sys.stderr)
+    print(f"🔍 DEBUG ORDEN: reverse={orden_timeline == 'desc'}\n", file=sys.stderr)
 
     timeline_items = []
     for cita in citas_agendadas:
@@ -1037,7 +1044,7 @@ def ficha_mascota(request, pk):
             'tipo': 'cita',
             'obj': cita,
             'fecha': event_dt.date(),
-            'sort_key': (event_dt.date(), event_dt.time()),
+            'sort_key': event_dt,
         })
 
     for consulta in consultas:
@@ -1046,16 +1053,19 @@ def ficha_mascota(request, pk):
             'tipo': 'consulta',
             'obj': consulta,
             'fecha': event_dt.date(),
-            'sort_key': (event_dt.date(), event_dt.time()),
+            'sort_key': event_dt,
         })
 
-    timeline_items = sorted(timeline_items, key=lambda item: item['sort_key'], reverse=(orden_timeline == 'desc'))
-    try:
-        print(f"🔎 timeline_items count (ficha_mascota): {len(timeline_items)}", file=sys.stderr)
-        for i, it in enumerate(timeline_items[:5]):
-            print(f"   [{i}] tipo={it['tipo']} sort_key={it['sort_key'][0]} {it['sort_key'][1]}", file=sys.stderr)
-    except Exception:
-        pass
+    # ORDENAR DESCENDENTE (más recientes primero) con reverse=True
+    timeline_items = sorted(timeline_items, key=lambda x: x['sort_key'], reverse=True)
+    
+    print(f"\n✅ ORDEN FINAL ficha_mascota (después de sorted reverse=True):", file=sys.stderr)
+    for i, it in enumerate(timeline_items):
+        obj = it['obj']
+        if it['tipo'] == 'cita':
+            print(f"   [{i+1}] CITA: {obj.fecha} {obj.hora_inicio}", file=sys.stderr)
+        else:
+            print(f"   [{i+1}] CONSULTA: {obj.fecha}", file=sys.stderr)
 
     context = {
         'paciente': paciente,
