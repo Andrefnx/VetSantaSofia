@@ -93,7 +93,9 @@
 
 {% block table_rows %}
 {% for insumo in insumos %}
-<tr data-id="{{ insumo.idInventario }}" data-especie="{{ insumo.especie|default_if_none:'' }}">
+<tr data-id="{{ insumo.idInventario }}" data-especie="{{ insumo.especie|default_if_none:'' }}" 
+    style="cursor: pointer;" 
+    onclick="if (event.target.closest('.manage-wheel')) return; const btn = this.querySelector('.manage-options button[onclick*=view]'); if(btn) btn.click();">
     <td>{{ insumo.medicamento }}</td>
     <td>{{ insumo.especie|default:"-" }}</td>
     <td>${{ insumo.precio_venta|default:0|floatformat:0 }}</td>
@@ -223,9 +225,9 @@
                             <div class="field-edit d-none" data-field="especie">
                                 <select class="form-select" data-field="especie">
                                     <option value="">Seleccionar...</option>
-                                    <option value="Perro">Perro</option>
-                                    <option value="Gato">Gato</option>
-                                    <option value="Ambos">Perro y Gato</option>
+                                    <option value="canino">Canino</option>
+                                    <option value="felino">Felino</option>
+                                    <option value="ambos">Ambos</option>
                                     <option value="Otro">Otro</option>
                                 </select>
                             </div>
@@ -504,8 +506,8 @@
                 </button>
                 
                 <!-- Botones GUARDAR y CANCELAR: solo visibles en modo EDICIÓN -->
-                <button type="button" class="vet-btn vet-btn-secondary" id="btnCancelarProducto" onclick="cancelarEdicionProducto()" style="display: none;">
-                    <i class="bi bi-x-circle-fill"></i> Cancelar
+                <button type="button" class="vet-btn vet-btn-grey" id="btnCancelarProducto" onclick="cancelarEdicionProducto()" style="display: none;">
+                    <i class="bi bi-x-circle"></i> Cancelar
                 </button>
                 <button type="button" class="vet-btn vet-btn-primary" id="btnGuardarProductoModal" onclick="guardarProducto()" style="display: none;">
                     <i class="bi bi-floppy-fill"></i> Guardar
@@ -526,7 +528,7 @@
             <div class="vet-modal-body">
                 <p id="eliminarProductoMensaje" class="text-center mb-4">¿Estás seguro que deseas eliminar este producto?</p>
                 <div style="display: flex; justify-content: center; gap: 10px;">
-                    <button type="button" class="vet-btn-cancel" onclick="closeEliminarProductoModal()">
+                    <button type="button" class="vet-btn vet-btn-grey" onclick="closeEliminarProductoModal()">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
                     <button type="button" class="vet-btn-delete" id="btnConfirmarEliminarProducto" onclick="eliminarProductoConfirmado()">
@@ -564,7 +566,7 @@
                     </div>
                 </div>
                 <div class="vet-modal-footer">
-                    <button type="button" class="vet-btn-cancel" onclick="closeVetModal('modalModificarStock')">
+                    <button type="button" class="vet-btn vet-btn-grey" onclick="closeVetModal('modalModificarStock')">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
                     <button type="button" class="vet-btn vet-btn-primary" onclick="guardarStock()">
@@ -611,7 +613,7 @@
                     Se marcará automáticamente cuando el stock supere el nivel medio.
                 </div>
                 <div class="vet-modal-footer">
-                    <button type="button" class="vet-btn-cancel" onclick="closeVetModal('modalConfigNiveles')">
+                    <button type="button" class="vet-btn vet-btn-grey" onclick="closeVetModal('modalConfigNiveles')">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
                     <button type="button" class="vet-btn vet-btn-primary" onclick="guardarNivelesStock()">
@@ -635,7 +637,7 @@
                 <p id="archivarProductoMensaje" class="text-center mb-4">¿Estás seguro que deseas archivar este producto? Podrás restaurarlo desde la pestaña de archivados.</p>
                 
                 <div class="vet-modal-footer">
-                    <button type="button" class="vet-btn-cancel" onclick="closeArchivarProductoModal()">
+                    <button type="button" class="vet-btn vet-btn-grey" onclick="closeArchivarProductoModal()">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
                     <button type="button" class="vet-btn vet-btn-primary" id="btnConfirmarArchivarProducto">

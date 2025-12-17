@@ -29,7 +29,9 @@
 
 {% block table_rows %}
 {% for servicio in servicios %}
-<tr data-id="{{ servicio.idServicio }}" data-categoria="{{ servicio.categoria|default_if_none:'' }}" data-descripcion="{{ servicio.descripcion|default_if_none:'' }}">
+<tr data-id="{{ servicio.idServicio }}" data-categoria="{{ servicio.categoria|default_if_none:'' }}" data-descripcion="{{ servicio.descripcion|default_if_none:'' }}" 
+    style="cursor: pointer;" 
+    onclick="if (event.target.closest('.manage-wheel')) return; const btn = this.querySelector('.manage-options button[onclick*=view]'); if(btn) btn.click();">
     <td>{{ servicio.nombre }}</td>
     <td>{{ servicio.categoria }}</td>
     <td>${{ servicio.precio|floatformat:0 }}</td>
@@ -136,18 +138,19 @@
 
             </div>
             <div class="vet-modal-body" style="border-top:1px solid #eee; text-align:right;">
-                <button type="button" class="vet-btn-grey" id="btnEditarServicio"
+                <button type="button" class="vet-btn vet-btn-grey" id="btnEditarServicio"
                         onclick="switchToEditModeServicio()">
                     <i class="bi bi-pencil-fill"></i> Editar
                 </button>
-                <button type="button" class="vet-btn-grey d-none" id="btnGuardarServicio"
-                        onclick="guardarServicioEditado()">
-                    <i class="bi bi-floppy-fill"></i> Guardar
-                </button>
-                <button type="button" class="vet-btn-delete" id="btnEliminarServicio"
+                 <button type="button" class="vet-btn-delete" id="btnEliminarServicio"
                         onclick="abrirModalEliminarServicio(this)">
                     <i class="bi bi-trash3-fill"></i> Eliminar
                 </button>
+                <button type="button" class="vet-btn vet-btn-primary d-none" id="btnGuardarServicio"
+                        onclick="guardarServicioEditado()">
+                    <i class="bi bi-floppy-fill"></i> Guardar
+                </button>
+               
             </div>
         </div>
     </div>
@@ -164,7 +167,7 @@
             <div class="vet-modal-body">
                 <p id="eliminarServicioMensaje" class="text-center mb-4">¿Estás seguro que deseas eliminar este servicio?</p>
                 <div class="vet-modal-footer">
-                    <button type="button" class="vet-btn-cancel" onclick="closeEliminarServicioModal()">
+                    <button type="button" class="vet-btn vet-btn-grey" onclick="closeEliminarServicioModal()">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
                     <button type="button" class="vet-btn-delete" id="btnConfirmarEliminarServicio">

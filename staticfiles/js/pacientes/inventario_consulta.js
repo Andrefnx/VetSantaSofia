@@ -46,7 +46,13 @@ async function cargarInventarioFiltrado() {
 
         if (data.success) {
             medicamentosDisponibles = data.productos;
-            console.log(`✅ ${data.total} medicamentos disponibles`);
+            console.log(`✅ ${data.total} medicamentos disponibles para ${window.pacienteData.especie || 'todas las especies'}`);
+            
+            // Mostrar información de filtrado aplicado
+            if (data.filtros_aplicados && data.filtros_aplicados.especie) {
+                console.log(`📋 Filtro aplicado: ${data.filtros_aplicados.especie}`);
+            }
+            
             mostrarInventario(medicamentosDisponibles);
         } else {
             console.error('❌ Error al cargar inventario:', data.error);
@@ -111,10 +117,14 @@ function mostrarInventario(productos) {
     if (!lista) return;
 
     if (productos.length === 0) {
+        const especiePaciente = window.pacienteData?.especie || 'esta especie';
         lista.innerHTML = `
             <div class="inventario-empty">
                 <i class="bi bi-inbox"></i>
-                <p>No hay medicamentos disponibles</p>
+                <p>No hay medicamentos disponibles para ${especiePaciente}</p>
+                <small style="color: #6b7280; margin-top: 8px; display: block;">
+                    Los productos deben estar configurados para la especie del paciente
+                </small>
             </div>
         `;
         return;

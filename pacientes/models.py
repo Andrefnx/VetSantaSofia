@@ -67,8 +67,8 @@ class Propietario(models.Model):
 class Paciente(models.Model):
     """Modelo para las mascotas/pacientes"""
     ESPECIE_CHOICES = [
-        ('perro', 'Perro'),
-        ('gato', 'Gato'),
+        ('canino', 'Canino'),
+        ('felino', 'Felino'),
         ('otro', 'Otro'),
     ]
     

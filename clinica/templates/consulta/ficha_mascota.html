@@ -66,10 +66,10 @@
                         </div>
                     </div>
                     <div class="info-row">
-                        <p><strong>Especie:</strong> <span class="view-mode">{{ paciente.especie }}</span>
+                        <p><strong>Especie:</strong> <span class="view-mode">{{ paciente.get_especie_display }}</span>
                             <select class="form-control edit-mode" name="especie" style="display:none;">
-                                <option value="perro" {% if paciente.especie == 'perro' %}selected{% endif %}>Perro</option>
-                                <option value="gato" {% if paciente.especie == 'gato' %}selected{% endif %}>Gato</option>
+                                <option value="canino" {% if paciente.especie == 'canino' %}selected{% endif %}>Canino</option>
+                                <option value="felino" {% if paciente.especie == 'felino' %}selected{% endif %}>Felino</option>
                                 <option value="otro" {% if paciente.especie == 'otro' %}selected{% endif %}>Otro</option>
                             </select>
                         </p>

@@ -436,14 +436,15 @@ def api_productos(request):
         
         # Filtrar por especie
         if especie_filtro:
-            # Incluir productos para la especie específica o "ambos" o "todos"
+            # Incluir productos para la especie específica o "ambos"
+            # Normalizar especie a minúsculas para comparación
             productos = productos.filter(
                 Q(especie__iexact=especie_filtro) | 
                 Q(especie__iexact='ambos') | 
-                Q(especie__iexact='todos') |
                 Q(especie__isnull=True) |
                 Q(especie='')
             )
+            print(f"🔍 Filtrado por especie '{especie_filtro}': {productos.count()} productos encontrados")
         
         # Filtrar por peso (si tiene rango de peso definido)
         if peso_filtro:

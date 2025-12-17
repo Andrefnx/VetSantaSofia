@@ -20,6 +20,13 @@ class Insumo(models.Model):
         ('otro', 'Otro'),
     ]
     
+    ESPECIE_CHOICES = [
+        ('canino', 'Canino'),
+        ('felino', 'Felino'),
+        ('ambos', 'Ambos'),
+        ('otro', 'Otro'),
+    ]
+    
     idInventario = models.AutoField(primary_key=True)
     medicamento = models.CharField(max_length=255)
     marca = models.CharField(max_length=100, blank=True, null=True)
@@ -27,7 +34,7 @@ class Insumo(models.Model):
     tipo = models.CharField(max_length=100, blank=True, null=True)
     formato = models.CharField(max_length=50, choices=FORMATO_CHOICES, blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
-    especie = models.CharField(max_length=100, blank=True, null=True)
+    especie = models.CharField(max_length=100, choices=ESPECIE_CHOICES, blank=True, null=True)
     
     stock_actual = models.IntegerField(default=0)
     stock_minimo = models.IntegerField(default=10, help_text="Nivel mínimo de stock (rojo)")
