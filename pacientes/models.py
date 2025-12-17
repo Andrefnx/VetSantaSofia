@@ -101,6 +101,24 @@ class Paciente(models.Model):
     activo = models.BooleanField(default=True)
     fecha_registro = models.DateTimeField(auto_now_add=True)
     
+    # 🔍 CAMPOS DE TRAZABILIDAD (Sistema de Historial)
+    ultimo_movimiento = models.DateTimeField(null=True, blank=True, verbose_name="Último Movimiento")
+    tipo_ultimo_movimiento = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name="Tipo de Último Movimiento",
+        help_text="Tipo del último cambio registrado"
+    )
+    usuario_ultima_modificacion = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='pacientes_modificados',
+        verbose_name="Usuario Última Modificación"
+    )
+    
     class Meta:
         verbose_name = 'Paciente'
         verbose_name_plural = 'Pacientes'

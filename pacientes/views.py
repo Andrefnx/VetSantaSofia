@@ -410,7 +410,8 @@ def crear_paciente(request):
             microchip = paciente_data.get('microchip', '').strip()
             microchip = microchip if microchip else None
             
-            paciente = Paciente.objects.create(
+            # Crear paciente
+            paciente = Paciente(
                 nombre=paciente_data.get('nombre'),
                 especie=paciente_data.get('especie'),
                 raza=paciente_data.get('raza', ''),
@@ -423,6 +424,10 @@ def crear_paciente(request):
                 ultimo_peso=paciente_data.get('ultimo_peso'),
                 propietario=propietario
             )
+            
+            # ⭐ ESTABLECER USUARIO PARA HISTORIAL
+            paciente._usuario_modificacion = request.user
+            paciente.save()
             
             return JsonResponse({
                 'success': True,
@@ -642,6 +647,9 @@ def editar_paciente(request, paciente_id):
                 )
                 paciente.propietario = nuevo_propietario
         
+        # ⭐ ESTABLECER USUARIO PARA HISTORIAL
+        paciente._usuario_modificacion = request.user
+        
         paciente.save()
         
         return JsonResponse({
@@ -669,6 +677,10 @@ def archivar_paciente(request, paciente_id):
         try:
             # Alternar el estado activo
             paciente.activo = not paciente.activo
+            
+            # ⭐ ESTABLECER USUARIO PARA HISTORIAL
+            paciente._usuario_modificacion = request.user
+            
             paciente.save()
             
             mensaje = 'Paciente archivado exitosamente' if not paciente.activo else 'Paciente restaurado exitosamente'

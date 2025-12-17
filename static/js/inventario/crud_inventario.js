@@ -294,6 +294,11 @@ function openProductoModal(mode, data = {}) {
         return;
     }
     
+    // ⭐ GUARDAR ID DEL PRODUCTO PARA CARGA DE HISTORIAL
+    if (data.idInventario) {
+        modal.setAttribute('data-objeto-id', data.idInventario);
+    }
+    
     // 🔍 LOG DE CAMPOS DE DOSIS RECIBIDOS DEL SERVIDOR
     console.log('📊 Valores de dosis del servidor:', {
         dosis_ml: data.dosis_ml,

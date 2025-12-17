@@ -185,6 +185,25 @@
             
             <div class="vet-modal-body" style="max-height: 70vh; overflow-y: auto;">
                 
+                <!-- ⭐ PESTAÑAS DE NAVEGACIÓN (Detalles / Historial) -->
+                <ul class="nav nav-tabs mb-3" id="modalProductoTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="tab-detalles" data-bs-toggle="tab" data-bs-target="#content-detalles" type="button" role="tab">
+                            <i class="fas fa-info-circle"></i> Detalles
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-historial" data-bs-toggle="tab" data-bs-target="#content-historial" type="button" role="tab" onclick="cargarHistorialModal()">
+                            <i class="fas fa-history"></i> Historial
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- CONTENIDO DE LAS PESTAÑAS -->
+                <div class="tab-content" id="modalProductoTabsContent">
+                    <!-- PESTAÑA: DETALLES -->
+                    <div class="tab-pane fade show active" id="content-detalles" role="tabpanel">
+                
                 <!-- SECCIÓN: IDENTIFICACIÓN GENERAL -->
                 <div class="detail-section">
                     <h4 class="detail-section-title">
@@ -496,6 +515,23 @@
                     </div>
                 </div>
 
+                    </div><!-- FIN: content-detalles -->
+
+                    <!-- ⭐ PESTAÑA: HISTORIAL -->
+                    <div class="tab-pane fade" id="content-historial" role="tabpanel">
+                        <div id="historial-loader" class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando historial...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Cargando historial del producto...</p>
+                        </div>
+                        <div id="historial-contenido" style="display: none;">
+                            <!-- El contenido se carga dinámicamente con AJAX -->
+                        </div>
+                    </div>
+
+                </div><!-- FIN: tab-content -->
+
             </div>
 
             <!-- Footer con botones -->
@@ -655,4 +691,138 @@
 <script src="{% static 'js/inventario/gestion_wheel.js' %}?v=1765912374"></script>
 <script src="{% static 'js/inventario/dosis_calculator.js' %}"></script>
 <script src="{% static 'js/inventario/crud_inventario.js' %}?v=13"></script>
+
+<style>
+/* Estilos para las pestañas del modal de producto */
+#modalProductoTabs {
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 1.5rem;
+}
+
+#modalProductoTabs .nav-link {
+    color: #757575;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#modalProductoTabs .nav-link:hover {
+    color: #6b8e6b;
+    background: rgba(175, 225, 175, 0.1);
+}
+
+#modalProductoTabs .nav-link.active {
+    color: #6b8e6b;
+    border-bottom-color: #afe1af;
+    background: rgba(175, 225, 175, 0.1);
+}
+
+#modalProductoTabs .nav-link i {
+    font-size: 1.1rem;
+}
+
+/* Contenido de las pestañas */
+#modalProductoTabsContent .tab-pane {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Spinner de carga */
+#historial-loader .spinner-border {
+    color: #afe1af !important;
+}
+</style>
+
+<script>
+// ⭐ NUEVA FUNCIONALIDAD: Cargar historial dinámicamente con AJAX
+let historialCargado = false; // Para evitar múltiples cargas
+
+function cargarHistorialModal() {
+    // Si ya se cargó, no hacer nada
+    if (historialCargado) {
+        return;
+    }
+    
+    // Obtener el ID del producto actual del modal
+    const modal = document.getElementById('modalProducto');
+    const productoId = modal.getAttribute('data-objeto-id');
+    
+    if (!productoId) {
+        console.error('No se encontró el ID del producto');
+        return;
+    }
+    
+    // Mostrar loader
+    document.getElementById('historial-loader').style.display = 'block';
+    document.getElementById('historial-contenido').style.display = 'none';
+    
+    // Llamada AJAX al endpoint de historial
+    fetch(`/historial/resumen/inventario/${productoId}/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.text();
+        })
+        .then(html => {
+            // Insertar el HTML en el contenedor
+            document.getElementById('historial-contenido').innerHTML = html;
+            
+            // Ocultar loader y mostrar contenido
+            document.getElementById('historial-loader').style.display = 'none';
+            document.getElementById('historial-contenido').style.display = 'block';
+            
+            // Marcar como cargado
+            historialCargado = true;
+        })
+        .catch(error => {
+            console.error('Error al cargar historial:', error);
+            document.getElementById('historial-loader').innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Error al cargar historial:</strong> ${error.message}
+                    <br><small>Por favor, recarga la página e intenta nuevamente.</small>
+                </div>
+            `;
+        });
+}
+
+// ⭐ MODIFICAR LA FUNCIÓN QUE ABRE EL MODAL PARA GUARDAR EL ID
+// Buscar la función que abre el modal y añadirle la siguiente línea:
+// document.getElementById('modalProducto').setAttribute('data-objeto-id', insumo.idInventario);
+// Esto debe hacerse en el archivo crud_inventario.js donde se cargan los datos del modal
+
+// ⭐ RESETEAR EL ESTADO AL CERRAR EL MODAL
+const originalCloseVetModal = window.closeVetModal;
+window.closeVetModal = function(modalId) {
+    if (modalId === 'modalProducto') {
+        // Resetear el flag para que se recargue en la próxima apertura
+        historialCargado = false;
+        
+        // Limpiar el contenido del historial
+        document.getElementById('historial-contenido').innerHTML = '';
+        
+        // Volver a la pestaña de detalles
+        document.getElementById('tab-detalles').click();
+    }
+    
+    // Llamar a la función original
+    originalCloseVetModal(modalId);
+};
+</script>
 {% endblock %}

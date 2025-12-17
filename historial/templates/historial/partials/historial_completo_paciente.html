@@ -1,0 +1,91 @@
+{% load static %}
+{% load humanize %}
+
+<!-- Partial: Historial completo para pestaña de pacientes -->
+<div class="historial-completo-paciente">
+    {% if eventos %}
+        <div class="mb-3">
+            <small class="text-muted">
+                Total de eventos: <strong>{{ total_eventos }}</strong>
+            </small>
+        </div>
+
+        {% include "historial/partials/historial_timeline.html" with eventos=eventos mostrar_detalles=True %}
+
+        <!-- Paginación -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Paginación del historial" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" onclick="event.preventDefault(); cargarPaginaHistorial({{ page_obj.previous_page_number }});">
+                            Anterior
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}" onclick="event.preventDefault(); cargarPaginaHistorial({{ num });">
+                                {{ num }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" onclick="event.preventDefault(); cargarPaginaHistorial({{ page_obj.next_page_number }});">
+                            Siguiente
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+    {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="fas fa-history fa-3x mb-3"></i>
+            <p>No hay eventos registrados en el historial</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+// Función para cargar una página específica del historial sin recargar la página
+function cargarPaginaHistorial(pageNum) {
+    const pacienteId = {{ objeto_id }};
+    
+    // Mostrar loader
+    document.getElementById('historial-registros-contenido').innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    `;
+    
+    // Cargar página
+    fetch(`/historial/paciente/${pacienteId}/?page=${pageNum}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('historial-registros-contenido').innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error al cargar página:', error);
+            document.getElementById('historial-registros-contenido').innerHTML = `
+                <div class="alert alert-danger">
+                    Error al cargar el historial. Por favor, intenta nuevamente.
+                </div>
+            `;
+        });
+}
+</script>

@@ -1,0 +1,23 @@
+{% load static %}
+
+<!-- Partial: Resumen de historial para modales (últimos 5 eventos) -->
+<div class="historial-resumen">
+    {% if eventos %}
+        {% include 'historial/partials/historial_timeline.html' with eventos=eventos mostrar_detalles=False %}
+        
+        {% if mostrar_mas %}
+        <div class="text-center mt-3">
+            <a href="{% url 'historial:detalle' entidad objeto_id %}" 
+               class="btn btn-sm btn-outline-primary" 
+               target="_blank">
+                <i class="fas fa-history"></i> Ver historial completo
+            </a>
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info text-center mb-0">
+            <i class="fas fa-info-circle"></i>
+            No hay eventos registrados en el historial
+        </div>
+    {% endif %}
+</div>

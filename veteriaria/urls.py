@@ -16,6 +16,7 @@ urlpatterns = [
     path('clinica/', include('clinica.urls')),
     path('agenda/', include('agenda.urls')),
     path('caja/', include('caja.urls')),
+    path('historial/', include('historial.urls')),  # Sistema de historial
     path('ui/preview/', ui_preview, name='ui_preview'),
     path('', include('login.urls')),  # ← ÚLTIMO (porque tiene catch-all)
 ]

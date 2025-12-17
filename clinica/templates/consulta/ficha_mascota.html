@@ -292,6 +292,9 @@
                 {% if user.rol != 'recepcion' %}
                 <button class="tab-btn" data-tab="docs">Documentos</button>
                 {% endif %}
+                <button class="tab-btn" data-tab="historial-registros" onclick="cargarHistorialRegistros()">
+                    <i class="fas fa-history"></i> Historial de Registros
+                </button>
             </div>
             <div class="tabs-content">
                 <div class="tab-content active" id="historial">
@@ -655,6 +658,33 @@
                     </div>
                 </div>
                 {% endif %}
+                
+                <!-- ⭐ NUEVA PESTAÑA: HISTORIAL DE REGISTROS -->
+                <div class="tab-content" id="historial-registros">
+                    <div class="historial-registros-container">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="mb-0">
+                                <i class="fas fa-history"></i> Historial de Registros
+                            </h3>
+                            <small class="text-muted">
+                                Registro completo de cambios del paciente
+                            </small>
+                        </div>
+                        
+                        <!-- Loader -->
+                        <div id="historial-registros-loader" class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando historial...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Cargando historial de registros...</p>
+                        </div>
+                        
+                        <!-- Contenido del historial -->
+                        <div id="historial-registros-contenido" style="display: none;">
+                            <!-- Se carga dinámicamente con AJAX -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -2020,5 +2050,70 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<script>
+// ⭐ NUEVA FUNCIONALIDAD: Cargar historial de registros dinámicamente
+let historialRegistrosCargado = false;
+
+function cargarHistorialRegistros() {
+    // Si ya se cargó, no hacer nada
+    if (historialRegistrosCargado) {
+        return;
+    }
+    
+    // Obtener el ID del paciente
+    const pacienteId = {{ paciente.id }};
+    
+    // Mostrar loader
+    document.getElementById('historial-registros-loader').style.display = 'block';
+    document.getElementById('historial-registros-contenido').style.display = 'none';
+    
+    // Llamada AJAX al endpoint de historial
+    fetch(`/historial/paciente/${pacienteId}/`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.text();
+        })
+        .then(html => {
+            // Insertar el HTML en el contenedor
+            document.getElementById('historial-registros-contenido').innerHTML = html;
+            
+            // Ocultar loader y mostrar contenido
+            document.getElementById('historial-registros-loader').style.display = 'none';
+            document.getElementById('historial-registros-contenido').style.display = 'block';
+            
+            // Marcar como cargado
+            historialRegistrosCargado = true;
+        })
+        .catch(error => {
+            console.error('Error al cargar historial de registros:', error);
+            document.getElementById('historial-registros-loader').innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Error al cargar historial:</strong> ${error.message}
+                    <br><small>Por favor, recarga la página e intenta nuevamente.</small>
+                </div>
+            `;
+        });
+}
+</script>
+
+<style>
+/* Estilos para el spinner de carga del historial */
+#historial-registros-loader .spinner-border {
+    color: #afe1af !important;
+}
+
+.historial-registros-container {
+    background: white;
+    border-radius: 8px;
+}
+</style>
 
 {% endblock %}

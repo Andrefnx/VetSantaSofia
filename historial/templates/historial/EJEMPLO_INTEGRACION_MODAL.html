@@ -1,0 +1,147 @@
+<!-- 
+EJEMPLO DE INTEGRACIÓN: Tab de Historial en Modal de Inventario
+
+UBICACIÓN: Agregar dentro de modalProducto, antes del cierre de vet-modal-body
+
+INSTRUCCIONES:
+1. Agregar tabs en el header del modal
+2. Incluir este contenido como un tab más
+3. Cargar historial vía AJAX cuando se abre el tab
+-->
+
+<!-- Sistema de Tabs (Agregar en el header del modal) -->
+<ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#tabDetalles" role="tab">
+            <i class="fas fa-info-circle"></i> Detalles
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#tabHistorial" role="tab" onclick="cargarHistorialModal('inventario', document.getElementById('modalProducto').dataset.objetoId)">
+            <i class="fas fa-history"></i> Historial
+        </a>
+    </li>
+</ul>
+
+<!-- Contenido de Tabs -->
+<div class="tab-content">
+    <!-- Tab 1: Detalles (contenido existente) -->
+    <div class="tab-pane fade show active" id="tabDetalles" role="tabpanel">
+        <!-- TODO EL CONTENIDO ACTUAL DEL MODAL VA AQUÍ -->
+    </div>
+    
+    <!-- Tab 2: Historial (NUEVO) -->
+    <div class="tab-pane fade" id="tabHistorial" role="tabpanel">
+        <div id="historialContainer">
+            <div class="text-center text-muted py-4">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2">Cargando historial...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript para cargar historial dinámicamente -->
+<script>
+// Cargar historial en el modal cuando se abre el tab
+function cargarHistorialModal(entidad, objetoId) {
+    const container = document.getElementById('historialContainer');
+    
+    // Si ya se cargó, no volver a cargar
+    if (container.dataset.cargado === 'true') {
+        return;
+    }
+    
+    // Mostrar spinner
+    container.innerHTML = `
+        <div class="text-center text-muted py-4">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2">Cargando historial...</p>
+        </div>
+    `;
+    
+    // Hacer petición AJAX
+    fetch(\`/historial/resumen/\${entidad}/\${objetoId}/\`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al cargar historial');
+            }
+            return response.text();
+        })
+        .then(html => {
+            container.innerHTML = html;
+            container.dataset.cargado = 'true';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            container.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Error al cargar el historial. Por favor, intente nuevamente.
+                </div>
+            `;
+        });
+}
+
+// Al abrir el modal, guardar el objetoId en un data attribute
+function abrirModalProducto(button, mode) {
+    const modal = document.getElementById('modalProducto');
+    const productoId = button.closest('tr').dataset.idProducto; // o como obtengas el ID
+    modal.dataset.objetoId = productoId;
+    
+    // Resetear el estado del historial para que se recargue si se vuelve a abrir
+    const historialContainer = document.getElementById('historialContainer');
+    if (historialContainer) {
+        historialContainer.dataset.cargado = 'false';
+    }
+    
+    // ... resto del código existente para abrir el modal
+}
+</script>
+
+<!-- Ejemplo completo de estructura del modal con tabs -->
+<!--
+<div class="vet-modal-overlay hide" id="modalProducto">
+    <div class="vet-custom-modal" style="max-width: 1000px; width: 100%;">
+        <div class="vet-modal-content">
+            <div class="vet-custom-modal-title">
+                <h3>
+                    <i class="fas fa-box"></i>
+                    <span id="modalProductoTitulo">Detalles del Producto</span>
+                </h3>
+                <i class="bi bi-x" onclick="closeVetModal('modalProducto')"></i>
+            </div>
+            
+            <div class="vet-modal-body">
+                <ul class="nav nav-tabs mb-3" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#tabDetalles">
+                            <i class="fas fa-info-circle"></i> Detalles
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#tabHistorial" 
+                           onclick="cargarHistorialModal('inventario', this.closest('.vet-modal-overlay').dataset.objetoId)">
+                            <i class="fas fa-history"></i> Historial
+                        </a>
+                    </li>
+                </ul>
+                
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="tabDetalles">
+                        [... contenido actual del modal ...]
+                    </div>
+                    
+                    <div class="tab-pane fade" id="tabHistorial">
+                        <div id="historialContainer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+-->

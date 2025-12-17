@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from inventario.models import Insumo
 
@@ -108,29 +109,35 @@ class Servicio(models.Model):
         verbose_name="Última Actualización"
     )
 
-    # TODO / MEJORA FUTURA:
-    # Agregar campo: activo = models.BooleanField(default=True)
-    #
-    # PROPÓSITO:
-    # - Permitir desactivación lógica de servicios en lugar de eliminación física
-    # - Mantener integridad referencial con agenda, clínica y caja
-    # - Preservar historial completo para auditorías y reportes
-    #
-    # IMPLEMENTACIÓN REQUERIDA:
-    # 1. Agregar el campo 'activo' al modelo
-    # 2. Crear y ejecutar migración de base de datos
-    # 3. Actualizar vistas para filtrar servicios activos: Servicio.objects.filter(activo=True)
-    # 4. Actualizar formularios para mostrar solo servicios activos
-    # 5. Modificar servicios/views.py::eliminar_servicio() para hacer soft delete
-    # 6. Agregar filtros en admin.py para ver servicios activos/inactivos
-    #
-    # ANÁLISIS DE IMPACTO NECESARIO:
-    # - agenda: Verificar que las citas existentes con servicios inactivos se manejen correctamente
-    # - clínica: Asegurar que consultas/atenciones pasadas no se vean afectadas
-    # - caja: Confirmar que ventas históricas mantengan sus referencias
-    # - reportes: Ajustar queries para considerar estado activo/inactivo según contexto
-    #
-    # Esta mejora debe implementarse con cuidado y testing exhaustivo.
+    # 🔍 CAMPOS DE TRAZABILIDAD Y SOFT DELETE (Sistema de Historial)
+    activo = models.BooleanField(
+        default=True,
+        verbose_name="Activo",
+        help_text="Permite desactivación lógica en lugar de eliminación física"
+    )
+    
+    ultimo_movimiento = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Último Movimiento"
+    )
+    
+    tipo_ultimo_movimiento = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name="Tipo de Último Movimiento",
+        help_text="Tipo del último cambio registrado"
+    )
+    
+    usuario_ultima_modificacion = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='servicios_modificados',
+        verbose_name="Usuario Última Modificación"
+    )
 
     class Meta:
         db_table = "Servicio"
