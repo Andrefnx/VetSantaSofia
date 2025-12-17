@@ -304,7 +304,9 @@
 
 {% block table_rows %}
 {% for paciente in pacientes %}
-<tr data-especie="{{ paciente.especie|lower }}" data-sexo="{{ paciente.sexo|lower }}">
+<tr data-especie="{{ paciente.especie|lower }}" data-sexo="{{ paciente.sexo|lower }}" 
+    style="cursor: pointer;" 
+    onclick="if (event.target.closest('.manage-wheel')) return; window.location.href='{% url 'pacientes:ficha_mascota' paciente.id %}'">
     <td>{{ paciente.nombre }}</td>
     <td>{{ paciente.get_especie_display|default:paciente.especie|capfirst }}</td>
     <td>{{ paciente.raza|default:"-" }}</td>
