@@ -519,6 +519,41 @@
 
                     <!-- ⭐ PESTAÑA: HISTORIAL -->
                     <div class="tab-pane fade" id="content-historial" role="tabpanel">
+                        <!-- Filtros del historial -->
+                        <div class="historial-filtros mb-3" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">
+                                    <i class="fas fa-filter"></i> Tipo de Evento
+                                </label>
+                                <select class="form-select form-select-sm" id="filtroTipoEvento" onchange="filtrarHistorial()">
+                                    <option value="">Todos los eventos</option>
+                                    <option value="ingreso_stock">Ingreso de Stock</option>
+                                    <option value="salida_stock">Salida de Stock</option>
+                                    <option value="actualizacion_precio">Actualización de Precio</option>
+                                    <option value="modificacion_informacion">Modificación de Información</option>
+                                    <option value="activacion">Activación</option>
+                                    <option value="desactivacion">Desactivación</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1; min-width: 200px;">
+                                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">
+                                    <i class="fas fa-exclamation-circle"></i> Criticidad
+                                </label>
+                                <select class="form-select form-select-sm" id="filtroCriticidad" onchange="filtrarHistorial()">
+                                    <option value="">Todas las criticidades</option>
+                                    <option value="critica">Crítica</option>
+                                    <option value="alta">Alta</option>
+                                    <option value="media">Media</option>
+                                    <option value="baja">Baja</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; align-items: flex-end;">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="limpiarFiltrosHistorial()">
+                                    <i class="fas fa-times"></i> Limpiar
+                                </button>
+                            </div>
+                        </div>
+                        
                         <div id="historial-loader" class="text-center py-5">
                             <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Cargando historial...</span>
@@ -807,6 +842,58 @@ function cargarHistorialModal() {
 // document.getElementById('modalProducto').setAttribute('data-objeto-id', insumo.idInventario);
 // Esto debe hacerse en el archivo crud_inventario.js donde se cargan los datos del modal
 
+// ⭐ FILTRAR EVENTOS DEL HISTORIAL
+function filtrarHistorial() {
+    const tipoEvento = document.getElementById('filtroTipoEvento').value;
+    const criticidad = document.getElementById('filtroCriticidad').value;
+    
+    // Obtener todos los eventos del timeline
+    const eventos = document.querySelectorAll('#historial-contenido .timeline-item');
+    
+    let eventosVisibles = 0;
+    
+    eventos.forEach(evento => {
+        const eventoTipo = evento.getAttribute('data-tipo-evento');
+        const eventoCriticidad = evento.getAttribute('data-criticidad');
+        
+        // Verificar si cumple con los filtros
+        const cumpleTipo = !tipoEvento || eventoTipo === tipoEvento;
+        const cumpleCriticidad = !criticidad || eventoCriticidad === criticidad;
+        
+        if (cumpleTipo && cumpleCriticidad) {
+            evento.style.display = '';
+            eventosVisibles++;
+        } else {
+            evento.style.display = 'none';
+        }
+    });
+    
+    // Mostrar mensaje si no hay eventos visibles
+    const contenedor = document.getElementById('historial-contenido');
+    let mensajeSinResultados = contenedor.querySelector('.sin-resultados-filtro');
+    
+    if (eventosVisibles === 0) {
+        if (!mensajeSinResultados) {
+            mensajeSinResultados = document.createElement('div');
+            mensajeSinResultados.className = 'alert alert-info text-center sin-resultados-filtro';
+            mensajeSinResultados.innerHTML = '<i class="fas fa-filter"></i> No hay eventos que coincidan con los filtros seleccionados';
+            contenedor.appendChild(mensajeSinResultados);
+        }
+        mensajeSinResultados.style.display = 'block';
+    } else {
+        if (mensajeSinResultados) {
+            mensajeSinResultados.style.display = 'none';
+        }
+    }
+}
+
+// ⭐ LIMPIAR FILTROS DEL HISTORIAL
+function limpiarFiltrosHistorial() {
+    document.getElementById('filtroTipoEvento').value = '';
+    document.getElementById('filtroCriticidad').value = '';
+    filtrarHistorial();
+}
+
 // ⭐ RESETEAR EL ESTADO AL CERRAR EL MODAL
 const originalCloseVetModal = window.closeVetModal;
 window.closeVetModal = function(modalId) {
@@ -816,6 +903,9 @@ window.closeVetModal = function(modalId) {
         
         // Limpiar el contenido del historial
         document.getElementById('historial-contenido').innerHTML = '';
+        
+        // Limpiar filtros
+        limpiarFiltrosHistorial();
         
         // Volver a la pestaña de detalles
         document.getElementById('tab-detalles').click();
