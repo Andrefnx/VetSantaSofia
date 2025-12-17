@@ -287,6 +287,46 @@ def marcar_cobro_en_proceso(request, venta_id):
 
 @login_required
 @user_passes_test(es_admin_o_recepcion)
+@require_http_methods(["POST"])
+def devolver_cobro_a_pendiente(request, venta_id):
+    """
+    Devuelve un cobro de 'en_proceso' a 'pendiente' (guardar como borrador)
+    Esto permite que vuelva a aparecer en la lista de Pagos Pendientes
+    """
+    try:
+        venta = Venta.objects.get(id=venta_id, estado='en_proceso')
+        
+        # Cambiar estado de vuelta a 'pendiente'
+        venta.estado = 'pendiente'
+        venta.save(update_fields=['estado'])
+        
+        # Registrar auditoría
+        AuditoriaCaja.objects.create(
+            venta=venta,
+            accion='devolver_a_pendiente',
+            usuario=request.user,
+            descripcion=f"Cobro devuelto a pendiente desde caja (borrador)"
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Cobro {venta.numero_venta} devuelto a pagos pendientes'
+        })
+        
+    except Venta.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Cobro no encontrado o no está en proceso'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+@login_required
+@user_passes_test(es_admin_o_recepcion)
 @require_http_methods(["POST", "DELETE"])
 def eliminar_cobro_pendiente(request, venta_id):
     """
