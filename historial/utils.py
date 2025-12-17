@@ -246,7 +246,26 @@ def registrar_actualizacion_antecedentes(paciente_id, nombre_paciente, campo_mod
     }
     
     nombre_campo = campos_nombres.get(campo_modificado, campo_modificado)
-    descripcion = f"{nombre_paciente}: Actualización de {nombre_campo}"
+    
+    # Generar descripción detallada con los valores
+    def truncar(texto, max_len=60):
+        if texto and len(texto) > max_len:
+            return texto[:max_len] + '...'
+        return texto if texto else ''
+    
+    antes = truncar(valor_anterior.strip()) if valor_anterior else ''
+    despues = truncar(valor_nuevo.strip()) if valor_nuevo else ''
+    
+    # Determinar tipo de cambio y generar descripción apropiada
+    if antes and not despues:
+        # Eliminado
+        descripcion = f"{nombre_paciente}: {nombre_campo} eliminado"
+    elif not antes and despues:
+        # Agregado
+        descripcion = f"{nombre_paciente}: {nombre_campo}: '{despues}'"
+    else:
+        # Actualizado
+        descripcion = f"{nombre_paciente}: {nombre_campo}: '{antes}' → '{despues}'"
     
     datos_cambio = {
         'campo': campo_modificado,

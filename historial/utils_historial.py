@@ -61,7 +61,27 @@ def generar_texto_legible(evento):
     # Eventos de antecedentes
     elif tipo == 'actualizacion_antecedentes':
         campo = datos.get('campo', 'antecedente médico')
-        return f"Actualización de {campo.replace('_', ' ')}"
+        campo_legible = campo.replace('_', ' ').capitalize()
+        
+        # Obtener valores
+        antes = datos.get('antes', '').strip() if datos.get('antes') else ''
+        despues = datos.get('despues', '').strip() if datos.get('despues') else ''
+        
+        # Truncar valores largos para el historial
+        def truncar(texto, max_len=60):
+            if len(texto) > max_len:
+                return texto[:max_len] + '...'
+            return texto
+        
+        # Si antes tenía valor y ahora está vacío = eliminado
+        if antes and not despues:
+            return f"{campo_legible}: Eliminado (antes: '{truncar(antes)}')"
+        # Si antes estaba vacío y ahora tiene valor = agregado
+        elif not antes and despues:
+            return f"{campo_legible}: '{truncar(despues)}'"
+        # Si ambos tienen valor = actualizado
+        else:
+            return f"{campo_legible}: '{truncar(antes)}' → '{truncar(despues)}'"
     
     # Eventos de información general
     elif tipo == 'modificacion_informacion':
