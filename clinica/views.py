@@ -900,17 +900,21 @@ def guardar_consulta(request, paciente_id):
     if request.method == 'POST':
         try:
             import json
+            from decimal import Decimal
+            from .models import ConsultaInsumo
+            
             data = json.loads(request.body)
             
             paciente = get_object_or_404(Paciente, id=paciente_id)
+            peso_paciente = data.get('peso')
             
             # Crear la consulta
             consulta = Consulta.objects.create(
                 paciente=paciente,
                 veterinario=request.user,
-                tipo_consulta=data.get('tipo_consulta', 'consulta_general'),  # ⭐ NUEVO CAMPO
+                tipo_consulta=data.get('tipo_consulta', 'consulta_general'),
                 temperatura=data.get('temperatura'),
-                peso=data.get('peso'),
+                peso=peso_paciente,
                 frecuencia_cardiaca=data.get('frecuencia_cardiaca'),
                 frecuencia_respiratoria=data.get('frecuencia_respiratoria'),
                 otros=data.get('otros', ''),
@@ -919,15 +923,78 @@ def guardar_consulta(request, paciente_id):
                 notas=data.get('notas', '')
             )
             
-            # Guardar medicamentos utilizados
+            # ⭐ GUARDAR SERVICIOS (ManyToMany)
+            servicios_ids = data.get('servicios_ids') or data.get('servicios', [])
+            if servicios_ids:
+                # Si es string separado por comas, convertir a lista
+                if isinstance(servicios_ids, str):
+                    servicios_ids = [int(sid.strip()) for sid in servicios_ids.split(',') if sid.strip()]
+                consulta.servicios.set(servicios_ids)
+            
+            # ⭐ GUARDAR INSUMOS con cálculo automático (NUEVO MODELO)
             medicamentos = data.get('medicamentos', [])
+            import re
+            
+            for med in medicamentos:
+                insumo_id = med.get('id')
+                dosis_raw = med.get('dosis')  # Puede ser "13.6 gr (1 envase)" o número
+                
+                if insumo_id and peso_paciente:
+                    try:
+                        insumo = Insumo.objects.get(id=insumo_id)
+                        peso_decimal = Decimal(str(peso_paciente))
+                        
+                        # Extraer número de la dosis (puede venir como "13.6 gr (1 envase)")
+                        dosis_numerica = None
+                        cantidad_envases = None
+                        
+                        if dosis_raw:
+                            # Intentar extraer el número de la dosis
+                            match_dosis = re.search(r'([\d.]+)\s*(ml|gr|mg|unidades)?', str(dosis_raw))
+                            if match_dosis:
+                                dosis_numerica = Decimal(match_dosis.group(1))
+                            
+                            # Intentar extraer cantidad de envases
+                            match_envases = re.search(r'\((\d+(?:\.\d+)?)\s*envases?\)', str(dosis_raw))
+                            if match_envases:
+                                cantidad_envases = Decimal(match_envases.group(1))
+                        
+                        # Si no hay cantidad de envases, calcularla a partir de la dosis
+                        if not cantidad_envases and dosis_numerica:
+                            if hasattr(insumo, 'ml_por_contenedor') and insumo.ml_por_contenedor:
+                                from decimal import ROUND_UP
+                                cantidad_envases = (dosis_numerica / insumo.ml_por_contenedor).quantize(Decimal('1'), rounding=ROUND_UP)
+                            else:
+                                cantidad_envases = Decimal('1')
+                        
+                        # Crear ConsultaInsumo
+                        consulta_insumo = ConsultaInsumo.objects.create(
+                            consulta=consulta,
+                            insumo=insumo,
+                            peso_paciente=peso_decimal,
+                            dosis_total_ml=dosis_numerica,
+                            ml_por_contenedor=insumo.ml_por_contenedor if hasattr(insumo, 'ml_por_contenedor') else None,
+                            cantidad_calculada=cantidad_envases or Decimal('1'),
+                            cantidad_final=cantidad_envases or Decimal('1'),
+                            calculo_automatico=True
+                        )
+                        
+                        print(f"✅ ConsultaInsumo creado: {insumo.medicamento} - Dosis: {dosis_numerica}, Cantidad: {cantidad_envases}")
+                        
+                    except (Insumo.DoesNotExist, ValueError, TypeError, AttributeError) as e:
+                        print(f"❌ Error al guardar insumo {insumo_id}: {str(e)}")
+                        import traceback
+                        traceback.print_exc()
+                        continue
+            
+            # ⭐ MANTENER COMPATIBILIDAD: Guardar también en MedicamentoUtilizado (modelo antiguo)
             for med in medicamentos:
                 MedicamentoUtilizado.objects.create(
                     consulta=consulta,
                     inventario_id=med.get('id'),
                     nombre=med.get('nombre'),
                     dosis=med.get('dosis'),
-                    peso_paciente=data.get('peso')
+                    peso_paciente=peso_paciente
                 )
             
             # ⭐ ACTUALIZAR EL PESO DEL PACIENTE SI SE PROPORCIONÓ
@@ -949,6 +1016,16 @@ def guardar_consulta(request, paciente_id):
                     cita_relacionada.save(update_fields=['estado', 'fecha_modificacion'])
                 except Cita.DoesNotExist:
                     pass
+            
+            # ⭐ CREAR COBRO PENDIENTE AUTOMÁTICAMENTE (después de guardar servicios e insumos)
+            # La señal post_save no funciona porque se dispara antes de guardar los ManyToMany
+            from caja.services import crear_cobro_pendiente_desde_consulta
+            try:
+                if consulta.servicios.exists() or consulta.insumos_detalle.exists():
+                    crear_cobro_pendiente_desde_consulta(consulta, request.user)
+            except Exception as e:
+                print(f"⚠️ Error al crear cobro pendiente: {str(e)}")
+                # No interrumpir el flujo, solo loguear el error
             
             return JsonResponse({
                 'success': True,

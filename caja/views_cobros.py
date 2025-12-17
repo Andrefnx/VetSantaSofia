@@ -195,6 +195,96 @@ def detalle_cobro_pendiente(request, venta_id):
     return render(request, 'caja/detalle_cobro_pendiente.html', context)
 
 
+@login_required
+@user_passes_test(es_admin_o_recepcion)
+@require_http_methods(["GET"])
+def api_cobros_pendientes(request):
+    """
+    API: Retorna cobros pendientes en formato JSON para cargar en el carrito de caja
+    """
+    cobros = obtener_cobros_pendientes()
+    
+    # Filtro opcional por paciente
+    paciente_id = request.GET.get('paciente')
+    if paciente_id:
+        cobros = cobros.filter(paciente_id=paciente_id)
+    
+    # Serializar cobros con sus detalles
+    cobros_data = []
+    for venta in cobros:
+        detalles_data = []
+        for detalle in venta.detalles.all():
+            detalles_data.append({
+                'id': detalle.id,
+                'tipo': detalle.tipo,
+                'descripcion': detalle.descripcion,
+                'cantidad': float(detalle.cantidad),
+                'precio_unitario': float(detalle.precio_unitario),
+                'subtotal': float(detalle.subtotal),
+            })
+        
+        cobros_data.append({
+            'id': venta.id,
+            'numero_venta': venta.numero_venta,
+            'tipo_origen': venta.tipo_origen,
+            'tipo_origen_display': venta.get_tipo_origen_display(),
+            'paciente': venta.paciente.nombre if venta.paciente else 'Sin paciente',
+            'paciente_id': venta.paciente.id if venta.paciente else None,
+            'subtotal_servicios': float(venta.subtotal_servicios),
+            'subtotal_insumos': float(venta.subtotal_insumos),
+            'descuento': float(venta.descuento),
+            'total': float(venta.total),
+            'fecha_creacion': venta.fecha_creacion.strftime('%d/%m/%Y %H:%M'),
+            'detalles': detalles_data,
+        })
+    
+    return JsonResponse({
+        'success': True,
+        'cobros': cobros_data,
+        'total_cobros': len(cobros_data),
+    })
+
+
+@login_required
+@user_passes_test(es_admin_o_recepcion)
+@require_http_methods(["POST", "DELETE"])
+def eliminar_cobro_pendiente(request, venta_id):
+    """
+    Elimina/cancela un cobro pendiente (cambia estado a 'cancelado')
+    Solo se pueden eliminar ventas con estado 'pendiente'
+    """
+    try:
+        venta = Venta.objects.get(id=venta_id, estado='pendiente')
+        
+        # Cambiar estado a cancelado
+        venta.estado = 'cancelado'
+        venta.save(update_fields=['estado'])
+        
+        # Registrar auditoría
+        AuditoriaCaja.objects.create(
+            venta=venta,
+            accion='cancelar_venta',
+            usuario=request.user,
+            descripcion=f"Cobro pendiente cancelado manualmente desde caja"
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Cobro {venta.numero_venta} cancelado exitosamente'
+        })
+        
+    except Venta.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Cobro no encontrado o ya no está pendiente'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
 # =============================================================================
 # VENTA LIBRE
 # =============================================================================
