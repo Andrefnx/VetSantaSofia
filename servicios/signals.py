@@ -47,8 +47,8 @@ def servicio_post_save(sender, instance, created, **kwargs):
     Registra eventos de cambios en el servicio.
     """
     try:
-        # Obtener usuario del middleware o del atributo _usuario_modificacion
-        usuario = get_current_user() or getattr(instance, '_usuario_modificacion', None)
+        # Obtener usuario del atributo _usuario_modificacion
+        usuario = getattr(instance, '_usuario_modificacion', None)
         
         if created:
             # CREACIÓN DE SERVICIO
