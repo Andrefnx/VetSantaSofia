@@ -97,7 +97,7 @@
     style="cursor: pointer;" 
     onclick="if (event.target.closest('.manage-wheel')) return; const btn = this.querySelector('.manage-options button[onclick*=view]'); if(btn) btn.click();">
     <td>{{ insumo.medicamento }}</td>
-    <td>{{ insumo.especie|default:"-" }}</td>
+    <td>{{ insumo.get_especie_display|default:"-" }}</td>
     <td>${{ insumo.precio_venta|default:0|floatformat:0 }}</td>
     <td>
         <span class="vet-badge {% if insumo.get_stock_nivel == 'alto' %}success{% elif insumo.get_stock_nivel == 'medio' %}warning{% else %}danger{% endif %}">
@@ -228,7 +228,7 @@
                                     <option value="canino">Canino</option>
                                     <option value="felino">Felino</option>
                                     <option value="ambos">Ambos</option>
-                                    <option value="Otro">Otro</option>
+                                    <option value="otro">Otro</option>
                                 </select>
                             </div>
                         </div>

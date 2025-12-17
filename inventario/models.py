@@ -5,9 +5,10 @@ from django.utils import timezone
 
 class Insumo(models.Model):
     TIPO_MOVIMIENTO_CHOICES = [
-        ('entrada', 'Entrada'),
-        ('salida', 'Salida'),
-        ('registro_inicial', 'Registro Inicial'),
+        ('ingreso_stock', 'Ingreso de Stock'),
+        ('salida_stock', 'Salida de Stock'),
+        ('modificacion_informacion', 'Modificación de Información'),
+        ('actualizacion_precio', 'Actualización de Precio'),
     ]
     
     FORMATO_CHOICES = [
@@ -70,7 +71,7 @@ class Insumo(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     ultimo_ingreso = models.DateTimeField(null=True, blank=True)
     ultimo_movimiento = models.DateTimeField(null=True, blank=True)
-    tipo_ultimo_movimiento = models.CharField(max_length=20, choices=TIPO_MOVIMIENTO_CHOICES, null=True, blank=True)
+    tipo_ultimo_movimiento = models.CharField(max_length=30, choices=TIPO_MOVIMIENTO_CHOICES, null=True, blank=True)
     usuario_ultimo_movimiento = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     
     class Meta:
