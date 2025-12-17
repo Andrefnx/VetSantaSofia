@@ -27,6 +27,10 @@
 
     <div class="vet-sidebar-wrapper">
         <div class="vet-sidebar-content">
+
+            <div class="vet-user-info">
+                                        <span class="vet-user-name">{{ user.nombre }} {{ user.apellido }}</span>
+                </div>
             <ul class="vet-nav-menu">
 
                 <!-- DASHBOARD -->
@@ -88,6 +92,19 @@
                 </li>
 
             </ul>
+            
+            <!-- Usuario y Logout -->
+            <div class="vet-sidebar-user">
+                <div class="vet-sidebar-divider"></div>
+                
+                <a href="#" onclick="event.preventDefault(); document.getElementById('sidebar-logout-form').submit();" class="vet-logout-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Cerrar Sesión</span>
+                </a>
+                <form id="sidebar-logout-form" method="POST" action="{% url 'logout' %}" style="display: none;">
+                    {% csrf_token %}
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -98,17 +115,24 @@ function toggleVetSidebar() {
     const sidebar = document.getElementById('vetSidebar');
     const mainPanel = document.querySelector('.main-panel');
     const html = document.documentElement;
+    const isMobile = window.innerWidth <= 991;
     
-    if (sidebar.classList.contains('collapsed')) {
-        sidebar.classList.remove('collapsed');
-        if (mainPanel) mainPanel.classList.remove('sidebar-collapsed');
-        html.classList.remove('sidebar-is-collapsed');
-        localStorage.setItem('sidebarState', 'expanded');
+    if (isMobile) {
+        // En mobile: toggle entre colapsada (70px) y expandida (260px)
+        sidebar.classList.toggle('mobile-open');
     } else {
-        sidebar.classList.add('collapsed');
-        if (mainPanel) mainPanel.classList.add('sidebar-collapsed');
-        html.classList.add('sidebar-is-collapsed');
-        localStorage.setItem('sidebarState', 'collapsed');
+        // En desktop: comportamiento normal
+        if (sidebar.classList.contains('collapsed')) {
+            sidebar.classList.remove('collapsed');
+            if (mainPanel) mainPanel.classList.remove('sidebar-collapsed');
+            html.classList.remove('sidebar-is-collapsed');
+            localStorage.setItem('sidebarState', 'expanded');
+        } else {
+            sidebar.classList.add('collapsed');
+            if (mainPanel) mainPanel.classList.add('sidebar-collapsed');
+            html.classList.add('sidebar-is-collapsed');
+            localStorage.setItem('sidebarState', 'collapsed');
+        }
     }
 }
 
@@ -117,18 +141,51 @@ function toggleVetSidebar() {
     const sidebar = document.getElementById('vetSidebar');
     const mainPanel = document.querySelector('.main-panel');
     const savedState = localStorage.getItem('sidebarState');
+    const isMobile = window.innerWidth <= 991;
     
-    if (savedState === 'collapsed') {
-        sidebar.classList.add('collapsed');
-        if (mainPanel) {
-            mainPanel.classList.add('sidebar-collapsed');
-        }
+    if (isMobile) {
+        // En mobile: empezar colapsada (sin clase mobile-open)
+        sidebar.classList.remove('mobile-open');
     } else {
+        // En desktop: restaurar estado guardado
+        if (savedState === 'collapsed') {
+            sidebar.classList.add('collapsed');
+            if (mainPanel) {
+                mainPanel.classList.add('sidebar-collapsed');
+            }
+        } else {
+            sidebar.classList.remove('collapsed');
+            if (mainPanel) {
+                mainPanel.classList.remove('sidebar-collapsed');
+            }
+        }
+    }
+})();
+
+// Manejar cambios de tamaño de ventana
+window.addEventListener('resize', function() {
+    const sidebar = document.getElementById('vetSidebar');
+    const mainPanel = document.querySelector('.main-panel');
+    const isMobile = window.innerWidth <= 991;
+    
+    if (isMobile) {
+        // Limpiar clases de desktop
         sidebar.classList.remove('collapsed');
         if (mainPanel) {
             mainPanel.classList.remove('sidebar-collapsed');
         }
+    } else {
+        // Limpiar clases de mobile
+        sidebar.classList.remove('mobile-open');
+        // Restaurar estado guardado
+        const savedState = localStorage.getItem('sidebarState');
+        if (savedState === 'collapsed') {
+            sidebar.classList.add('collapsed');
+            if (mainPanel) {
+                mainPanel.classList.add('sidebar-collapsed');
+            }
+        }
     }
-})();
+});
 </script>
 <!-- End Sidebar Custom -->

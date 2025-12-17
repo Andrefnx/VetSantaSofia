@@ -86,8 +86,13 @@ function openServicioModal(mode, data = {}) {
     });
 
     // Guardar ID
-    if (data.idServicio) modal.dataset.idservicio = data.idServicio;
-    else delete modal.dataset.idservicio;
+    if (data.idServicio) {
+        modal.dataset.idservicio = data.idServicio;
+        modal.setAttribute('data-objeto-id', data.idServicio); // Para historial
+    } else {
+        delete modal.dataset.idservicio;
+        modal.removeAttribute('data-objeto-id');
+    }
 
     modal.classList.remove("hide");
     modal.classList.add("show");
@@ -169,6 +174,11 @@ function getServicioModalData() {
         if (!data[p.dataset.field]) data[p.dataset.field] = p.textContent;
     });
 
+    // Incluir el ID si existe
+    if (modal.dataset.idservicio) {
+        data.idServicio = modal.dataset.idservicio;
+    }
+
     return data;
 }
 
@@ -220,6 +230,95 @@ function closeServicioModal() {
  ************************************/
 let servicioAEliminarId = null;
 
+/************************************
+ *  ARCHIVAR / RESTAURAR SERVICIO
+ ************************************/
+let servicioAArchivarId = null;
+
+function abrirModalArchivarServicio(btn) {
+    let tr = btn.closest("tr");
+    let nombre = "";
+    let esArchivar = true;
+
+    if (tr) {
+        nombre = tr.cells[0].textContent.trim();
+        servicioAArchivarId = tr.getAttribute("data-id");
+        // Detectar si es archivar o restaurar por el ícono del botón
+        const icono = btn.querySelector("i");
+        esArchivar = icono && icono.classList.contains("fa-archive");
+    } else {
+        const modal = document.getElementById("modalServicio");
+        servicioAArchivarId = modal.dataset.idservicio || null;
+
+        const nombreField = modal.querySelector('[data-field="nombre"]');
+        nombre = nombreField ? nombreField.textContent.trim() : "";
+    }
+
+    // Actualizar mensaje y título según la acción
+    const tituloModal = document.querySelector("#modalArchivarServicio .vet-custom-modal-title h3");
+    const btnConfirmar = document.getElementById("btnConfirmarArchivarServicio");
+    
+    if (esArchivar) {
+        tituloModal.innerHTML = '<i class="fas fa-archive"></i> Archivar Servicio';
+        document.getElementById("archivarServicioMensaje").textContent =
+            `¿Estás seguro que deseas archivar el servicio "${nombre}"? Podrás restaurarlo desde la pestaña de archivados.`;
+        btnConfirmar.innerHTML = '<i class="fas fa-archive"></i> Archivar';
+    } else {
+        tituloModal.innerHTML = '<i class="fas fa-undo"></i> Restaurar Servicio';
+        document.getElementById("archivarServicioMensaje").textContent =
+            `¿Estás seguro que deseas restaurar el servicio "${nombre}"? Volverá a aparecer en la pestaña de activos.`;
+        btnConfirmar.innerHTML = '<i class="fas fa-undo"></i> Restaurar';
+    }
+
+    openVetModal('modalArchivarServicio');
+}
+
+function closeArchivarServicioModal() {
+    closeVetModal("modalArchivarServicio");
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const btnConfirmar = document.getElementById("btnConfirmarArchivarServicio");
+    if (btnConfirmar) {
+        btnConfirmar.onclick = function () {
+            archivarServicioConfirmado();
+        };
+    }
+});
+
+function archivarServicioConfirmado() {
+    if (!servicioAArchivarId) return;
+
+    // Get CSRF token
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                      document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='))?.split('=')[1];
+
+    fetch(`/servicios/archivar/${servicioAArchivarId}/`, {
+        method: "POST",
+        headers: { 
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken
+        },
+        body: JSON.stringify({})
+    })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) {
+                closeVetModal("modalArchivarServicio");
+                location.reload();
+            } else {
+                alert(resp.error || 'Error al archivar/restaurar servicio');
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Error al archivar/restaurar servicio');
+        });
+}
+
+/************************************
+ *  ELIMINAR SERVICIO
+ ************************************/
 function abrirModalEliminarServicio(btn) {
 
     let tr = btn.closest("tr");
@@ -296,7 +395,31 @@ function eliminarServicioConfirmado() {
     })
         .then(r => r.json())
         .then(resp => {
-            if (resp.success) location.reload();
+            if (resp.success) {
+                closeVetModal("modalEliminarServicio");
+                // Si fue archivado en lugar de eliminado, mostrar mensaje especial
+                if (resp.archived) {
+                    if (window.Swal) {
+                        Swal.fire({
+                            title: 'Servicio archivado',
+                            text: resp.message,
+                            icon: 'info',
+                            confirmButtonText: 'Entendido'
+                        }).then(() => location.reload());
+                    } else {
+                        alert(resp.message);
+                        location.reload();
+                    }
+                } else {
+                    location.reload();
+                }
+            } else {
+                alert(resp.error || 'Error al eliminar servicio');
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Error al eliminar servicio');
         });
 }
 
@@ -341,4 +464,11 @@ function construirResumenCambiosServicio(updated) {
 
         return "Datos del nuevo servicio:\n\n" + lineas.join("\n");
     }
+}
+
+/************************************
+ *  CAMBIAR ESTADO (ACTIVOS/ARCHIVADOS)
+ ************************************/
+function cambiarEstadoServicios(estado) {
+    window.location.href = `/servicios/?estado=${estado}`;
 }

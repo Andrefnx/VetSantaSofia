@@ -1,0 +1,171 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Historial - {{ nombre_objeto }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Encabezado -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-history"></i> Historial de {{ entidad_display }}
+        </h1>
+        <button onclick="window.close()" class="d-none d-sm-inline-block btn btn-sm btn-outline-secondary">
+            <i class="fas fa-times"></i> Cerrar
+        </button>
+    </div>
+
+    <!-- Información del objeto -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">
+                {{ nombre_objeto }}
+            </h6>
+            <span class="badge badge-primary badge-pill">
+                {{ total_eventos }} evento{{ total_eventos|pluralize }}
+            </span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Estadística: Total de eventos -->
+                <div class="col-md-4 mb-3">
+                    <div class="border-left-primary p-3 bg-light rounded">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total de Eventos
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ stats.total_eventos }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estadística: Eventos más frecuentes -->
+                <div class="col-md-4 mb-3">
+                    <div class="border-left-info p-3 bg-light rounded">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Evento más frecuente
+                        </div>
+                        <div class="text-sm mb-0 font-weight-bold text-gray-800">
+                            {% if stats.por_tipo %}
+                                {{ stats.por_tipo.0.tipo_evento|title|slice:":20" }}
+                                <small class="text-muted">({{ stats.por_tipo.0.count }})</small>
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estadística: Usuario más activo -->
+                <div class="col-md-4 mb-3">
+                    <div class="border-left-success p-3 bg-light rounded">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Usuario más activo
+                        </div>
+                        <div class="text-sm mb-0 font-weight-bold text-gray-800">
+                            {% if stats.por_usuario %}
+                                {{ stats.por_usuario.0.usuario__nombre }} {{ stats.por_usuario.0.usuario__apellido }}
+                                <small class="text-muted">({{ stats.por_usuario.0.count }})</small>
+                            {% else %}
+                                Sistema automático
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline de eventos -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-stream"></i> Línea de Tiempo
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if page_obj %}
+                {% for fecha, eventos_dia in page_obj %}
+                    <!-- Separador de fecha -->
+                    <div class="fecha-separador mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1 border-top"></div>
+                            <span class="px-3 text-muted">
+                                <i class="far fa-calendar-alt"></i>
+                                {{ fecha|date:"l, j \d\e F \d\e Y" }}
+                            </span>
+                            <div class="flex-grow-1 border-top"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Eventos del día -->
+                    {% include 'historial/partials/historial_timeline.html' with eventos=eventos_dia mostrar_detalles=True %}
+                {% endfor %}
+
+                <!-- Paginación -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Paginación del historial" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-history fa-4x mb-3 text-gray-300"></i>
+                    <p class="h5">No hay eventos en el historial</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.fecha-separador {
+    margin: 2rem 0 1.5rem;
+}
+
+.border-left-primary {
+    border-left: 4px solid #4e73df !important;
+}
+
+.border-left-info {
+    border-left: 4px solid #36b9cc !important;
+}
+
+.border-left-success {
+    border-left: 4px solid #1cc88a !important;
+}
+</style>
+{% endblock %}

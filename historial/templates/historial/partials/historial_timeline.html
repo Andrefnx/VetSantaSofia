@@ -1,0 +1,223 @@
+{% load static %}
+{% load humanize %}
+
+<!-- Partial: Timeline de historial -->
+<div class="timeline-historial">
+    {% if eventos %}
+        {% for evento in eventos %}
+        <div class="timeline-item mb-2 {% if forloop.last %}last{% endif %}" data-tipo-evento="{{ evento.tipo_evento }}" data-criticidad="{{ evento.criticidad }}">
+            <!-- Línea vertical del timeline -->
+            <div class="timeline-marker">
+                <span class="timeline-icon {{ evento.get_color_criticidad }}">
+                    <i class="fas {{ evento.get_icono }}"></i>
+                </span>
+            </div>
+            
+            <!-- Contenido del evento -->
+            <div class="timeline-content">
+                <div class="evento-card border-left-{{ evento.criticidad }}">
+                    <!-- Header compacto con badge a la izquierda -->
+                    <div class="evento-header">
+                        <span class="badge badge-sm {{ evento.get_color_criticidad|slice:'5:' }}">
+                            {{ evento.get_tipo_evento_display }}
+                        </span>
+                    </div>
+                    
+                    <!-- Descripción compacta -->
+                    <div class="evento-descripcion">
+                        {{ evento.descripcion }}
+                    </div>
+                    
+                    <!-- Fecha y usuario en una línea compacta -->
+                    <div class="evento-footer">
+                        <span class="evento-fecha">
+                            <i class="far fa-clock"></i> {{ evento.fecha_evento|naturaltime }}
+                        </span>
+                        <span class="evento-usuario-inline">
+                            <i class="fas fa-user"></i>
+                            {% if evento.usuario %}
+                                {{ evento.usuario.nombre }} {{ evento.usuario.apellido }}
+                            {% else %}
+                                Sistema
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center text-muted py-4">
+            <i class="fas fa-history fa-3x mb-3"></i>
+            <p>No hay eventos registrados en el historial</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Estilos del timeline -->
+<style>
+/* Timeline base */
+.timeline-historial {
+    position: relative;
+    padding-left: 0;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 38px;
+    min-height: 40px;
+}
+
+.timeline-item:not(.last)::before {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: 28px;
+    bottom: -8px;
+    width: 2px;
+    background: #e0e0e0;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 0;
+    top: 2px;
+}
+
+.timeline-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid currentColor;
+    font-size: 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.timeline-content {
+    flex: 1;
+}
+
+.evento-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    transition: all 0.2s ease;
+}
+
+.evento-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-color: #afe1af;
+}
+
+/* Colores de borde según criticidad */
+.border-left-critica {
+    border-left: 4px solid #dc3545 !important;
+}
+
+.border-left-alta {
+    border-left: 4px solid #ffc107 !important;
+}
+
+.border-left-media {
+    border-left: 4px solid #74bd74 !important;
+}
+
+.border-left-baja {
+    border-left: 4px solid #6b8e6b !important;
+}
+
+/* Header compacto - solo badge */
+.evento-header {
+    margin-bottom: 6px;
+}
+
+.badge-sm {
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 4px;
+    color: #000;
+}
+
+.badge-info {
+    background-color: #74bd74;
+}
+
+.badge-danger {
+    background-color: #dc3545;
+    color: #fff !important;
+}
+
+.badge-warning {
+    background-color: #ffc107;
+}
+
+.badge-secondary {
+    background-color: #d0d0d0;
+}
+
+.evento-fecha {
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
+.evento-usuario-inline {
+    color: #6b8e6b;
+    font-weight: 500;
+    margin-left: auto;
+    font-size: 0.8rem;
+}
+
+.evento-usuario-inline i {
+    color: #afe1af;
+    margin-right: 3px;
+}
+
+.evento-descripcion {
+    font-size: 0.9rem;
+    color: #103012;
+    line-height: 1.4;
+    margin-bottom: 6px;
+}
+
+/* Footer con fecha y usuario */
+.evento-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    padding-top: 4px;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* Iconos especiales por tipo de evento */
+.timeline-icon {
+    color: #74bd74;
+}
+
+/* Salida de stock - ROJO */
+[data-tipo-evento="salida_stock"] .timeline-icon {
+    color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+
+/* Ingreso de stock - VERDE */
+[data-tipo-evento="ingreso_stock"] .timeline-icon {
+    color: #6b8e6b !important;
+    border-color: #6b8e6b !important;
+}
+
+/* Eventos críticos - ROJO */
+[data-criticidad="critica"] .timeline-icon {
+    color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+
+
+</style>

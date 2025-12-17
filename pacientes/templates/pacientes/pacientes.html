@@ -86,8 +86,8 @@
                                 <label>Especie</label>
                                 <select id="pacienteEspecie" class="form-control">
                                     <option value="">Selecciona...</option>
-                                    <option value="perro">Perro</option>
-                                    <option value="gato">Gato</option>
+                                    <option value="canino">Canino</option>
+                                    <option value="felino">Felino</option>
                                 </select>
                             </div>
 
@@ -212,13 +212,13 @@
                                 <div class="mb-2">
                                     <label>Teléfono *</label>
                                     <input type="tel" id="propietarioTelefono" placeholder="+56912345678"
-                                        class="form-control">
+                                        class="form-control" data-phone="true" required>
                                 </div>
 
                                 <div class="mb-2">
                                     <label>Email</label>
                                     <input type="email" id="propietarioEmail" placeholder="correo@dominio.cl"
-                                        class="form-control">
+                                        class="form-control" data-email="true">
                                 </div>
 
                                 <div class="mb-2">
@@ -304,7 +304,9 @@
 
 {% block table_rows %}
 {% for paciente in pacientes %}
-<tr data-especie="{{ paciente.especie|lower }}" data-sexo="{{ paciente.sexo|lower }}">
+<tr data-especie="{{ paciente.especie|lower }}" data-sexo="{{ paciente.sexo|lower }}" 
+    style="cursor: pointer;" 
+    onclick="if (event.target.closest('.manage-wheel')) return; window.location.href='{% url 'pacientes:ficha_mascota' paciente.id %}'">
     <td>{{ paciente.nombre }}</td>
     <td>{{ paciente.get_especie_display|default:paciente.especie|capfirst }}</td>
     <td>{{ paciente.raza|default:"-" }}</td>

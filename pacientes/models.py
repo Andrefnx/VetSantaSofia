@@ -1,6 +1,7 @@
 # hospital/models.py
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from datetime import date
 from dateutil.relativedelta import relativedelta
 
@@ -26,13 +27,48 @@ class Propietario(models.Model):
     @property
     def nombre_completo(self):
         return f"{self.nombre} {self.apellido}"
+    
+    def clean(self):
+        """Validate data integrity: prevent duplicate telefono and email (case-insensitive)"""
+        super().clean()
+        
+        # Build base queryset excluding current instance
+        queryset = Propietario.objects.exclude(pk=self.pk) if self.pk else Propietario.objects.all()
+        
+        errors = {}
+        
+        # Validate telefono uniqueness (case-insensitive)
+        if self.telefono:
+            telefono_lower = self.telefono.lower()
+            if queryset.filter(telefono__iexact=telefono_lower).exists():
+                errors['telefono'] = ValidationError(
+                    'Ya existe un propietario con este número de teléfono.',
+                    code='duplicate_telefono'
+                )
+        
+        # Validate email uniqueness (case-insensitive)
+        if self.email:
+            email_lower = self.email.lower()
+            if queryset.filter(email__iexact=email_lower).exists():
+                errors['email'] = ValidationError(
+                    'Ya existe un propietario con este correo electrónico.',
+                    code='duplicate_email'
+                )
+        
+        if errors:
+            raise ValidationError(errors)
+    
+    def save(self, *args, **kwargs):
+        """Override save to enforce full_clean() validation"""
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 
 class Paciente(models.Model):
     """Modelo para las mascotas/pacientes"""
     ESPECIE_CHOICES = [
-        ('perro', 'Perro'),
-        ('gato', 'Gato'),
+        ('canino', 'Canino'),
+        ('felino', 'Felino'),
         ('otro', 'Otro'),
     ]
     
@@ -64,6 +100,24 @@ class Paciente(models.Model):
     propietario = models.ForeignKey(Propietario, on_delete=models.CASCADE, related_name='mascotas')
     activo = models.BooleanField(default=True)
     fecha_registro = models.DateTimeField(auto_now_add=True)
+    
+    # 🔍 CAMPOS DE TRAZABILIDAD (Sistema de Historial)
+    ultimo_movimiento = models.DateTimeField(null=True, blank=True, verbose_name="Último Movimiento")
+    tipo_ultimo_movimiento = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name="Tipo de Último Movimiento",
+        help_text="Tipo del último cambio registrado"
+    )
+    usuario_ultima_modificacion = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='pacientes_modificados',
+        verbose_name="Usuario Última Modificación"
+    )
     
     class Meta:
         verbose_name = 'Paciente'

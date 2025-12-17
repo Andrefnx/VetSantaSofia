@@ -15,8 +15,20 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="general-container">
+<div class="container-fluid p-0">
+    <!-- Encabezado -->
+    <div class="p-1-5">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+                <h1 class="page-title"><i class="bi bi-clipboard2-pulse"></i> Ficha Clínica: {{ paciente.nombre }}</h1>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="p-1-5">
+        {% csrf_token %}
+        <div class="general-container">
         <div class="general-information">
             <div class="section personal-info">
                 <div class="section-header-with-edit">
@@ -54,10 +66,10 @@
                         </div>
                     </div>
                     <div class="info-row">
-                        <p><strong>Especie:</strong> <span class="view-mode">{{ paciente.especie }}</span>
+                        <p><strong>Especie:</strong> <span class="view-mode">{{ paciente.get_especie_display }}</span>
                             <select class="form-control edit-mode" name="especie" style="display:none;">
-                                <option value="perro" {% if paciente.especie == 'perro' %}selected{% endif %}>Perro</option>
-                                <option value="gato" {% if paciente.especie == 'gato' %}selected{% endif %}>Gato</option>
+                                <option value="canino" {% if paciente.especie == 'canino' %}selected{% endif %}>Canino</option>
+                                <option value="felino" {% if paciente.especie == 'felino' %}selected{% endif %}>Felino</option>
                                 <option value="otro" {% if paciente.especie == 'otro' %}selected{% endif %}>Otro</option>
                             </select>
                         </p>
@@ -182,15 +194,15 @@
                         <p><strong>Teléfono:</strong>
                             <span class="view-mode">{{ paciente.propietario.telefono|default:"No registrado" }}</span>
                             <input type="tel" class="form-control edit-mode" name="propietario_telefono"
-                                value="{{ paciente.propietario.telefono }}" placeholder="+569876543210" style="display:none;">
-                            <small class="text-danger" id="errorTelefono" style="display:none;">El teléfono debe tener 9 dígitos (ej: +569876543210 o 987654321)</small>
+                                value="{{ paciente.propietario.telefono }}" placeholder="+569876543210" 
+                                data-phone="true" style="display:none;">
                         </p>
                     </div>
                     <p><strong>Correo Electrónico:</strong>
                         <span class="view-mode">{{ paciente.propietario.email|default:"No registrado" }}</span>
                         <input type="email" class="form-control edit-mode" name="propietario_email"
-                            value="{{ paciente.propietario.email }}" placeholder="ejemplo@correo.com" style="display:none;">
-                        <small class="text-danger" id="errorEmail" style="display:none;">El correo debe tener un formato válido (ej: ejemplo@correo.com)</small>
+                            value="{{ paciente.propietario.email }}" placeholder="ejemplo@correo.com" 
+                            data-email="true" style="display:none;">
                     </p>
                     <p><strong>Dirección:</strong>
                         <span class="view-mode">{{ paciente.propietario.direccion|default:"No registrada" }}</span>
@@ -280,6 +292,9 @@
                 {% if user.rol != 'recepcion' %}
                 <button class="tab-btn" data-tab="docs">Documentos</button>
                 {% endif %}
+                <button class="tab-btn" data-tab="historial-registros" onclick="cargarHistorialRegistros()">
+                    <i class="fas fa-history"></i> Historial de Registros
+                </button>
             </div>
             <div class="tabs-content">
                 <div class="tab-content active" id="historial">
@@ -292,19 +307,6 @@
                                         ({{ citas_agendadas|length }} cita{{ citas_agendadas|length|pluralize }} agendada{{ citas_agendadas|length|pluralize }})
                                     </small>
                                 </h3>
-                                <form method="get" class="d-flex align-items-center gap-2">
-                                    <label class="mb-0 small text-muted">Orden</label>
-                                    <select name="orden_timeline" class="form-select form-select-sm" onchange="this.form.submit()" style="width: auto;">
-                                        <option value="desc" {% if orden_timeline != 'asc' %}selected{% endif %}>Descendente</option>
-                                        <option value="asc" {% if orden_timeline == 'asc' %}selected{% endif %}>Ascendente</option>
-                                        
-                                    </select>
-                                    {% for key, value in request.GET.items %}
-                                        {% if key != 'orden_timeline' %}
-                                            <input type="hidden" name="{{ key }}" value="{{ value }}" />
-                                        {% endif %}
-                                    {% endfor %}
-                                </form>
                                 <small class="text-muted" style="margin-left:auto;">Items: {{ timeline_items|length }}</small>
                             </div>
                             <!-- DEBUG: Citas count = {{ citas_agendadas|length }} -->
@@ -319,7 +321,7 @@
                             <div class="timeline" id="timeline">
                                 <!-- START CITAS AGENDADAS LOOP -->
                                 {% if timeline_items %}
-                                    {% for item in timeline_items %}
+                                    {% for item in timeline_items reversed %}
                                         {% if item.tipo == 'cita' %}
                                             {% with cita=item.obj %}
                                             <div class="timeline-item" 
@@ -392,94 +394,29 @@
                                                             </h3>
                                                             <p class="event-subtitle timeline-item-subtitle">
                                                                 <i class="bi bi-person"></i> {{ consulta.veterinario.nombre }} {{ consulta.veterinario.apellido }}
+                                                                {% if not consulta.insumos_descontados and consulta.finalizada %}
+                                                                <span class="badge bg-warning text-dark ms-2" title="Pendiente de registrar uso de insumos">
+                                                                    <i class="bi bi-clock-history"></i> Pendiente
+                                                                </span>
+                                                                {% endif %}
                                                             </p>
                                                         </div>
                                                         {% if user.rol != 'recepcion' %}
-                                                        <button class="timeline-btn timeline-item-btn" onclick="verDetalleConsulta('{{ consulta.id }}')">
-                                                            Ver detalle
-                                                        </button>
+                                                            {% if consulta.insumos_descontados %}
+                                                            <button class="timeline-btn timeline-item-btn" onclick="verDetalleConsulta('{{ consulta.id }}')">
+                                                                <i class="bi bi-eye"></i> Ver detalle
+                                                            </button>
+                                                            {% else %}
+                                                            <button class="timeline-btn timeline-item-btn btn-warning" onclick="editarConsulta('{{ consulta.id }}')">
+                                                                <i class="bi bi-pencil-square"></i> Editar
+                                                            </button>
+                                                            {% endif %}
                                                         {% endif %}
                                                     </div>
                                                 </div>
                                             </div>
                                             {% endwith %}
                                         {% endif %}
-                                    {% endfor %}
-                                {% elif citas_agendadas or consultas %}
-                                    {% for cita in citas_agendadas %}
-                                    <div class="timeline-item" 
-                                        data-cita-id="{{ cita.id }}"
-                                        data-servicio="{{ cita.servicio.nombre|default:'' }}"
-                                        data-veterinario="{{ cita.veterinario.nombre }} {{ cita.veterinario.apellido }}"
-                                        data-fecha="{{ cita.fecha|date:'d/m/Y' }}"
-                                        data-hora="{{ cita.hora_inicio|time:'H:i' }}">
-                                        <div class="timeline-date">
-                                            <span class="month">{{ cita.fecha|date:"M" }}</span>
-                                            <span class="day">{{ cita.fecha|date:"d" }}</span>
-                                            <span class="year" style="display:none;">{{ cita.fecha|date:"Y" }}</span>
-                                        </div>
-                                        <div class="timeline-marker"></div>
-                                        <div class="timeline-content">
-                                            <div class="timeline-card timeline-cita-agendada">
-                                                <div class="timeline-item-header">
-                                                    <div class="timeline-item-info">
-                                                        <h3 class="event-title timeline-item-title">
-                                                            {{ cita.servicio.nombre|default:"Cita agendada" }}
-                                                            <span class="timeline-item-date">
-                                                                {{ cita.fecha|date:"d/m/Y" }} {{ cita.hora_inicio|time:"H:i" }} - {{ cita.hora_fin|time:"H:i" }}
-                                                            </span>
-                                                        </h3>
-                                                        <p class="event-subtitle timeline-item-subtitle">
-                                                            <i class="bi bi-person"></i> {{ cita.veterinario.nombre }} {{ cita.veterinario.apellido }}
-                                                        </p>
-                                                    </div>
-                                                    {% if user.id == cita.veterinario_id %}
-                                                    <button class="timeline-btn timeline-item-btn" onclick="iniciarCitaDesdeFicha({{ cita.id }}, this)">
-                                                        Iniciar
-                                                    </button>
-                                                    {% else %}
-                                                    <span class="badge bg-secondary" style="font-weight: 600;">Asignada a {{ cita.veterinario.nombre }} {{ cita.veterinario.apellido }}</span>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-
-                                    {% for consulta in consultas %}
-                                    <div class="timeline-item"
-                                        data-diagnostico="{{ consulta.diagnostico|lower|default:'' }}"
-                                        data-tratamiento="{{ consulta.tratamiento|lower|default:'' }}"
-                                        data-veterinario="{{ consulta.veterinario.nombre|lower }} {{ consulta.veterinario.apellido|lower }}"
-                                        data-veterinario-id="{{ consulta.veterinario.id }}"
-                                        data-tipo="{{ consulta.get_tipo_consulta_display|lower }}">
-                                        <div class="timeline-date">
-                                            <span class="month">{{ consulta.fecha|date:"M" }}</span>
-                                            <span class="day">{{ consulta.fecha|date:"d" }}</span>
-                                            <span class="year" style="display:none;">{{ consulta.fecha|date:"Y" }}</span>
-                                        </div>
-                                        <div class="timeline-marker"></div>
-                                        <div class="timeline-content">
-                                            <div class="timeline-item-header">
-                                                <div class="timeline-item-info">
-                                                    <h3 class="event-title timeline-item-title">
-                                                        {{ consulta.servicios_nombres|default:"Consulta general" }}
-                                                        <span class="timeline-item-date">
-                                                            {{ consulta.fecha|date:"d/m/Y H:i" }}
-                                                        </span>
-                                                    </h3>
-                                                    <p class="event-subtitle timeline-item-subtitle">
-                                                        <i class="bi bi-person"></i> {{ consulta.veterinario.nombre }} {{ consulta.veterinario.apellido }}
-                                                    </p>
-                                                </div>
-                                                {% if user.rol != 'recepcion' %}
-                                                <button class="timeline-btn timeline-item-btn" onclick="verDetalleConsulta('{{ consulta.id }}')">
-                                                    Ver detalle
-                                                </button>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
                                     {% endfor %}
                                 {% else %}
                                     <div class="timeline-item empty-state">
@@ -721,6 +658,33 @@
                     </div>
                 </div>
                 {% endif %}
+                
+                <!-- ⭐ NUEVA PESTAÑA: HISTORIAL DE REGISTROS -->
+                <div class="tab-content" id="historial-registros">
+                    <div class="historial-registros-container">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="mb-0">
+                                <i class="fas fa-history"></i> Historial de Registros
+                            </h3>
+                            <small class="text-muted">
+                                Registro completo de cambios del paciente
+                            </small>
+                        </div>
+                        
+                        <!-- Loader -->
+                        <div id="historial-registros-loader" class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando historial...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Cargando historial de registros...</p>
+                        </div>
+                        
+                        <!-- Contenido del historial -->
+                        <div id="historial-registros-contenido" style="display: none;">
+                            <!-- Se carga dinámicamente con AJAX -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -728,39 +692,6 @@
 
 <!-- ⭐ MODALES (sin cambios) -->
 
-<script>
-// Toggle edición de Antecedentes en la ficha (no modal)
-document.addEventListener('DOMContentLoaded', function() {
-    const btnEditar = document.getElementById('btnEditarAntecedentes');
-    const acciones = document.getElementById('btnEditAntecedentesActions');
-    const contenedor = document.getElementById('infoAntecedentes');
-    const btnCancelar = document.getElementById('btnCancelarAntecedentes');
-    const btnGuardar = document.getElementById('btnGuardarAntecedentes');
-
-    if (!btnEditar || !acciones || !contenedor) return;
-
-    const setEditMode = (editing) => {
-        // Mostrar/ocultar acciones
-        acciones.style.display = editing ? 'flex' : 'none';
-        // Ocultar/mostrar el lápiz mientras se edita
-        btnEditar.style.display = editing ? 'none' : 'inline-flex';
-        // Alternar clase de edición; el CSS controla qué se muestra
-        contenedor.classList.toggle('edit-mode-active', editing);
-    };
-
-    // Inicial: solo texto
-    setEditMode(false);
-
-    btnEditar.addEventListener('click', () => setEditMode(true));
-    btnCancelar?.addEventListener('click', () => setEditMode(false));
-
-    // Guardar: mantener UI coherente; envío se maneja por backend o JS existente
-    btnGuardar?.addEventListener('click', () => {
-        // Aquí podrías recopilar datos si existe flujo de guardado específico
-        setEditMode(false);
-    });
-});
-</script>
 <!-- Modal Detalle Consulta -->
 <div id="detalleConsultaModal" class="vet-modal-overlay hide">
     <div class="vet-custom-modal">
@@ -901,18 +832,34 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="tratamiento-container">
                                 <textarea class="form-control" name="tratamiento" rows="6" placeholder="Descripción del tratamiento..."></textarea>
                                 
+                                <!-- ⭐ INSUMOS DEL SERVICIO (Solo lectura) -->
+                                <div id="insumosServicioContainer" style="display: none; margin-bottom: 16px; padding: 12px; background: #f0f9ff; border: 1px solid #bfdbfe; border-radius: 6px;">
+                                    <div style="font-weight: 600; font-size: 0.9rem; color: #1e40af; margin-bottom: 8px;">
+                                        <i class="bi bi-box-seam"></i> Insumos requeridos por el servicio
+                                    </div>
+                                    <div id="insumosServicioLista" style="font-size: 0.85rem; color: #1e3a8a;">
+                                        <!-- Se llena dinámicamente con JS -->
+                                    </div>
+                                    <small style="display: block; margin-top: 8px; font-size: 11px; color: #64748b;">
+                                        <i class="bi bi-info-circle"></i> Estos insumos están predefinidos en el catálogo del servicio y se incluirán automáticamente.
+                                    </small>
+                                </div>
+                                
                                 <div class="inventario-selector-compact">
-                                    <input type="text" class="form-control form-control-sm" id="searchInventario" placeholder="Buscar medicamento...">
+                                    <input type="text" class="form-control form-control-sm" id="searchInventario" placeholder="Buscar medicamento adicional...">
                                     <div class="inventario-list-compact" id="inventarioList">
                                         <!-- Lista dinámica -->
                                     </div>
                                 </div>
                                 
                                 <div class="insumos-utilizados">
-                                    <div class="insumos-title">Insumos utilizados:</div>
+                                    <div class="insumos-title">Insumos adicionales:</div>
                                     <div id="insumosSeleccionados">
                                         <!-- Tags dinámicos -->
                                     </div>
+                                    <small class="info-note" style="display: block; margin-top: 8px; font-size: 12px; color: #6b7280;">
+                                        <i class="bi bi-info-circle"></i> Los insumos seleccionados se descuentan automáticamente del stock al guardar la consulta.
+                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -924,10 +871,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             </div>
-            <div class="vet-modal-footer d-flex justify-content-end align-items-center">
-                <button type="submit" class="vet-btn vet-btn-primary" id="btnAgendarNuevaCita">
-                    <i class="bi bi-check-lg"></i> Guardar
-                </button>
+            <div class="vet-modal-footer d-flex justify-content-between align-items-center">
+                <div class="d-flex gap-2 align-items-center">
+                    <i class="bi bi-info-circle text-muted"></i>
+                    <small class="text-muted" id="estadoConsultaTexto">Pendiente de registrar uso de insumos</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="vet-btn vet-btn-grey" id="btnGuardarBorrador">
+                        <i class="bi bi-file-earmark"></i> Guardar borrador
+                    </button>
+                    <button type="button" class="vet-btn vet-btn-success" id="btnFinalizarConsulta">
+                        <i class="bi bi-check-circle"></i> Finalizar consulta
+                    </button>
+                </div>
             </div>
         </form>
     </div>
@@ -1116,8 +1072,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         <hr class="section-divider">
 
                         <div class="detail-section">
-                            <div class="detail-section-title">Insumos / Implementos</div>
-                            <input type="text" class="form-control" id="buscarInsumosCirugia" placeholder="Buscar insumo..." style="margin-bottom:8px;">
+                            <!-- ⭐ INSUMOS DEL SERVICIO DE CIRUGÍA (Solo lectura) -->
+                            <div id="insumosServicioCirugiaContainer" style="display: none; margin-bottom: 16px; padding: 12px; background: #f0f9ff; border: 1px solid #bfdbfe; border-radius: 6px;">
+                                <div style="font-weight: 600; font-size: 0.9rem; color: #1e40af; margin-bottom: 8px;">
+                                    <i class="bi bi-box-seam"></i> Insumos requeridos por la cirugía
+                                </div>
+                                <div id="insumosServicioCirugiaLista" style="font-size: 0.85rem; color: #1e3a8a;">
+                                    <!-- Se llena dinámicamente con JS -->
+                                </div>
+                                <small style="display: block; margin-top: 8px; font-size: 11px; color: #64748b;">
+                                    <i class="bi bi-info-circle"></i> Estos insumos están predefinidos en el catálogo del servicio.
+                                </small>
+                            </div>
+                            
+                            <div class="detail-section-title">Insumos Adicionales</div>
+                            <input type="text" class="form-control" id="buscarInsumosCirugia" placeholder="Buscar insumo adicional..." style="margin-bottom:8px;">
                             <div id="insumosCirugia" class="insumos-container"></div>
                             <input type="hidden" name="insumos_cirugia" id="insumosCirugiaHidden">
                             <small class="info-note">Nota: los insumos seleccionados se descuentan del stock.</small>
@@ -1226,6 +1195,9 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
+    </div> <!-- Cierre p-1-5 contenido -->
+</div> <!-- Cierre container-fluid -->
+
 {% endblock %}
 
 {% block extra_js %}
@@ -1239,6 +1211,9 @@ window.serviciosSeleccionadosArray = [];
 
 console.log('✅ Variables globales inicializadas');
 </script>
+
+<!-- ✅ Validador de Insumos (debe cargar PRIMERO) -->
+<script src="{% static 'js/utils/validator_insumos.js' %}"></script>
 
 <script src="{% static 'js/pacientes/hospitalizaciones.js' %}"></script>
 <script src="{% static 'js/base/modals_base.js' %}"></script>
@@ -1361,11 +1336,21 @@ function agregarServicio(id, nombre) {
         return;
     }
     
+    // Buscar el servicio completo para obtener sus insumos
+    const servicioCompleto = todosLosServicios.find(s => s.idServicio === id);
+    
     // Agregar al array
-    serviciosSeleccionadosArray.push({ id, nombre });
+    serviciosSeleccionadosArray.push({ 
+        id, 
+        nombre,
+        insumos: servicioCompleto?.insumos || []  // ⭐ Incluir insumos del servicio
+    });
     
     // Actualizar vista
     actualizarServiciosSeleccionados();
+    
+    // ⭐ Mostrar insumos del servicio
+    mostrarInsumosServicios();
     
     // Limpiar buscador
     buscarServicio.value = '';
@@ -1375,6 +1360,9 @@ function agregarServicio(id, nombre) {
 function eliminarServicio(id) {
     serviciosSeleccionadosArray = serviciosSeleccionadosArray.filter(s => s.id !== id);
     actualizarServiciosSeleccionados();
+    
+    // ⭐ Actualizar insumos del servicio
+    mostrarInsumosServicios();
 }
 
 function actualizarServiciosSeleccionados() {
@@ -1397,6 +1385,111 @@ function actualizarServiciosSeleccionados() {
             </span>
         `).join('');
     }
+}
+
+// ⭐ NUEVA FUNCIÓN: Mostrar insumos predefinidos de los servicios
+function mostrarInsumosServicios() {
+    const container = document.getElementById('insumosServicioContainer');
+    const lista = document.getElementById('insumosServicioLista');
+    
+    if (!container || !lista) return;
+    
+    // Recolectar todos los insumos de los servicios seleccionados
+    const insumosMap = new Map();
+    
+    serviciosSeleccionadosArray.forEach(servicio => {
+        if (servicio.insumos && servicio.insumos.length > 0) {
+            servicio.insumos.forEach(insumo => {
+                const key = insumo.id;
+                if (insumosMap.has(key)) {
+                    // Si ya existe, sumar la cantidad
+                    insumosMap.get(key).cantidad += insumo.cantidad;
+                } else {
+                    // Agregar nuevo
+                    insumosMap.set(key, { ...insumo });
+                }
+            });
+        }
+    });
+    
+    const insumosArray = Array.from(insumosMap.values());
+    
+    if (insumosArray.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    // Mostrar contenedor
+    container.style.display = 'block';
+    
+    // Generar HTML con mensajes mejorados
+    let html = '<div class="alert alert-info d-flex align-items-start mb-3" role="alert">';
+    html += '<i class="bi bi-info-circle-fill me-2 mt-1" style="font-size: 1.2rem;"></i>';
+    html += '<div>';
+    html += '<strong>Insumos médicos de los servicios seleccionados</strong><br>';
+    html += '<small class="text-muted">Estos medicamentos e insumos se utilizarán en la consulta</small>';
+    html += '</div>';
+    html += '</div>';
+    
+    html += '<ul class="list-group">';
+    
+    insumosArray.forEach(insumo => {
+        const stockSuficiente = insumo.stock_actual >= insumo.cantidad;
+        let iconoStock, claseStock, mensajeStock;
+        
+        if (stockSuficiente) {
+            iconoStock = '<i class="bi bi-check-circle-fill text-success"></i>';
+            claseStock = 'text-success';
+            mensajeStock = 'Disponible';
+        } else {
+            iconoStock = '<i class="bi bi-exclamation-triangle-fill text-danger"></i>';
+            claseStock = 'text-danger';
+            mensajeStock = 'Stock insuficiente - Verificar antes de proceder';
+        }
+        
+        html += `
+            <li class="list-group-item d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <strong>${insumo.nombre}</strong>
+                    <br>
+                    <small class="text-muted">
+                        Cantidad necesaria: ${insumo.cantidad} ${insumo.unidad_medida || ''}
+                    </small>
+                </div>
+                <div class="text-end ms-3" style="min-width: 140px;">
+                    ${iconoStock}
+                    <small class="d-block mt-1 ${claseStock}" style="font-weight: 500;">
+                        ${mensajeStock}
+                    </small>
+                    <small class="text-muted d-block">
+                        Stock: ${insumo.stock_actual} ${insumo.unidad_medida || ''}
+                    </small>
+                </div>
+            </li>
+        `;
+    });
+    
+    html += '</ul>';
+    lista.innerHTML = html;
+    
+    // Generar HTML de insumos
+    lista.innerHTML = insumosArray.map(insumo => {
+        const stockBajo = insumo.stock_actual < insumo.cantidad;
+        const stockClass = stockBajo ? 'text-danger' : 'text-success';
+        const stockIcon = stockBajo ? 'exclamation-triangle-fill' : 'check-circle-fill';
+        
+        return `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid #dbeafe; background: white; border-radius: 4px; margin-bottom: 4px;">
+                <div style="flex: 1;">
+                    <strong style="color: #1e3a8a;">${insumo.nombre}</strong>
+                    <small style="color: #64748b; margin-left: 8px;">× ${insumo.cantidad} ${insumo.unidad || 'unidad(es)'}</small>
+                </div>
+                <div class="${stockClass}" style="font-size: 0.85rem; font-weight: 600;">
+                    <i class="bi bi-${stockIcon}"></i> Stock: ${insumo.stock_actual}
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // Función para subir documento
@@ -1545,6 +1638,482 @@ function mostrarMensaje(mensaje, tipo) {
         alerta.remove();
     }, 5000);
 }
+
+/* ============================================================
+   CALCULADORA DE COSTOS DE CONSULTA
+   Calcula envases y costos según peso del paciente
+============================================================ */
+
+/**
+ * Calcular envases requeridos según formato del insumo
+ * Replica la lógica de calcular_envases_requeridos() del modelo Python
+ */
+function calcularEnvasesRequeridos(insumo, pesoPacienteKg, diasTratamiento = 1) {
+    const resultado = {
+        envases_requeridos: 1,
+        calculo_automatico: false,
+        detalle: '',
+        dosis_calculada: 0,
+        contenido_envase: 0
+    };
+
+    // Validar datos de entrada
+    if (!pesoPacienteKg || pesoPacienteKg <= 0) {
+        resultado.detalle = 'Peso del paciente no válido';
+        return resultado;
+    }
+
+    if (!insumo.formato) {
+        resultado.detalle = 'Formato no definido - requiere cálculo manual';
+        return resultado;
+    }
+
+    // PASO 1: Determinar CONTENIDO de 1 ENVASE según formato
+    let contenidoEnvase = null;
+    const formato = insumo.formato.toLowerCase();
+
+    if (formato === 'liquido' || formato === 'inyectable') {
+        if (insumo.ml_contenedor) {
+            contenidoEnvase = parseFloat(insumo.ml_contenedor);
+        }
+    } else if (formato === 'pastilla' || formato === 'comprimido' || formato === 'tableta') {
+        if (insumo.cantidad_pastillas) {
+            contenidoEnvase = parseFloat(insumo.cantidad_pastillas);
+        }
+    } else if (formato === 'pipeta') {
+        if (insumo.unidades_pipeta) {
+            contenidoEnvase = parseFloat(insumo.unidades_pipeta);
+        }
+    } else if (formato === 'polvo' || formato === 'crema' || formato === 'otro') {
+        if (insumo.ml_contenedor) {
+            contenidoEnvase = parseFloat(insumo.ml_contenedor);
+        }
+    }
+
+    if (!contenidoEnvase || contenidoEnvase <= 0) {
+        resultado.detalle = `Contenido del envase no definido para formato '${formato}'`;
+        return resultado;
+    }
+
+    resultado.contenido_envase = contenidoEnvase;
+
+    // PASO 2: Calcular DOSIS TOTAL requerida
+    let dosisTotal = 0;
+
+    if (formato === 'liquido' || formato === 'inyectable') {
+        if (!insumo.dosis_ml) {
+            resultado.detalle = 'Dosis (ml) no definida - requiere cálculo manual';
+            return resultado;
+        }
+
+        // Calcular dosis según peso
+        if (insumo.peso_kg && insumo.peso_kg > 0) {
+            // dosis_ml es "por X kg", calcular proporcionalmente
+            const factorPeso = pesoPacienteKg / parseFloat(insumo.peso_kg);
+            const dosisDiaria = parseFloat(insumo.dosis_ml) * factorPeso;
+            dosisTotal = dosisDiaria * diasTratamiento;
+        } else {
+            // dosis_ml es fija
+            const dosisDiaria = parseFloat(insumo.dosis_ml);
+            dosisTotal = dosisDiaria * diasTratamiento;
+        }
+    } else if (formato === 'pastilla' || formato === 'comprimido' || formato === 'tableta') {
+        // Si hay peso de referencia, ajustar
+        if (insumo.peso_kg && insumo.peso_kg > 0) {
+            // Verificar rango de peso si existe
+            if (insumo.tiene_rango_peso) {
+                if (insumo.peso_min_kg && pesoPacienteKg < parseFloat(insumo.peso_min_kg)) {
+                    resultado.detalle = `Peso del paciente (${pesoPacienteKg} kg) menor al mínimo recomendado (${insumo.peso_min_kg} kg)`;
+                    return resultado;
+                }
+                if (insumo.peso_max_kg && pesoPacienteKg > parseFloat(insumo.peso_max_kg)) {
+                    resultado.detalle = `Peso del paciente (${pesoPacienteKg} kg) mayor al máximo recomendado (${insumo.peso_max_kg} kg)`;
+                    return resultado;
+                }
+            }
+        }
+
+        // Asumir que cantidad_pastillas es la dosis diaria
+        const dosisDiaria = insumo.cantidad_pastillas ? parseFloat(insumo.cantidad_pastillas) : 1;
+        dosisTotal = dosisDiaria * diasTratamiento;
+    } else if (formato === 'pipeta') {
+        // Verificar rango de peso si existe
+        if (insumo.tiene_rango_peso) {
+            if (insumo.peso_min_kg && pesoPacienteKg < parseFloat(insumo.peso_min_kg)) {
+                resultado.detalle = `Peso del paciente (${pesoPacienteKg} kg) menor al mínimo recomendado (${insumo.peso_min_kg} kg)`;
+                return resultado;
+            }
+            if (insumo.peso_max_kg && pesoPacienteKg > parseFloat(insumo.peso_max_kg)) {
+                resultado.detalle = `Peso del paciente (${pesoPacienteKg} kg) mayor al máximo recomendado (${insumo.peso_max_kg} kg)`;
+                return resultado;
+            }
+        }
+
+        // Pipetas: típicamente 1 unidad por aplicación
+        dosisTotal = 1 * diasTratamiento;
+    } else {
+        // Para otros formatos: usar dosis_ml como referencia
+        if (insumo.dosis_ml) {
+            const dosisDiaria = parseFloat(insumo.dosis_ml);
+            dosisTotal = dosisDiaria * diasTratamiento;
+        } else {
+            resultado.detalle = 'Dosis no definida para formato genérico - requiere cálculo manual';
+            return resultado;
+        }
+    }
+
+    resultado.dosis_calculada = dosisTotal;
+
+    // PASO 3: Calcular ENVASES REQUERIDOS (siempre redondear hacia arriba)
+    if (dosisTotal > 0 && contenidoEnvase > 0) {
+        const envasesCalculados = dosisTotal / contenidoEnvase;
+        const envasesRequeridos = Math.ceil(envasesCalculados); // SIEMPRE redondear hacia arriba
+
+        resultado.envases_requeridos = envasesRequeridos;
+        resultado.calculo_automatico = true;
+        resultado.detalle = `Dosis total: ${dosisTotal.toFixed(2)} unidades | Contenido por envase: ${contenidoEnvase.toFixed(2)} | Envases: ${envasesRequeridos} (calculado: ${envasesCalculados.toFixed(2)})`;
+    } else {
+        resultado.detalle = 'No se pudo calcular automáticamente - valores insuficientes';
+    }
+
+    return resultado;
+}
+
+/**
+ * Obtener todos los insumos usados (servicio + adicionales)
+ * MEJORADO: Usa datos disponibles incluso si medicamentosDisponibles no está cargado
+ */
+function obtenerInsumosUsados() {
+    const insumosUsados = [];
+
+    // 1. Obtener insumos de los servicios seleccionados
+    if (window.serviciosSeleccionadosArray && window.serviciosSeleccionadosArray.length > 0) {
+        const pesoInput = document.getElementById('pesoConsulta');
+        const pesoPaciente = pesoInput && pesoInput.value ? parseFloat(pesoInput.value) : null;
+        
+        window.serviciosSeleccionadosArray.forEach(servicio => {
+            if (servicio.insumos && servicio.insumos.length > 0) {
+                servicio.insumos.forEach(insumoServicio => {
+                    // Intentar buscar el insumo completo en medicamentosDisponibles
+                    let insumoCompleto = null;
+                    if (typeof medicamentosDisponibles !== 'undefined' && medicamentosDisponibles.length > 0) {
+                        insumoCompleto = medicamentosDisponibles.find(m => m.id === insumoServicio.id);
+                    }
+                    
+                    // Si no está disponible, usar los datos del servicio
+                    if (!insumoCompleto) {
+                        insumoCompleto = insumoServicio;
+                    }
+                    
+                    if (insumoCompleto) {
+                        // Calcular dosis para insumos de servicio
+                        let dosisCalculadaTexto = null;
+                        if (pesoPaciente && pesoPaciente > 0) {
+                            const resultado = calcularEnvasesRequeridos(insumoCompleto, pesoPaciente, 1);
+                            if (resultado && resultado.dosis_calculada) {
+                                const unidad = resultado.detalle?.unidad_dosis || 'unidades';
+                                const unidadEnvase = resultado.detalle?.unidad_envase || 'envase';
+                                const envases = resultado.envases_requeridos;
+                                dosisCalculadaTexto = `${resultado.dosis_calculada.toFixed(2)} ${unidad} (${envases} ${unidadEnvase}${envases !== 1 ? 's' : ''})`;
+                            }
+                        }
+                        
+                        insumosUsados.push({
+                            origen: 'servicio',
+                            servicio_nombre: servicio.nombre,
+                            insumo: insumoCompleto,
+                            cantidad_servicio: insumoServicio.cantidad || 1,
+                            dosis_calculada: dosisCalculadaTexto
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    // 2. Obtener insumos adicionales seleccionados manualmente
+    if (window.medicamentosSeleccionados && window.medicamentosSeleccionados.length > 0) {
+        window.medicamentosSeleccionados.forEach(medSel => {
+            let insumoCompleto = null;
+            
+            // Intentar buscar el insumo completo en medicamentosDisponibles
+            if (typeof medicamentosDisponibles !== 'undefined' && medicamentosDisponibles.length > 0) {
+                insumoCompleto = medicamentosDisponibles.find(m => m.id === medSel.id);
+            }
+            
+            // Si no está disponible, construir objeto con los datos que tenemos
+            if (!insumoCompleto) {
+                insumoCompleto = {
+                    id: medSel.id,
+                    nombre: medSel.nombre,
+                    formato: medSel.formato,
+                    precio_venta: 0, // No tenemos el precio, usar 0
+                    // Intentar reconstruir otros datos si están disponibles
+                    dosis_ml: medSel.dosis_base,
+                    peso_kg: medSel.peso_referencia
+                };
+            }
+            
+            if (insumoCompleto) {
+                insumosUsados.push({
+                    origen: 'adicional',
+                    insumo: insumoCompleto,
+                    peso_usado: medSel.peso || medSel.peso_paciente,
+                    dosis_calculada: medSel.dosis
+                });
+            }
+        });
+    }
+
+    return insumosUsados;
+}
+
+/**
+ * Calcular y mostrar el valor total de la consulta en consola
+ */
+function calcularYMostrarTotalConsulta() {
+    console.log('');
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('🧾 DETALLE INSUMOS CONSULTA');
+    console.log('═══════════════════════════════════════════════════════════');
+
+    // Obtener peso del paciente
+    const pesoInput = document.getElementById('pesoConsulta');
+    const pesoPaciente = pesoInput && pesoInput.value ? parseFloat(pesoInput.value) : null;
+
+    if (!pesoPaciente || pesoPaciente <= 0) {
+        console.warn('⚠️ No se pudo obtener el peso del paciente para el cálculo');
+        console.log('');
+        return;
+    }
+
+    console.log(`🐾 Peso del paciente: ${pesoPaciente} kg`);
+    console.log('');
+
+    // ===== SECCIÓN 1: INSUMOS =====
+    const insumosUsados = obtenerInsumosUsados();
+    let totalInsumos = 0;
+
+    if (insumosUsados.length === 0) {
+        console.log('💊 No hay insumos seleccionados');
+        console.log('');
+    } else {
+        console.log('💊 INSUMOS UTILIZADOS:');
+        console.log('────────────────────────────────────────────────────────────');
+        
+        insumosUsados.forEach((item, index) => {
+            const insumo = item.insumo;
+            
+            // USAR DIRECTAMENTE la dosis ya calculada (ej: "17 pipetas (4 cajas)")
+            let dosisTexto = item.dosis_calculada || 'Dosis no calculada';
+            let dosisTotal = 1;
+            let unidad = 'unidades';
+            let envases = 1;
+            
+            // Solo parsear si existe, para extraer valores numéricos (NO para recalcular)
+            if (item.dosis_calculada) {
+                const match = item.dosis_calculada.match(/^([\d.]+)\s+(\w+)(?:\s+\((\d+)\s+(?:envase|caja|frasco|ampolla)s?\))?/i);
+                if (match) {
+                    dosisTotal = parseFloat(match[1]);
+                    unidad = match[2];
+                    if (match[3]) {
+                        envases = parseInt(match[3]);
+                    }
+                }
+            }
+
+            // OBTENER PRECIO del inventario
+            let precioUnitario = 0;
+            
+            // Primero intentar del objeto insumo
+            if (insumo.precio_venta) {
+                precioUnitario = Number(insumo.precio_venta) || 0;
+            }
+            
+            // Si no, buscar en medicamentosDisponibles
+            if (precioUnitario === 0 && typeof medicamentosDisponibles !== 'undefined') {
+                const insumoInventario = medicamentosDisponibles.find(m => 
+                    m.id === insumo.id || m.idInventario === insumo.id
+                );
+                if (insumoInventario && insumoInventario.precio_venta) {
+                    precioUnitario = Number(insumoInventario.precio_venta) || 0;
+                }
+            }
+
+            // CALCULAR SUBTOTAL
+            const subtotal = envases * precioUnitario;
+            totalInsumos += subtotal;
+
+            // OBTENER CONTENIDO POR ENVASE (solo para mostrar, no para calcular)
+            const formato = insumo.formato ? insumo.formato.toLowerCase() : '';
+            let contenidoPorEnvase = null;
+            
+            if (formato === 'liquido' || formato === 'inyectable') {
+                contenidoPorEnvase = insumo.ml_contenedor ? Number(insumo.ml_contenedor) : null;
+            } else if (formato === 'pastilla' || formato === 'comprimido' || formato === 'tableta') {
+                contenidoPorEnvase = insumo.cantidad_pastillas ? Number(insumo.cantidad_pastillas) : null;
+            } else if (formato === 'pipeta') {
+                contenidoPorEnvase = insumo.unidades_pipeta ? Number(insumo.unidades_pipeta) : null;
+            }
+
+            // MOSTRAR EN CONSOLA (usando dosis calculada directamente)
+            console.log(`- ${insumo.nombre}`);
+            console.log(`  Formato: ${insumo.formato || 'N/A'}`);
+            console.log(`  Dosis calculada: ${dosisTexto}`);
+            console.log(`  Precio unitario: $${precioUnitario.toFixed(0)}`);
+            console.log(`  Subtotal: $${subtotal.toFixed(0)}`);
+            console.log('');
+        });
+
+        console.log('💰 TOTAL INSUMOS: $' + totalInsumos.toFixed(0));
+        console.log('');
+    }
+
+    // ===== SECCIÓN 2: SERVICIOS =====
+    let totalServicios = 0;
+    let serviciosDetectados = [];
+
+    // Intentar detectar servicios desde múltiples fuentes
+    if (window.serviciosSeleccionadosArray && window.serviciosSeleccionadosArray.length > 0) {
+        serviciosDetectados = window.serviciosSeleccionadosArray;
+    } else {
+        // Intentar obtener desde el formulario
+        const serviciosIdsInput = document.getElementById('serviciosIds');
+        if (serviciosIdsInput && serviciosIdsInput.value) {
+            const idsArray = serviciosIdsInput.value.split(',').filter(id => id.trim());
+            if (idsArray.length > 0 && window.todosLosServicios) {
+                serviciosDetectados = idsArray.map(id => {
+                    const servicioCompleto = window.todosLosServicios.find(s => s.idServicio == id);
+                    return servicioCompleto ? { 
+                        id: servicioCompleto.idServicio, 
+                        nombre: servicioCompleto.nombre 
+                    } : null;
+                }).filter(s => s !== null);
+            }
+        }
+    }
+
+    if (serviciosDetectados.length === 0) {
+        console.log('🏥 No hay servicios seleccionados');
+        console.log('');
+    } else {
+        console.log('🏥 SERVICIOS:');
+        console.log('────────────────────────────────────────────────────────────');
+        
+        serviciosDetectados.forEach((servicio, index) => {
+            let precio = 0;
+            
+            // Intentar obtener precio del servicio completo
+            if (window.todosLosServicios && window.todosLosServicios.length > 0) {
+                const servicioCompleto = window.todosLosServicios.find(s => 
+                    s.idServicio === servicio.id || s.idServicio == servicio.id
+                );
+                precio = servicioCompleto && servicioCompleto.precio ? parseFloat(servicioCompleto.precio) : 0;
+            }
+            
+            console.log(`- ${servicio.nombre}: $${precio.toFixed(0)}`);
+            totalServicios += precio;
+        });
+
+        console.log('');
+        console.log('💰 TOTAL SERVICIOS: $' + totalServicios.toFixed(0));
+        console.log('');
+    }
+
+    // ===== TOTAL FINAL =====
+    const totalFinal = totalInsumos + totalServicios;
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('🎯 TOTAL FINAL CONSULTA: $' + totalFinal.toFixed(0));
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('');
+}
+
+// Agregar el cálculo al evento de los botones de guardar
+document.addEventListener('DOMContentLoaded', function() {
+    const btnGuardarBorrador = document.getElementById('btnGuardarBorrador');
+    const btnFinalizarConsulta = document.getElementById('btnFinalizarConsulta');
+
+    // Agregar listener al botón de guardar borrador
+    if (btnGuardarBorrador) {
+        btnGuardarBorrador.addEventListener('click', function() {
+            console.log('📝 Guardando borrador - Calculando costos...');
+            setTimeout(() => calcularYMostrarTotalConsulta(), 100);
+        });
+    }
+
+    // Agregar listener al botón de finalizar consulta
+    if (btnFinalizarConsulta) {
+        btnFinalizarConsulta.addEventListener('click', function() {
+            console.log('✅ Finalizando consulta - Calculando costos...');
+            setTimeout(() => calcularYMostrarTotalConsulta(), 100);
+        });
+    }
+});
 </script>
+
+<script>
+// ⭐ NUEVA FUNCIONALIDAD: Cargar historial de registros dinámicamente
+let historialRegistrosCargado = false;
+
+function cargarHistorialRegistros() {
+    // Si ya se cargó, no hacer nada
+    if (historialRegistrosCargado) {
+        return;
+    }
+    
+    // Obtener el ID del paciente
+    const pacienteId = {{ paciente.id }};
+    
+    // Mostrar loader
+    document.getElementById('historial-registros-loader').style.display = 'block';
+    document.getElementById('historial-registros-contenido').style.display = 'none';
+    
+    // Llamada AJAX al endpoint de historial
+    fetch(`/historial/paciente/${pacienteId}/`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.text();
+        })
+        .then(html => {
+            // Insertar el HTML en el contenedor
+            document.getElementById('historial-registros-contenido').innerHTML = html;
+            
+            // Ocultar loader y mostrar contenido
+            document.getElementById('historial-registros-loader').style.display = 'none';
+            document.getElementById('historial-registros-contenido').style.display = 'block';
+            
+            // Marcar como cargado
+            historialRegistrosCargado = true;
+        })
+        .catch(error => {
+            console.error('Error al cargar historial de registros:', error);
+            document.getElementById('historial-registros-loader').innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Error al cargar historial:</strong> ${error.message}
+                    <br><small>Por favor, recarga la página e intenta nuevamente.</small>
+                </div>
+            `;
+        });
+}
+</script>
+
+<style>
+/* Estilos para el spinner de carga del historial */
+#historial-registros-loader .spinner-border {
+    color: #afe1af !important;
+}
+
+.historial-registros-container {
+    background: white;
+    border-radius: 8px;
+}
+</style>
 
 {% endblock %}

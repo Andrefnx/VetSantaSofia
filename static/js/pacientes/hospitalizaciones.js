@@ -100,6 +100,9 @@ const hospitalizacionesManager = {
 
                 if (duracionInput) duracionInput.value = opt.dataset.duracion || '';
                 if (descripcionInput) descripcionInput.value = opt.dataset.descripcion || '';
+                
+                // ⭐ Mostrar insumos del servicio de cirugía
+                this.mostrarInsumosServicioCirugia(selectServicio.value);
             });
 
             formCirugia.addEventListener('submit', (e) => {
@@ -423,6 +426,74 @@ const hospitalizacionesManager = {
 
         const buscador = document.getElementById('buscarInsumosCirugia');
         this.renderInsumosSelect(buscador ? buscador.value : '');
+    },
+
+    mostrarInsumosServicioCirugia(servicioId) {
+        const container = document.getElementById('insumosServicioCirugiaContainer');
+        if (!container) return;
+
+        // Si no hay servicio seleccionado, ocultar
+        if (!servicioId) {
+            container.style.display = 'none';
+            return;
+        }
+
+        // Buscar el servicio en this.serviciosCirugia
+        const servicio = this.serviciosCirugia.find(s => String(s.id) === String(servicioId));
+        if (!servicio || !servicio.insumos || servicio.insumos.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+
+        // Construir HTML con los insumos del servicio
+        let html = '<div class="alert alert-info d-flex align-items-start mb-3" role="alert">';
+        html += '<i class="bi bi-info-circle-fill me-2 mt-1" style="font-size: 1.2rem;"></i>';
+        html += '<div>';
+        html += '<strong>Insumos quirúrgicos necesarios</strong><br>';
+        html += '<small class="text-muted">Verificar disponibilidad antes de programar la cirugía</small>';
+        html += '</div>';
+        html += '</div>';
+        html += '<ul class="list-group mb-3">';
+
+        servicio.insumos.forEach(insumo => {
+            const stockSuficiente = insumo.stock_actual >= insumo.cantidad;
+            let iconoStock, claseStock, mensajeStock;
+            
+            if (stockSuficiente) {
+                iconoStock = '<i class="bi bi-check-circle-fill text-success"></i>';
+                claseStock = 'text-success';
+                mensajeStock = '✓ Disponible';
+            } else {
+                iconoStock = '<i class="bi bi-exclamation-triangle-fill text-danger"></i>';
+                claseStock = 'text-danger';
+                mensajeStock = '⚠ STOCK INSUFICIENTE';
+            }
+            
+            html += `
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <strong>${insumo.nombre}</strong>
+                        <br>
+                        <small class="text-muted">
+                            Cantidad necesaria: ${insumo.cantidad} ${insumo.unidad_medida || ''}
+                        </small>
+                    </div>
+                    <div class="text-end ms-3" style="min-width: 160px;">
+                        ${iconoStock}
+                        <small class="d-block mt-1 ${claseStock}" style="font-weight: 500;">
+                            ${mensajeStock}
+                        </small>
+                        <small class="text-muted d-block">
+                            Stock actual: ${insumo.stock_actual} ${insumo.unidad_medida || ''}
+                        </small>
+                    </div>
+                </li>
+            `;
+        });
+
+        html += '</ul>';
+        container.innerHTML = html;
+        container.style.display = 'block';
     },
 
     renderEquipoSelect(filtro = '') {
@@ -758,6 +829,20 @@ const hospitalizacionesManager = {
                         }
                     });
                     
+                    // ⭐ Badge de estado de insumos mejorado
+                    let estadoInsumosHTML = '';
+                    if (hosp.insumos_descontados) {
+                        estadoInsumosHTML = `<div style="margin-top:8px; padding:8px 12px; background:#d1fae5; border:1px solid #86efac; border-radius:6px; font-size:12px; color:#065f46; display:flex; align-items:center; gap:8px;">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span><strong>✓ Medicamentos e insumos registrados en inventario</strong></span>
+                        </div>`;
+                    } else if (todosInsumos.length > 0) {
+                        estadoInsumosHTML = `<div style="margin-top:8px; padding:8px 12px; background:#fef3c7; border:1px solid #fde047; border-radius:6px; font-size:12px; color:#78350f; display:flex; align-items:center; gap:8px;">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span><strong>⚠ Pendiente: Registrar uso de insumos en inventario</strong></span>
+                        </div>`;
+                    }
+                    
                     htmlIzquierda += `
                         <div style="padding:10px 0; margin-bottom:10px; border-bottom:1px solid #e5e7eb;">
                             <h6 style="margin:0 0 8px 0; font-size:14px; font-weight:600; color:#111;"><i class="bi bi-box-seam" style="font-size:13px;"></i> Insumos utilizados</h6>
@@ -768,6 +853,7 @@ const hospitalizacionesManager = {
                                     <strong style="color:#111;">${ins.nombre || 'Insumo'}</strong>${dosis ? ` | <span style="color:#16a34a;">${dosis}</span>` : ''}${count > 1 ? ` | <span style="color:#6b7280;">(x${count})</span>` : ''}
                                 </div>`;
                             }).join('')}
+                            ${estadoInsumosHTML}
                         </div>
                     `;
                 }
@@ -922,7 +1008,15 @@ const hospitalizacionesManager = {
     async guardarCirugia(e) {
         e.preventDefault();
         const form = e.target;
+        const submitButton = form.querySelector('button[type="submit"]');
         const hospId = document.getElementById('cirugiaModal').dataset.hospId;
+        
+        // ✅ VALIDACIÓN CENTRALIZADA: verificar si el formulario ya fue enviado
+        if (window.ValidadorInsumos && window.ValidadorInsumos.formularioYaEnviado(form)) {
+            window.ValidadorInsumos.mostrarAlerta('Esta cirugía ya está siendo procesada.', 'ya_procesando');
+            return;
+        }
+        
         const formData = new FormData(form);
 
         // ⚠️ asegúrate que tu <select> tenga name="servicio_cirugia"
@@ -945,6 +1039,12 @@ const hospitalizacionesManager = {
         // Equipo seleccionado
         const equipoHidden = document.getElementById('equipoCirugiaHidden');
         const equipoSeleccionado = equipoHidden ? equipoHidden.value.split(',').filter(Boolean) : [];
+
+        // ✅ BLOQUEAR BOTÓN durante procesamiento
+        if (window.ValidadorInsumos && submitButton) {
+            window.ValidadorInsumos.bloquearBoton(submitButton);
+            window.ValidadorInsumos.marcarFormularioEnviado(form);
+        }
 
         try {
             const response = await fetch(`/clinica/hospitalizacion/${hospId}/cirugia/crear/`, {
@@ -969,6 +1069,11 @@ const hospitalizacionesManager = {
 
             const data = await response.json();
             if (data.success) {
+                // ✅ DESBLOQUEAR BOTÓN con éxito
+                if (window.ValidadorInsumos && submitButton) {
+                    window.ValidadorInsumos.desbloquearBoton(submitButton, true);
+                }
+                
                 alert('Cirugía registrada');
                 const modal = document.getElementById('cirugiaModal');
                 modal.classList.remove('show');
@@ -993,10 +1098,23 @@ const hospitalizacionesManager = {
                 
                 this.cargarHospitalizaciones();
             } else {
+                // ✅ DESBLOQUEAR BOTÓN y resetear formulario en caso de error
+                if (window.ValidadorInsumos) {
+                    if (submitButton) window.ValidadorInsumos.desbloquearBoton(submitButton, false);
+                    window.ValidadorInsumos.resetearFormulario(form);
+                }
+                
                 alert('Error: ' + data.error);
             }
         } catch (error) {
             console.error('Error:', error);
+            
+            // ✅ DESBLOQUEAR BOTÓN y resetear formulario en caso de error de red
+            if (window.ValidadorInsumos) {
+                if (submitButton) window.ValidadorInsumos.desbloquearBoton(submitButton, false);
+                window.ValidadorInsumos.resetearFormulario(form);
+            }
+            
             alert('Error al guardar cirugía');
         }
     },
@@ -1043,8 +1161,22 @@ const hospitalizacionesManager = {
     async guardarAlta(e) {
         e.preventDefault();
         const form = e.target;
+        const submitButton = form.querySelector('button[type="submit"]');
         const hospId = document.getElementById('altaMedicaModal').dataset.hospId;
+        
+        // ✅ VALIDACIÓN CENTRALIZADA: verificar si el formulario ya fue enviado
+        if (window.ValidadorInsumos && window.ValidadorInsumos.formularioYaEnviado(form)) {
+            window.ValidadorInsumos.mostrarAlerta('Esta alta médica ya está siendo procesada.', 'ya_procesando');
+            return;
+        }
+        
         const formData = new FormData(form);
+
+        // ✅ BLOQUEAR BOTÓN durante procesamiento
+        if (window.ValidadorInsumos && submitButton) {
+            window.ValidadorInsumos.bloquearBoton(submitButton);
+            window.ValidadorInsumos.marcarFormularioEnviado(form);
+        }
 
         try {
             const response = await fetch(`/clinica/hospitalizacion/${hospId}/alta/crear/`, {
@@ -1063,6 +1195,11 @@ const hospitalizacionesManager = {
 
             const data = await response.json();
             if (data.success) {
+                // ✅ DESBLOQUEAR BOTÓN con éxito
+                if (window.ValidadorInsumos && submitButton) {
+                    window.ValidadorInsumos.desbloquearBoton(submitButton, true);
+                }
+                
                 alert('Alta médica completada');
                 const modal = document.getElementById('altaMedicaModal');
                 modal.classList.remove('show');
@@ -1070,10 +1207,23 @@ const hospitalizacionesManager = {
                 form.reset();
                 this.cargarHospitalizaciones();
             } else {
+                // ✅ DESBLOQUEAR BOTÓN y resetear formulario en caso de error
+                if (window.ValidadorInsumos) {
+                    if (submitButton) window.ValidadorInsumos.desbloquearBoton(submitButton, false);
+                    window.ValidadorInsumos.resetearFormulario(form);
+                }
+                
                 alert('Error: ' + data.error);
             }
         } catch (error) {
             console.error('Error:', error);
+            
+            // ✅ DESBLOQUEAR BOTÓN y resetear formulario en caso de error de red
+            if (window.ValidadorInsumos) {
+                if (submitButton) window.ValidadorInsumos.desbloquearBoton(submitButton, false);
+                window.ValidadorInsumos.resetearFormulario(form);
+            }
+            
             alert('Error al completar alta');
         }
     },

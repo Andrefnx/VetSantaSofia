@@ -14,6 +14,147 @@ import json
 import sys
 import os
 
+# ============================================================
+# FUNCIÓN CENTRALIZADA: DESCUENTO DE INSUMOS
+# ============================================================
+def descontar_insumos_consulta(consulta, user):
+    """
+    Descuenta los insumos de una consulta del inventario.
+    
+    Esta función:
+    - Valida que no se haya descontado previamente (insumos_descontados)
+    - Descuenta insumos desde Servicio → ServicioInsumo → Insumo
+    - Descuenta insumos manuales asociados mediante MedicamentoUtilizado
+    - Guarda movimientos de stock en el historial
+    - Marca consulta.insumos_descontados = True
+    
+    Args:
+        consulta: Instancia de Consulta
+        user: Usuario que realiza la operación
+    
+    Returns:
+        dict con resultado: {'success': bool, 'message': str, 'detalles': dict}
+    
+    Raises:
+        ValidationError: Si el stock es insuficiente
+        Exception: Otros errores
+    """
+    from .services.inventario_service import validate_stock_for_services, discount_stock_for_services
+    from inventario.models import Insumo
+    
+    print('=' * 60)
+    print('🔵 DESCUENTO DE INSUMOS - INICIO')
+    print('=' * 60)
+    print(f'📋 Consulta ID: {consulta.id}')
+    print(f'🐾 Paciente: {consulta.paciente.nombre}')
+    print(f'📍 Estado actual insumos_descontados: {consulta.insumos_descontados}')
+    
+    # ⭐ VALIDACIÓN: Evitar doble descuento
+    if consulta.insumos_descontados:
+        print('⚠️ Los insumos ya fueron descontados previamente')
+        return {
+            'success': False,
+            'error': 'ya_descontado',
+            'message': '🔒 Los insumos de esta consulta ya fueron descontados del inventario.'
+        }
+    
+    insumos_procesados = []
+    
+    # ============================================================
+    # PASO 1: DESCONTAR INSUMOS DE SERVICIOS
+    # ============================================================
+    servicios = consulta.servicios.all()
+    if servicios.exists():
+        print(f'\n📦 PROCESANDO SERVICIOS ({servicios.count()})')
+        print('-' * 60)
+        
+        try:
+            # Validar stock disponible
+            print('🔍 Validando disponibilidad de stock...')
+            validate_stock_for_services(servicios)
+            print('✅ Stock suficiente para todos los servicios')
+            
+            # Descontar inventario
+            print('📉 Descontando insumos de servicios...')
+            resultado = discount_stock_for_services(
+                services=servicios,
+                user=user,
+                origen_obj=consulta
+            )
+            
+            print(f'✅ {resultado["total_items"]} insumos descontados desde servicios')
+            for item in resultado['insumos_descontados']:
+                print(f'  - {item["medicamento"]}: {item["cantidad_descontada"]} unidades')
+                insumos_procesados.append(item)
+                
+        except ValidationError as ve:
+            print(f'❌ ERROR: Stock insuficiente')
+            print(f'   Detalle: {str(ve)}')
+            raise ve  # Re-lanzar para manejo en vista
+    else:
+        print('\nℹ️ No hay servicios asociados a esta consulta')
+    
+    # ============================================================
+    # PASO 2: DESCONTAR INSUMOS MANUALES (MedicamentoUtilizado)
+    # ============================================================
+    medicamentos = consulta.medicamentos_detalle.filter(inventario_id__isnull=False)
+    if medicamentos.exists():
+        print(f'\n💊 PROCESANDO MEDICAMENTOS MANUALES ({medicamentos.count()})')
+        print('-' * 60)
+        
+        for med in medicamentos:
+            try:
+                insumo = Insumo.objects.get(idInventario=med.inventario_id)
+                
+                # Validar stock
+                if insumo.stock_actual <= 0:
+                    raise ValidationError(
+                        f"Stock insuficiente para {insumo.medicamento}. "
+                        f"Stock actual: {insumo.stock_actual}"
+                    )
+                
+                # Descontar 1 unidad
+                insumo.stock_actual -= 1
+                insumo.save(update_fields=['stock_actual'])
+                
+                print(f'✅ {insumo.medicamento}: descontada 1 unidad (stock: {insumo.stock_actual + 1} → {insumo.stock_actual})')
+                
+                insumos_procesados.append({
+                    'medicamento': insumo.medicamento,
+                    'cantidad_descontada': 1,
+                    'stock_anterior': insumo.stock_actual + 1,
+                    'stock_actual': insumo.stock_actual
+                })
+                
+            except Insumo.DoesNotExist:
+                print(f'⚠️ Insumo con ID {med.inventario_id} no encontrado en inventario')
+            except Exception as e:
+                print(f'❌ Error al descontar {med.nombre}: {str(e)}')
+                raise e
+    else:
+        print('\nℹ️ No hay medicamentos manuales con inventario_id')
+    
+    # ============================================================
+    # PASO 3: MARCAR CONSULTA COMO PROCESADA
+    # ============================================================
+    consulta.insumos_descontados = True
+    consulta.save(update_fields=['insumos_descontados'])
+    print(f'\n✅ Flag insumos_descontados actualizado a True')
+    
+    print('=' * 60)
+    print('✅ DESCUENTO DE INSUMOS - COMPLETADO')
+    print(f'📊 Total de insumos procesados: {len(insumos_procesados)}')
+    print('=' * 60)
+    
+    return {
+        'success': True,
+        'message': '✅ Insumos descontados correctamente del inventario',
+        'detalles': {
+            'total_items': len(insumos_procesados),
+            'insumos_descontados': insumos_procesados
+        }
+    }
+
 # Helper: normalize event datetime for sorting
 def _normalize_event_dt(obj):
     """Return a timezone-aware datetime for either Consulta or Cita.
@@ -102,7 +243,7 @@ def ficha_paciente(request, paciente_id):
         Cita.objects.filter(paciente=paciente, fecha__gte=hoy)
         .exclude(estado__in=['completada', 'realizada'])
         .select_related('veterinario', 'servicio')
-        .order_by('fecha', 'hora_inicio')
+        .order_by('-fecha', '-hora_inicio')  # Orden descendente para mostrar más recientes primero
     )
     print(f"\n📊 Citas filtradas (fecha__gte={hoy}): {citas_agendadas.count()}", file=sys.stderr)
     
@@ -121,9 +262,11 @@ def ficha_paciente(request, paciente_id):
     
     print(f"{'='*80}\n", file=sys.stderr)
 
-    orden_timeline = request.GET.get('orden_timeline', 'desc').lower()
-    if orden_timeline not in ['asc', 'desc']:
-        orden_timeline = 'desc'
+    # FORZAR ORDEN DESCENDENTE SIEMPRE (más recientes primero)
+    orden_timeline = 'desc'
+    
+    print(f"\n🔍 DEBUG ORDEN: FORZADO A DESC - orden_timeline = '{orden_timeline}'", file=sys.stderr)
+    print(f"🔍 DEBUG ORDEN: reverse={orden_timeline == 'desc'}\n", file=sys.stderr)
 
     timeline_items = []
     for cita in citas_agendadas:
@@ -132,7 +275,7 @@ def ficha_paciente(request, paciente_id):
             'tipo': 'cita',
             'obj': cita,
             'fecha': event_dt.date(),
-            'sort_key': (event_dt.date(), event_dt.time()),
+            'sort_key': event_dt,
         })
 
     for consulta in consultas:
@@ -141,16 +284,19 @@ def ficha_paciente(request, paciente_id):
             'tipo': 'consulta',
             'obj': consulta,
             'fecha': event_dt.date(),
-            'sort_key': (event_dt.date(), event_dt.time()),
+            'sort_key': event_dt,
         })
 
-    timeline_items = sorted(timeline_items, key=lambda item: item['sort_key'], reverse=(orden_timeline == 'desc'))
-    try:
-        print(f"🔎 timeline_items count (ficha_paciente): {len(timeline_items)}", file=sys.stderr)
-        for i, it in enumerate(timeline_items[:5]):
-            print(f"   [{i}] tipo={it['tipo']} sort_key={it['sort_key'][0]} {it['sort_key'][1]}", file=sys.stderr)
-    except Exception:
-        pass
+    # ORDENAR DESCENDENTE (más recientes primero) con reverse=True  
+    timeline_items = sorted(timeline_items, key=lambda x: x['sort_key'], reverse=True)
+    
+    print(f"\n✅ ORDEN FINAL ficha_paciente (después de sorted reverse=True):", file=sys.stderr)
+    for i, it in enumerate(timeline_items):
+        obj = it['obj']
+        if it['tipo'] == 'cita':
+            print(f"   [{i+1}] CITA: {obj.fecha} {obj.hora_inicio}", file=sys.stderr)
+        else:
+            print(f"   [{i+1}] CONSULTA: {obj.fecha}", file=sys.stderr)
 
     context = {
         'paciente': paciente,
@@ -243,6 +389,9 @@ def crear_consulta(request, paciente_id):
         peso = data.get('peso')
         fc = data.get('frecuencia_cardiaca')
         fr = data.get('frecuencia_respiratoria')
+        finalizar = data.get('finalizar', False)  # ⭐ Nuevo parámetro
+        
+        print(f'🔄 Modo: {"FINALIZACIÓN (descontar insumos)" if finalizar else "BORRADOR (sin descuento)"}')
         
         # Determinar tipo de consulta basado en servicios seleccionados
         tipo_consulta = 'otros'  # Por defecto para múltiples servicios
@@ -333,9 +482,84 @@ def crear_consulta(request, paciente_id):
             except Exception as e:
                 print(f'  ❌ Error al guardar medicamento {med.get("nombre")}: {str(e)}')
 
-        # Si la consulta proviene de una cita, marcarla como completada
+        # ⭐ DESCUENTO DE INVENTARIO POR SERVICIOS (solo si finalizar=True)
+        # Descontar insumos del inventario según los servicios ejecutados
+        if finalizar and consulta.servicios.exists():
+            try:
+                from .services.inventario_service import validate_stock_for_services, discount_stock_for_services
+                
+                # ⭐ PASO 1: VALIDAR STOCK ANTES DE DESCONTAR
+                print(f'🔍 Validando disponibilidad de stock...')
+                servicios = consulta.servicios.all()
+                
+                try:
+                    validate_stock_for_services(servicios)
+                    print(f'  ✅ Stock suficiente para todos los insumos')
+                except ValidationError as stock_error:
+                    # Stock insuficiente detectado ANTES de descontar
+                    print(f'  ⚠️ Stock insuficiente detectado:')
+                    print(f'     {str(stock_error)}')
+                    
+                    consulta.delete()  # Revertir creación de consulta
+                    
+                    mensaje_error = (
+                        "⚠️ STOCK INSUFICIENTE\n\n"
+                        "No es posible finalizar esta consulta porque algunos insumos "
+                        "no tienen stock disponible:\n\n"
+                        f"{str(stock_error)}\n\n"
+                        "Opciones:\n"
+                        "• Guarde como BORRADOR y confirme más tarde\n"
+                        "• Registre nuevos ingresos de inventario\n"
+                        "• Modifique los servicios seleccionados"
+                    )
+                    
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'stock_insuficiente',
+                        'message': mensaje_error,
+                        'detalles': str(stock_error)
+                    }, status=400)
+                
+                # ⭐ PASO 2: DESCONTAR INVENTARIO (solo si validación pasó)
+                print(f'📦 Iniciando descuento de inventario para servicios...')
+                
+                resultado = discount_stock_for_services(
+                    services=servicios,
+                    user=request.user,
+                    origen_obj=consulta
+                )
+                
+                print(f'  ✅ Inventario descontado exitosamente')
+                print(f'  📊 Items descontados: {resultado["total_items"]}')
+                for item in resultado['insumos_descontados']:
+                    print(f'    - {item["medicamento"]}: {item["cantidad_descontada"]} unidades (quedan {item["stock_restante"]})')
+                
+            except ValidationError as ve:
+                # Si hay error de validación (backup por si acaso)
+                print(f'  ⚠️ Error de validación en inventario: {str(ve)}')
+                consulta.delete()  # Revertir creación de consulta
+                return JsonResponse({
+                    'success': False,
+                    'error': 'stock_insuficiente',
+                    'message': f'⚠️ Stock insuficiente\n\n{str(ve)}\n\nPor favor, verifique el inventario.',
+                    'detalles': str(ve)
+                }, status=400)
+            except Exception as e:
+                # Cualquier otro error en el descuento
+                print(f'  ❌ Error inesperado al descontar inventario: {str(e)}')
+                consulta.delete()  # Revertir creación de consulta
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error al procesar inventario: {str(e)}'
+                }, status=500)
+        elif not finalizar and consulta.servicios.exists():
+            print(f'  ℹ️ MODO BORRADOR: Servicios asociados pero NO se descuenta inventario')
+        else:
+            print(f'  ℹ️ No hay servicios asociados')
+        
+        # Si la consulta proviene de una cita, marcarla como completada (solo si finalizar=True)
         cita_id = data.get('cita_id')
-        if cita_id:
+        if cita_id and finalizar:
             try:
                 cita_relacionada = Cita.objects.get(id=cita_id, paciente=paciente)
                 cita_relacionada.estado = 'completada'
@@ -343,25 +567,207 @@ def crear_consulta(request, paciente_id):
                 print(f'  ✅ Cita {cita_id} marcada como completada')
             except Cita.DoesNotExist:
                 print(f'  ⚠️ Cita {cita_id} no encontrada para este paciente; no se actualiza estado')
+        elif cita_id and not finalizar:
+            print(f'  ℹ️ MODO BORRADOR: Cita {cita_id} NO se marca como completada')
         
         print('=' * 50)
         print(f'✅ CONSULTA CREADA EXITOSAMENTE')
         print(f'   ID: {consulta.id}')
+        print(f'   Modo: {"FINALIZADA" if finalizar else "BORRADOR"}')
         print(f'   Tipo: {consulta.tipo_consulta}')
         print(f'   Paciente: {paciente.nombre}')
         print(f'   Veterinario: {request.user.nombre} {request.user.apellido}')
         print(f'   Medicamentos guardados: {consulta.medicamentos_detalle.count()}')
+        print(f'   Insumos descontados: {consulta.insumos_descontados}')
         print('=' * 50)
+        
+        mensaje = 'Consulta finalizada exitosamente' if finalizar else 'Borrador de consulta guardado'
         
         return JsonResponse({
             'success': True,
-            'message': 'Consulta creada exitosamente',
-            'consulta_id': consulta.id
+            'message': mensaje,
+            'consulta_id': consulta.id,
+            'finalizada': finalizar,
+            'insumos_descontados': consulta.insumos_descontados
         })
         
     except Exception as e:
         print('=' * 50)
         print('❌ ERROR AL CREAR CONSULTA')
+        print('=' * 50)
+        print(f'Tipo de error: {type(e).__name__}')
+        print(f'Mensaje: {str(e)}')
+        import traceback
+        print('Traceback completo:')
+        traceback.print_exc()
+        print('=' * 50)
+        
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+@login_required
+@require_http_methods(["PUT"])
+def actualizar_consulta(request, consulta_id):
+    """
+    Actualiza una consulta existente (solo si es un borrador sin finalizar).
+    """
+    try:
+        print('=' * 50)
+        print('🔄 ACTUALIZANDO CONSULTA')
+        print('=' * 50)
+        
+        # Obtener la consulta
+        consulta = get_object_or_404(Consulta, id=consulta_id)
+        print(f'✅ Consulta encontrada: ID {consulta.id}')
+        print(f'   Paciente: {consulta.paciente.nombre}')
+        print(f'   Estado actual insumos_descontados: {consulta.insumos_descontados}')
+        
+        # ⭐ VALIDACIÓN CRÍTICA: No permitir edición de consultas finalizadas
+        if consulta.insumos_descontados:
+            print('🔒 Consulta ya finalizada - No se puede editar')
+            return JsonResponse({
+                'success': False,
+                'error': 'consulta_finalizada',
+                'message': '🔒 Esta consulta ya fue finalizada y no se puede modificar.\n\nLos insumos ya fueron descontados del inventario.'
+            }, status=403)
+        
+        # Parsear el body
+        try:
+            data = json.loads(request.body)
+            print(f'✅ JSON parseado correctamente')
+            print(f'📥 Datos recibidos: {json.dumps(data, indent=2, ensure_ascii=False)}')
+        except json.JSONDecodeError as e:
+            print(f'❌ Error al parsear JSON: {str(e)}')
+            return JsonResponse({
+                'success': False,
+                'error': f'JSON inválido: {str(e)}'
+            }, status=400)
+        
+        # Extraer parámetros
+        finalizar = data.get('finalizar', False)
+        print(f'🔄 Modo actualización: {"FINALIZACIÓN (descontar insumos)" if finalizar else "BORRADOR (sin descuento)"}')
+        
+        # Actualizar campos básicos
+        consulta.temperatura = data.get('temperatura') if data.get('temperatura') else None
+        consulta.peso = data.get('peso') if data.get('peso') else None
+        consulta.frecuencia_cardiaca = data.get('frecuencia_cardiaca') if data.get('frecuencia_cardiaca') else None
+        consulta.frecuencia_respiratoria = data.get('frecuencia_respiratoria') if data.get('frecuencia_respiratoria') else None
+        consulta.otros = data.get('otros', '')
+        consulta.diagnostico = data.get('diagnostico', '')
+        consulta.tratamiento = data.get('tratamiento', '')
+        consulta.notas = data.get('notas', '')
+        
+        print('✅ Campos básicos actualizados')
+        
+        # Actualizar peso del paciente si se proporcionó
+        peso = data.get('peso')
+        if peso:
+            try:
+                peso_float = float(peso)
+                consulta.paciente.ultimo_peso = peso_float
+                consulta.paciente.save()
+                print(f'✅ Peso del paciente actualizado: {peso_float} kg')
+            except (ValueError, TypeError) as e:
+                print(f'⚠️  Error al actualizar peso: {str(e)}')
+        
+        # Actualizar servicios
+        servicios_ids = data.get('servicios_ids', '')
+        if servicios_ids:
+            # Limpiar servicios existentes
+            consulta.servicios.clear()
+            print('🗑️ Servicios anteriores eliminados')
+            
+            # Agregar nuevos servicios
+            ids_list = servicios_ids.split(',')
+            for servicio_id in ids_list:
+                try:
+                    servicio = Servicio.objects.get(idServicio=servicio_id.strip())
+                    consulta.servicios.add(servicio)
+                    print(f'✅ Servicio agregado: {servicio.nombre}')
+                except Servicio.DoesNotExist:
+                    print(f'⚠️  Servicio no encontrado: {servicio_id}')
+        
+        # Actualizar medicamentos - Eliminar anteriores y crear nuevos
+        from .models import MedicamentoUtilizado
+        consulta.medicamentos_detalle.all().delete()
+        print('🗑️ Medicamentos anteriores eliminados')
+        
+        medicamentos = data.get('medicamentos', [])
+        print(f'💊 Medicamentos a guardar: {len(medicamentos)}')
+        
+        for med in medicamentos:
+            try:
+                MedicamentoUtilizado.objects.create(
+                    consulta=consulta,
+                    inventario_id=med.get('id'),
+                    nombre=med.get('nombre'),
+                    dosis=med.get('dosis', ''),
+                    peso_paciente=peso if peso else None
+                )
+                print(f'  ✅ Medicamento guardado: {med["nombre"]} - Dosis: {med.get("dosis", "Sin dosis")}')
+            except Exception as e:
+                print(f'  ❌ Error al guardar medicamento {med.get("nombre")}: {str(e)}')
+        
+        # ⭐ GUARDAR CAMBIOS BÁSICOS ANTES DEL DESCUENTO
+        consulta.save()
+        print('✅ Campos básicos guardados en BD')
+        
+        # ⭐ SI SE FINALIZA, DESCONTAR INSUMOS usando función centralizada
+        if finalizar:
+            print('🔄 Finalizando consulta - Llamando a descontar_insumos_consulta()')
+            resultado = descontar_insumos_consulta(consulta, request.user)
+            
+            if not resultado['success']:
+                # Error al descontar (stock insuficiente u otro)
+                error_code = resultado.get('error', 'error_desconocido')
+                
+                if error_code == 'stock_insuficiente':
+                    mensaje = (
+                        "⚠️ STOCK INSUFICIENTE\n\n"
+                        "No es posible finalizar esta consulta porque algunos insumos "
+                        "no tienen stock disponible:\n\n"
+                        f"{resultado['message']}\n\n"
+                        "Opciones:\n"
+                        "• Guarde como BORRADOR y confirme más tarde\n"
+                        "• Registre nuevos ingresos de inventario\n"
+                        "• Modifique los servicios seleccionados"
+                    )
+                else:
+                    mensaje = resultado['message']
+                
+                return JsonResponse({
+                    'success': False,
+                    'error': error_code,
+                    'message': mensaje
+                }, status=400)
+            
+            print('✅ Insumos descontados correctamente')
+        
+        # Verificar estado final
+        print(f'📊 Estado final - insumos_descontados: {consulta.insumos_descontados}')
+        
+        print('=' * 50)
+        print(f'✅ CONSULTA ACTUALIZADA EXITOSAMENTE')
+        print(f'   ID: {consulta.id}')
+        print(f'   Modo: {"FINALIZADA" if finalizar else "BORRADOR"}')
+        print(f'   Insumos descontados: {consulta.insumos_descontados}')
+        print('=' * 50)
+        
+        mensaje = 'Consulta actualizada y finalizada exitosamente' if finalizar else 'Borrador de consulta actualizado'
+        
+        return JsonResponse({
+            'success': True,
+            'message': mensaje,
+            'consulta_id': consulta.id,
+            'finalizada': finalizar,
+            'insumos_descontados': consulta.insumos_descontados
+        })
+        
+    except Exception as e:
+        print('=' * 50)
+        print('❌ ERROR AL ACTUALIZAR CONSULTA')
         print('=' * 50)
         print(f'Tipo de error: {type(e).__name__}')
         print(f'Mensaje: {str(e)}')
@@ -389,12 +795,23 @@ def detalle_consulta(request, paciente_id, consulta_id):
         for med_detalle in consulta.medicamentos_detalle.all():
             med_info = {
                 'nombre': med_detalle.nombre,
+                'inventario_id': med_detalle.inventario_id,  # ⭐ ID para reconstruir selección
             }
             if med_detalle.dosis:
                 med_info['dosis'] = med_detalle.dosis
+            if med_detalle.peso_paciente:
+                med_info['peso_paciente'] = str(med_detalle.peso_paciente)  # ⭐ Peso para recalcular dosis
             medicamentos.append(med_info)
         
         veterinario_nombre = f"{consulta.veterinario.nombre} {consulta.veterinario.apellido}".strip()
+        
+        # ⭐ Obtener servicios con sus IDs
+        servicios_lista = []
+        for servicio in consulta.servicios.all():
+            servicios_lista.append({
+                'id': servicio.idServicio,
+                'nombre': servicio.nombre
+            })
         
         data = {
             'success': True,
@@ -412,6 +829,8 @@ def detalle_consulta(request, paciente_id, consulta_id):
                 'tratamiento': consulta.tratamiento or '-',
                 'medicamentos': medicamentos,
                 'notas': consulta.notas or '-',
+                'insumos_descontados': consulta.insumos_descontados,
+                'servicios': servicios_lista,  # ⭐ Lista de servicios con IDs
             }
         }
         return JsonResponse(data)
@@ -420,6 +839,61 @@ def detalle_consulta(request, paciente_id, consulta_id):
     except Exception as e:
         print(f"Error en detalle_consulta: {str(e)}")
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def confirmar_consulta(request, consulta_id):
+    """
+    Confirma una consulta previamente guardada como borrador,
+    descontando los insumos del inventario usando la función centralizada.
+    """
+    try:
+        # Obtener la consulta
+        consulta = get_object_or_404(Consulta, id=consulta_id)
+        
+        # ⭐ Usar función centralizada para descontar insumos
+        resultado = descontar_insumos_consulta(consulta, request.user)
+        
+        if not resultado['success']:
+            # Error: ya descontado o validación falló
+            return JsonResponse({
+                'success': False,
+                'error': resultado.get('error', 'error_desconocido'),
+                'message': resultado['message']
+            }, status=400)
+        
+        # Éxito: insumos descontados correctamente
+        return JsonResponse({
+            'success': True,
+            'message': resultado['message'],
+            'consulta': {
+                'id': consulta.id,
+                'insumos_descontados': consulta.insumos_descontados
+            },
+            'detalles': resultado.get('detalles', {})
+        })
+        
+    except Consulta.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'not_found',
+            'message': 'Consulta no encontrada'
+        }, status=404)
+    except Exception as e:
+        print('=' * 50)
+        print('❌ ERROR AL CONFIRMAR CONSULTA')
+        print('=' * 50)
+        print(f'Tipo: {type(e).__name__}')
+        print(f'Mensaje: {str(e)}')
+        import traceback
+        traceback.print_exc()
+        print('=' * 50)
+        
+        return JsonResponse({
+            'success': False,
+            'error': 'error',
+            'message': f'Error al confirmar consulta: {str(e)}'
+        }, status=500)
 
 @login_required
 def guardar_consulta(request, paciente_id):
@@ -544,7 +1018,7 @@ def ficha_mascota(request, pk):
         Cita.objects.filter(paciente=paciente, fecha__gte=hoy)
         .exclude(estado__in=['completada', 'realizada'])
         .select_related('veterinario', 'servicio')
-        .order_by('fecha', 'hora_inicio')
+        .order_by('-fecha', '-hora_inicio')  # Orden descendente para mostrar más recientes primero
     )
 
     # Si el usuario es veterinario (y no administrador), solo mostrar sus citas agendadas
@@ -557,9 +1031,11 @@ def ficha_mascota(request, pk):
         print(f"###   Cita ID {cita.id}: {cita.fecha} {cita.hora_inicio} - Vet: {cita.veterinario.nombre}")
     print("###" + "="*77 + "\n", flush=True)
     
-    orden_timeline = request.GET.get('orden_timeline', 'desc').lower()
-    if orden_timeline not in ['asc', 'desc']:
-        orden_timeline = 'desc'
+    # FORZAR ORDEN DESCENDENTE SIEMPRE (más recientes primero)
+    orden_timeline = 'desc'
+    
+    print(f"\n🔍 DEBUG ORDEN: FORZADO A DESC - orden_timeline = '{orden_timeline}'", file=sys.stderr)
+    print(f"🔍 DEBUG ORDEN: reverse={orden_timeline == 'desc'}\n", file=sys.stderr)
 
     timeline_items = []
     for cita in citas_agendadas:
@@ -568,7 +1044,7 @@ def ficha_mascota(request, pk):
             'tipo': 'cita',
             'obj': cita,
             'fecha': event_dt.date(),
-            'sort_key': (event_dt.date(), event_dt.time()),
+            'sort_key': event_dt,
         })
 
     for consulta in consultas:
@@ -577,16 +1053,19 @@ def ficha_mascota(request, pk):
             'tipo': 'consulta',
             'obj': consulta,
             'fecha': event_dt.date(),
-            'sort_key': (event_dt.date(), event_dt.time()),
+            'sort_key': event_dt,
         })
 
-    timeline_items = sorted(timeline_items, key=lambda item: item['sort_key'], reverse=(orden_timeline == 'desc'))
-    try:
-        print(f"🔎 timeline_items count (ficha_mascota): {len(timeline_items)}", file=sys.stderr)
-        for i, it in enumerate(timeline_items[:5]):
-            print(f"   [{i}] tipo={it['tipo']} sort_key={it['sort_key'][0]} {it['sort_key'][1]}", file=sys.stderr)
-    except Exception:
-        pass
+    # ORDENAR DESCENDENTE (más recientes primero) con reverse=True
+    timeline_items = sorted(timeline_items, key=lambda x: x['sort_key'], reverse=True)
+    
+    print(f"\n✅ ORDEN FINAL ficha_mascota (después de sorted reverse=True):", file=sys.stderr)
+    for i, it in enumerate(timeline_items):
+        obj = it['obj']
+        if it['tipo'] == 'cita':
+            print(f"   [{i+1}] CITA: {obj.fecha} {obj.hora_inicio}", file=sys.stderr)
+        else:
+            print(f"   [{i+1}] CONSULTA: {obj.fecha}", file=sys.stderr)
 
     context = {
         'paciente': paciente,
@@ -607,26 +1086,49 @@ def ficha_mascota(request, pk):
 def obtener_servicios(request):
     """Retorna lista de servicios en formato JSON para cargar dinámicamente en consultas"""
     try:
+        from servicios.models import ServicioInsumo
+        
         categoria = request.GET.get('categoria')
         qs = Servicio.objects.all()
         if categoria:
             qs = qs.filter(categoria__iexact=categoria)
 
-        servicios_qs = qs.values('idServicio', 'nombre', 'categoria', 'duracion', 'descripcion').order_by('nombre')
-        servicios = [
-            {
-                **s,
-                # Alias para compatibilidad con el front
-                'descripcion_servicio': s.get('descripcion'),
-            }
-            for s in servicios_qs
-        ]
+        servicios = []
+        for servicio in qs.order_by('nombre'):
+            # Obtener insumos asociados al servicio
+            insumos_servicio = ServicioInsumo.objects.filter(servicio=servicio).select_related('insumo')
+            insumos_data = []
+            for si in insumos_servicio:
+                insumo = si.insumo
+                insumos_data.append({
+                    'id': insumo.idInventario,
+                    'nombre': insumo.medicamento,
+                    'cantidad': si.cantidad,
+                    'stock_actual': insumo.stock_actual,
+                    'unidad': getattr(insumo, 'unidad', 'unidad'),
+                    'origen': 'catalogo_servicio'  # Marca que viene del catálogo
+                })
+            
+            servicios.append({
+                'idServicio': servicio.idServicio,
+                'nombre': servicio.nombre,
+                'categoria': servicio.categoria,
+                'duracion': servicio.duracion,
+                'descripcion': servicio.descripcion,
+                'descripcion_servicio': servicio.descripcion,
+                'insumos': insumos_data  # ⭐ NUEVO: Insumos del servicio
+            })
 
         return JsonResponse({
             'success': True,
             'servicios': servicios
         })
     except Exception as e:
+        print('❌ Error en obtener_servicios:')
+        print(f'   Tipo: {type(e).__name__}')
+        print(f'   Mensaje: {str(e)}')
+        import traceback
+        traceback.print_exc()
         return JsonResponse({
             'success': False,
             'error': str(e)
@@ -866,7 +1368,68 @@ def crear_alta_medica(request, hospitalizacion_id):
         hospitalizacion = get_object_or_404(Hospitalizacion, id=hospitalizacion_id)
         data = json.loads(request.body)
         
-        # Crear el alta (todos los campos son opcionales)
+        print('=' * 80)
+        print(f'🏥 INICIANDO PROCESO DE ALTA MÉDICA')
+        print(f'   Hospitalización ID: {hospitalizacion_id}')
+        print(f'   Paciente: {hospitalizacion.paciente.nombre}')
+        print(f'   Estado actual: {hospitalizacion.estado}')
+        print('=' * 80)
+        
+        # ⭐ PASO 1: RECOPILAR SERVICIOS DE CIRUGÍAS
+        # Obtener todos los servicios asociados a las cirugías de esta hospitalización
+        servicios_cirugias = []
+        cirugias = hospitalizacion.cirugias.all()
+        
+        print(f'\n📋 Cirugías registradas: {cirugias.count()}')
+        for cirugia in cirugias:
+            if cirugia.servicio:
+                servicios_cirugias.append(cirugia.servicio)
+                print(f'  ✅ Cirugía: {cirugia.tipo_cirugia} - Servicio: {cirugia.servicio.nombre}')
+            else:
+                print(f'  ⚠️  Cirugía: {cirugia.tipo_cirugia} - Sin servicio asociado')
+        
+        print(f'\n📦 Total de servicios a descontar: {len(servicios_cirugias)}')
+        
+        # ⭐ PASO 2: DESCONTAR INVENTARIO POR SERVICIOS (si hay servicios)
+        if servicios_cirugias:
+            try:
+                from .services.inventario_service import discount_stock_for_services
+                
+                print(f'\n💰 Iniciando descuento de inventario...')
+                
+                # Llamar al servicio de descuento
+                resultado = discount_stock_for_services(
+                    services=servicios_cirugias,
+                    user=request.user,
+                    origen_obj=hospitalizacion
+                )
+                
+                print(f'  ✅ Inventario descontado exitosamente')
+                print(f'  📊 Items descontados: {resultado["total_items"]}')
+                for item in resultado['insumos_descontados']:
+                    print(f'    - {item["medicamento"]}: {item["cantidad_descontada"]} unidades (quedan {item["stock_restante"]})')
+                
+            except ValidationError as ve:
+                # Error de validación (stock insuficiente o ya descontado)
+                print(f'\n❌ Error de validación en inventario: {str(ve)}')
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error de inventario: {str(ve)}'
+                }, status=400)
+            except Exception as e:
+                # Cualquier otro error en el descuento
+                print(f'\n❌ Error inesperado al descontar inventario: {str(e)}')
+                import traceback
+                traceback.print_exc()
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error al procesar inventario: {str(e)}'
+                }, status=500)
+        else:
+            print(f'\n  ℹ️  No hay servicios de cirugías para descontar inventario')
+        
+        # ⭐ PASO 3: CREAR ALTA MÉDICA (solo si inventario fue exitoso o no aplica)
+        print(f'\n📄 Creando registro de alta médica...')
         alta = Alta.objects.create(
             hospitalizacion=hospitalizacion,
             fecha_alta=timezone.now(),
@@ -875,18 +1438,39 @@ def crear_alta_medica(request, hospitalizacion_id):
             recomendaciones=data.get('recomendaciones', ''),
             proxima_revision=data.get('proxima_revision') or None
         )
+        print(f'  ✅ Alta médica creada con ID: {alta.id}')
         
-        # Actualizar estado de hospitalización
+        # ⭐ PASO 4: ACTUALIZAR ESTADO DE HOSPITALIZACIÓN
+        print(f'\n🏥 Actualizando estado de hospitalización...')
         hospitalizacion.estado = 'alta'
         hospitalizacion.fecha_alta = timezone.now()
         hospitalizacion.save()
+        print(f'  ✅ Estado actualizado a "alta"')
+        
+        print('=' * 80)
+        print(f'✅ ALTA MÉDICA COMPLETADA EXITOSAMENTE')
+        print(f'   Alta ID: {alta.id}')
+        print(f'   Servicios procesados: {len(servicios_cirugias)}')
+        print(f'   Inventario descontado: {"Sí" if servicios_cirugias else "No aplica"}')
+        print('=' * 80)
         
         return JsonResponse({
             'success': True,
-            'message': 'Alta médica registrada',
-            'alta_id': alta.id
+            'message': 'Alta médica registrada exitosamente',
+            'alta_id': alta.id,
+            'servicios_procesados': len(servicios_cirugias)
         })
     except Exception as e:
+        print('=' * 80)
+        print('❌ ERROR AL CREAR ALTA MÉDICA')
+        print('=' * 80)
+        print(f'Tipo de error: {type(e).__name__}')
+        print(f'Mensaje: {str(e)}')
+        import traceback
+        print('Traceback completo:')
+        traceback.print_exc()
+        print('=' * 80)
+        
         return JsonResponse({
             'success': False,
             'error': str(e)
@@ -952,6 +1536,7 @@ def detalle_hospitalizacion(request, paciente_id, hospitalizacion_id):
             'diagnostico': hospitalizacion.diagnostico_hosp,
             'estado': hospitalizacion.get_estado_display(),
             'observaciones': hospitalizacion.observaciones,
+            'insumos_descontados': hospitalizacion.insumos_descontados,  # ⭐ NUEVO: Estado de descuento
             'insumos': [
                 {
                     'id': getattr(ins, 'idInventario', getattr(ins, 'pk', None)),

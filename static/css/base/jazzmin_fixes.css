@@ -1,0 +1,37 @@
+/* ==============================
+   ADMIN TOOLS STATS – FIX LAYOUT
+   ============================== */
+
+/* ==============================
+   BOTONES
+   ============================== */
+
+.btn-success {
+    background-color: #92e9c0;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+}
+
+.btn-info {
+    background-color: #3bb39f91;
+}
+
+.btn {
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+/* ==============================
+   SIDEBAR ACTIVE LINK
+   ============================== */
+
+.nav-sidebar .nav-link.active {
+    background-color: #88ce97;
+    color: #fff;
+}
+
+.nav-sidebar .nav-link.active i {
+    color: #fff;
+}

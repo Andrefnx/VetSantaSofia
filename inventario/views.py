@@ -66,13 +66,14 @@ def crear_insumo(request):
                 # Metadata
                 fecha_creacion=timezone.now(),
                 usuario_ultimo_movimiento=request.user,
-                tipo_ultimo_movimiento='registro_inicial'
+                tipo_ultimo_movimiento=None  # Se asignará después si hay stock
             )
             
-            # Actualizar fechas si tiene stock inicial
+            # Actualizar fechas y tipo de movimiento si tiene stock inicial
             if int(data.get('stock_actual', 0)) > 0:
                 insumo.ultimo_ingreso = timezone.now()
                 insumo.ultimo_movimiento = timezone.now()
+                insumo.tipo_ultimo_movimiento = 'ingreso_stock'
                 insumo.save()
             
             return JsonResponse({
@@ -115,21 +116,49 @@ def editar_insumo(request, insumo_id):
             insumo.descripcion = data.get('descripcion', insumo.descripcion)
             insumo.especie = data.get('especie', insumo.especie)
             
+            # Detectar tipo de cambio ANTES de modificar
+            cambio_stock = False
+            cambio_precio = False
+            cambio_informacion = False
+            
+            # Detectar cambio de precio
             if 'precio_venta' in data and data['precio_venta']:
-                insumo.precio_venta = Decimal(str(data['precio_venta']))
+                precio_nuevo = Decimal(str(data['precio_venta']))
+                if precio_nuevo != insumo.precio_venta:
+                    cambio_precio = True
+                insumo.precio_venta = precio_nuevo
             
             # Stock
             if 'stock_actual' in data:
                 stock_nuevo = int(data['stock_actual'])
-                insumo.stock_actual = stock_nuevo
-                
-                if stock_nuevo > stock_anterior:
-                    insumo.ultimo_ingreso = timezone.now()
-                    insumo.tipo_ultimo_movimiento = 'entrada'
-                elif stock_nuevo < stock_anterior:
-                    insumo.tipo_ultimo_movimiento = 'salida'
+                if stock_nuevo != stock_anterior:
+                    cambio_stock = True
+                    insumo.stock_actual = stock_nuevo
+                    
+                    if stock_nuevo > stock_anterior:
+                        insumo.ultimo_ingreso = timezone.now()
+            
+
+            
+            # Si cambió algo más que stock o precio, es modificación de información
+            campos_informacion = ['nombre_comercial', 'medicamento', 'marca', 'sku', 'tipo', 
+                                 'formato', 'descripcion', 'especie', 'dosis_ml', 'ml_contenedor', 
+                                 'cantidad_pastillas', 'precauciones', 'contraindicaciones', 'efectos_adversos']
+            for campo in campos_informacion:
+                if campo in data:
+                    cambio_informacion = True
+                    break
+            
+            # Determinar tipo de movimiento (prioridad: stock > precio > información)
+            if cambio_stock:
+                if insumo.stock_actual > stock_anterior:
+                    insumo.tipo_ultimo_movimiento = 'ingreso_stock'
                 else:
-                    insumo.tipo_ultimo_movimiento = insumo.tipo_ultimo_movimiento or 'entrada'
+                    insumo.tipo_ultimo_movimiento = 'salida_stock'
+            elif cambio_precio:
+                insumo.tipo_ultimo_movimiento = 'actualizacion_precio'
+            elif cambio_informacion:
+                insumo.tipo_ultimo_movimiento = 'modificacion_informacion'
             
             # Dosis según formato
             if 'dosis_ml' in data:
@@ -265,11 +294,8 @@ def eliminar_insumo(request, insumo_id):
     
     try:
         with connection.cursor() as cursor:
-            # Desactivar foreign keys temporalmente (SQLite)
-            cursor.execute("PRAGMA foreign_keys = OFF")
-            
-            # 1. Verificar existencia
-            cursor.execute("SELECT medicamento FROM inventario WHERE idInventario = %s", [insumo_id])
+            # 1. Verificar existencia (usando comillas dobles para preservar case en PostgreSQL)
+            cursor.execute('SELECT medicamento FROM inventario WHERE "idInventario" = %s', [insumo_id])
             row = cursor.fetchone()
             
             if not row:
@@ -297,11 +323,8 @@ def eliminar_insumo(request, insumo_id):
             
             # 3. Si está en uso, ARCHIVAR en lugar de eliminar
             if relaciones:
-                cursor.execute("UPDATE inventario SET archivado = 1 WHERE idInventario = %s", [insumo_id])
+                cursor.execute('UPDATE inventario SET archivado = true WHERE "idInventario" = %s', [insumo_id])
                 print(f"📁 Archivado (en uso en: {", ".join(relaciones)}): {nombre_insumo}")
-                
-                # Reactivar foreign keys
-                cursor.execute("PRAGMA foreign_keys = ON")
                 
                 return JsonResponse({
                     'success': True,
@@ -310,11 +333,8 @@ def eliminar_insumo(request, insumo_id):
                 })
             
             # 4. Si NO está en uso, eliminar permanentemente
-            cursor.execute("DELETE FROM inventario WHERE idInventario = %s", [insumo_id])
+            cursor.execute('DELETE FROM inventario WHERE "idInventario" = %s', [insumo_id])
             print(f"✅ Eliminado permanentemente: {nombre_insumo}")
-            
-            # Reactivar foreign keys
-            cursor.execute("PRAGMA foreign_keys = ON")
             
             return JsonResponse({
                 'success': True,
@@ -352,11 +372,11 @@ def modificar_stock_insumo(request, insumo_id):
                 
                 # Determinar tipo de movimiento
                 if stock_nuevo > stock_anterior:
-                    tipo_movimiento = 'entrada'
+                    tipo_movimiento = 'ingreso_stock'
                     cantidad = stock_nuevo - stock_anterior
                     insumo.ultimo_ingreso = timezone.now()
                 elif stock_nuevo < stock_anterior:
-                    tipo_movimiento = 'salida'
+                    tipo_movimiento = 'salida_stock'
                     cantidad = stock_anterior - stock_nuevo
                 else:
                     return JsonResponse({
@@ -379,10 +399,10 @@ def modificar_stock_insumo(request, insumo_id):
                 
                 stock_anterior = insumo.stock_actual
                 
-                if tipo_movimiento == 'entrada':
+                if tipo_movimiento == 'ingreso_stock':
                     insumo.stock_actual += cantidad
                     insumo.ultimo_ingreso = timezone.now()
-                elif tipo_movimiento == 'salida':
+                elif tipo_movimiento == 'salida_stock':
                     if insumo.stock_actual < cantidad:
                         return JsonResponse({
                             'success': False,
@@ -445,14 +465,15 @@ def api_productos(request):
         
         # Filtrar por especie
         if especie_filtro:
-            # Incluir productos para la especie específica o "ambos" o "todos"
+            # Incluir productos para la especie específica o "ambos"
+            # Normalizar especie a minúsculas para comparación
             productos = productos.filter(
                 Q(especie__iexact=especie_filtro) | 
                 Q(especie__iexact='ambos') | 
-                Q(especie__iexact='todos') |
                 Q(especie__isnull=True) |
                 Q(especie='')
             )
+            print(f"🔍 Filtrado por especie '{especie_filtro}': {productos.count()} productos encontrados")
         
         # Filtrar por peso (si tiene rango de peso definido)
         if peso_filtro:

@@ -7,21 +7,44 @@ function toggleWheel(button) {
     }
 
     const options = button.nextElementSibling;
-    const rect = button.getBoundingClientRect();
+    const wheel = button.closest('.manage-wheel');
     const clone = options.cloneNode(true);
+    const rect = button.getBoundingClientRect();
     
     clone.classList.add('show');
-    clone.style.cssText = `
-        position: fixed;
-        top: ${rect.bottom + 8}px;
-        right: ${window.innerWidth - rect.right}px;
-        z-index: 9999;
-        min-width: 180px;
-    `;
-
+    
+    // Calcular posición: a la izquierda del botón, centrado verticalmente
+    const leftPosition = rect.left - 180 - 8; // 180px ancho menu + 8px margin
+    const topPosition = rect.top + (rect.height / 2);
+    
+    // Aplicar posición inline (el CSS con position fixed ya está definido)
+    clone.style.left = leftPosition + 'px';
+    clone.style.top = topPosition + 'px';
+    clone.style.transform = 'translateY(-50%)';
+    
+    // Insertar en body para que no sea cortado por overflow
     document.body.appendChild(clone);
+    
+    // Verificar si se sale del viewport
+    const menuRect = clone.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    
+    // Si se sale por abajo
+    if (menuRect.bottom > viewportHeight - 20) {
+        clone.style.top = 'auto';
+        clone.style.bottom = '20px';
+        clone.style.transform = 'none';
+    }
+    
+    // Si se sale por arriba
+    if (menuRect.top < 20) {
+        clone.style.top = '20px';
+        clone.style.bottom = 'auto';
+        clone.style.transform = 'none';
+    }
+    
     activeClone = clone;
-    button.closest('.manage-wheel').classList.add('active');
+    wheel.classList.add('active');
 
     const originalButtons = options.querySelectorAll('button');
     const row = button.closest('tr');

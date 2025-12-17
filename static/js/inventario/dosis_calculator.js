@@ -63,50 +63,135 @@ function obtenerTextoRangoPeso(data) {
 
 /**
  * Actualiza los campos de dosis según el formato seleccionado
+ * SOLO controla visibilidad, NO calcula ni modifica stock
  * @param {string} formato - Formato del producto
  * @param {HTMLElement} modal - Elemento del modal
+ * @param {boolean} limpiarCampos - Si debe limpiar campos al cambiar formato (default: true)
  */
-function actualizarCamposDosis(formato, modal) {
+function actualizarCamposDosis(formato, modal, limpiarCampos = true) {
     if (!modal) return;
     
-    console.log('🔧 Actualizando campos de dosis para formato:', formato);
+    console.log('🔧 Actualizando campos de dosis para formato:', formato, '| Limpiar:', limpiarCampos);
     
-    // Ocultar todos los campos de dosis
+    // Preservar valores actuales antes de limpiar
+    const valorDosisMl = modal.querySelector('.campo-dosis:not(.d-none) input[data-field="dosis_ml"]')?.value || '';
+    const valorPesoKg = modal.querySelector('input[data-field="peso_kg"]')?.value || '';
+    
+    // Ocultar TODOS los campos de dosis específicos
     const camposDosis = modal.querySelectorAll('.campo-dosis');
-    camposDosis.forEach(campo => campo.classList.add('d-none'));
+    camposDosis.forEach(campo => {
+        campo.classList.add('d-none');
+    });
+    
+    // ⚠️ LIMPIAR SOLO si se solicita (cuando usuario cambia formato manualmente)
+    // NO limpiar dosis_ml ni peso_kg (son comunes a todos los formatos)
     
     // Mostrar campos según formato
     switch(formato) {
         case 'liquido':
         case 'inyectable':
+            // Mostrar: dosis_ml, peso_kg, ml_contenedor
             mostrarCampo(modal, '.campo-dosis-liquido');
-            mostrarCampo(modal, '.campo-ml-contenedor');
             mostrarCampo(modal, '.campo-peso-kg');
+            // Limpiar campos no aplicables SOLO si se solicita
+            if (limpiarCampos) {
+                limpiarCampo(modal, 'cantidad_pastillas');
+                limpiarCampo(modal, 'unidades_pipeta');
+            }
             console.log('✅ Mostrando campos para líquido/inyectable');
             break;
             
         case 'pastilla':
+            // Mostrar: dosis_ml (como pastillas/kg), peso_kg, cantidad_pastillas
             mostrarCampo(modal, '.campo-dosis-pastilla');
             mostrarCampo(modal, '.campo-peso-kg');
+            // Limpiar campos no aplicables SOLO si se solicita
+            if (limpiarCampos) {
+                limpiarCampo(modal, 'ml_contenedor');
+                limpiarCampo(modal, 'unidades_pipeta');
+            }
             console.log('✅ Mostrando campos para pastilla');
             break;
             
         case 'pipeta':
+            // Mostrar: dosis_ml (como pipetas/kg), peso_kg, unidades_pipeta
             mostrarCampo(modal, '.campo-dosis-pipeta');
             mostrarCampo(modal, '.campo-peso-kg');
+            // Limpiar campos no aplicables SOLO si se solicita
+            if (limpiarCampos) {
+                limpiarCampo(modal, 'ml_contenedor');
+                limpiarCampo(modal, 'cantidad_pastillas');
+            }
             console.log('✅ Mostrando campos para pipeta');
             break;
             
         case 'polvo':
-        case 'crema':
-            mostrarCampo(modal, '.campo-dosis-liquido');
+            // Mostrar: dosis_ml (como g/kg), peso_kg, ml_contenedor (como gramos)
+            mostrarCampo(modal, '.campo-dosis-polvo');
             mostrarCampo(modal, '.campo-peso-kg');
-            console.log('✅ Mostrando campos para polvo/crema');
+            // Limpiar campos no aplicables SOLO si se solicita
+            if (limpiarCampos) {
+                limpiarCampo(modal, 'cantidad_pastillas');
+                limpiarCampo(modal, 'unidades_pipeta');
+            }
+            console.log('✅ Mostrando campos para polvo');
             break;
+            
+        case 'crema':
+            // Mostrar: dosis_ml (como g/kg), peso_kg, ml_contenedor (como gramos)
+            mostrarCampo(modal, '.campo-dosis-crema');
+            mostrarCampo(modal, '.campo-peso-kg');
+            // Limpiar campos no aplicables SOLO si se solicita
+            if (limpiarCampos) {
+                limpiarCampo(modal, 'cantidad_pastillas');
+                limpiarCampo(modal, 'unidades_pipeta');
+            }
+            console.log('✅ Mostrando campos para crema');
+            break;
+            
+        case 'otro':
+            // Mostrar: dosis_ml (como unidades/kg), peso_kg, ml_contenedor (genérico)
+            mostrarCampo(modal, '.campo-dosis-otro');
+            mostrarCampo(modal, '.campo-peso-kg');
+            // Limpiar campos no aplicables SOLO si se solicita
+            if (limpiarCampos) {
+                limpiarCampo(modal, 'cantidad_pastillas');
+                limpiarCampo(modal, 'unidades_pipeta');
+            }
+            console.log('✅ Mostrando campos para otro (formato genérico)');
+            break;
+            
+        default:
+            console.warn('⚠️ Formato no reconocido:', formato);
+            break;
+    }
+    
+    // Restaurar valores comunes SOLO si no estamos limpiando (al cargar datos)
+    if (!limpiarCampos) {
+        if (valorDosisMl) {
+            const inputDosisMl = modal.querySelector('.campo-dosis:not(.d-none) input[data-field="dosis_ml"]');
+            if (inputDosisMl && !inputDosisMl.value) inputDosisMl.value = valorDosisMl;
+        }
+        if (valorPesoKg) {
+            const inputPesoKg = modal.querySelector('input[data-field="peso_kg"]');
+            if (inputPesoKg && !inputPesoKg.value) inputPesoKg.value = valorPesoKg;
+        }
     }
     
     // Siempre mostrar rango de peso
     mostrarCampo(modal, '.campo-rango-peso');
+}
+
+/**
+ * Limpia el valor de un campo específico
+ * @param {HTMLElement} modal - Elemento del modal
+ * @param {string} fieldName - Nombre del campo a limpiar
+ */
+function limpiarCampo(modal, fieldName) {
+    const input = modal.querySelector(`input[data-field="${fieldName}"]`);
+    if (input) {
+        input.value = '';
+    }
 }
 
 /**
@@ -249,7 +334,8 @@ function inicializarEventosFormato(modal) {
     
     if (formatoSelect) {
         formatoSelect.addEventListener('change', function() {
-            actualizarCamposDosis(this.value, modal);
+            // Cuando usuario cambia formato manualmente, SÍ limpiar campos
+            actualizarCamposDosis(this.value, modal, true);
         });
     }
     

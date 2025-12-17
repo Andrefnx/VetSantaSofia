@@ -435,7 +435,7 @@ textarea.is-invalid:focus {
 =========================== */
 
 .tabs-section {
-    max-height: calc(100vh - 120px); /* Límite de altura con margen */
+    max-height: 92vh; /* Límite de altura con margen */
     display: flex;
     flex-direction: column;
     overflow: hidden; /* Ocultar desbordamiento del contenedor principal */
@@ -533,7 +533,6 @@ textarea.is-invalid:focus {
     position: relative;
     margin: 30px 0;
     padding-left: 0;
-    border-left: 3px solid #e1e1e1;
     width: 100%;
     box-sizing: border-box;
 }
@@ -685,6 +684,24 @@ textarea.is-invalid:focus {
 .timeline-btn:hover {
     background: var(--primary-color);
     color: white;
+}
+
+/* ⭐ Botón de editar (para borradores) */
+.timeline-btn.btn-warning {
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.timeline-btn.btn-warning:hover {
+    background: #ffc107;
+    color: #212529;
+}
+
+/* Badge de borrador */
+.timeline-item-subtitle .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    vertical-align: middle;
 }
 
 /* Estado vacío */
@@ -907,13 +924,44 @@ td[colspan][style*="text-align: center"] {
     }
 }
 
-@media screen and (max-width: 800px) {
+@media screen and (max-width: 991px) {
     .general-container {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    .general-information {
+        min-width: 100% !important;
     }
     
     .info-row {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem !important;
+    }
+    
+    .section {
+        margin-bottom: 0.8rem !important;
+    }
+    
+    .section-header-with-edit {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .section h2 {
+        font-size: 1.1rem !important;
+    }
+    
+    /* Ajustar tabs para mobile */
+    .tabs-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .tabs-container button {
+        font-size: 0.85rem !important;
+        padding: 0.6rem 0.8rem !important;
+        white-space: nowrap;
     }
 }
 
@@ -1742,9 +1790,13 @@ td[colspan][style*="text-align: center"] {
 }
 
 #btnEditAntecedentesActions {
-    display: flex !important;
     gap: 0.7rem;
     align-items: center;
+}
+
+/* Forzar ocultar lápiz cuando se muestran acciones */
+.antecedentes-compact .section-header-with-edit #btnEditarAntecedentes[style*="display: none"] {
+    display: none !important;
 }
 
 /* Estilos para antecedentes en modo edición */

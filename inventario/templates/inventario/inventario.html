@@ -3,6 +3,10 @@
 
 {% block title %}Inventario{% endblock %}
 
+{% block table_title %}
+<i class="bi bi-box-seam"></i> Inventario
+{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/custom/style_inventario.css' %}" type="text/css" media="all">
 <style>
@@ -54,10 +58,6 @@
 </style>
 {% endblock %}
 
-{% block table_title %}
-<i class="fas fa-boxes"></i> Inventario
-{% endblock %}
-
 {% block table_filters %}
 {% endblock %}
 
@@ -86,30 +86,26 @@
 <th>Especie</th>
 <th>Precio</th>
 <th>Stock</th>
-<th>Último Movimiento</th>
-<th>Tipo</th>
+<th>Marca</th>
+<th>Tipo de Medicamento</th>
 <th>Gestión</th>
 {% endblock %}
 
 {% block table_rows %}
 {% for insumo in insumos %}
-<tr data-id="{{ insumo.idInventario }}" data-especie="{{ insumo.especie|default_if_none:'' }}">
+<tr data-id="{{ insumo.idInventario }}" data-especie="{{ insumo.especie|default_if_none:'' }}" 
+    style="cursor: pointer;" 
+    onclick="if (event.target.closest('.manage-wheel')) return; const btn = this.querySelector('.manage-options button[onclick*=view]'); if(btn) btn.click();">
     <td>{{ insumo.medicamento }}</td>
-    <td>{{ insumo.especie|default:"-" }}</td>
+    <td>{{ insumo.get_especie_display|default:"-" }}</td>
     <td>${{ insumo.precio_venta|default:0|floatformat:0 }}</td>
     <td>
         <span class="vet-badge {% if insumo.get_stock_nivel == 'alto' %}success{% elif insumo.get_stock_nivel == 'medio' %}warning{% else %}danger{% endif %}">
             {{ insumo.stock_actual }}
         </span>
     </td>
-    <td>{{ insumo.ultimo_movimiento|date:"d/m/Y H:i"|default:"-" }}</td>
-    <td class="tipo-movimiento-cell" data-id="{{ insumo.idInventario }}">
-        {% if insumo.tipo_ultimo_movimiento %}
-            {{ insumo.get_tipo_ultimo_movimiento_display }}
-        {% else %}
-            -
-        {% endif %}
-    </td>
+    <td>{{ insumo.marca|default:"-" }}</td>
+    <td>{{ insumo.tipo|default:"-" }}</td>
     <td>
         <div class="manage-wheel">
             <button type="button" onclick="toggleWheel(this)">
@@ -183,6 +179,25 @@
             
             <div class="vet-modal-body" style="max-height: 70vh; overflow-y: auto;">
                 
+                <!-- ⭐ PESTAÑAS DE NAVEGACIÓN (Detalles / Historial) -->
+                <ul class="nav nav-tabs mb-3" id="modalProductoTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="tab-detalles" data-bs-toggle="tab" data-bs-target="#content-detalles" type="button" role="tab">
+                            <i class="fas fa-info-circle"></i> Detalles
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-historial" data-bs-toggle="tab" data-bs-target="#content-historial" type="button" role="tab" onclick="cargarHistorialModal()">
+                            <i class="fas fa-history"></i> Historial
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- CONTENIDO DE LAS PESTAÑAS -->
+                <div class="tab-content" id="modalProductoTabsContent">
+                    <!-- PESTAÑA: DETALLES -->
+                    <div class="tab-pane fade show active" id="content-detalles" role="tabpanel">
+                
                 <!-- SECCIÓN: IDENTIFICACIÓN GENERAL -->
                 <div class="detail-section">
                     <h4 class="detail-section-title">
@@ -223,10 +238,10 @@
                             <div class="field-edit d-none" data-field="especie">
                                 <select class="form-select" data-field="especie">
                                     <option value="">Seleccionar...</option>
-                                    <option value="Perro">Perro</option>
-                                    <option value="Gato">Gato</option>
-                                    <option value="Ambos">Perro y Gato</option>
-                                    <option value="Otro">Otro</option>
+                                    <option value="canino">Canino</option>
+                                    <option value="felino">Felino</option>
+                                    <option value="ambos">Ambos</option>
+                                    <option value="otro">Otro</option>
                                 </select>
                             </div>
                         </div>
@@ -311,7 +326,7 @@
                             <div class="field-view" data-field="dosis_formula_view">-</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">ML en Contenedor</label>
+                            <label class="form-label fw-bold" id="labelContenidoEnvase">Contenido del Envase</label>
                             <div class="field-view" data-field="ml_contenedor_view">-</div>
                         </div>
                     </div>
@@ -322,28 +337,84 @@
                         <!-- PARA LÍQUIDOS E INYECTABLES -->
                         <div class="row campo-dosis campo-dosis-liquido d-none">
                             <div class="col-md-4 mb-3">
-                                <label class="form-label fw-bold">Dosis (ml)</label>
+                                <label class="form-label fw-bold">Dosis por kg (ml/kg)</label>
                                 <input type="number" class="form-control" data-field="dosis_ml" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Cantidad de ml por cada kg de peso</small>
                             </div>
                             <div class="col-md-4 mb-3 campo-ml-contenedor">
-                                <label class="form-label fw-bold">ML Contenedor</label>
+                                <label class="form-label fw-bold">Contenido del envase (ml)</label>
                                 <input type="number" class="form-control" data-field="ml_contenedor" step="0.01" placeholder="0.00">
+                                <small class="text-muted">ML que trae 1 frasco/ampolla</small>
                             </div>
                         </div>
 
                         <!-- PARA PASTILLAS -->
                         <div class="row campo-dosis campo-dosis-pastilla d-none">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Cantidad de Pastillas</label>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Dosis por kg (pastillas/kg)</label>
+                                <input type="number" class="form-control" data-field="dosis_ml" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Cantidad de pastillas por cada kg de peso</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Pastillas por envase</label>
                                 <input type="number" class="form-control" data-field="cantidad_pastillas" placeholder="0">
+                                <small class="text-muted">Cantidad de pastillas que trae 1 blister/caja</small>
                             </div>
                         </div>
 
                         <!-- PARA PIPETAS -->
                         <div class="row campo-dosis campo-dosis-pipeta d-none">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Unidades de Pipeta</label>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Dosis por kg (pipetas/kg)</label>
+                                <input type="number" class="form-control" data-field="dosis_ml" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Cantidad de pipetas por cada kg de peso</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Unidades por envase</label>
                                 <input type="number" class="form-control" data-field="unidades_pipeta" placeholder="0">
+                                <small class="text-muted">Cantidad de pipetas que trae 1 caja</small>
+                            </div>
+                        </div>
+
+                        <!-- PARA POLVO -->
+                        <div class="row campo-dosis campo-dosis-polvo d-none">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Dosis por kg (g/kg)</label>
+                                <input type="number" class="form-control" data-field="dosis_ml" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Cantidad de gramos por cada kg de peso</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Contenido del envase (g)</label>
+                                <input type="number" class="form-control" data-field="ml_contenedor" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Gramos que trae 1 sobre/frasco</small>
+                            </div>
+                        </div>
+
+                        <!-- PARA CREMA -->
+                        <div class="row campo-dosis campo-dosis-crema d-none">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Dosis por kg (g/kg)</label>
+                                <input type="number" class="form-control" data-field="dosis_ml" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Cantidad de gramos por cada kg de peso</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Contenido del envase (g)</label>
+                                <input type="number" class="form-control" data-field="ml_contenedor" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Gramos que trae 1 tubo/pote</small>
+                            </div>
+                        </div>
+
+                        <!-- PARA OTRO (FORMATO GENÉRICO) -->
+                        <div class="row campo-dosis campo-dosis-otro d-none">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Dosis por kg (unidades/kg)</label>
+                                <input type="number" class="form-control" data-field="dosis_ml" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Cantidad de unidades por cada kg de peso</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Contenido del envase (unidades)</label>
+                                <input type="number" class="form-control" data-field="ml_contenedor" step="0.01" placeholder="0.00">
+                                <small class="text-muted">Unidades genéricas que trae 1 envase</small>
                             </div>
                         </div>
 
@@ -352,7 +423,7 @@
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-bold">Peso Referencia (kg)</label>
                                 <input type="number" class="form-control" data-field="peso_kg" step="0.01" placeholder="0.00">
-                                <small class="text-muted">Peso de referencia para la dosis</small>
+                                <small class="text-muted">Peso del animal para la dosis indicada. Ej: si la dosis es 2ml para 10kg, ingrese 10</small>
                             </div>
                         </div>
 
@@ -438,14 +509,72 @@
                     </div>
                 </div>
 
+                    </div><!-- FIN: content-detalles -->
+
+                    <!-- ⭐ PESTAÑA: HISTORIAL -->
+                    <div class="tab-pane fade" id="content-historial" role="tabpanel">
+                        <!-- Filtros del historial -->
+                        <div class="historial-filtros mb-3" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">
+                                    <i class="fas fa-filter"></i> Tipo de Evento
+                                </label>
+                                <select class="form-select form-select-sm" id="filtroTipoEvento" onchange="filtrarHistorial()">
+                                    <option value="">Todos los eventos</option>
+                                    <option value="ingreso_stock">Ingreso de Stock</option>
+                                    <option value="salida_stock">Salida de Stock</option>
+                                    <option value="actualizacion_precio">Actualización de Precio</option>
+                                    <option value="modificacion_informacion">Modificación de Información</option>
+                                    <option value="activacion">Activación</option>
+                                    <option value="desactivacion">Desactivación</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1; min-width: 200px;">
+                                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">
+                                    <i class="fas fa-exclamation-circle"></i> Criticidad
+                                </label>
+                                <select class="form-select form-select-sm" id="filtroCriticidad" onchange="filtrarHistorial()">
+                                    <option value="">Todas las criticidades</option>
+                                    <option value="critica">Crítica</option>
+                                    <option value="alta">Alta</option>
+                                    <option value="media">Media</option>
+                                    <option value="baja">Baja</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; align-items: flex-end;">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="limpiarFiltrosHistorial()">
+                                    <i class="fas fa-times"></i> Limpiar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="historial-loader" class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando historial...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Cargando historial del producto...</p>
+                        </div>
+                        <div id="historial-contenido" style="display: none;">
+                            <!-- El contenido se carga dinámicamente con AJAX -->
+                        </div>
+                    </div>
+
+                </div><!-- FIN: tab-content -->
+
             </div>
 
             <!-- Footer con botones -->
             <div class="vet-modal-footer">
+                <!-- Botón EDITAR: solo visible en modo VER -->
                 <button type="button" class="vet-btn vet-btn-grey" id="btnEditarProducto" onclick="switchToEditModeProducto()">
                     <i class="bi bi-pencil-fill"></i> Editar
                 </button>
-                <button type="button" class="vet-btn vet-btn-primary" id="btnGuardarProductoModal" onclick="guardarProducto()">
+                
+                <!-- Botones GUARDAR y CANCELAR: solo visibles en modo EDICIÓN -->
+                <button type="button" class="vet-btn vet-btn-grey" id="btnCancelarProducto" onclick="cancelarEdicionProducto()" style="display: none;">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="button" class="vet-btn vet-btn-primary" id="btnGuardarProductoModal" onclick="guardarProducto()" style="display: none;">
                     <i class="bi bi-floppy-fill"></i> Guardar
                 </button>
             </div>
@@ -464,7 +593,7 @@
             <div class="vet-modal-body">
                 <p id="eliminarProductoMensaje" class="text-center mb-4">¿Estás seguro que deseas eliminar este producto?</p>
                 <div style="display: flex; justify-content: center; gap: 10px;">
-                    <button type="button" class="vet-btn-cancel" onclick="closeEliminarProductoModal()">
+                    <button type="button" class="vet-btn vet-btn-grey" onclick="closeEliminarProductoModal()">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
                     <button type="button" class="vet-btn-delete" id="btnConfirmarEliminarProducto" onclick="eliminarProductoConfirmado()">
@@ -502,7 +631,7 @@
                     </div>
                 </div>
                 <div class="vet-modal-footer">
-                    <button type="button" class="vet-btn-cancel" onclick="closeVetModal('modalModificarStock')">
+                    <button type="button" class="vet-btn vet-btn-grey" onclick="closeVetModal('modalModificarStock')">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
                     <button type="button" class="vet-btn vet-btn-primary" onclick="guardarStock()">
@@ -549,7 +678,7 @@
                     Se marcará automáticamente cuando el stock supere el nivel medio.
                 </div>
                 <div class="vet-modal-footer">
-                    <button type="button" class="vet-btn-cancel" onclick="closeVetModal('modalConfigNiveles')">
+                    <button type="button" class="vet-btn vet-btn-grey" onclick="closeVetModal('modalConfigNiveles')">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
                     <button type="button" class="vet-btn vet-btn-primary" onclick="guardarNivelesStock()">
@@ -573,7 +702,7 @@
                 <p id="archivarProductoMensaje" class="text-center mb-4">¿Estás seguro que deseas archivar este producto? Podrás restaurarlo desde la pestaña de archivados.</p>
                 
                 <div class="vet-modal-footer">
-                    <button type="button" class="vet-btn-cancel" onclick="closeArchivarProductoModal()">
+                    <button type="button" class="vet-btn vet-btn-grey" onclick="closeArchivarProductoModal()">
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
                     <button type="button" class="vet-btn vet-btn-primary" id="btnConfirmarArchivarProducto">
@@ -588,7 +717,196 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/inventario/gestion_wheel.js' %}?v=10"></script>
+<script src="{% static 'js/inventario/gestion_wheel.js' %}?v=1765912374"></script>
 <script src="{% static 'js/inventario/dosis_calculator.js' %}"></script>
 <script src="{% static 'js/inventario/crud_inventario.js' %}?v=13"></script>
+
+<style>
+/* Estilos para las pestañas del modal de producto */
+#modalProductoTabs {
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 1.5rem;
+}
+
+#modalProductoTabs .nav-link {
+    color: #757575;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#modalProductoTabs .nav-link:hover {
+    color: #6b8e6b;
+    background: rgba(175, 225, 175, 0.1);
+}
+
+#modalProductoTabs .nav-link.active {
+    color: #6b8e6b;
+    border-bottom-color: #afe1af;
+    background: rgba(175, 225, 175, 0.1);
+}
+
+#modalProductoTabs .nav-link i {
+    font-size: 1.1rem;
+}
+
+/* Contenido de las pestañas */
+#modalProductoTabsContent .tab-pane {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Spinner de carga */
+#historial-loader .spinner-border {
+    color: #afe1af !important;
+}
+</style>
+
+<script>
+// ⭐ NUEVA FUNCIONALIDAD: Cargar historial dinámicamente con AJAX
+let historialCargado = false; // Para evitar múltiples cargas
+
+function cargarHistorialModal() {
+    // Si ya se cargó, no hacer nada
+    if (historialCargado) {
+        return;
+    }
+    
+    // Obtener el ID del producto actual del modal
+    const modal = document.getElementById('modalProducto');
+    const productoId = modal.getAttribute('data-objeto-id');
+    
+    if (!productoId) {
+        console.error('No se encontró el ID del producto');
+        return;
+    }
+    
+    // Mostrar loader
+    document.getElementById('historial-loader').style.display = 'block';
+    document.getElementById('historial-contenido').style.display = 'none';
+    
+    // Llamada AJAX al endpoint de historial
+    fetch(`/historial/resumen/inventario/${productoId}/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.text();
+        })
+        .then(html => {
+            // Insertar el HTML en el contenedor
+            document.getElementById('historial-contenido').innerHTML = html;
+            
+            // Ocultar loader y mostrar contenido
+            document.getElementById('historial-loader').style.display = 'none';
+            document.getElementById('historial-contenido').style.display = 'block';
+            
+            // Marcar como cargado
+            historialCargado = true;
+        })
+        .catch(error => {
+            console.error('Error al cargar historial:', error);
+            document.getElementById('historial-loader').innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Error al cargar historial:</strong> ${error.message}
+                    <br><small>Por favor, recarga la página e intenta nuevamente.</small>
+                </div>
+            `;
+        });
+}
+
+// ⭐ MODIFICAR LA FUNCIÓN QUE ABRE EL MODAL PARA GUARDAR EL ID
+// Buscar la función que abre el modal y añadirle la siguiente línea:
+// document.getElementById('modalProducto').setAttribute('data-objeto-id', insumo.idInventario);
+// Esto debe hacerse en el archivo crud_inventario.js donde se cargan los datos del modal
+
+// ⭐ FILTRAR EVENTOS DEL HISTORIAL
+function filtrarHistorial() {
+    const tipoEvento = document.getElementById('filtroTipoEvento').value;
+    const criticidad = document.getElementById('filtroCriticidad').value;
+    
+    // Obtener todos los eventos del timeline
+    const eventos = document.querySelectorAll('#historial-contenido .timeline-item');
+    
+    let eventosVisibles = 0;
+    
+    eventos.forEach(evento => {
+        const eventoTipo = evento.getAttribute('data-tipo-evento');
+        const eventoCriticidad = evento.getAttribute('data-criticidad');
+        
+        // Verificar si cumple con los filtros
+        const cumpleTipo = !tipoEvento || eventoTipo === tipoEvento;
+        const cumpleCriticidad = !criticidad || eventoCriticidad === criticidad;
+        
+        if (cumpleTipo && cumpleCriticidad) {
+            evento.style.display = '';
+            eventosVisibles++;
+        } else {
+            evento.style.display = 'none';
+        }
+    });
+    
+    // Mostrar mensaje si no hay eventos visibles
+    const contenedor = document.getElementById('historial-contenido');
+    let mensajeSinResultados = contenedor.querySelector('.sin-resultados-filtro');
+    
+    if (eventosVisibles === 0) {
+        if (!mensajeSinResultados) {
+            mensajeSinResultados = document.createElement('div');
+            mensajeSinResultados.className = 'alert alert-info text-center sin-resultados-filtro';
+            mensajeSinResultados.innerHTML = '<i class="fas fa-filter"></i> No hay eventos que coincidan con los filtros seleccionados';
+            contenedor.appendChild(mensajeSinResultados);
+        }
+        mensajeSinResultados.style.display = 'block';
+    } else {
+        if (mensajeSinResultados) {
+            mensajeSinResultados.style.display = 'none';
+        }
+    }
+}
+
+// ⭐ LIMPIAR FILTROS DEL HISTORIAL
+function limpiarFiltrosHistorial() {
+    document.getElementById('filtroTipoEvento').value = '';
+    document.getElementById('filtroCriticidad').value = '';
+    filtrarHistorial();
+}
+
+// ⭐ RESETEAR EL ESTADO AL CERRAR EL MODAL
+const originalCloseVetModal = window.closeVetModal;
+window.closeVetModal = function(modalId) {
+    if (modalId === 'modalProducto') {
+        // Resetear el flag para que se recargue en la próxima apertura
+        historialCargado = false;
+        
+        // Limpiar el contenido del historial
+        document.getElementById('historial-contenido').innerHTML = '';
+        
+        // Limpiar filtros
+        limpiarFiltrosHistorial();
+        
+        // Volver a la pestaña de detalles
+        document.getElementById('tab-detalles').click();
+    }
+    
+    // Llamar a la función original
+    originalCloseVetModal(modalId);
+};
+</script>
 {% endblock %}

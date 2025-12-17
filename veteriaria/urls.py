@@ -1,36 +1,24 @@
-"""
-URL configuration for veteriaria project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from veteriaria.views_ui import ui_preview
 
+admin.site.site_header = 'VetLog'
+admin.site.site_title = 'VetLog Admin'
+
 urlpatterns = [
     path('admin/', admin.site.urls),  # ← PRIMERO
+    path('admin_tools_stats/', include('admin_tools_stats.urls')),
+    
     path('dashboard/', include('dashboard.urls')),
     path('pacientes/', include('pacientes.urls')),
     path('inventario/', include('inventario.urls')),
     path('servicios/', include('servicios.urls')),
     path('clinica/', include('clinica.urls')),
-    path('hospital/', include('hospital.urls')),
     path('agenda/', include('agenda.urls')),
     path('caja/', include('caja.urls')),
-    path('gestion/', include('gestion.urls')),
+    path('historial/', include('historial.urls')),  # Sistema de historial
     path('ui/preview/', ui_preview, name='ui_preview'),
     path('', include('login.urls')),  # ← ÚLTIMO (porque tiene catch-all)
 ]

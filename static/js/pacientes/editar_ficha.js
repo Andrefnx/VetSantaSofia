@@ -354,8 +354,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Botón editar responsable clickeado');
             
             // Mostrar botones de guardar/cancelar
-            btnEditarResponsable.style.display = 'none';
-            btnEditResponsableActions.style.display = 'flex';
+            btnEditarResponsable.style.setProperty('display', 'none', 'important');
+            btnEditResponsableActions.style.setProperty('display', 'flex', 'important');
             
             // Ocultar todos los span.view-mode
             infoResponsable.querySelectorAll('.view-mode').forEach(el => {
@@ -717,8 +717,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (enlaceCambiarResponsable) enlaceCambiarResponsable.style.display = 'none';
             
             // Ocultar botones de guardar/cancelar y mostrar botón de editar
-            btnEditarResponsable.style.display = 'inline-block';
-            btnEditResponsableActions.style.display = 'none';
+            btnEditarResponsable.style.setProperty('display', 'inline-block', 'important');
+            btnEditResponsableActions.style.setProperty('display', 'none', 'important');
             
             propietarioSeleccionado = null;
         });
@@ -771,31 +771,31 @@ document.addEventListener('DOMContentLoaded', function() {
         // Validar teléfono
         if (inputTelefono && inputTelefono.value) {
             if (!validarTelefono(inputTelefono.value)) {
-                errorTelefono.style.display = 'block';
+                if (errorTelefono) errorTelefono.style.display = 'block';
                 inputTelefono.classList.add('is-invalid');
                 hasErrors = true;
             } else {
-                errorTelefono.style.display = 'none';
+                if (errorTelefono) errorTelefono.style.display = 'none';
                 inputTelefono.classList.remove('is-invalid');
             }
         } else {
-            errorTelefono.style.display = 'none';
-            inputTelefono.classList.remove('is-invalid');
+            if (errorTelefono) errorTelefono.style.display = 'none';
+            if (inputTelefono) inputTelefono.classList.remove('is-invalid');
         }
 
         // Validar email
         if (inputEmail && inputEmail.value) {
             if (!validarEmail(inputEmail.value)) {
-                errorEmail.style.display = 'block';
+                if (errorEmail) errorEmail.style.display = 'block';
                 inputEmail.classList.add('is-invalid');
                 hasErrors = true;
             } else {
-                errorEmail.style.display = 'none';
+                if (errorEmail) errorEmail.style.display = 'none';
                 inputEmail.classList.remove('is-invalid');
             }
         } else {
-            errorEmail.style.display = 'none';
-            inputEmail.classList.remove('is-invalid');
+            if (errorEmail) errorEmail.style.display = 'none';
+            if (inputEmail) inputEmail.classList.remove('is-invalid');
         }
 
         return hasErrors;

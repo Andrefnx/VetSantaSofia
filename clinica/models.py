@@ -37,6 +37,13 @@ class Consulta(models.Model):
     # ⭐ Relación ManyToMany con Servicios
     servicios = models.ManyToManyField(Servicio, blank=True, related_name='consultas')
     
+    # ⭐ Control de descuento de inventario
+    insumos_descontados = models.BooleanField(
+        default=False,
+        help_text="Indica si los insumos de esta consulta ya fueron descontados del inventario. "
+                  "Previene descuentos duplicados."
+    )
+    
     class Meta:
         ordering = ['-fecha']
         verbose_name = 'Consulta'
@@ -48,6 +55,80 @@ class Consulta(models.Model):
     def servicios_nombres(self):
         """Retorna los nombres de los servicios separados por comas"""
         return ', '.join([s.nombre for s in self.servicios.all()]) if self.servicios.exists() else self.get_tipo_consulta_display()
+    
+    def confirmar_y_descontar_insumos(self, usuario, dias_tratamiento=1):
+        """
+        Confirma la consulta y descuenta todos los insumos asociados.
+        
+        MOMENTO DE EJECUCIÓN: Solo al confirmar/finalizar la consulta.
+        
+        Proceso:
+        1. Valida que no se haya descontado previamente (insumos_descontados=False)
+        2. Para cada ConsultaInsumo:
+           - Llama a descontar_stock() que usa calcular_envases_requeridos()
+           - Valida stock suficiente
+           - Descuenta envases completos
+        3. Marca consulta.insumos_descontados = True
+        
+        Args:
+            usuario: Usuario que confirma
+            dias_tratamiento: Días del tratamiento (default: 1)
+        
+        Returns:
+            dict: {
+                'success': bool,
+                'insumos_descontados': [list],
+                'total_items': int
+            }
+        
+        Raises:
+            ValidationError: Si ya descontado o stock insuficiente
+        """
+        from django.db import transaction
+        
+        # Validar que no se haya descontado previamente
+        if self.insumos_descontados:
+            raise ValidationError(
+                "Los insumos de esta consulta ya fueron descontados del inventario."
+            )
+        
+        insumos_detalle = self.insumos_detalle.all()
+        
+        if not insumos_detalle.exists():
+            # Sin insumos, solo marcar como procesado
+            self.insumos_descontados = True
+            self.save(update_fields=['insumos_descontados'])
+            return {
+                'success': True,
+                'insumos_descontados': [],
+                'total_items': 0,
+                'message': 'Consulta confirmada sin insumos asociados'
+            }
+        
+        resultados = []
+        
+        # Descontar dentro de transacción atómica
+        with transaction.atomic():
+            for detalle in insumos_detalle:
+                try:
+                    resultado = detalle.descontar_stock(usuario, dias_tratamiento)
+                    resultados.append(resultado)
+                except ValidationError as e:
+                    # Re-lanzar para rollback de toda la transacción
+                    raise ValidationError(
+                        f"Error al descontar {detalle.insumo.medicamento}: {str(e)}"
+                    )
+            
+            # Marcar consulta como procesada
+            self.insumos_descontados = True
+            self.save(update_fields=['insumos_descontados'])
+        
+        return {
+            'success': True,
+            'insumos_descontados': resultados,
+            'total_items': len(resultados),
+            'message': f'✅ {len(resultados)} insumos descontados correctamente'
+        }
 
 
 class MedicamentoUtilizado(models.Model):
@@ -86,6 +167,13 @@ class Hospitalizacion(models.Model):
     # Insumos/implementos usados durante la hospitalización completa
     insumos = models.ManyToManyField(Insumo, blank=True, related_name='hospitalizaciones_usadas')
     
+    # ⭐ Control de descuento de inventario
+    insumos_descontados = models.BooleanField(
+        default=False,
+        help_text="Indica si los insumos de esta hospitalización ya fueron descontados del inventario. "
+                  "Previene descuentos duplicados."
+    )
+    
     class Meta:
         ordering = ['-fecha_ingreso']
         verbose_name = 'Hospitalización'
@@ -113,6 +201,70 @@ class Hospitalizacion(models.Model):
     
     def __str__(self):
         return f"Hospitalización de {self.paciente.nombre} - {self.fecha_ingreso.strftime('%d/%m/%Y')}"
+    
+    def finalizar_y_descontar_insumos(self, usuario, dias_tratamiento=None):
+        """
+        Finaliza la hospitalización y descuenta todos los insumos asociados.
+        
+        Similar a Consulta.confirmar_y_descontar_insumos() pero para hospitalizaciones.
+        Si dias_tratamiento no se especifica, se calcula desde fecha_ingreso hasta fecha_alta.
+        
+        Args:
+            usuario: Usuario que finaliza
+            dias_tratamiento: Días del tratamiento (si None, se calcula automáticamente)
+        
+        Returns:
+            dict: Resultado del descuento
+        """
+        from django.db import transaction
+        from datetime import timedelta
+        
+        if self.insumos_descontados:
+            raise ValidationError(
+                "Los insumos de esta hospitalización ya fueron descontados del inventario."
+            )
+        
+        # Calcular días de tratamiento si no se especifica
+        if dias_tratamiento is None and self.fecha_alta:
+            delta = self.fecha_alta - self.fecha_ingreso
+            dias_tratamiento = max(1, delta.days)  # Mínimo 1 día
+        elif dias_tratamiento is None:
+            dias_tratamiento = 1  # Default
+        
+        insumos_detalle = self.insumos_detalle.all()
+        
+        if not insumos_detalle.exists():
+            self.insumos_descontados = True
+            self.save(update_fields=['insumos_descontados'])
+            return {
+                'success': True,
+                'insumos_descontados': [],
+                'total_items': 0,
+                'message': 'Hospitalización finalizada sin insumos asociados'
+            }
+        
+        resultados = []
+        
+        with transaction.atomic():
+            for detalle in insumos_detalle:
+                try:
+                    resultado = detalle.descontar_stock(usuario, dias_tratamiento)
+                    resultados.append(resultado)
+                except ValidationError as e:
+                    raise ValidationError(
+                        f"Error al descontar {detalle.insumo.medicamento}: {str(e)}"
+                    )
+            
+            self.insumos_descontados = True
+            self.save(update_fields=['insumos_descontados'])
+        
+        return {
+            'success': True,
+            'insumos_descontados': resultados,
+            'total_items': len(resultados),
+            'dias_tratamiento': dias_tratamiento,
+            'message': f'✅ {len(resultados)} insumos descontados correctamente'
+        }
 
 
 class Cirugia(models.Model):
@@ -255,6 +407,13 @@ class ConsultaInsumo(models.Model):
     fecha_confirmacion = models.DateTimeField(null=True, blank=True)
     observaciones = models.TextField(blank=True, null=True)
     
+    # Control de descuento
+    stock_descontado = models.BooleanField(
+        default=False,
+        help_text="Indica si el stock de este insumo ya fue descontado. Previene descuentos duplicados."
+    )
+    fecha_descuento = models.DateTimeField(null=True, blank=True)
+    
     # Registro
     fecha_registro = models.DateTimeField(auto_now_add=True)
     
@@ -304,6 +463,82 @@ class ConsultaInsumo(models.Model):
         """Calcula cantidad antes de guardar"""
         self.calcular_cantidad()
         super().save(*args, **kwargs)
+    
+    def descontar_stock(self, usuario, dias_tratamiento=1):
+        """
+        Descuenta stock del insumo usando calcular_envases_requeridos().
+        
+        REGLAS:
+        - Usa calcular_envases_requeridos() del modelo Insumo
+        - Valida stock suficiente ANTES de descontar
+        - Marca stock_descontado=True para evitar duplicados
+        - Registra metadata del movimiento
+        - NUNCA permite stock negativo
+        
+        Args:
+            usuario: Usuario que realiza el descuento
+            dias_tratamiento: Días de tratamiento (default: 1)
+        
+        Returns:
+            dict: Resultado del descuento
+        
+        Raises:
+            ValidationError: Si stock insuficiente o ya descontado
+        """
+        from django.db import transaction
+        
+        # Validar que no se haya descontado previamente
+        if self.stock_descontado:
+            raise ValidationError(
+                f"El stock del insumo '{self.insumo.medicamento}' "
+                f"ya fue descontado para esta consulta."
+            )
+        
+        # Calcular envases requeridos
+        resultado = self.insumo.calcular_envases_requeridos(
+            peso_paciente_kg=float(self.peso_paciente),
+            dias_tratamiento=dias_tratamiento
+        )
+        
+        envases_requeridos = resultado['envases_requeridos']
+        
+        # Validar stock suficiente
+        if self.insumo.stock_actual < envases_requeridos:
+            raise ValidationError(
+                f"Stock insuficiente para '{self.insumo.medicamento}'. "
+                f"Requerido: {envases_requeridos} envases, "
+                f"Disponible: {self.insumo.stock_actual} envases"
+            )
+        
+        # Descontar stock dentro de transacción
+        with transaction.atomic():
+            # Actualizar stock del insumo
+            stock_anterior = self.insumo.stock_actual
+            self.insumo.stock_actual -= envases_requeridos
+            self.insumo.ultimo_movimiento = timezone.now()
+            self.insumo.tipo_ultimo_movimiento = 'salida'
+            self.insumo.usuario_ultimo_movimiento = usuario
+            self.insumo.save(update_fields=[
+                'stock_actual',
+                'ultimo_movimiento',
+                'tipo_ultimo_movimiento',
+                'usuario_ultimo_movimiento'
+            ])
+            
+            # Marcar como descontado
+            self.stock_descontado = True
+            self.fecha_descuento = timezone.now()
+            self.save(update_fields=['stock_descontado', 'fecha_descuento'])
+        
+        return {
+            'success': True,
+            'insumo': self.insumo.medicamento,
+            'envases_descontados': envases_requeridos,
+            'stock_anterior': stock_anterior,
+            'stock_actual': self.insumo.stock_actual,
+            'calculo_automatico': resultado['calculo_automatico'],
+            'detalle': resultado['detalle']
+        }
 
 
 class HospitalizacionInsumo(models.Model):
@@ -337,6 +572,13 @@ class HospitalizacionInsumo(models.Model):
     )
     fecha_confirmacion = models.DateTimeField(null=True, blank=True)
     observaciones = models.TextField(blank=True, null=True)
+    
+    # Control de descuento
+    stock_descontado = models.BooleanField(
+        default=False,
+        help_text="Indica si el stock de este insumo ya fue descontado. Previene descuentos duplicados."
+    )
+    fecha_descuento = models.DateTimeField(null=True, blank=True)
     
     # Registro
     fecha_registro = models.DateTimeField(auto_now_add=True)
@@ -377,6 +619,60 @@ class HospitalizacionInsumo(models.Model):
         """Calcula cantidad antes de guardar"""
         self.calcular_cantidad()
         super().save(*args, **kwargs)
+    
+    def descontar_stock(self, usuario, dias_tratamiento=1):
+        """
+        Descuenta stock del insumo usando calcular_envases_requeridos().
+        Misma lógica que ConsultaInsumo.descontar_stock()
+        """
+        from django.db import transaction
+        
+        if self.stock_descontado:
+            raise ValidationError(
+                f"El stock del insumo '{self.insumo.medicamento}' "
+                f"ya fue descontado para esta hospitalización."
+            )
+        
+        resultado = self.insumo.calcular_envases_requeridos(
+            peso_paciente_kg=float(self.peso_paciente),
+            dias_tratamiento=dias_tratamiento
+        )
+        
+        envases_requeridos = resultado['envases_requeridos']
+        
+        if self.insumo.stock_actual < envases_requeridos:
+            raise ValidationError(
+                f"Stock insuficiente para '{self.insumo.medicamento}'. "
+                f"Requerido: {envases_requeridos} envases, "
+                f"Disponible: {self.insumo.stock_actual} envases"
+            )
+        
+        with transaction.atomic():
+            stock_anterior = self.insumo.stock_actual
+            self.insumo.stock_actual -= envases_requeridos
+            self.insumo.ultimo_movimiento = timezone.now()
+            self.insumo.tipo_ultimo_movimiento = 'salida'
+            self.insumo.usuario_ultimo_movimiento = usuario
+            self.insumo.save(update_fields=[
+                'stock_actual',
+                'ultimo_movimiento',
+                'tipo_ultimo_movimiento',
+                'usuario_ultimo_movimiento'
+            ])
+            
+            self.stock_descontado = True
+            self.fecha_descuento = timezone.now()
+            self.save(update_fields=['stock_descontado', 'fecha_descuento'])
+        
+        return {
+            'success': True,
+            'insumo': self.insumo.medicamento,
+            'envases_descontados': envases_requeridos,
+            'stock_anterior': stock_anterior,
+            'stock_actual': self.insumo.stock_actual,
+            'calculo_automatico': resultado['calculo_automatico'],
+            'detalle': resultado['detalle']
+        }
 
 
 class CirugiaInsumo(models.Model):

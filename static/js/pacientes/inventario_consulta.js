@@ -46,7 +46,13 @@ async function cargarInventarioFiltrado() {
 
         if (data.success) {
             medicamentosDisponibles = data.productos;
-            console.log(`✅ ${data.total} medicamentos disponibles`);
+            console.log(`✅ ${data.total} medicamentos disponibles para ${window.pacienteData.especie || 'todas las especies'}`);
+            
+            // Mostrar información de filtrado aplicado
+            if (data.filtros_aplicados && data.filtros_aplicados.especie) {
+                console.log(`📋 Filtro aplicado: ${data.filtros_aplicados.especie}`);
+            }
+            
             mostrarInventario(medicamentosDisponibles);
         } else {
             console.error('❌ Error al cargar inventario:', data.error);
@@ -111,10 +117,14 @@ function mostrarInventario(productos) {
     if (!lista) return;
 
     if (productos.length === 0) {
+        const especiePaciente = window.pacienteData?.especie || 'esta especie';
         lista.innerHTML = `
             <div class="inventario-empty">
                 <i class="bi bi-inbox"></i>
-                <p>No hay medicamentos disponibles</p>
+                <p>No hay medicamentos disponibles para ${especiePaciente}</p>
+                <small style="color: #6b7280; margin-top: 8px; display: block;">
+                    Los productos deben estar configurados para la especie del paciente
+                </small>
             </div>
         `;
         return;
@@ -146,89 +156,133 @@ function mostrarInventario(productos) {
 
 /**
  * Calcular dosis personalizada según el peso del paciente
+ * CORREGIDO: Valida datos correctamente y calcula dosis sin fallar
  */
 function calcularDosisPersonalizada(producto, pesoPaciente) {
-    console.log('🧮 Calculando dosis para:', {
-        nombre: producto.nombre,
-        formato: producto.formato,
-        peso_paciente: pesoPaciente,
-        peso_ref: producto.peso_kg,
-        dosis_ml: producto.dosis_ml,
-        cantidad_pastillas: producto.cantidad_pastillas
-    });
-
-    if (!pesoPaciente || pesoPaciente <= 0) {
-        console.warn('⚠️ Peso del paciente no válido');
+    console.log('');
+    console.log('🧮 Cálculo dosis:');
+    console.log(`- Producto: ${producto.nombre}`);
+    console.log(`- Formato: ${producto.formato || 'NO DEFINIDO'}`);
+    
+    // Validar peso del paciente
+    const pesoNumerico = parseFloat(pesoPaciente);
+    if (!pesoNumerico || pesoNumerico <= 0) {
+        console.warn('❌ Peso del paciente no válido:', pesoPaciente);
         return null;
     }
+    console.log(`- Peso paciente: ${pesoNumerico} kg`);
 
-    if (!producto.peso_kg || producto.peso_kg <= 0) {
-        console.warn('⚠️ Producto sin peso de referencia');
+    // Validar y convertir peso de referencia
+    let pesoReferencia = parseFloat(producto.peso_kg);
+    if (!pesoReferencia || pesoReferencia <= 0 || isNaN(pesoReferencia)) {
+        console.log(`- Peso referencia: NO DEFINIDO (asumiendo 1 kg)`);
+        pesoReferencia = 1; // Si no hay peso de referencia, asumir factor 1:1
+    } else {
+        console.log(`- Peso referencia: ${pesoReferencia} kg`);
+    }
+
+    // Validar dosis base
+    const dosisBase = parseFloat(producto.dosis_ml);
+    if (!dosisBase || dosisBase <= 0 || isNaN(dosisBase)) {
+        console.warn('❌ Dosis base no definida o inválida:', producto.dosis_ml);
         return null;
     }
 
     const formato = producto.formato ? producto.formato.toLowerCase() : '';
-    let dosisTexto = '';
     
+    // Variables de cálculo
+    let dosisTotal = 0;
+    let contenidoEnvase = 0;
+    let unidadDosis = '';
+    let unidadEnvase = '';
+    let factorPeso = pesoNumerico / pesoReferencia;
+    
+    console.log(`- Dosis base: ${dosisBase}`);
+    console.log(`- Factor: ${factorPeso.toFixed(2)} (${pesoNumerico} / ${pesoReferencia})`);
+    
+    // PASO 1: Calcular dosis_total según formato
     switch(formato) {
         case 'liquido':
         case 'inyectable':
-            if (producto.dosis_ml && producto.dosis_ml > 0) {
-                const dosis = (producto.dosis_ml / producto.peso_kg) * pesoPaciente;
-                const dosisRedondeada = Math.round(dosis * 100) / 100;
-                dosisTexto = `${dosisRedondeada} ml`;
-                console.log('💧 Dosis líquido calculada:', dosisTexto);
+            // Siempre calcular dosis_total primero
+            dosisTotal = dosisBase * factorPeso;
+            unidadDosis = 'ml';
+            unidadEnvase = formato === 'inyectable' ? 'ampolla' : 'frasco';
+            
+            // Luego manejar ml_contenedor (con fallback)
+            contenidoEnvase = parseFloat(producto.ml_contenedor);
+            if (!contenidoEnvase || contenidoEnvase <= 0) {
+                console.warn('⚠️ ml_contenedor no definido, usando fallback (1 envase)');
+                contenidoEnvase = dosisTotal; // Fallback: 1 envase = dosis total
             }
             break;
             
         case 'pastilla':
         case 'comprimido':
         case 'tableta':
-            if (producto.cantidad_pastillas && producto.cantidad_pastillas > 0) {
-                const pastillas = (producto.cantidad_pastillas / producto.peso_kg) * pesoPaciente;
-                
-                if (pastillas < 1) {
-                    const fraccion = obtenerFraccion(pastillas);
-                    dosisTexto = `${fraccion} past`;
-                } else if (pastillas % 1 !== 0) {
-                    const entero = Math.floor(pastillas);
-                    const decimal = pastillas - entero;
-                    const fraccion = obtenerFraccion(decimal);
-                    dosisTexto = fraccion !== '1' ? `${entero} ${fraccion} past` : `${Math.round(pastillas)} past`;
-                } else {
-                    dosisTexto = `${Math.round(pastillas)} past`;
-                }
-                console.log('💊 Dosis pastilla calculada:', dosisTexto);
+            // Siempre calcular dosis_total primero
+            dosisTotal = dosisBase * factorPeso;
+            unidadDosis = 'pastillas';
+            unidadEnvase = 'envase';
+            
+            // Luego manejar cantidad_pastillas (con fallback)
+            contenidoEnvase = parseFloat(producto.cantidad_pastillas);
+            if (!contenidoEnvase || contenidoEnvase <= 0) {
+                console.warn('⚠️ cantidad_pastillas no definido, usando fallback (1 envase)');
+                contenidoEnvase = dosisTotal; // Fallback: 1 envase = dosis total
             }
             break;
             
         case 'pipeta':
-            if (producto.unidades_pipeta) {
-                dosisTexto = `${producto.unidades_pipeta} pipeta`;
-                console.log('💉 Dosis pipeta:', dosisTexto);
+            // Siempre calcular dosis_total primero
+            dosisTotal = dosisBase * factorPeso;
+            unidadDosis = 'pipetas';
+            unidadEnvase = 'caja';
+            
+            // Luego manejar unidades_pipeta (con fallback)
+            contenidoEnvase = parseFloat(producto.unidades_pipeta);
+            if (!contenidoEnvase || contenidoEnvase <= 0) {
+                console.warn('⚠️ unidades_pipeta no definido, usando fallback (1 envase)');
+                contenidoEnvase = dosisTotal; // Fallback: 1 envase = dosis total
             }
             break;
             
         case 'polvo':
         case 'crema':
         case 'gel':
-            if (producto.dosis_ml && producto.dosis_ml > 0) {
-                const dosis = (producto.dosis_ml / producto.peso_kg) * pesoPaciente;
-                const dosisRedondeada = Math.round(dosis * 100) / 100;
-                dosisTexto = `${dosisRedondeada} gr`;
-                console.log('🧪 Dosis polvo/crema calculada:', dosisTexto);
+            // Siempre calcular dosis_total primero
+            dosisTotal = dosisBase * factorPeso;
+            unidadDosis = 'gr';
+            unidadEnvase = 'envase';
+            
+            // Luego manejar ml_contenedor (con fallback)
+            contenidoEnvase = parseFloat(producto.ml_contenedor);
+            if (!contenidoEnvase || contenidoEnvase <= 0) {
+                console.warn('⚠️ ml_contenedor no definido, usando fallback (1 envase)');
+                contenidoEnvase = dosisTotal; // Fallback: 1 envase = dosis total
             }
             break;
             
         default:
-            console.warn('⚠️ Formato no reconocido:', formato);
+            console.warn('❌ Formato no reconocido:', formato);
+            return null;
     }
     
-    if (!dosisTexto) {
-        console.warn('⚠️ No se pudo calcular dosis');
-    }
+    // PASO 2: Calcular envases_requeridos (SIEMPRE redondear hacia arriba)
+    const envasesRequeridos = Math.ceil(dosisTotal / contenidoEnvase);
     
-    return dosisTexto || null;
+    // PASO 3: Generar texto legible
+    const dosisRedondeada = Math.round(dosisTotal * 100) / 100;
+    const dosisTexto = `${dosisRedondeada} ${unidadDosis} (${envasesRequeridos} ${unidadEnvase}${envasesRequeridos !== 1 ? 's' : ''})`;
+    
+    // LOGS DETALLADOS FINALES
+    console.log(`- Dosis final: ${dosisRedondeada} ${unidadDosis}`);
+    console.log(`- Contenido por envase: ${contenidoEnvase} ${unidadDosis}`);
+    console.log(`- Envases requeridos: ${envasesRequeridos} (${(dosisTotal / contenidoEnvase).toFixed(2)} exacto)`);
+    console.log(`✅ Texto guardado: "${dosisTexto}"`);
+    console.log('');
+    
+    return dosisTexto;
 }
 
 /**
@@ -311,7 +365,11 @@ function agregarMedicamento(productoId) {
         id: producto.id,
         nombre: producto.nombre,
         peso: peso,
-        dosis: dosisCalculada
+        dosis: dosisCalculada,
+        // Guardar info base para presentación correcta
+        dosis_base: producto.dosis_ml,
+        peso_referencia: producto.peso_kg || 1,
+        formato: producto.formato
     });
 
     actualizarMedicamentosSeleccionados();
@@ -355,16 +413,41 @@ function actualizarMedicamentosSeleccionados() {
     }
 
     container.innerHTML = window.medicamentosSeleccionados.map(med => {
-        console.log('📦 Renderizando medicamento:', med);
+        // ⭐ Obtener peso: puede estar como peso_paciente o peso
+        const pesoPaciente = med.peso_paciente || med.peso || 'N/A';
+        
+        // Construir presentación correcta de dosis
+        let dosisTexto = '';
+        if (med.dosis && med.dosis_base && med.peso_referencia) {
+            // Extraer unidad del formato
+            const unidad = med.formato === 'liquido' || med.formato === 'inyectable' ? 'ml' :
+                          med.formato === 'pastilla' || med.formato === 'comprimido' ? 'pastillas' :
+                          med.formato === 'pipeta' ? 'pipetas' : 'unidades';
+            
+            // Formato: "dosis_base por peso_kg · Paciente X kg → dosis_total"
+            dosisTexto = `${med.dosis_base} ${unidad} por ${med.peso_referencia} kg · Paciente ${pesoPaciente} kg → ${med.dosis}`;
+            
+            // Log detallado de presentación
+            console.log('📦 Renderizando:', med.nombre);
+            console.log(`  - Dosis base: ${med.dosis_base} ${unidad}`);
+            console.log(`  - Peso referencia: ${med.peso_referencia} kg`);
+            console.log(`  - Peso paciente: ${pesoPaciente} kg`);
+            console.log(`  - Dosis total: ${med.dosis}`);
+            console.log(`  - Texto UI: "${dosisTexto}"`);
+        } else if (med.dosis) {
+            // Fallback si no hay info base
+            dosisTexto = med.dosis;
+            console.log('📦 Renderizando (fallback):', med.nombre, '→', dosisTexto);
+        }
         
         return `
             <div class="medicamento-tag">
                 <div class="medicamento-info">
                     <div class="medicamento-nombre">${med.nombre}</div>
-                    ${med.dosis ? `
+                    ${dosisTexto ? `
                         <div class="medicamento-dosis">
                             <i class="bi bi-prescription2"></i> 
-                            <span>${med.dosis} por ${med.peso} kg</span>
+                            <span>${dosisTexto}</span>
                         </div>
                     ` : `
                         <div class="medicamento-dosis" style="opacity: 0.7;">
@@ -489,7 +572,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         return {
                             ...med,
                             peso: nuevoPeso,
-                            dosis: nuevaDosis
+                            dosis: nuevaDosis,
+                            // Mantener info base para presentación correcta
+                            dosis_base: producto.dosis_ml,
+                            peso_referencia: producto.peso_kg || 1,
+                            formato: producto.formato
                         };
                     }
                     return med;
