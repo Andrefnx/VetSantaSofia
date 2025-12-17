@@ -170,3 +170,161 @@ AUTHENTICATION_BACKENDS = [
     'cuentas.backends.RutBackend',  # Backend personalizado para RUT
     'django.contrib.auth.backends.ModelBackend',  # Backend por defecto
 ]
+
+JAZZMIN_SETTINGS = {
+    # =========================
+    # Branding
+    # =========================
+    "site_title": "VetSantaSofia Admin",
+    "site_header": "Veterinaria Santa Sofía",
+    "site_brand": "VetSantaSofia",
+    "welcome_sign": "Administración Clínica Veterinaria",
+    "copyright": "Veterinaria Santa Sofía",
+
+    # Logo (opcional, puedes dejar None)
+    "site_logo": None,
+    "login_logo": None,
+    "site_icon": None,
+
+    # =========================
+    # Navegación
+    # =========================
+    "show_sidebar": True,
+    "navigation_expanded": True,
+
+    # Orden lógico por flujo real del sistema
+    "order_with_respect_to": [
+    "agenda",
+    "clinica",
+    "pacientes",
+    "inventario",
+    "servicios",
+    "auth",
+],
+
+
+    # Ocultar modelos técnicos
+    "hide_models": [
+        "auth.permission",
+        "contenttypes.contenttype",
+        "admin.logentry",
+        "sessions.session",
+    ],
+
+    # =========================
+    # Íconos semánticos
+    # =========================
+    "icons": {
+     # =========================
+    # Agenda
+    # =========================
+    "agenda": "fas fa-calendar-alt",
+    "agenda.cita": "fas fa-clock",
+    "agenda.excepciondisponibilidad": "fas fa-ban",
+    "agenda.horariofijoveterinario": "fas fa-calendar-day",
+
+    # =========================
+    # Clínica
+    # =========================
+    "clinica": "fas fa-stethoscope",
+    "clinica.consulta": "fas fa-notes-medical",
+    "clinica.cirugia": "fas fa-procedures",
+    "clinica.hospitalizacion": "fas fa-hospital",
+    "clinica.altamedica": "fas fa-file-medical",
+    "clinica.documento": "fas fa-file-medical-alt",
+    "clinica.registrodiario": "fas fa-clipboard-list",
+
+    # =========================
+    # Pacientes
+    # =========================
+    "pacientes": "fas fa-paw",
+    "pacientes.paciente": "fas fa-dog",
+    "pacientes.propietario": "fas fa-user",
+
+    # =========================
+    # Inventario
+    # =========================
+    "inventario": "fas fa-boxes",
+    "inventario.insumo": "fas fa-pills",
+
+    # =========================
+    # Servicios
+    # =========================
+    "servicios": "fas fa-concierge-bell",
+    "servicios.servicioveterinario": "fas fa-briefcase-medical",
+    "servicios.servicioinsumo": "fas fa-syringe",
+
+    # =========================
+    # Autenticación
+    # =========================
+    "auth": "fas fa-user-shield",
+    "auth.group": "fas fa-users-cog",
+    "cuentas.customuser": "fas fa-user-md",
+
+    # =========================
+    # Auditoría
+    # =========================
+    "admin.logentry": "fas fa-history",
+},
+
+
+    "default_icon_parents": "fas fa-folder",
+    "default_icon_children": "fas fa-file",
+
+    # =========================
+    # Formularios
+    # =========================
+    "changeform_format": "horizontal_tabs",
+
+    "changeform_format_overrides": {
+        "auth.user": "collapsible",
+        "auth.group": "vertical_tabs",
+        "inventario.insumo": "horizontal_tabs",
+        "clinica.consulta": "horizontal_tabs",
+        "hospital.hospitalizacion": "horizontal_tabs",
+    },
+
+    # =========================
+    # UX y rendimiento
+    # =========================
+    "show_ui_builder": True,
+    "related_modal_active": False,
+
+    # =========================
+    # Colores
+    # =========================
+    "theme": "litera",
+
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": False,
+    "accent": "accent-primary",
+    "navbar": "navbar-white navbar-light",
+    "no_navbar_border": False,
+    "navbar_fixed": False,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-primary",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": True,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": True,
+    "sidebar_nav_legacy_style": True,
+    "sidebar_nav_flat_style": True,
+    "theme": "litera",
+    "dark_mode_theme": None,
+    "button_classes": {
+        "primary": "btn-outline-primary",
+        "secondary": "btn-outline-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    }
+}
