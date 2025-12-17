@@ -819,6 +819,25 @@
     }
 
     /**
+     * Guarda el carrito actual como borrador (devuelve a estado 'pendiente')
+     * Si el carrito fue cargado desde un pago pendiente, lo devuelve a la lista
+     */
+    async function guardarBorrador() {
+        if (cart.length === 0) {
+            alert('El carrito está vacío');
+            return;
+        }
+        
+        // TODO: Implementar lógica para detectar si es una venta en_proceso
+        // y devolverla a pendiente. Por ahora solo limpia el carrito.
+        
+        if (confirm('¿Guardar como borrador? Esto limpiará el carrito actual.')) {
+            clearCart();
+            alert('Borrador guardado. El pago volverá a Pagos Pendientes.');
+        }
+    }
+
+    /**
      * Carga la lista de pagos pendientes desde el API
      */
     async function cargarPagosPendientes() {
@@ -953,7 +972,7 @@
      */
     async function cargarPagoPendiente(ventaId) {
         try {
-            // Buscar la venta en los datos cargados
+            // 1. Primero obtener los datos de la venta ANTES de cambiar el estado
             const response = await fetch("{% url 'caja:api_cobros_pendientes' %}");
             const data = await response.json();
             
@@ -965,6 +984,20 @@
             
             if (!venta) {
                 throw new Error('Venta no encontrada');
+            }
+            
+            // 2. Ahora sí, marcar como "en proceso" para sacarlo de la lista
+            const marcarResponse = await fetch(`/caja/api/cobro/${ventaId}/marcar-en-proceso/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            const marcarData = await marcarResponse.json();
+            if (!marcarData.success) {
+                throw new Error(marcarData.error || 'Error al marcar como en proceso');
             }
             
 
@@ -1001,6 +1034,9 @@
             
             // Actualizar UI del carrito
             updateCart();
+            
+            // Actualizar contador de pagos pendientes (debe disminuir en 1)
+            await actualizarBadgePagosPendientes();
             
             // Cerrar el modal
             cerrarModalPagosPendientes();

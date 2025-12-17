@@ -125,6 +125,7 @@ class Venta(models.Model):
     """
     ESTADO_CHOICES = [
         ('pendiente', 'Cobro Pendiente'),
+        ('en_proceso', 'En Proceso'),  # Cargado en caja pero no finalizado
         ('pagado', 'Pagado'),
         ('cancelado', 'Cancelado'),
     ]

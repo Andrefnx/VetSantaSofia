@@ -247,6 +247,46 @@ def api_cobros_pendientes(request):
 
 @login_required
 @user_passes_test(es_admin_o_recepcion)
+@require_http_methods(["POST"])
+def marcar_cobro_en_proceso(request, venta_id):
+    """
+    Marca un cobro pendiente como 'en_proceso' cuando se carga en la caja
+    Esto lo saca de la lista de Pagos Pendientes temporalmente
+    """
+    try:
+        venta = Venta.objects.get(id=venta_id, estado='pendiente')
+        
+        # Cambiar estado a 'en_proceso' (temporal mientras está en caja)
+        venta.estado = 'en_proceso'
+        venta.save(update_fields=['estado'])
+        
+        # Registrar auditoría
+        AuditoriaCaja.objects.create(
+            venta=venta,
+            accion='cargar_en_caja',
+            usuario=request.user,
+            descripcion=f"Cobro cargado en caja para procesar"
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Cobro {venta.numero_venta} cargado en caja'
+        })
+        
+    except Venta.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Cobro no encontrado o ya no está pendiente'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+@login_required
+@user_passes_test(es_admin_o_recepcion)
 @require_http_methods(["POST", "DELETE"])
 def eliminar_cobro_pendiente(request, venta_id):
     """
