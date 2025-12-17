@@ -6,6 +6,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Sum
+from django.db import transaction
+from django.core.exceptions import ValidationError
 from decimal import Decimal
 
 # Importar desde las apps correctas
@@ -31,25 +33,113 @@ def caja(request):
     })
 
 @csrf_exempt
+@login_required
 def procesar_venta(request):
+    """
+    Procesa una venta desde la caja registradora
+    Crea la venta, agrega detalles, descuenta stock y marca como pagada
+    """
     if request.method == 'POST':
-        data = json.loads(request.body)
-        items = data.get('items', [])
         try:
-            for item in items:
-                nombre = item['name']
-                cantidad = int(item['quantity'])
-                # Busca el producto por nombre
-                producto = Insumo.objects.get(medicamento=nombre)
-                if producto.stock_actual >= cantidad:
-                    producto.stock_actual -= cantidad
-                    producto.save()
+            data = json.loads(request.body)
+            items = data.get('items', [])
+            metodo_pago = data.get('metodo_pago', 'efectivo')
+            cliente = data.get('cliente', 'Cliente General')
+            venta_en_proceso_id = data.get('venta_en_proceso_id')
+            
+            from .models import Venta, DetalleVenta
+            from django.utils import timezone
+            
+            with transaction.atomic():
+                # Si hay una venta en proceso, usarla. Si no, crear una nueva
+                if venta_en_proceso_id:
+                    venta = Venta.objects.get(id=venta_en_proceso_id, estado='en_proceso')
+                    # Actualizar datos
+                    venta.metodo_pago = metodo_pago
+                    venta.usuario_cobro = request.user
+                    venta.fecha_pago = timezone.now()
+                    venta.estado = 'pagado'
+                    venta.save()
                 else:
-                    return JsonResponse({'success': False, 'error': f'Stock insuficiente para {nombre}'})
-            return JsonResponse({'success': True})
+                    # Crear nueva venta
+                    venta = Venta.objects.create(
+                        tipo_origen='venta_libre',
+                        usuario_creacion=request.user,
+                        usuario_cobro=request.user,
+                        metodo_pago=metodo_pago,
+                        estado='pagado',
+                        fecha_pago=timezone.now()
+                    )
+                    
+                    # Crear detalles de venta
+                    subtotal_servicios = Decimal('0.00')
+                    subtotal_insumos = Decimal('0.00')
+                    
+                    for item in items:
+                        nombre = item['name']
+                        cantidad = Decimal(str(item['quantity']))
+                        precio_unitario = Decimal(str(item['price']))
+                        subtotal = cantidad * precio_unitario
+                        
+                        # Determinar si es servicio o insumo
+                        servicio = None
+                        insumo = None
+                        tipo = 'insumo'
+                        
+                        try:
+                            servicio = Servicio.objects.get(nombre=nombre)
+                            tipo = 'servicio'
+                            subtotal_servicios += subtotal
+                        except Servicio.DoesNotExist:
+                            try:
+                                insumo = Insumo.objects.get(medicamento=nombre)
+                                tipo = 'insumo'
+                                subtotal_insumos += subtotal
+                            except Insumo.DoesNotExist:
+                                pass
+                        
+                        # Crear detalle de venta
+                        detalle = DetalleVenta.objects.create(
+                            venta=venta,
+                            tipo=tipo,
+                            servicio=servicio,
+                            insumo=insumo,
+                            descripcion=nombre,
+                            cantidad=cantidad,
+                            precio_unitario=precio_unitario,
+                            subtotal=subtotal
+                        )
+                        
+                        # Descontar stock si es insumo
+                        if tipo == 'insumo' and insumo:
+                            if insumo.stock_actual >= cantidad:
+                                insumo.stock_actual -= cantidad
+                                insumo.save()
+                                detalle.stock_descontado = True
+                                detalle.fecha_descuento_stock = timezone.now()
+                                detalle.save()
+                            else:
+                                raise ValidationError(f'Stock insuficiente para {nombre}')
+                    
+                    # Actualizar totales de la venta
+                    venta.subtotal_servicios = subtotal_servicios
+                    venta.subtotal_insumos = subtotal_insumos
+                    venta.total = subtotal_servicios + subtotal_insumos
+                    venta.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    'venta_id': venta.id,
+                    'numero_venta': venta.numero_venta,
+                    'total': str(venta.total)
+                })
+                
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 @login_required
 def cashregister(request):

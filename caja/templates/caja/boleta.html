@@ -1,0 +1,104 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boleta - {{ venta.numero_venta }}</title>
+    <link rel="stylesheet" href="{% static 'css/caja/boleta.css' %}">
+</head>
+<body>
+    <div class="boleta-container">
+        <!-- Encabezado -->
+        <div class="encabezado">
+            <div class="logo">
+                <h1>VETERINARIA SANTA SOFIA</h1>
+            </div>
+            <div class="info-empresa">
+                <p>RUT: [POR CONFIRMAR]</p>
+                <p>Patagona 1338</p>
+                <p>6200000 Magallanes</p>
+                <p>Punta Arenas, Magallanes y la Antártica Chilena</p>
+            </div>
+        </div>
+
+        <div class="separador">========================================</div>
+
+        <!-- Información de la Boleta -->
+        <div class="info-boleta">
+            <p><strong>BOLETA N°:</strong> {{ venta.numero_venta }}</p>
+            <p><strong>FECHA:</strong> {{ venta.fecha_pago|date:"d/m/Y H:i" }}</p>
+            <p><strong>MÉTODO PAGO:</strong> {{ venta.get_metodo_pago_display }}</p>
+            {% if venta.paciente %}
+            <p><strong>PACIENTE:</strong> {{ venta.paciente.nombre }}</p>
+            <p><strong>TUTOR:</strong> {{ venta.paciente.propietario.nombre }} {{ venta.paciente.propietario.apellido }}</p>
+            {% endif %}
+            <p><strong>ATENDIÓ:</strong> {{ usuario_actual.nombre }} {{ usuario_actual.apellido }}</p>
+        </div>
+
+        <div class="separador">========================================</div>
+
+        <!-- Detalles de la Venta -->
+        <div class="detalles">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="col-descripcion">DESCRIPCIÓN</th>
+                        <th class="col-cantidad">CANT</th>
+                        <th class="col-precio">PRECIO</th>
+                        <th class="col-subtotal">SUBTOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detalle in venta.detalles.all %}
+                    <tr>
+                        <td class="col-descripcion">{{ detalle.descripcion }}</td>
+                        <td class="col-cantidad">{{ detalle.cantidad|floatformat:0 }}</td>
+                        <td class="col-precio">${{ detalle.precio_unitario|floatformat:0 }}</td>
+                        <td class="col-subtotal">${{ detalle.subtotal|floatformat:0 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="separador">========================================</div>
+
+        <!-- Totales -->
+        <div class="totales">
+            {% if venta.descuento > 0 %}
+            <div class="linea-total">
+                <span>SUBTOTAL BRUTO:</span>
+                <span>${{ subtotal_bruto|floatformat:0 }}</span>
+            </div>
+            <div class="linea-total">
+                <span>DESCUENTO:</span>
+                <span>-${{ venta.descuento|floatformat:0 }}</span>
+            </div>
+            {% endif %}
+            <div class="linea-total">
+                <span>SUBTOTAL NETO:</span>
+                <span>${{ subtotal_neto|floatformat:0 }}</span>
+            </div>
+            <div class="linea-total">
+                <span>IVA (19%):</span>
+                <span>${{ iva_calculado|floatformat:0 }}</span>
+            </div>
+            <div class="linea-total total-final">
+                <span>TOTAL A PAGAR:</span>
+                <span>${{ venta.total|floatformat:0 }}</span>
+            </div>
+        </div>
+
+        <div class="separador">========================================</div>
+
+        <!-- Pie de Página -->
+        <div class="pie">
+            <p class="mensaje">¡Gracias por su preferencia!</p>
+            <p class="fecha-impresion">Impreso: {% now "d/m/Y H:i:s" %}</p>
+        </div>
+    </div>
+
+    <script src="{% static 'js/caja/boleta.js' %}"></script>
+</body>
+</html>

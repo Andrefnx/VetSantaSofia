@@ -713,3 +713,36 @@ def buscar_insumo(request):
             for i in insumos
         ]
     })
+
+
+# =============================================================================
+# IMPRESIÓN DE BOLETA
+# =============================================================================
+
+@login_required
+@user_passes_test(es_admin_o_recepcion)
+def imprimir_boleta(request, venta_id):
+    """
+    Vista para generar e imprimir la boleta de una venta pagada
+    Solo se muestra si la venta está en estado 'pagado'
+    """
+    venta = get_object_or_404(Venta, id=venta_id, estado='pagado')
+    
+    # Calcular subtotal neto e IVA (IVA incluido en el precio)
+    # Subtotal neto = Total / 1.19
+    # IVA = Total - Subtotal neto
+    subtotal_neto = round(venta.total / Decimal('1.19'))
+    iva_calculado = venta.total - subtotal_neto
+    
+    # Si hay descuento, calcular el subtotal bruto
+    subtotal_bruto = venta.total + venta.descuento if venta.descuento > 0 else venta.total
+    
+    context = {
+        'venta': venta,
+        'usuario_actual': request.user,
+        'subtotal_neto': subtotal_neto,
+        'iva_calculado': iva_calculado,
+        'subtotal_bruto': subtotal_bruto,
+    }
+    
+    return render(request, 'caja/boleta.html', context)

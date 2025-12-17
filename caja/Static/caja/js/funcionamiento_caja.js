@@ -82,9 +82,11 @@ function updateCart() {
             </div>
         `).join('');
 
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const iva = Math.round(subtotal * 0.19);
-    const total = subtotal + iva;
+    // Total con IVA incluido
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    // Descomponer: subtotal = total / 1.19, iva = total - subtotal
+    const subtotal = Math.round(total / 1.19);
+    const iva = total - subtotal;
 
     document.getElementById('subtotal').textContent = '$' + subtotal.toLocaleString();
     document.getElementById('iva').textContent = '$' + iva.toLocaleString();
@@ -153,8 +155,8 @@ function togglePaymentMethod(element, method) {
 function calcularPagos() {
     if (cart.length === 0) return;
 
+    // Total con IVA ya incluido
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const totalConIva = total + Math.round(total * 0.19);
 
     let totalRecibido = 0;
 
@@ -164,12 +166,12 @@ function calcularPagos() {
         totalRecibido += value;
     });
 
-    const diferencia = totalRecibido - totalConIva;
+    const diferencia = totalRecibido - total;
 
     if (selectedPaymentMethods.size > 0) {
         document.getElementById('paymentSummary').style.display = 'block';
         document.getElementById('totalRecibido').textContent = '$' + totalRecibido.toLocaleString();
-        document.getElementById('totalAPagar').textContent = '$' + totalConIva.toLocaleString();
+        document.getElementById('totalAPagar').textContent = '$' + total.toLocaleString();
 
         const diferenciaElement = document.getElementById('diferencia');
         const diferenciaLabel = document.getElementById('diferenciaLabel');
@@ -195,7 +197,7 @@ function calcularPagos() {
     }
 }
 
-function procesarVentaDirecto() {
+async function procesarVentaDirecto() {
     if (cart.length === 0) {
         alert('El carrito está vacío');
         return;
@@ -209,37 +211,98 @@ function procesarVentaDirecto() {
         return;
     }
 
+    // Total con IVA ya incluido
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const totalConIva = total + Math.round(total * 0.19);
 
     let totalRecibido = 0;
-    let paymentDetails = [];
+    let metodoPagoMap = {
+        'efectivo': 0,
+        'debito': 0,
+        'credito': 0,
+        'transferencia': 0
+    };
 
     selectedPaymentMethods.forEach(method => {
         const input = document.getElementById(method + 'Amount');
         const value = parseFloat(input.value) || 0;
         totalRecibido += value;
-
+        
         if (value > 0) {
-            paymentDetails.push(`${method.charAt(0).toUpperCase() + method.slice(1)}: $${value.toLocaleString()}`);
+            metodoPagoMap[method] = value;
         }
     });
 
-    const diferencia = totalRecibido - totalConIva;
+    const diferencia = totalRecibido - total;
 
     if (diferencia < 0) {
         alert(`Falta dinero: $${Math.abs(diferencia).toLocaleString()}`);
         return;
     }
 
-    let mensaje = `¡Venta procesada exitosamente!\n\nCliente: ${cliente}\n\nMétodos de pago:\n${paymentDetails.join('\n')}\n\nTotal: $${totalConIva.toLocaleString()}\nRecibido: $${totalRecibido.toLocaleString()}`;
-
-    if (diferencia > 0) {
-        mensaje += `\nVuelto: $${diferencia.toLocaleString()}`;
+    // Determinar el método de pago principal
+    let metodoPagoPrincipal = 'efectivo';
+    if (selectedPaymentMethods.size === 1) {
+        metodoPagoPrincipal = Array.from(selectedPaymentMethods)[0];
+    } else if (selectedPaymentMethods.size > 1) {
+        metodoPagoPrincipal = 'mixto';
     }
 
-    alert(mensaje);
-    clearCart();
+    try {
+        // Preparar datos para enviar al backend
+        const ventaData = {
+            items: cart.map(item => ({
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price
+            })),
+            cliente: cliente || 'Cliente General',
+            metodo_pago: metodoPagoPrincipal,
+            detalles_pago: metodoPagoMap,
+            total: total,
+            venta_en_proceso_id: ventaEnProcesoId  // Si hay una venta en proceso
+        };
+
+        // Enviar al backend
+        const response = await fetch(window.CAJA_URLS.procesarVenta, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(ventaData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Mostrar mensaje de éxito
+            let mensaje = `¡Venta procesada exitosamente!\n\nVenta N°: ${result.numero_venta}\nTotal: $${total.toLocaleString()}`;
+            
+            if (diferencia > 0) {
+                mensaje += `\nVuelto: $${diferencia.toLocaleString()}`;
+            }
+            
+            alert(mensaje);
+
+            // Abrir boleta en nueva ventana/pestaña
+            if (result.venta_id) {
+                const boletaUrl = `/caja/boleta/${result.venta_id}/`;
+                window.open(boletaUrl, '_blank');
+            }
+
+            // Limpiar carrito
+            clearCart();
+
+            // Actualizar contador de pagos pendientes
+            await actualizarBadgePagosPendientes();
+        } else {
+            alert(`❌ Error al procesar la venta: ${result.error || 'Error desconocido'}`);
+        }
+
+    } catch (error) {
+        console.error('Error al procesar venta:', error);
+        alert('Error al procesar la venta. Por favor, intente nuevamente.');
+    }
 }
 
 function toggleCashRegister() {
