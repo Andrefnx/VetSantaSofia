@@ -1,1 +1,344 @@
+# ==============================================================================
+# ARCHIVOS SENSIBLES - NO SUBIR A GIT
+# ==============================================================================
+
+# Variables de entorno
 .env
+.env.local
+.env.production
+.env.*.local
+
+# ==============================================================================
+# PYTHON
+# ==============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+*.sqlite3
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# ==============================================================================
+# DJANGO
+# ==============================================================================
+
+# Static files (recolectados por collectstatic)
+/staticfiles/
+/static_root/
+
+# Media files (uploads de usuarios - considerar si quieres esto en git)
+/media/
+/mediafiles/
+
+# Database backups
+*.dump
+*.sql
+backup.sql
+
+# Migration files (considerar si quieres esto - normalmente se incluyen)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# ==============================================================================
+# IDE / EDITORS
+# ==============================================================================
+
+# VSCode
+.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+.history/
+*.vsix
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# ==============================================================================
+# SISTEMA OPERATIVO
+# ==============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==============================================================================
+# ARCHIVOS DE CONFIGURACIÓN LOCAL
+# ==============================================================================
+
+# Settings locales (mantener settings.py pero no versiones con credenciales)
+local_settings.py
+settings_local.py
+# NO ignorar settings_production.py - ese sí debe estar en git
+
+# ==============================================================================
+# LOGS Y TEMPORALES
+# ==============================================================================
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# ==============================================================================
+# DEPLOYMENT
+# ==============================================================================
+
+# Archivos de configuración con credenciales
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# Secrets
+secrets.json
+credentials.json
+
+# ==============================================================================
+# DESARROLLO
+# ==============================================================================
+
+# Testing
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+*.cover
+
+# Documentation builds
+docs/_build/
+
+# ==============================================================================
+# ESPECÍFICO DEL PROYECTO
+# ==============================================================================
+
+# Backups de base de datos
+backup.sql
+*.dump
+
+# Archivos de configuración con credenciales reales
+.env.production.real
+
+# Node modules (si usas frontend con npm)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# ==============================================================================
+# MANTENER ESTOS ARCHIVOS (NO IGNORAR)
+# ==============================================================================
+
+# Template de variables de entorno
+!.env.example
+
+# Settings de producción (sin credenciales, usa variables de entorno)
+!veteriaria/settings_production.py
+
+# Scripts de deployment
+!build.sh
+!runtime.txt
