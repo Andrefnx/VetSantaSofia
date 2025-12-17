@@ -391,7 +391,7 @@
                                                             </h3>
                                                             <p class="event-subtitle timeline-item-subtitle">
                                                                 <i class="bi bi-person"></i> {{ consulta.veterinario.nombre }} {{ consulta.veterinario.apellido }}
-                                                                {% if not consulta.insumos_descontados %}
+                                                                {% if not consulta.insumos_descontados and consulta.finalizada %}
                                                                 <span class="badge bg-warning text-dark ms-2" title="Pendiente de registrar uso de insumos">
                                                                     <i class="bi bi-clock-history"></i> Pendiente
                                                                 </span>
