@@ -35,20 +35,24 @@ from caja.services import crear_cobro_pendiente_desde_consulta, crear_cobro_pend
 #                 print(f"Error al crear cobro desde consulta {instance.id}: {str(e)}")
 
 
-@receiver(post_save, sender=Hospitalizacion)
-def crear_cobro_desde_hospitalizacion(sender, instance, created, **kwargs):
-    """
-    Crea un cobro pendiente cuando se da de alta una hospitalización
-    """
-    # Solo si la hospitalización está en estado 'alta' y no tiene venta
-    if instance.estado == 'alta' and (not hasattr(instance, 'venta') or not instance.venta):
-        # Verificar que tenga insumos o cirugías
-        tiene_insumos = instance.insumos_detalle.exists()
-        tiene_cirugias = instance.cirugias.exists()
-        
-        if tiene_insumos or tiene_cirugias:
-            try:
-                usuario = instance.veterinario if instance.veterinario else instance.paciente.propietario
-                crear_cobro_pendiente_desde_hospitalizacion(instance, usuario)
-            except Exception as e:
-                print(f"Error al crear cobro desde hospitalización {instance.id}: {str(e)}")
+# ⚠️ SIGNAL DESACTIVADA - Los cobros pendientes se crean manualmente en crear_alta_medica()
+# para tener control completo sobre el flujo y evitar duplicados
+# Ver: clinica/views.py -> crear_alta_medica()
+#
+# @receiver(post_save, sender=Hospitalizacion)
+# def crear_cobro_desde_hospitalizacion(sender, instance, created, **kwargs):
+#     """
+#     Crea un cobro pendiente cuando se da de alta una hospitalización
+#     """
+#     # Solo si la hospitalización está en estado 'alta' y no tiene venta
+#     if instance.estado == 'alta' and (not hasattr(instance, 'venta') or not instance.venta):
+#         # Verificar que tenga insumos o cirugías
+#         tiene_insumos = instance.insumos_detalle.exists()
+#         tiene_cirugias = instance.cirugias.exists()
+#         
+#         if tiene_insumos or tiene_cirugias:
+#             try:
+#                 usuario = instance.veterinario if instance.veterinario else instance.paciente.propietario
+#                 crear_cobro_pendiente_desde_hospitalizacion(instance, usuario)
+#             except Exception as e:
+#                 print(f"Error al crear cobro desde hospitalización {instance.id}: {str(e)}")

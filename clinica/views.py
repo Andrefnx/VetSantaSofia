@@ -632,7 +632,7 @@ def crear_consulta(request, paciente_id):
             if venta:
                 print(f'✅ Cobro pendiente creado: Venta #{venta.id}')
                 print(f'   - Estado: {venta.estado}')
-                print(f'   - Monto total: ${venta.monto_total}')
+                print(f'   - Total: ${venta.total}')
                 print(f'   - Detalles: {venta.detalles.count()} items')
             else:
                 print(f'⚠️ No se creó cobro pendiente (sin servicios ni insumos)')
@@ -832,7 +832,7 @@ def actualizar_consulta(request, consulta_id):
             if venta:
                 print(f'✅ Cobro pendiente creado/actualizado: Venta #{venta.id}')
                 print(f'   - Estado: {venta.estado}')
-                print(f'   - Monto total: ${venta.monto_total}')
+                print(f'   - Total: ${venta.total}')
                 print(f'   - Detalles: {venta.detalles.count()} items')
             else:
                 print(f'⚠️ No se creó cobro pendiente (sin servicios ni insumos)')
@@ -1433,14 +1433,16 @@ def crear_cirugia(request, hospitalizacion_id):
         hospitalizacion = get_object_or_404(Hospitalizacion, id=hospitalizacion_id)
         data = json.loads(request.body)
 
-        # Resolver servicio de cirugía (categoría cirugia)
+        # Resolver servicio de cirugía (categoría Cirugía)
         servicio = None
         servicio_id = data.get('servicio_id')
         if servicio_id:
             try:
-                servicio = Servicio.objects.get(idServicio=servicio_id, categoria__iexact='cirugia')
+                servicio = Servicio.objects.get(idServicio=servicio_id)
+                print(f'✅ Servicio encontrado: {servicio.nombre} (Categoría: {servicio.categoria})')
             except Servicio.DoesNotExist:
                 servicio = None
+                print(f'⚠️ Servicio no encontrado con ID {servicio_id}')
         servicio_nombre = servicio.nombre if servicio else data.get('tipo_cirugia', '')
         duracion = servicio.duracion if servicio else data.get('duracion_minutos')
         
@@ -1460,14 +1462,77 @@ def crear_cirugia(request, hospitalizacion_id):
         
         # Procesar medicamentos si existen
         medicamentos = data.get('medicamentos', [])
+        print(f'💊 Medicamentos recibidos para cirugía: {len(medicamentos)}')
+        
         if medicamentos:
             from inventario.models import Insumo
-            for med_id in medicamentos:
+            from .models import HospitalizacionInsumo
+            import re
+            from decimal import Decimal
+            
+            peso = hospitalizacion.paciente.ultimo_peso
+            
+            for med_data in medicamentos:
                 try:
+                    # Si solo viene el ID (formato antiguo - STRING o INT)
+                    if isinstance(med_data, (int, str)):
+                        med_id = int(med_data) if isinstance(med_data, str) else med_data
+                        insumo = Insumo.objects.get(idInventario=med_id)
+                        cirugia.medicamentos.add(insumo)
+                        print(f'  ✅ Insumo agregado (sin dosis): {insumo.medicamento}')
+                        continue
+                    
+                    # Formato nuevo: objeto con {id, nombre, dosis}
+                    med_id = med_data.get('id')
+                    dosis_str = med_data.get('dosis', '')
+                    
                     insumo = Insumo.objects.get(idInventario=med_id)
                     cirugia.medicamentos.add(insumo)
+                    print(f'  ✅ Insumo agregado a ManyToMany: {insumo.medicamento}')
+                    
+                    if dosis_str:
+                        print(f'  📝 Parseando dosis: "{dosis_str}"')
+                        
+                        # Extraer dosis_total_ml con regex (ej: "1.7 pastillas" → 1.7)
+                        dosis_total_ml = None
+                        match_dosis = re.search(r'^([\d.]+)', dosis_str)
+                        if match_dosis:
+                            try:
+                                dosis_total_ml = Decimal(match_dosis.group(1))
+                                print(f'    ✅ dosis_total_ml extraído: {dosis_total_ml}')
+                            except:
+                                print(f'    ⚠️ Error al convertir dosis a Decimal')
+                        
+                        # Extraer cantidad_final con regex (ej: "(1 envase)" o "(1 frasco)" → 1)
+                        cantidad_final = None
+                        match_cantidad = re.search(r'\((\d+(?:\.\d+)?)\s*(?:envases?|frascos?)\)', dosis_str)
+                        if match_cantidad:
+                            try:
+                                cantidad_final = Decimal(match_cantidad.group(1))
+                                print(f'    ✅ cantidad_final extraído: {cantidad_final}')
+                            except:
+                                print(f'    ⚠️ Error al convertir cantidad a Decimal')
+                        
+                        # Crear HospitalizacionInsumo
+                        try:
+                            HospitalizacionInsumo.objects.create(
+                                hospitalizacion=hospitalizacion,
+                                insumo=insumo,
+                                peso_paciente=Decimal(peso) if peso else None,
+                                dosis_total_ml=dosis_total_ml,
+                                cantidad_final=cantidad_final
+                            )
+                            print(f'  ✅ HospitalizacionInsumo guardado: {insumo.medicamento} (cantidad: {cantidad_final}, dosis: {dosis_total_ml})')
+                        except Exception as e:
+                            print(f'  ❌ Error al crear HospitalizacionInsumo: {str(e)}')
+                    
                 except Insumo.DoesNotExist:
+                    print(f'  ⚠️ Insumo no encontrado con ID {med_id if isinstance(med_data, dict) else med_data}')
                     pass
+                except Exception as e:
+                    print(f'  ❌ Error al procesar medicamento: {str(e)}')
+                    import traceback
+                    traceback.print_exc()
         
         return JsonResponse({
             'success': True,
@@ -1635,6 +1700,27 @@ def crear_alta_medica(request, hospitalizacion_id):
         hospitalizacion.fecha_alta = timezone.now()
         hospitalizacion.save()
         print(f'  ✅ Estado actualizado a "alta"')
+        
+        # ⭐ PASO 5: CREAR COBRO PENDIENTE
+        print('\n' + '=' * 80)
+        print('💰 CREANDO COBRO PENDIENTE PARA HOSPITALIZACIÓN')
+        print('=' * 80)
+        
+        from caja.services import crear_cobro_pendiente_desde_hospitalizacion
+        
+        try:
+            venta = crear_cobro_pendiente_desde_hospitalizacion(hospitalizacion, request.user)
+            if venta:
+                print(f'✅ Cobro pendiente creado: Venta #{venta.id}')
+                print(f'   - Estado: {venta.estado}')
+                print(f'   - Total: ${venta.total}')
+                print(f'   - Detalles: {venta.detalles.count()} items')
+            else:
+                print(f'⚠️ No se creó cobro pendiente (sin cirugías ni insumos)')
+        except Exception as e:
+            print(f'❌ Error al crear cobro pendiente: {str(e)}')
+            import traceback
+            traceback.print_exc()
         
         print('=' * 80)
         print(f'✅ ALTA MÉDICA COMPLETADA EXITOSAMENTE')

@@ -225,20 +225,33 @@ def crear_cobro_pendiente_desde_hospitalizacion(hospitalizacion, usuario):
                 precio_unitario=cirugia.servicio.precio
             )
         
-        # Agregar insumos de cirugía
-        for cirugia_insumo in cirugia.insumos_detalle.all():
-            DetalleVenta.objects.create(
-                venta=venta,
-                tipo='insumo',
-                insumo=cirugia_insumo.insumo,
-                descripcion=f"{cirugia_insumo.insumo.medicamento} (Cirugía: {cirugia.tipo_cirugia})",
-                cantidad=cirugia_insumo.cantidad_final,
-                precio_unitario=cirugia_insumo.insumo.precio_venta or Decimal('0'),
-                peso_paciente=cirugia_insumo.peso_paciente,
-                dosis_calculada_ml=cirugia_insumo.dosis_total_ml,
-                ml_contenedor=cirugia_insumo.ml_por_contenedor,
-                calculo_automatico=cirugia_insumo.calculo_automatico
-            )
+        # Agregar insumos de cirugía (desde CirugiaInsumo si existen)
+        insumos_cirugia = cirugia.insumos_detalle.all()
+        if insumos_cirugia.exists():
+            for cirugia_insumo in insumos_cirugia:
+                DetalleVenta.objects.create(
+                    venta=venta,
+                    tipo='insumo',
+                    insumo=cirugia_insumo.insumo,
+                    descripcion=f"{cirugia_insumo.insumo.medicamento} (Cirugía: {cirugia.tipo_cirugia})",
+                    cantidad=cirugia_insumo.cantidad_final,
+                    precio_unitario=cirugia_insumo.insumo.precio_venta or Decimal('0'),
+                    peso_paciente=cirugia_insumo.peso_paciente,
+                    dosis_calculada_ml=cirugia_insumo.dosis_total_ml,
+                    ml_contenedor=cirugia_insumo.ml_por_contenedor,
+                    calculo_automatico=cirugia_insumo.calculo_automatico
+                )
+        else:
+            # Fallback: si no hay CirugiaInsumo, buscar en ManyToMany directo
+            for insumo in cirugia.medicamentos.all():
+                DetalleVenta.objects.create(
+                    venta=venta,
+                    tipo='insumo',
+                    insumo=insumo,
+                    descripcion=f"{insumo.medicamento} (Cirugía: {cirugia.tipo_cirugia})",
+                    cantidad=1,  # Cantidad por defecto
+                    precio_unitario=insumo.precio_venta or Decimal('0')
+                )
     
     # Recalcular totales
     venta.calcular_totales()
