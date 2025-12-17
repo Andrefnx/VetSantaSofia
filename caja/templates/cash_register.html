@@ -440,7 +440,8 @@
         devolverAPendiente: "{% url 'caja:devolver_cobro_a_pendiente' 0 %}".replace('/0/', '/{id}/'),
         eliminarCobro: "{% url 'caja:eliminar_cobro_pendiente' 0 %}".replace('/0/', '/{id}/'),
         procesarVenta: "{% url 'caja:procesar_venta' %}",
-        imprimirBoleta: "{% url 'caja:imprimir_boleta' 0 %}".replace('/0/', '/{id}/')
+        imprimirBoleta: "{% url 'caja:imprimir_boleta' 0 %}".replace('/0/', '/{id}/'),
+        guardarBorrador: "{% url 'caja:guardar_borrador' %}"
     };
 </script>
 <script src="{% static 'caja/js/funcionamiento_caja.js' %}"></script>

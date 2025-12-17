@@ -285,28 +285,92 @@ def marcar_cobro_en_proceso(request, venta_id):
         }, status=400)
 
 
+@csrf_exempt
 @login_required
 @user_passes_test(es_admin_o_recepcion)
 @require_http_methods(["POST"])
 def devolver_cobro_a_pendiente(request, venta_id):
     """
     Devuelve un cobro de 'en_proceso' a 'pendiente' (guardar como borrador)
-    Esto permite que vuelva a aparecer en la lista de Pagos Pendientes
+    Actualiza los detalles de la venta con los cambios realizados en el carrito
     """
     try:
+        data = json.loads(request.body)
+        items = data.get('items', [])
+        
         venta = Venta.objects.get(id=venta_id, estado='en_proceso')
         
-        # Cambiar estado de vuelta a 'pendiente'
-        venta.estado = 'pendiente'
-        venta.save(update_fields=['estado'])
-        
-        # Registrar auditoría
-        AuditoriaCaja.objects.create(
-            venta=venta,
-            accion='devolver_a_pendiente',
-            usuario=request.user,
-            descripcion=f"Cobro devuelto a pendiente desde caja (borrador)"
-        )
+        with transaction.atomic():
+            # Si se enviaron items, actualizar los detalles de la venta
+            if items:
+                # Eliminar detalles anteriores
+                venta.detalles.all().delete()
+                
+                # Crear nuevos detalles con los items actuales del carrito
+                subtotal_total = Decimal('0.00')
+                
+                for item in items:
+                    nombre = item['name']
+                    cantidad = Decimal(str(item['quantity']))
+                    precio_unitario = Decimal(str(item['price']))
+                    subtotal = cantidad * precio_unitario
+                    
+                    # Determinar si es servicio o insumo
+                    servicio = None
+                    insumo = None
+                    tipo = 'insumo'
+                    
+                    try:
+                        servicio = Servicio.objects.get(nombre=nombre)
+                        tipo = 'servicio'
+                    except Servicio.DoesNotExist:
+                        try:
+                            insumo = Insumo.objects.get(medicamento=nombre)
+                            tipo = 'insumo'
+                        except Insumo.DoesNotExist:
+                            pass
+                    
+                    # Crear detalle de venta
+                    DetalleVenta.objects.create(
+                        venta=venta,
+                        tipo=tipo,
+                        servicio=servicio,
+                        insumo=insumo,
+                        descripcion=nombre,
+                        cantidad=cantidad,
+                        precio_unitario=precio_unitario,
+                        subtotal=subtotal
+                    )
+                    
+                    subtotal_total += subtotal
+                
+                # Actualizar totales de la venta
+                venta.total = subtotal_total
+                
+                # Calcular subtotales por tipo
+                subtotal_servicios = Decimal('0.00')
+                subtotal_insumos = Decimal('0.00')
+                
+                for detalle in venta.detalles.all():
+                    if detalle.tipo == 'servicio':
+                        subtotal_servicios += detalle.subtotal
+                    else:
+                        subtotal_insumos += detalle.subtotal
+                
+                venta.subtotal_servicios = subtotal_servicios
+                venta.subtotal_insumos = subtotal_insumos
+            
+            # Cambiar estado de vuelta a 'pendiente'
+            venta.estado = 'pendiente'
+            venta.save()
+            
+            # Registrar auditoría
+            AuditoriaCaja.objects.create(
+                venta=venta,
+                accion='devolver_a_pendiente',
+                usuario=request.user,
+                descripcion=f"Cobro devuelto a pendiente desde caja (borrador actualizado)"
+            )
         
         return JsonResponse({
             'success': True,
@@ -363,6 +427,111 @@ def eliminar_cobro_pendiente(request, venta_id):
             'success': False,
             'error': str(e)
         }, status=400)
+
+
+@csrf_exempt
+@login_required
+@user_passes_test(es_admin_o_recepcion)
+@require_http_methods(["POST"])
+def guardar_borrador(request):
+    """
+    Guarda el carrito actual como un cobro pendiente (borrador)
+    Crea una venta con estado 'pendiente' desde los items del carrito
+    """
+    try:
+        data = json.loads(request.body)
+        items = data.get('items', [])
+        cliente = data.get('cliente', '')
+        
+        if not items:
+            return JsonResponse({
+                'success': False,
+                'error': 'El carrito está vacío'
+            }, status=400)
+        
+        with transaction.atomic():
+            # Crear venta pendiente
+            venta = Venta.objects.create(
+                tipo_origen='venta_libre',
+                usuario_creacion=request.user,
+                estado='pendiente'
+            )
+            
+            # Crear detalles de venta
+            subtotal_total = Decimal('0.00')
+            
+            for item in items:
+                nombre = item['name']
+                cantidad = Decimal(str(item['quantity']))
+                precio_unitario = Decimal(str(item['price']))
+                subtotal = cantidad * precio_unitario
+                
+                # Determinar si es servicio o insumo
+                servicio = None
+                insumo = None
+                tipo = 'insumo'
+                
+                try:
+                    servicio = Servicio.objects.get(nombre=nombre)
+                    tipo = 'servicio'
+                except Servicio.DoesNotExist:
+                    try:
+                        insumo = Insumo.objects.get(medicamento=nombre)
+                        tipo = 'insumo'
+                    except Insumo.DoesNotExist:
+                        pass
+                
+                # Crear detalle de venta
+                DetalleVenta.objects.create(
+                    venta=venta,
+                    tipo=tipo,
+                    servicio=servicio,
+                    insumo=insumo,
+                    descripcion=nombre,
+                    cantidad=cantidad,
+                    precio_unitario=precio_unitario,
+                    subtotal=subtotal
+                )
+                
+                subtotal_total += subtotal
+            
+            # Actualizar totales de la venta (con IVA incluido)
+            venta.total = subtotal_total
+            
+            # Calcular subtotales por tipo
+            subtotal_servicios = Decimal('0.00')
+            subtotal_insumos = Decimal('0.00')
+            
+            for detalle in venta.detalles.all():
+                if detalle.tipo == 'servicio':
+                    subtotal_servicios += detalle.subtotal
+                else:
+                    subtotal_insumos += detalle.subtotal
+            
+            venta.subtotal_servicios = subtotal_servicios
+            venta.subtotal_insumos = subtotal_insumos
+            venta.save()
+            
+            # Registrar auditoría
+            AuditoriaCaja.objects.create(
+                venta=venta,
+                accion='crear_venta',
+                usuario=request.user,
+                descripcion=f"Carrito guardado como borrador (pago pendiente)"
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'venta_id': venta.id,
+                'numero_venta': venta.numero_venta,
+                'message': f'Borrador guardado como {venta.numero_venta}'
+            })
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
 # =============================================================================

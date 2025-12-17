@@ -464,6 +464,7 @@ function cerrarModalPagosPendientes() {
 /**
  * Guarda el carrito actual como borrador (devuelve a estado 'pendiente')
  * Si el carrito fue cargado desde un pago pendiente, lo devuelve a la lista
+ * Si es un carrito nuevo, lo crea como venta pendiente
  */
 async function guardarBorrador() {
     if (cart.length === 0) {
@@ -471,20 +472,31 @@ async function guardarBorrador() {
         return;
     }
 
-    // Si hay una venta en proceso cargada, devolverla a pendiente
-    if (ventaEnProcesoId) {
-        if (!confirm('¿Guardar como borrador? El pago volverá a Pagos Pendientes.')) {
-            return;
-        }
+    if (!confirm('¿Guardar como borrador?\n\nEl carrito se guardará en Pagos Pendientes.')) {
+        return;
+    }
 
-        try {
+    try {
+        // Si hay una venta en proceso cargada, devolverla a pendiente
+        if (ventaEnProcesoId) {
             const url = window.CAJA_URLS.devolverAPendiente.replace('{id}', ventaEnProcesoId);
+            
+            // Enviar los items actuales del carrito para actualizar la venta
+            const borradorData = {
+                items: cart.map(item => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price
+                }))
+            };
+            
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken')
-                }
+                },
+                body: JSON.stringify(borradorData)
             });
 
             const result = await response.json();
@@ -492,21 +504,45 @@ async function guardarBorrador() {
             if (result.success) {
                 alert(`✅ ${result.message}`);
                 clearCart();
-                // Actualizar contador de pagos pendientes
                 await actualizarBadgePagosPendientes();
             } else {
                 alert(`❌ Error: ${result.error}`);
             }
-        } catch (error) {
-            console.error('Error al guardar borrador:', error);
-            alert('Error al guardar el borrador: ' + error.message);
+        } else {
+            // Si es un carrito nuevo, crear venta pendiente
+            const cliente = document.getElementById('clienteInput').value;
+            
+            const borradorData = {
+                items: cart.map(item => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price
+                })),
+                cliente: cliente || 'Cliente General'
+            };
+
+            const response = await fetch(window.CAJA_URLS.guardarBorrador, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(borradorData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(`✅ ${result.message}\n\nPodrás completar el pago desde "Pagos Pendientes".`);
+                clearCart();
+                await actualizarBadgePagosPendientes();
+            } else {
+                alert(`❌ Error: ${result.error}`);
+            }
         }
-    } else {
-        // Si no hay venta en proceso, solo limpiar el carrito
-        if (confirm('¿Limpiar el carrito actual?')) {
-            clearCart();
-            alert('Carrito limpiado.');
-        }
+    } catch (error) {
+        console.error('Error al guardar borrador:', error);
+        alert('Error al guardar el borrador: ' + error.message);
     }
 }
 
