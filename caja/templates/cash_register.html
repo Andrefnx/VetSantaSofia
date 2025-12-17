@@ -95,14 +95,15 @@
         <!-- RIGHT: Shopping Cart -->
         <div class="cart-section">
             <!-- Cart Header -->
-            <div class="cart-header">
+            <div class="cart-header" style="overflow: visible;">
                 <h5><i class="bi bi-bag-check-fill"></i> Carrito de Venta</h5>
 
-                <div class="cart-header-inner">
-                    <div class="cart-header-actions">
-                        <button class="save-draft-btn" onclick="abrirModalPagosPendientes()" style="margin-right: 8px;">
+                <div class="cart-header-inner" style="overflow: visible;">
+                    <div class="cart-header-actions" style="overflow: visible;">
+                        <button class="save-draft-btn" onclick="abrirModalPagosPendientes()" style="margin-right: 8px; position: relative; overflow: visible !important;">
                             <i class="fas fa-file-invoice-dollar"></i>
                             <span>Pagos Pendientes</span>
+                            <span id="badgePagosPendientes" style="display: block; position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; min-width: 22px; height: 22px; padding: 0 6px; font-size: 12px; font-weight: bold; line-height: 22px; text-align: center; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.5); border: 2px solid white; z-index: 1000;">0</span>
                         </button>
                         <button class="save-draft-btn" onclick="guardarBorrador()">
                             <i class="fas fa-save"></i>
@@ -738,9 +739,65 @@
             document.getElementById('cashStatusLabel').textContent = 'Caja Cerrada';
             document.getElementById('cashAmount').textContent = '$0';
         }
+        
+        // Cargar contador de pagos pendientes al iniciar
+        cargarContadorPagosPendientes();
     });
 
     // =========== FUNCIONES PARA PAGOS PENDIENTES ===========
+
+    /**
+     * Helper para obtener el CSRF token
+     */
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    /**
+     * Actualiza el badge con el número de pagos pendientes
+     */
+    function actualizarBadgePagosPendientes(cantidad) {
+        const badge = document.getElementById('badgePagosPendientes');
+        console.log('Actualizando badge con cantidad:', cantidad);
+        if (badge) {
+            badge.textContent = cantidad;
+            badge.style.display = cantidad > 0 ? 'block' : 'none';
+            console.log('Badge actualizado - display:', badge.style.display);
+        } else {
+            console.error('Badge no encontrado!');
+        }
+    }
+
+    /**
+     * Carga el contador de pagos pendientes (sin abrir el modal)
+     */
+    async function cargarContadorPagosPendientes() {
+        try {
+            console.log('Cargando contador de pagos pendientes...');
+            const response = await fetch("{% url 'caja:api_cobros_pendientes' %}");
+            const data = await response.json();
+            console.log('Respuesta del API:', data);
+            if (data.success) {
+                console.log('Total de cobros:', data.total_cobros);
+                actualizarBadgePagosPendientes(data.total_cobros);
+            } else {
+                console.error('API retornó success=false');
+            }
+        } catch (error) {
+            console.error('Error al cargar contador de pagos pendientes:', error);
+        }
+    }
 
     /**
      * Abre el modal de pagos pendientes y carga los datos desde el API
@@ -796,12 +853,14 @@
                 contentDiv.style.display = 'block';
                 noPagosDiv.style.display = 'block';
                 document.querySelector('#pagosPendientesContent .table-responsive').style.display = 'none';
+                actualizarBadgePagosPendientes(0);
             } else {
                 // Mostrar tabla con pagos
                 contentDiv.style.display = 'block';
                 noPagosDiv.style.display = 'none';
                 document.querySelector('#pagosPendientesContent .table-responsive').style.display = 'block';
                 renderizarPagosPendientes(data.cobros);
+                actualizarBadgePagosPendientes(data.cobros.length);
             }
 
         } catch (error) {

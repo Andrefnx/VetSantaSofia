@@ -464,13 +464,17 @@ def crear_consulta(request, paciente_id):
             except (ValueError, TypeError) as e:
                 print(f'⚠️  Error al actualizar peso: {str(e)}')
         
-        # Procesar medicamentos - CREAR MedicamentoUtilizado
-        from .models import MedicamentoUtilizado
+        # Procesar medicamentos - CREAR MedicamentoUtilizado Y ConsultaInsumo
+        from .models import MedicamentoUtilizado, ConsultaInsumo
+        import re
+        from decimal import Decimal
+        
         medicamentos = data.get('medicamentos', [])
         print(f'💊 Medicamentos recibidos: {len(medicamentos)}')
         
         for med in medicamentos:
             try:
+                # 1️⃣ Guardar en MedicamentoUtilizado (modelo antiguo para compatibilidad)
                 MedicamentoUtilizado.objects.create(
                     consulta=consulta,
                     inventario_id=med.get('id'),
@@ -478,9 +482,55 @@ def crear_consulta(request, paciente_id):
                     dosis=med.get('dosis', ''),
                     peso_paciente=peso if peso else None
                 )
-                print(f'  ✅ Medicamento guardado: {med["nombre"]} - Dosis: {med.get("dosis", "Sin dosis")}')
+                print(f'  ✅ MedicamentoUtilizado guardado: {med["nombre"]}')
+                
+                # 2️⃣ Guardar en ConsultaInsumo (modelo nuevo para cobros pendientes)
+                dosis_str = med.get('dosis', '')
+                print(f'  📝 Parseando dosis: "{dosis_str}"')
+                
+                # Extraer dosis_total_ml con regex (ej: "1.7 pastillas" → 1.7)
+                dosis_total_ml = None
+                match_dosis = re.search(r'^([\d.]+)', dosis_str)
+                if match_dosis:
+                    try:
+                        dosis_total_ml = Decimal(match_dosis.group(1))
+                        print(f'    ✅ dosis_total_ml extraído: {dosis_total_ml}')
+                    except:
+                        print(f'    ⚠️ Error al convertir dosis a Decimal')
+                else:
+                    print(f'    ⚠️ No se encontró valor numérico en dosis')
+                
+                # Extraer cantidad_final con regex (ej: "(1 envase)" o "(1 frasco)" → 1)
+                cantidad_final = None
+                match_cantidad = re.search(r'\((\d+(?:\.\d+)?)\s*(?:envases?|frascos?)\)', dosis_str)
+                if match_cantidad:
+                    try:
+                        cantidad_final = Decimal(match_cantidad.group(1))
+                        print(f'    ✅ cantidad_final extraído: {cantidad_final}')
+                    except:
+                        print(f'    ⚠️ Error al convertir cantidad a Decimal')
+                else:
+                    print(f'    ⚠️ No se encontró cantidad de envases en dosis')
+                
+                # Crear ConsultaInsumo
+                from inventario.models import Insumo
+                try:
+                    insumo = Insumo.objects.get(idInventario=med.get('id'))
+                    ConsultaInsumo.objects.create(
+                        consulta=consulta,
+                        insumo=insumo,
+                        peso_paciente=Decimal(peso) if peso else None,
+                        dosis_total_ml=dosis_total_ml,
+                        cantidad_final=cantidad_final
+                    )
+                    print(f'  ✅ ConsultaInsumo guardado: {med["nombre"]} (cantidad: {cantidad_final}, dosis: {dosis_total_ml})')
+                except Insumo.DoesNotExist:
+                    print(f'  ⚠️ Insumo no encontrado con ID {med.get("id")}')
+                
             except Exception as e:
                 print(f'  ❌ Error al guardar medicamento {med.get("nombre")}: {str(e)}')
+                import traceback
+                traceback.print_exc()
 
         # ⭐ DESCUENTO DE INVENTARIO POR SERVICIOS (solo si finalizar=True)
         # Descontar insumos del inventario según los servicios ejecutados
@@ -570,6 +620,27 @@ def crear_consulta(request, paciente_id):
         elif cita_id and not finalizar:
             print(f'  ℹ️ MODO BORRADOR: Cita {cita_id} NO se marca como completada')
         
+        # ⭐ CREAR COBRO PENDIENTE (siempre, incluso en modo borrador)
+        print('=' * 50)
+        print('💰 CREANDO COBRO PENDIENTE')
+        print('=' * 50)
+        
+        from caja.services import crear_cobro_pendiente_desde_consulta
+        
+        try:
+            venta = crear_cobro_pendiente_desde_consulta(consulta, request.user)
+            if venta:
+                print(f'✅ Cobro pendiente creado: Venta #{venta.id}')
+                print(f'   - Estado: {venta.estado}')
+                print(f'   - Monto total: ${venta.monto_total}')
+                print(f'   - Detalles: {venta.detalles.count()} items')
+            else:
+                print(f'⚠️ No se creó cobro pendiente (sin servicios ni insumos)')
+        except Exception as e:
+            print(f'❌ Error al crear cobro pendiente: {str(e)}')
+            import traceback
+            traceback.print_exc()
+        
         print('=' * 50)
         print(f'✅ CONSULTA CREADA EXITOSAMENTE')
         print(f'   ID: {consulta.id}')
@@ -578,6 +649,7 @@ def crear_consulta(request, paciente_id):
         print(f'   Paciente: {paciente.nombre}')
         print(f'   Veterinario: {request.user.nombre} {request.user.apellido}')
         print(f'   Medicamentos guardados: {consulta.medicamentos_detalle.count()}')
+        print(f'   ConsultaInsumo guardados: {consulta.insumos_detalle.count()}')
         print(f'   Insumos descontados: {consulta.insumos_descontados}')
         print('=' * 50)
         
@@ -748,10 +820,32 @@ def actualizar_consulta(request, consulta_id):
         # Verificar estado final
         print(f'📊 Estado final - insumos_descontados: {consulta.insumos_descontados}')
         
+        # ⭐ CREAR/ACTUALIZAR COBRO PENDIENTE (siempre)
+        print('=' * 50)
+        print('💰 CREANDO/ACTUALIZANDO COBRO PENDIENTE')
+        print('=' * 50)
+        
+        from caja.services import crear_cobro_pendiente_desde_consulta
+        
+        try:
+            venta = crear_cobro_pendiente_desde_consulta(consulta, request.user)
+            if venta:
+                print(f'✅ Cobro pendiente creado/actualizado: Venta #{venta.id}')
+                print(f'   - Estado: {venta.estado}')
+                print(f'   - Monto total: ${venta.monto_total}')
+                print(f'   - Detalles: {venta.detalles.count()} items')
+            else:
+                print(f'⚠️ No se creó cobro pendiente (sin servicios ni insumos)')
+        except Exception as e:
+            print(f'❌ Error al crear cobro pendiente: {str(e)}')
+            import traceback
+            traceback.print_exc()
+        
         print('=' * 50)
         print(f'✅ CONSULTA ACTUALIZADA EXITOSAMENTE')
         print(f'   ID: {consulta.id}')
         print(f'   Modo: {"FINALIZADA" if finalizar else "BORRADOR"}')
+        print(f'   ConsultaInsumo guardados: {consulta.insumos_detalle.count()}')
         print(f'   Insumos descontados: {consulta.insumos_descontados}')
         print('=' * 50)
         
@@ -935,57 +1029,75 @@ def guardar_consulta(request, paciente_id):
             medicamentos = data.get('medicamentos', [])
             import re
             
+            print(f"\n{'='*60}")
+            print(f"📦 GUARDANDO INSUMOS DE CONSULTA #{consulta.id}")
+            print(f"{'='*60}")
+            
             for med in medicamentos:
                 insumo_id = med.get('id')
-                dosis_raw = med.get('dosis')  # Puede ser "13.6 gr (1 envase)" o número
+                nombre = med.get('nombre', 'Sin nombre')
+                dosis_raw = med.get('dosis')
+                
+                print(f"\n🔍 Procesando insumo: {nombre} (ID: {insumo_id})")
+                print(f"   Dosis raw: '{dosis_raw}'")
                 
                 if insumo_id and peso_paciente:
                     try:
                         insumo = Insumo.objects.get(id=insumo_id)
                         peso_decimal = Decimal(str(peso_paciente))
                         
-                        # Extraer número de la dosis (puede venir como "13.6 gr (1 envase)")
+                        # Extraer números de la dosis
                         dosis_numerica = None
                         cantidad_envases = None
                         
                         if dosis_raw:
-                            # Intentar extraer el número de la dosis
-                            match_dosis = re.search(r'([\d.]+)\s*(ml|gr|mg|unidades)?', str(dosis_raw))
+                            dosis_str = str(dosis_raw)
+                            
+                            # Extraer primer número (la dosis)
+                            match_dosis = re.search(r'^([\d.]+)', dosis_str)
                             if match_dosis:
                                 dosis_numerica = Decimal(match_dosis.group(1))
+                                print(f"   ✓ Dosis extraída: {dosis_numerica}")
                             
-                            # Intentar extraer cantidad de envases
-                            match_envases = re.search(r'\((\d+(?:\.\d+)?)\s*envases?\)', str(dosis_raw))
+                            # Extraer cantidad de envases del paréntesis
+                            match_envases = re.search(r'\((\d+(?:\.\d+)?)\s*envases?\)', dosis_str)
                             if match_envases:
                                 cantidad_envases = Decimal(match_envases.group(1))
+                                print(f"   ✓ Envases extraídos: {cantidad_envases}")
                         
-                        # Si no hay cantidad de envases, calcularla a partir de la dosis
-                        if not cantidad_envases and dosis_numerica:
-                            if hasattr(insumo, 'ml_por_contenedor') and insumo.ml_por_contenedor:
-                                from decimal import ROUND_UP
-                                cantidad_envases = (dosis_numerica / insumo.ml_por_contenedor).quantize(Decimal('1'), rounding=ROUND_UP)
-                            else:
-                                cantidad_envases = Decimal('1')
+                        # Si no hay cantidad de envases, usar 1 por defecto
+                        if not cantidad_envases:
+                            cantidad_envases = Decimal('1')
+                            print(f"   ⚠ No se encontraron envases, usando default: 1")
                         
                         # Crear ConsultaInsumo
                         consulta_insumo = ConsultaInsumo.objects.create(
                             consulta=consulta,
                             insumo=insumo,
                             peso_paciente=peso_decimal,
-                            dosis_total_ml=dosis_numerica,
+                            dosis_total_ml=dosis_numerica or Decimal('0'),
                             ml_por_contenedor=insumo.ml_por_contenedor if hasattr(insumo, 'ml_por_contenedor') else None,
-                            cantidad_calculada=cantidad_envases or Decimal('1'),
-                            cantidad_final=cantidad_envases or Decimal('1'),
+                            cantidad_calculada=cantidad_envases,
+                            cantidad_final=cantidad_envases,
                             calculo_automatico=True
                         )
                         
-                        print(f"✅ ConsultaInsumo creado: {insumo.medicamento} - Dosis: {dosis_numerica}, Cantidad: {cantidad_envases}")
+                        print(f"   ✅ ConsultaInsumo creado exitosamente")
+                        print(f"      - Peso paciente: {peso_decimal} kg")
+                        print(f"      - Dosis total: {dosis_numerica}")
+                        print(f"      - Cantidad final: {cantidad_envases}")
                         
-                    except (Insumo.DoesNotExist, ValueError, TypeError, AttributeError) as e:
-                        print(f"❌ Error al guardar insumo {insumo_id}: {str(e)}")
+                    except Insumo.DoesNotExist:
+                        print(f"   ❌ ERROR: Insumo {insumo_id} no existe en la BD")
+                    except Exception as e:
+                        print(f"   ❌ ERROR al crear ConsultaInsumo: {str(e)}")
                         import traceback
                         traceback.print_exc()
-                        continue
+            
+            print(f"\n{'='*60}")
+            print(f"✅ Total insumos procesados: {len(medicamentos)}")
+            print(f"   ConsultaInsumo creados: {consulta.insumos_detalle.count()}")
+            print(f"{'='*60}\n")
             
             # ⭐ MANTENER COMPATIBILIDAD: Guardar también en MedicamentoUtilizado (modelo antiguo)
             for med in medicamentos:

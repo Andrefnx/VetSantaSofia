@@ -9,26 +9,30 @@ from .models import Consulta, Hospitalizacion
 from caja.services import crear_cobro_pendiente_desde_consulta, crear_cobro_pendiente_desde_hospitalizacion
 
 
-@receiver(post_save, sender=Consulta)
-def crear_cobro_desde_consulta(sender, instance, created, **kwargs):
-    """
-    Crea un cobro pendiente automáticamente cuando se guarda una consulta
-    Solo si no existe ya un cobro asociado
-    """
-    # Solo si la consulta es nueva o si no tiene venta asociada
-    if not hasattr(instance, 'venta') or not instance.venta:
-        # Verificar que tenga servicios o insumos
-        tiene_servicios = instance.servicios.exists()
-        tiene_insumos = instance.insumos_detalle.exists()
-        
-        if tiene_servicios or tiene_insumos:
-            try:
-                # Usar el veterinario como usuario de creación
-                usuario = instance.veterinario if instance.veterinario else instance.paciente.propietario
-                crear_cobro_pendiente_desde_consulta(instance, usuario)
-            except Exception as e:
-                # Loguear el error pero no interrumpir el guardado
-                print(f"Error al crear cobro desde consulta {instance.id}: {str(e)}")
+# ⚠️ SIGNAL DESACTIVADA - Los cobros pendientes se crean manualmente en las vistas
+# para evitar timing issues con ManyToMany fields (servicios, insumos_detalle)
+# Ver: clinica/views.py -> crear_consulta() y actualizar_consulta()
+#
+# @receiver(post_save, sender=Consulta)
+# def crear_cobro_desde_consulta(sender, instance, created, **kwargs):
+#     """
+#     Crea un cobro pendiente automáticamente cuando se guarda una consulta
+#     Solo si no existe ya un cobro asociado
+#     """
+#     # Solo si la consulta es nueva o si no tiene venta asociada
+#     if not hasattr(instance, 'venta') or not instance.venta:
+#         # Verificar que tenga servicios o insumos
+#         tiene_servicios = instance.servicios.exists()
+#         tiene_insumos = instance.insumos_detalle.exists()
+#         
+#         if tiene_servicios or tiene_insumos:
+#             try:
+#                 # Usar el veterinario como usuario de creación
+#                 usuario = instance.veterinario if instance.veterinario else instance.paciente.propietario
+#                 crear_cobro_pendiente_desde_consulta(instance, usuario)
+#             except Exception as e:
+#                 # Loguear el error pero no interrumpir el guardado
+#                 print(f"Error al crear cobro desde consulta {instance.id}: {str(e)}")
 
 
 @receiver(post_save, sender=Hospitalizacion)

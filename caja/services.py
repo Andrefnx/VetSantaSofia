@@ -139,8 +139,16 @@ def crear_cobro_pendiente_desde_consulta(consulta, usuario):
         )
     
     # Agregar insumos con cálculo automático
-    for consulta_insumo in consulta.insumos_detalle.all():
-        DetalleVenta.objects.create(
+    print(f"\n🔍 Buscando insumos de consulta #{consulta.id}...")
+    insumos_consulta = consulta.insumos_detalle.all()
+    print(f"   📦 Total ConsultaInsumo encontrados: {insumos_consulta.count()}")
+    
+    for consulta_insumo in insumos_consulta:
+        print(f"\n   💊 Creando DetalleVenta para: {consulta_insumo.insumo.medicamento}")
+        print(f"      - Cantidad: {consulta_insumo.cantidad_final}")
+        print(f"      - Precio unitario: ${consulta_insumo.insumo.precio_venta or 0}")
+        
+        detalle = DetalleVenta.objects.create(
             venta=venta,
             tipo='insumo',
             insumo=consulta_insumo.insumo,
@@ -152,6 +160,7 @@ def crear_cobro_pendiente_desde_consulta(consulta, usuario):
             ml_contenedor=consulta_insumo.ml_por_contenedor,
             calculo_automatico=consulta_insumo.calculo_automatico
         )
+        print(f"      ✅ DetalleVenta #{detalle.id} creado")
     
     # Recalcular totales
     venta.calcular_totales()
