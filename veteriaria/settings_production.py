@@ -59,7 +59,6 @@ if os.getenv('CUSTOM_DOMAIN'):
 INSTALLED_APPS = [
     'jazzmin',
     
-    'admin_tools_stats',
     'django_nvd3',
     
     'django.contrib.admin',
