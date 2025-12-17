@@ -1,16 +1,37 @@
-:root {
-    --font-sans: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --primary: #0d6efd;
-    --success: #198754;
-    --danger: #dc3545;
-    --info: #0dcaf0;
-    --bg-light: #f8f9fa;
-    --border: #dee2e6;
+/* ==============================
+   ADMIN TOOLS STATS – FIX LAYOUT
+   ============================== */
+
+/* ==============================
+   BOTONES
+   ============================== */
+
+.btn-success {
+    background-color: #92e9c0;
 }
 
-body,
-.content-wrapper,
-.main-sidebar {
-    font-family: var(--font-sans);
-    font-size: 14px;
+.btn-danger {
+    background-color: #dc3545;
+}
+
+.btn-info {
+    background-color: #3bb39f91;
+}
+
+.btn {
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+/* ==============================
+   SIDEBAR ACTIVE LINK
+   ============================== */
+
+.nav-sidebar .nav-link.active {
+    background-color: #88ce97;
+    color: #fff;
+}
+
+.nav-sidebar .nav-link.active i {
+    color: #fff;
 }
