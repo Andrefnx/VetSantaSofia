@@ -32,6 +32,10 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'jazzmin',
+    'django_light',
+    'admin_tools_stats',
+    'django_nvd3',
+    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -294,7 +298,8 @@ JAZZMIN_SETTINGS = {
     # Colores
     # =========================
     "theme": "litera",
-
+    "use_google_fonts_cdn": True,
+    "custom_css": "css/base/jazzmin_fixes.css",
 }
 
 JAZZMIN_UI_TWEAKS = {

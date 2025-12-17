@@ -86,8 +86,8 @@
 <th>Especie</th>
 <th>Precio</th>
 <th>Stock</th>
-<th>Último Movimiento</th>
-<th>Tipo</th>
+<th>Marca</th>
+<th>Tipo de Medicamento</th>
 <th>Gestión</th>
 {% endblock %}
 
@@ -104,14 +104,8 @@
             {{ insumo.stock_actual }}
         </span>
     </td>
-    <td>{{ insumo.ultimo_movimiento|date:"d/m/Y H:i"|default:"-" }}</td>
-    <td class="tipo-movimiento-cell" data-id="{{ insumo.idInventario }}">
-        {% if insumo.tipo_ultimo_movimiento %}
-            {{ insumo.get_tipo_ultimo_movimiento_display }}
-        {% else %}
-            -
-        {% endif %}
-    </td>
+    <td>{{ insumo.marca|default:"-" }}</td>
+    <td>{{ insumo.tipo|default:"-" }}</td>
     <td>
         <div class="manage-wheel">
             <button type="button" onclick="toggleWheel(this)">

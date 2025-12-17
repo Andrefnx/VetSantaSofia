@@ -9,6 +9,8 @@ admin.site.site_title = 'VetLog Admin'
 
 urlpatterns = [
     path('admin/', admin.site.urls),  # ← PRIMERO
+    path('admin_tools_stats/', include('admin_tools_stats.urls')),
+    
     path('dashboard/', include('dashboard.urls')),
     path('pacientes/', include('pacientes.urls')),
     path('inventario/', include('inventario.urls')),

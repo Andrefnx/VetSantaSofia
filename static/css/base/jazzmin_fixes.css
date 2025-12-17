@@ -1,0 +1,16 @@
+:root {
+    --font-sans: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --primary: #0d6efd;
+    --success: #198754;
+    --danger: #dc3545;
+    --info: #0dcaf0;
+    --bg-light: #f8f9fa;
+    --border: #dee2e6;
+}
+
+body,
+.content-wrapper,
+.main-sidebar {
+    font-family: var(--font-sans);
+    font-size: 14px;
+}
