@@ -32,7 +32,6 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'jazzmin',
-    'django_nvd3',
     
     'django.contrib.admin',
     'django.contrib.auth',
