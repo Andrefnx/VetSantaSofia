@@ -117,8 +117,18 @@ def reporte_inventario(request):
         logger = logging.getLogger(__name__)
         logger.error(f"Error en filtros avanzados: {str(e)}")
     
-    # Anotar veces vendido
-    insumos = insumos.annotate(veces_vendido=Count('detalleventa')).order_by('medicamento')
+    # Anotar veces vendido (con filtro de fecha si aplica)
+    if fecha_desde or fecha_hasta:
+        # Contar solo ventas en el rango de fechas
+        filtro_count = Q()
+        if fecha_desde:
+            filtro_count &= Q(detalleventa__venta__fecha_creacion__date__gte=fecha_desde)
+        if fecha_hasta:
+            filtro_count &= Q(detalleventa__venta__fecha_creacion__date__lte=fecha_hasta)
+        insumos = insumos.annotate(veces_vendido=Count('detalleventa', filter=filtro_count)).order_by('medicamento')
+    else:
+        # Contar todas las ventas
+        insumos = insumos.annotate(veces_vendido=Count('detalleventa')).order_by('medicamento')
     
     # Obtener marcas únicas para el filtro
     marcas = Insumo.objects.exclude(marca__isnull=True).exclude(marca='').values_list('marca', flat=True).distinct().order_by('marca')
@@ -234,8 +244,18 @@ def exportar_inventario_excel(request):
         logger = logging.getLogger(__name__)
         logger.error(f"Error en filtros avanzados: {str(e)}")
     
-    # Anotar veces vendido
-    insumos = insumos.annotate(veces_vendido=Count('detalleventa')).order_by('medicamento')
+    # Anotar veces vendido (con filtro de fecha si aplica)
+    if fecha_desde or fecha_hasta:
+        # Contar solo ventas en el rango de fechas
+        filtro_count = Q()
+        if fecha_desde:
+            filtro_count &= Q(detalleventa__venta__fecha_creacion__date__gte=fecha_desde)
+        if fecha_hasta:
+            filtro_count &= Q(detalleventa__venta__fecha_creacion__date__lte=fecha_hasta)
+        insumos = insumos.annotate(veces_vendido=Count('detalleventa', filter=filtro_count)).order_by('medicamento')
+    else:
+        # Contar todas las ventas
+        insumos = insumos.annotate(veces_vendido=Count('detalleventa')).order_by('medicamento')
     
     # Crear workbook y hoja
     wb = Workbook()
