@@ -466,15 +466,11 @@ if (closeAgendarCitaModal) {
 // Guardar nueva consulta (si el formulario existe)
 const formNuevaConsulta = document.getElementById('formNuevaConsulta');
 if (formNuevaConsulta) {
-    // Variable para controlar si es finalización o borrador
-    let esFinalizacion = false;
-    
     // Botón Guardar Borrador
     const btnGuardarBorrador = document.getElementById('btnGuardarBorrador');
     if (btnGuardarBorrador) {
         btnGuardarBorrador.onclick = function() {
-            esFinalizacion = false;
-            guardarConsulta(btnGuardarBorrador);
+            guardarConsulta(btnGuardarBorrador, false);  // false = modo borrador
         };
     }
     
@@ -497,8 +493,7 @@ if (formNuevaConsulta) {
             );
             
             if (confirmacion) {
-                esFinalizacion = true;
-                guardarConsulta(btnFinalizarConsulta);
+                guardarConsulta(btnFinalizarConsulta, true);  // true = finalizar
             }
         };
     }
@@ -683,7 +678,7 @@ if (formNuevaConsulta) {
     }
     
     // Función unificada para guardar
-    async function guardarConsulta(botonActivador) {
+    async function guardarConsulta(botonActivador, esFinalizacion = false) {
     const form = formNuevaConsulta;
     
     // ✅ VALIDACIÓN CENTRALIZADA: verificar si el formulario ya fue enviado
@@ -698,6 +693,7 @@ if (formNuevaConsulta) {
     const serviciosIdsValue = formData.get('servicios_ids');
     console.log('🔍 DEBUG servicios_ids del FormData:', serviciosIdsValue);
     console.log('🔍 DEBUG serviciosSeleccionadosArray:', window.serviciosSeleccionadosArray);
+    console.log('🔍 DEBUG esFinalizacion:', esFinalizacion);
     
     const data = {
         paciente_id: window.pacienteData.id,
