@@ -226,8 +226,8 @@ def api_cobros_pendientes(request):
                 detalles_data.append({
                     'id': detalle.id,
                     'tipo': detalle.tipo,
-                    'servicio_id': detalle.servicio.id if detalle.servicio else None,
-                    'insumo_id': detalle.insumo.id if detalle.insumo else None,
+                    'servicio_id': detalle.servicio.pk if detalle.servicio else None,
+                    'insumo_id': detalle.insumo.pk if detalle.insumo else None,
                     'descripcion': detalle.descripcion,
                     'cantidad': float(detalle.cantidad),
                     'precio_unitario': float(detalle.precio_unitario),
