@@ -91,7 +91,7 @@ def reporte_inventario(request):
             venta__tipo_origen='consulta',
             insumo_id__isnull=False
         ).values_list('insumo_id', flat=True).distinct())
-        insumos = insumos.filter(id__in=ids_usados) if ids_usados else insumos.none()
+        insumos = insumos.filter(idInventario__in=ids_usados) if ids_usados else insumos.none()
     elif en_consultas == 'no':
         # Excluir los que fueron usados en consultas
         ids_usados = list(DetalleVenta.objects.filter(
@@ -100,7 +100,7 @@ def reporte_inventario(request):
             insumo_id__isnull=False
         ).values_list('insumo_id', flat=True).distinct())
         if ids_usados:
-            insumos = insumos.exclude(id__in=ids_usados)
+            insumos = insumos.exclude(idInventario__in=ids_usados)
     
     # Filtros de uso en hospitalizaciones - LÓGICA SIMPLE
     if en_hospitalizaciones == 'si':
@@ -110,7 +110,7 @@ def reporte_inventario(request):
             venta__tipo_origen='hospitalizacion',
             insumo_id__isnull=False
         ).values_list('insumo_id', flat=True).distinct())
-        insumos = insumos.filter(id__in=ids_usados) if ids_usados else insumos.none()
+        insumos = insumos.filter(idInventario__in=ids_usados) if ids_usados else insumos.none()
     elif en_hospitalizaciones == 'no':
         # Excluir los que fueron usados en hospitalizaciones
         ids_usados = list(DetalleVenta.objects.filter(
@@ -119,7 +119,7 @@ def reporte_inventario(request):
             insumo_id__isnull=False
         ).values_list('insumo_id', flat=True).distinct())
         if ids_usados:
-            insumos = insumos.exclude(id__in=ids_usados)
+            insumos = insumos.exclude(idInventario__in=ids_usados)
     
     # Construir filtro para anotación de veces vendido
     filtro_count = Q()
@@ -212,7 +212,7 @@ def exportar_inventario_excel(request):
             venta__tipo_origen='consulta',
             insumo_id__isnull=False
         ).values_list('insumo_id', flat=True).distinct())
-        insumos = insumos.filter(id__in=ids_usados) if ids_usados else insumos.none()
+        insumos = insumos.filter(idInventario__in=ids_usados) if ids_usados else insumos.none()
     elif en_consultas == 'no':
         # Excluir los que fueron usados en consultas
         ids_usados = list(DetalleVenta.objects.filter(
@@ -221,7 +221,7 @@ def exportar_inventario_excel(request):
             insumo_id__isnull=False
         ).values_list('insumo_id', flat=True).distinct())
         if ids_usados:
-            insumos = insumos.exclude(id__in=ids_usados)
+            insumos = insumos.exclude(idInventario__in=ids_usados)
     
     # Filtros de uso en hospitalizaciones - LÓGICA SIMPLE
     if en_hospitalizaciones == 'si':
@@ -231,7 +231,7 @@ def exportar_inventario_excel(request):
             venta__tipo_origen='hospitalizacion',
             insumo_id__isnull=False
         ).values_list('insumo_id', flat=True).distinct())
-        insumos = insumos.filter(id__in=ids_usados) if ids_usados else insumos.none()
+        insumos = insumos.filter(idInventario__in=ids_usados) if ids_usados else insumos.none()
     elif en_hospitalizaciones == 'no':
         # Excluir los que fueron usados en hospitalizaciones
         ids_usados = list(DetalleVenta.objects.filter(
@@ -240,7 +240,7 @@ def exportar_inventario_excel(request):
             insumo_id__isnull=False
         ).values_list('insumo_id', flat=True).distinct())
         if ids_usados:
-            insumos = insumos.exclude(id__in=ids_usados)
+            insumos = insumos.exclude(idInventario__in=ids_usados)
     
     # Construir filtro para anotación de veces vendido
     filtro_count = Q()
