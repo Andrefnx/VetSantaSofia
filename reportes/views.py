@@ -150,6 +150,9 @@ def reporte_inventario(request):
         insumos = insumos.filter(veces_vendido__gt=0)
     elif vendidos == 'no':
         insumos = insumos.filter(veces_vendido=0)
+    # Si hay filtros positivos de tipo origen, también asegurar veces_vendido > 0
+    elif en_consultas == 'si' or en_hospitalizaciones == 'si':
+        insumos = insumos.filter(veces_vendido__gt=0)
     
     # Obtener marcas únicas para el filtro
     marcas = Insumo.objects.exclude(marca__isnull=True).exclude(marca='').values_list('marca', flat=True).distinct().order_by('marca')
@@ -286,6 +289,9 @@ def exportar_inventario_excel(request):
         insumos = insumos.filter(veces_vendido__gt=0)
     elif vendidos == 'no':
         insumos = insumos.filter(veces_vendido=0)
+    # Si hay filtros positivos de tipo origen, también asegurar veces_vendido > 0
+    elif en_consultas == 'si' or en_hospitalizaciones == 'si':
+        insumos = insumos.filter(veces_vendido__gt=0)
     
     # Crear workbook y hoja
     wb = Workbook()
