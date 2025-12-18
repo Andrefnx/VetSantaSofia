@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 from inventario.models import Insumo
 from caja.models import Venta, DetalleVenta
 from clinica.models import Consulta, Hospitalizacion
@@ -262,37 +263,106 @@ def exportar_inventario_excel(request):
     ws = wb.active
     ws.title = "Inventario"
     
-    # Encabezados
+    # Agregar información de filtros aplicados en las primeras filas
+    ws.append(['REPORTE DE INVENTARIO'])
+    ws.append(['Fecha de generación:', timezone.now().strftime('%d/%m/%Y %H:%M')])
+    ws.append(['Generado por:', request.user.nombre if hasattr(request.user, 'nombre') else request.user.username])
+    ws.append([])  # Línea en blanco
+    
+    # Mostrar filtros aplicados
+    ws.append(['FILTROS APLICADOS:'])
+    if marca:
+        ws.append(['Marca:', marca])
+    if estado:
+        ws.append(['Estado:', 'Activo' if estado == 'activo' else 'Archivado'])
+    if stock_min:
+        ws.append(['Stock mínimo:', stock_min])
+    if stock_max:
+        ws.append(['Stock máximo:', stock_max])
+    if precio_min:
+        ws.append(['Precio mínimo:', f'${precio_min}'])
+    if precio_max:
+        ws.append(['Precio máximo:', f'${precio_max}'])
+    if fecha_desde:
+        ws.append(['Fecha desde:', fecha_desde])
+    if fecha_hasta:
+        ws.append(['Fecha hasta:', fecha_hasta])
+    if vendidos:
+        ws.append(['Vendidos:', 'Solo vendidos' if vendidos == 'si' else 'No vendidos'])
+    if en_consultas:
+        ws.append(['Usados en consultas:', 'Sí' if en_consultas == 'si' else 'No'])
+    if en_hospitalizaciones:
+        ws.append(['Usados en hospitalizaciones:', 'Sí' if en_hospitalizaciones == 'si' else 'No'])
+    
+    ws.append([])  # Línea en blanco
+    ws.append(['Total de registros:', insumos.count()])
+    ws.append([])  # Línea en blanco
+    
+    # Encabezados de datos
     headers = ['Medicamento', 'Marca', 'Stock Actual', 'Precio Venta', 'Veces Vendido', 'Estado']
     ws.append(headers)
     
     # Agregar datos
     for insumo in insumos:
-        estado = 'Archivado' if insumo.archivado else 'Activo'
-        marca = insumo.marca if insumo.marca else '-'
+        estado_txt = 'Archivado' if insumo.archivado else 'Activo'
+        marca_txt = insumo.marca if insumo.marca else '-'
         precio = float(insumo.precio_venta) if insumo.precio_venta else 0.0
         
         ws.append([
             insumo.medicamento,
-            marca,
+            marca_txt,
             float(insumo.stock_actual),
             precio,
             insumo.veces_vendido,
-            estado
+            estado_txt
         ])
     
     # Ajustar ancho de columnas
     for col in range(1, len(headers) + 1):
         ws.column_dimensions[get_column_letter(col)].width = 20
     
+    # Guardar los filtros aplicados para registro
+    filtros_dict = {
+        'marca': marca,
+        'estado': estado,
+        'stock_min': stock_min,
+        'stock_max': stock_max,
+        'precio_min': precio_min,
+        'precio_max': precio_max,
+        'fecha_desde': fecha_desde,
+        'fecha_hasta': fecha_hasta,
+        'vendidos': vendidos,
+        'en_consultas': en_consultas,
+        'en_hospitalizaciones': en_hospitalizaciones,
+    }
+    
+    # Crear registro del reporte
+    from .models import ReporteGenerado
+    from django.core.files.base import ContentFile
+    import io
+    
+    reporte = ReporteGenerado.objects.create(
+        tipo='inventario',
+        usuario=request.user,
+        filtros=filtros_dict,
+        total_registros=insumos.count()
+    )
+    
+    # Guardar el Excel en el registro
+    excel_buffer = io.BytesIO()
+    wb.save(excel_buffer)
+    excel_buffer.seek(0)
+    
+    filename = f'reporte_inventario_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    reporte.archivo.save(filename, ContentFile(excel_buffer.read()), save=True)
+    
     # Preparar respuesta HTTP
+    excel_buffer.seek(0)
     response = HttpResponse(
+        excel_buffer.read(),
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-    response['Content-Disposition'] = 'attachment; filename=reporte_inventario.xlsx'
-    
-    # Guardar workbook en response
-    wb.save(response)
+    response['Content-Disposition'] = f'attachment; filename={filename}'
     
     return response
 
