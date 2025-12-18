@@ -811,21 +811,73 @@ def descontar_stock_insumo(detalle_venta):
         )
     
     # ==========================================================================
-    # DESCUENTO ATÓMICO: Stock + Flags
+    # DESCUENTO ATÓMICO: Stock + Flags + Registro en Historial
+    # ==========================================================================
+    # NOTA IMPORTANTE - TRAZABILIDAD DE SALIDAS DE STOCK:
+    # Este es el punto único y centralizado donde el stock REALMENTE baja
+    # al confirmar un pago en caja. Aquí se establecen los campos críticos
+    # para que el signal de inventario (inventario/signals.py) pueda:
+    #   1. Detectar el cambio de stock (stock_anterior vs stock_nuevo)
+    #   2. Identificar el tipo de movimiento ('salida_stock' - DEBE ser exacto)
+    #   3. Capturar el usuario responsable de la transacción
+    #   4. Registrar automáticamente en RegistroHistorico (historial centralizado)
+    #
+    # ¿Por qué signals y no registro manual?
+    #   - Evita duplicación de lógica de historial en múltiples lugares
+    #   - Garantiza que CUALQUIER cambio de stock se registre (no solo desde caja)
+    #   - Centraliza la auditoría en un solo punto (DRY principle)
+    #   - Mantiene la separación de responsabilidades (caja = negocio, signals = auditoría)
+    #
+    # ¿Por qué es crítico el valor exacto 'salida_stock'?
+    #   - El signal valida: if tipo_movimiento in ['ingreso_stock', 'salida_stock']
+    #   - Cualquier otro valor (ej: 'salida') NO será registrado en historial
+    #   - Debe coincidir con Insumo.TIPO_MOVIMIENTO_CHOICES
+    #
+    # RESPONSABILIDAD DE ESTA FUNCIÓN:
+    #   ✅ Descontar stock del inventario
+    #   ✅ Establecer tipo_ultimo_movimiento correcto para el signal
+    #   ✅ Establecer usuario_ultimo_movimiento para trazabilidad
+    #   ✅ Prevenir descuentos duplicados (flag stock_descontado)
+    #   ❌ NO crear registros de historial manualmente (eso es del signal)
     # ==========================================================================
     with transaction.atomic():
-        # Guardar valores anteriores para logging
+        # Guardar valores anteriores para logging y para el signal
         stock_anterior = insumo.stock_actual
         
-        # Descontar stock
+        # Obtener usuario responsable desde la venta asociada
+        # El usuario_creacion de la venta es quien inició la transacción
+        usuario_responsable = detalle_venta.venta.usuario_creacion
+        
+        # Descontar stock y establecer metadatos para trazabilidad
         insumo.stock_actual -= cantidad
         insumo.ultimo_movimiento = timezone.now()
-        insumo.tipo_ultimo_movimiento = 'salida'
-        insumo.save(update_fields=['stock_actual', 'ultimo_movimiento', 'tipo_ultimo_movimiento'])
+        
+        # CRÍTICO: Usar 'salida_stock' (NO 'salida')
+        # Este valor DEBE coincidir exactamente con los valores esperados por el signal
+        # en inventario/signals.py línea 105-107
+        insumo.tipo_ultimo_movimiento = 'salida_stock'
+        
+        # Establecer usuario para que el signal pueda capturarlo
+        # Si esto no se setea, el signal intentará usar get_current_user() del middleware
+        # como fallback, pero es más confiable establecerlo explícitamente
+        insumo.usuario_ultimo_movimiento = usuario_responsable
+        
+        # Guardar cambios - El signal post_save detectará estos cambios y:
+        #   1. Comparará stock_anterior (de pre_save) vs stock_actual (actual)
+        #   2. Verificará que tipo_ultimo_movimiento == 'salida_stock'
+        #   3. Llamará a registrar_cambio_stock() con usuario_responsable
+        #   4. Creará un RegistroHistorico con tipo_evento='salida_stock'
+        insumo.save(update_fields=[
+            'stock_actual', 
+            'ultimo_movimiento', 
+            'tipo_ultimo_movimiento',
+            'usuario_ultimo_movimiento'
+        ])
         
         logger.debug(
             f"📉 Stock descontado: {insumo.medicamento} - "
-            f"{stock_anterior} → {insumo.stock_actual} (descontado: {cantidad})"
+            f"{stock_anterior} → {insumo.stock_actual} (descontado: {cantidad}) - "
+            f"Usuario: {usuario_responsable.username}"
         )
         
         # Marcar como descontado
@@ -858,8 +910,66 @@ def cancelar_venta(venta, usuario, motivo=''):
     if estado_anterior == 'pagado':
         for detalle in venta.detalles.filter(tipo='insumo', stock_descontado=True):
             if detalle.insumo:
-                detalle.insumo.stock_actual += int(detalle.cantidad)
-                detalle.insumo.save()
+                # =============================================================
+                # REINTEGRO DE STOCK + REGISTRO EN HISTORIAL
+                # =============================================================
+                # CONTEXTO - CANCELACIÓN DE VENTA:
+                # Cuando se cancela una venta que ya estaba pagada, el stock
+                # que se descontó originalmente debe REINTEGRARSE al inventario.
+                # Este es el punto donde el stock REALMENTE aumenta.
+                #
+                # COHERENCIA CON SALIDAS (A6.1):
+                # Al igual que descontar_stock_insumo() establece los campos
+                # necesarios para que el signal registre la salida, aquí se
+                # establecen los campos para que el signal registre el INGRESO.
+                #
+                # RESPONSABILIDAD DE ESTE CÓDIGO:
+                #   ✅ Aumentar stock_actual (reintegro físico)
+                #   ✅ Establecer tipo_ultimo_movimiento = 'ingreso_stock'
+                #   ✅ Establecer usuario_ultimo_movimiento (quien canceló)
+                #   ✅ Actualizar timestamp del movimiento
+                #   ✅ Marcar detalle como NO descontado
+                #   ❌ NO crear registros de historial manualmente (eso es del signal)
+                #
+                # EL SIGNAL SE ENCARGA DE:
+                #   - Detectar cambio de stock (stock_anterior vs stock_nuevo)
+                #   - Validar tipo_movimiento == 'ingreso_stock'
+                #   - Registrar en RegistroHistorico automáticamente
+                #   - Capturar usuario responsable (de usuario_ultimo_movimiento)
+                # =============================================================
+                
+                insumo = detalle.insumo
+                cantidad_reintegrar = int(detalle.cantidad)
+                
+                # Reintegrar stock
+                insumo.stock_actual += cantidad_reintegrar
+                
+                # Establecer metadatos para que el signal registre correctamente
+                insumo.ultimo_movimiento = timezone.now()
+                
+                # CRÍTICO: Usar 'ingreso_stock' (NO mantener 'salida_stock')
+                # El stock está AUMENTANDO, por lo tanto es un INGRESO
+                # Este valor DEBE coincidir con los valores esperados por el signal
+                # en inventario/signals.py línea 109
+                insumo.tipo_ultimo_movimiento = 'ingreso_stock'
+                
+                # Establecer usuario responsable (quien cancela la venta)
+                # Esto garantiza trazabilidad completa de la cancelación
+                insumo.usuario_ultimo_movimiento = usuario
+                
+                # Guardar cambios - El signal post_save detectará:
+                #   1. Cambio de stock (aumentó)
+                #   2. tipo_ultimo_movimiento == 'ingreso_stock' ✅
+                #   3. usuario_ultimo_movimiento establecido ✅
+                #   4. Creará RegistroHistorico con tipo_evento='ingreso_stock'
+                insumo.save(update_fields=[
+                    'stock_actual',
+                    'ultimo_movimiento',
+                    'tipo_ultimo_movimiento',
+                    'usuario_ultimo_movimiento'
+                ])
+                
+                # Marcar detalle como no descontado (ya se reintegró)
                 detalle.stock_descontado = False
                 detalle.save()
     

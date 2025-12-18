@@ -11,6 +11,7 @@ from decimal import Decimal
 from .models import Insumo
 
 from historial.models import RegistroHistorico
+from historial.middleware import get_current_user
 from historial.utils import (
     registrar_creacion,
     registrar_cambio_precio,
@@ -51,6 +52,8 @@ def insumo_pre_save(sender, instance, **kwargs):
                 'precauciones': anterior.precauciones,
                 'contraindicaciones': anterior.contraindicaciones,
                 'efectos_adversos': anterior.efectos_adversos,
+                # Campo de estado
+                'archivado': anterior.archivado,
             }
         except Insumo.DoesNotExist:
             pass
@@ -132,7 +135,28 @@ def insumo_post_save(sender, instance, created, **kwargs):
                     tipo_evento_prioritario = 'actualizacion_precio'
                 cambios_detectados.append('precio_venta')
             
-            # 3. MODIFICACIÓN DE INFORMACIÓN (MENOR PRIORIDAD)
+            # 3. CAMBIO DE ESTADO ARCHIVADO (TERCERA PRIORIDAD - MEDIA CRITICIDAD)
+            if 'archivado' in anterior and anterior['archivado'] != instance.archivado:
+                from historial.utils import registrar_cambio_estado
+                
+                # Invertir lógica: archivado=True significa inactivo (desactivacion)
+                # archivado=False significa activo (activacion)
+                activo = not instance.archivado
+                
+                registrar_cambio_estado(
+                    entidad='inventario',
+                    objeto_id=instance.pk,
+                    nombre_objeto=instance.medicamento,
+                    activo=activo,
+                    usuario=usuario
+                )
+                
+                # Solo sobrescribir si no hay cambio de stock ni precio
+                if not tipo_evento_prioritario:
+                    tipo_evento_prioritario = 'desactivacion' if instance.archivado else 'activacion'
+                cambios_detectados.append('archivado')
+            
+            # 4. MODIFICACIÓN DE INFORMACIÓN (MENOR PRIORIDAD)
             campos_info = [
                 'medicamento', 'marca', 'sku', 'tipo', 'formato', 'descripcion', 'especie',
                 'dosis_ml', 'ml_contenedor', 'cantidad_pastillas', 'unidades_pipeta', 'peso_kg',

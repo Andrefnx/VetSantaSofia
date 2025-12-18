@@ -263,8 +263,19 @@ def discount_stock_for_services(services, user, origen_obj):
                         f"Esto no debería ocurrir. Contacte al administrador."
                     )
                 
-                # Guardar cambios
-                insumo.save()
+                # ⭐ A7.2: Establecer metadata para que el signal registre en RegistroHistorico
+                from django.utils import timezone
+                insumo.tipo_ultimo_movimiento = 'salida_stock'
+                insumo.usuario_ultimo_movimiento = user
+                insumo.ultimo_movimiento = timezone.now()
+                
+                # Guardar cambios (el signal detectará y registrará automáticamente)
+                insumo.save(update_fields=[
+                    'stock_actual',
+                    'ultimo_movimiento',
+                    'tipo_ultimo_movimiento',
+                    'usuario_ultimo_movimiento'
+                ])
                 
                 # Registrar para respuesta
                 insumos_descontados.append({
