@@ -124,6 +124,7 @@ def reporte_inventario(request):
     try:
         if en_consultas == 'no':
             ids_excl = list(DetalleVenta.objects.filter(
+                tipo='insumo',
                 venta__tipo_origen='consulta',
                 insumo_id__isnull=False
             ).values_list('insumo_id', flat=True).distinct())
@@ -132,6 +133,7 @@ def reporte_inventario(request):
         
         if en_hospitalizaciones == 'no':
             ids_excl = list(DetalleVenta.objects.filter(
+                tipo='insumo',
                 venta__tipo_origen='hospitalizacion',
                 insumo_id__isnull=False
             ).values_list('insumo_id', flat=True).distinct())
@@ -263,6 +265,7 @@ def exportar_inventario_excel(request):
     try:
         if en_consultas == 'no':
             ids_excl = list(DetalleVenta.objects.filter(
+                tipo='insumo',
                 venta__tipo_origen='consulta',
                 insumo_id__isnull=False
             ).values_list('insumo_id', flat=True).distinct())
@@ -271,6 +274,7 @@ def exportar_inventario_excel(request):
         
         if en_hospitalizaciones == 'no':
             ids_excl = list(DetalleVenta.objects.filter(
+                tipo='insumo',
                 venta__tipo_origen='hospitalizacion',
                 insumo_id__isnull=False
             ).values_list('insumo_id', flat=True).distinct())
