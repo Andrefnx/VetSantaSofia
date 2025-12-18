@@ -1326,7 +1326,7 @@ if (buscarServicio) {
     });
 }
 
-function agregarServicio(id, nombre) {
+function agregarServicio(id, nombre, actualizarBuscador = true) {
     // Verificar que no esté ya agregado
     if (serviciosSeleccionadosArray.some(s => s.id === id)) {
         return;
@@ -1348,9 +1348,11 @@ function agregarServicio(id, nombre) {
     // ⭐ Mostrar insumos del servicio
     mostrarInsumosServicios();
     
-    // Limpiar buscador
-    buscarServicio.value = '';
-    resultadosServicio.style.display = 'none';
+    // Limpiar buscador solo si se solicita (al agregar manualmente, no al cargar borrador)
+    if (actualizarBuscador && buscarServicio && resultadosServicio) {
+        buscarServicio.value = '';
+        resultadosServicio.style.display = 'none';
+    }
 }
 
 function eliminarServicio(id) {

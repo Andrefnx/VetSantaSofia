@@ -1153,15 +1153,23 @@ window.editarConsulta = async function(consultaId) {
                         window.serviciosSeleccionadosArray = [];
                     }
                     
-                    // Agregar cada servicio
+                    // Agregar cada servicio usando la función agregarServicio si está disponible
                     consulta.servicios.forEach(servicio => {
-                        if (typeof window.serviciosSeleccionadosArray !== 'undefined') {
+                        if (typeof agregarServicio === 'function') {
+                            // Usar agregarServicio para obtener los insumos del servicio
+                            // Pasar false para no actualizar el buscador al cargar borrador
+                            agregarServicio(servicio.id, servicio.nombre, false);
+                            console.log(`  ✅ Servicio cargado con insumos: ${servicio.nombre} (ID: ${servicio.id})`);
+                        } else if (typeof window.serviciosSeleccionadosArray !== 'undefined') {
+                            // Fallback: agregar manualmente buscando el servicio completo
+                            const servicioCompleto = window.todosLosServicios?.find(s => s.idServicio === servicio.id);
                             window.serviciosSeleccionadosArray.push({
                                 id: servicio.id,
-                                nombre: servicio.nombre
+                                nombre: servicio.nombre,
+                                insumos: servicioCompleto?.insumos || []
                             });
+                            console.log(`  ✅ Servicio: ${servicio.nombre} (ID: ${servicio.id})`);
                         }
-                        console.log(`  ✅ Servicio: ${servicio.nombre} (ID: ${servicio.id})`);
                     });
                     
                     // Actualizar input hidden con IDs
@@ -1175,6 +1183,12 @@ window.editarConsulta = async function(consultaId) {
                     if (typeof actualizarServiciosSeleccionados === 'function') {
                         actualizarServiciosSeleccionados();
                         console.log('✅ UI de servicios actualizada');
+                    }
+                    
+                    // Actualizar insumos de servicios si existe la función
+                    if (typeof mostrarInsumosServicios === 'function') {
+                        mostrarInsumosServicios();
+                        console.log('✅ Insumos de servicios actualizados');
                     }
                 }).catch(e => console.warn('⚠️ Error al cargar servicios:', e));
             } else {
