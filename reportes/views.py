@@ -7,6 +7,18 @@ from caja.models import Venta, DetalleVenta
 from clinica.models import Consulta, Hospitalizacion
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
+from datetime import datetime
+
+
+def validar_fecha(fecha_str):
+    """Valida que una cadena sea una fecha válida en formato YYYY-MM-DD"""
+    if not fecha_str or not fecha_str.strip():
+        return ''
+    try:
+        datetime.strptime(fecha_str.strip(), '%Y-%m-%d')
+        return fecha_str.strip()
+    except ValueError:
+        return ''
 
 
 @login_required
@@ -67,8 +79,8 @@ def reporte_inventario(request):
     vendidos = request.GET.get('vendidos', '').strip()
     en_consultas = request.GET.get('en_consultas', '').strip()
     en_hospitalizaciones = request.GET.get('en_hospitalizaciones', '').strip()
-    fecha_desde = request.GET.get('fecha_desde', '').strip()
-    fecha_hasta = request.GET.get('fecha_hasta', '').strip()
+    fecha_desde = validar_fecha(request.GET.get('fecha_desde', ''))
+    fecha_hasta = validar_fecha(request.GET.get('fecha_hasta', ''))
     
     # Solo aplicar filtros avanzados si se solicitan explícitamente
     try:
@@ -221,8 +233,8 @@ def exportar_inventario_excel(request):
     vendidos = request.GET.get('vendidos', '').strip()
     en_consultas = request.GET.get('en_consultas', '').strip()
     en_hospitalizaciones = request.GET.get('en_hospitalizaciones', '').strip()
-    fecha_desde = request.GET.get('fecha_desde', '').strip()
-    fecha_hasta = request.GET.get('fecha_hasta', '').strip()
+    fecha_desde = validar_fecha(request.GET.get('fecha_desde', ''))
+    fecha_hasta = validar_fecha(request.GET.get('fecha_hasta', ''))
     
     # Solo aplicar filtros avanzados si se solicitan explícitamente
     try:
