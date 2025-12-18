@@ -363,6 +363,37 @@ def exportar_inventario_excel(request):
     
     resumen_filtros = " | ".join(resumen_parts) if resumen_parts else "Sin filtros aplicados"
     
+    # Generar resumen de resultados (tipo tabla de texto)
+    resultados_texto = []
+    resultados_texto.append(f"{'MEDICAMENTO':<40} {'MARCA':<20} {'STOCK':<10} {'PRECIO':<15} {'VENDIDO':<10} {'ESTADO':<15}")
+    resultados_texto.append("=" * 110)
+    
+    for insumo in insumos[:100]:  # Limitar a 100 registros para no saturar el campo
+        veces_vendido = DetalleVenta.objects.filter(
+            insumo=insumo,
+            venta__estado='pagado'
+        ).count()
+        
+        nombre = insumo.nombre[:38] if len(insumo.nombre) > 38 else insumo.nombre
+        marca = insumo.marca[:18] if len(insumo.marca) > 18 else insumo.marca
+        stock = str(insumo.cantidad)
+        precio = f"${insumo.precio_venta:,.2f}"
+        vendido = str(veces_vendido)
+        estado = "Activo" if insumo.disponible else "No Disponible"
+        
+        resultados_texto.append(f"{nombre:<40} {marca:<20} {stock:<10} {precio:<15} {vendido:<10} {estado:<15}")
+    
+    if insumos.count() > 100:
+        resultados_texto.append(f"\n... y {insumos.count() - 100} registros más")
+    
+    observaciones_completas = f"""FILTROS APLICADOS:
+{resumen_filtros}
+
+RESULTADOS ({insumos.count()} registros):
+{chr(10).join(resultados_texto)}
+
+Generado desde IP: {request.META.get('REMOTE_ADDR', 'IP no disponible')}"""
+    
     # Crear registro del reporte (sin guardar archivo físico - Render usa sistema efímero)
     from .models import ReporteGenerado
     
@@ -372,7 +403,7 @@ def exportar_inventario_excel(request):
         filtros=filtros_dict,
         resumen_filtros=resumen_filtros,
         total_registros=insumos.count(),
-        observaciones=f"Reporte generado desde: {request.META.get('REMOTE_ADDR', 'IP no disponible')}"
+        observaciones=observaciones_completas
     )
     
     # Preparar respuesta HTTP
