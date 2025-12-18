@@ -284,34 +284,45 @@ def detalle_insumo(request, insumo_id):
 @login_required
 @solo_admin_y_vet
 def eliminar_insumo(request, insumo_id):
-    """Vista para eliminar/archivar un insumo"""
+    """
+    Vista para eliminar/archivar un insumo.
+    
+    REGLA DE NEGOCIO:
+    - Si el insumo tiene referencias en consultas, hospitalizaciones o servicios:
+      → SOFT DELETE: Se marca como archivado=True (no se elimina físicamente)
+      → Esto preserva la integridad referencial del historial médico
+    - Si NO tiene referencias:
+      → HARD DELETE: Se elimina físicamente usando ORM de Django
+      → ORM respeta las restricciones PROTECT y permite rollback automático
+    
+    PROTECCIONES:
+    - Usa ORM en lugar de SQL directo para respetar restricciones de FK
+    - Captura ProtectedError por si ORM detecta referencias no validadas manualmente
+    - Nunca expone excepciones técnicas al usuario final
+    """
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
     
     print(f"🗑️ Procesando eliminación de insumo ID: {insumo_id}")
     
     from django.db import connection
+    from django.db.models import ProtectedError
     
     try:
+        # 1. Verificar existencia del insumo usando ORM
+        insumo = get_object_or_404(Insumo, idInventario=insumo_id)
+        nombre_insumo = insumo.medicamento
+        print(f"📦 Producto: {nombre_insumo}")
+        
+        # 2. Verificar relaciones manualmente (evita múltiples queries ORM)
+        relaciones = []
+        tablas = [
+            ('clinica_consulta_medicamentos', 'insumo_id', 'consultas'),
+            ('clinica_hospitalizacion_insumos', 'insumo_id', 'hospitalizaciones'),  
+            ('clinica_cirugia_medicamentos', 'insumo_id', 'cirugías'),
+        ]
+        
         with connection.cursor() as cursor:
-            # 1. Verificar existencia (usando comillas dobles para preservar case en PostgreSQL)
-            cursor.execute('SELECT medicamento FROM inventario WHERE "idInventario" = %s', [insumo_id])
-            row = cursor.fetchone()
-            
-            if not row:
-                return JsonResponse({'success': False, 'error': 'Producto no encontrado'}, status=404)
-            
-            nombre_insumo = row[0]
-            print(f"📦 Producto: {nombre_insumo}")
-            
-            # 2. Verificar relaciones (solo tablas que existen)
-            relaciones = []
-            tablas = [
-                ('clinica_consulta_medicamentos', 'insumo_id', 'consultas'),
-                ('clinica_hospitalizacion_insumos', 'insumo_id', 'hospitalizaciones'),  
-                ('clinica_cirugia_medicamentos', 'insumo_id', 'cirugías'),
-            ]
-            
             for tabla, col, desc in tablas:
                 try:
                     cursor.execute(f"SELECT COUNT(*) FROM {tabla} WHERE {col} = %s", [insumo_id])
@@ -319,21 +330,25 @@ def eliminar_insumo(request, insumo_id):
                     if count > 0:
                         relaciones.append(f"{count} {desc}")
                 except:
-                    pass  # Tabla no existe, ignorar
+                    pass  # Tabla no existe en este entorno, ignorar
+        
+        # 3. SOFT DELETE: Si está en uso, archivar (NO eliminar físicamente)
+        if relaciones:
+            insumo.archivado = True
+            insumo.save(update_fields=['archivado'])
+            print(f"📁 SOFT DELETE - Archivado (en uso en: {", ".join(relaciones)}): {nombre_insumo}")
             
-            # 3. Si está en uso, ARCHIVAR en lugar de eliminar
-            if relaciones:
-                cursor.execute('UPDATE inventario SET archivado = true WHERE "idInventario" = %s', [insumo_id])
-                print(f"📁 Archivado (en uso en: {", ".join(relaciones)}): {nombre_insumo}")
-                
-                return JsonResponse({
-                    'success': True,
-                    'archived': True,
-                    'message': f'El producto "{nombre_insumo}" está siendo usado en {", ".join(relaciones)}. Se ha archivado en lugar de eliminarse.'
-                })
-            
-            # 4. Si NO está en uso, eliminar permanentemente
-            cursor.execute('DELETE FROM inventario WHERE "idInventario" = %s', [insumo_id])
+            return JsonResponse({
+                'success': True,
+                'archived': True,
+                'message': f'Este producto fue utilizado en ventas o registros clínicos, por lo que será archivado. '
+                          f'No se puede eliminar porque está en uso en: {", ".join(relaciones)}.'
+            })
+        
+        # 4. HARD DELETE: Si NO está en uso, intentar eliminación física con ORM
+        try:
+            print(f"🗑️ HARD DELETE - Eliminación física con ORM: {nombre_insumo}")
+            insumo.delete()  # ORM respeta restricciones PROTECT automáticamente
             print(f"✅ Eliminado permanentemente: {nombre_insumo}")
             
             return JsonResponse({
@@ -341,18 +356,33 @@ def eliminar_insumo(request, insumo_id):
                 'archived': False,
                 'message': f'Producto "{nombre_insumo}" eliminado exitosamente'
             })
+            
+        except ProtectedError as e:
+            # FALLBACK: Si ORM detecta referencias PROTECT que no validamos manualmente
+            # (ej: nuevas tablas agregadas al proyecto), aplicar soft delete
+            print(f"⚠️ ProtectedError detectado - Aplicando soft delete como fallback")
+            insumo.archivado = True
+            insumo.save(update_fields=['archivado'])
+            
+            return JsonResponse({
+                'success': True,
+                'archived': True,
+                'message': 'Este producto fue utilizado en ventas o registros clínicos, por lo que será archivado.'
+            })
+    
+    except Insumo.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Producto no encontrado'}, status=404)
     
     except Exception as e:
+        # Capturar cualquier otro error inesperado sin exponer detalles técnicos al usuario
         print(f"❌ ERROR CRÍTICO: {str(e)}")
         print(f"❌ Tipo de excepción: {type(e).__name__}")
         import traceback
         traceback.print_exc()
         
-        # Devolver el error específico para debugging
         return JsonResponse({
             'success': False,
-            'error': f'Error: {str(e)}',
-            'error_type': type(e).__name__
+            'error': 'Ocurrió un error al procesar la solicitud. Por favor, contacta al administrador.'
         }, status=400)
 
 @csrf_exempt

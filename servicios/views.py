@@ -107,58 +107,100 @@ def editar_servicio(request, servicio_id):
 @csrf_exempt
 @login_required
 def eliminar_servicio(request, servicio_id):
-    """Vista para eliminar un servicio - Valida relaciones y archiva si es necesario"""
-    if request.method == 'POST':
+    """
+    Vista para eliminar/desactivar un servicio.
+    
+    REGLA DE NEGOCIO:
+    - Si el servicio tiene referencias en citas o ventas:
+      → SOFT DELETE: Se marca como activo=False (no se elimina físicamente)
+      → Preserva el historial de citas programadas y ventas realizadas
+      → El servicio no se mostrará en nuevas operaciones pero permanece en históricos
+    - Si NO tiene referencias:
+      → HARD DELETE: Se elimina físicamente usando ORM de Django
+      → Esto también eliminará en cascada los ServicioInsumo asociados
+    
+    PROTECCIONES:
+    - Usa ORM en lugar de SQL directo para respetar relaciones CASCADE/PROTECT
+    - Captura ProtectedError por si hay referencias no detectadas manualmente
+    - Nunca expone excepciones técnicas al usuario final
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+    
+    from django.db.models import ProtectedError
+    
+    try:
+        servicio = get_object_or_404(Servicio, idServicio=servicio_id)
+        nombre_servicio = servicio.nombre
+        print(f"🗑️ Procesando eliminación de servicio: {nombre_servicio}")
+        
+        # Verificar si el servicio está siendo usado en otras tablas
+        relaciones = []
+        
+        with connection.cursor() as cursor:
+            # Verificar en agenda (citas)
+            cursor.execute('SELECT COUNT(*) FROM agenda_cita WHERE servicio_id = %s', [servicio_id])
+            count_citas = cursor.fetchone()[0]
+            if count_citas > 0:
+                relaciones.append(f"{count_citas} citas")
+            
+            # Verificar en detalles de ventas de caja
+            cursor.execute('SELECT COUNT(*) FROM caja_detalleventa WHERE servicio_id = %s', [servicio_id])
+            count_ventas = cursor.fetchone()[0]
+            if count_ventas > 0:
+                relaciones.append(f"{count_ventas} ventas")
+        
+        # SOFT DELETE: Si tiene relaciones, desactivar (NO eliminar físicamente)
+        if relaciones:
+            servicio.activo = False
+            servicio._usuario_modificacion = request.user
+            servicio.save()
+            print(f"📁 SOFT DELETE - Desactivado (en uso en: {', '.join(relaciones)}): {nombre_servicio}")
+            
+            return JsonResponse({
+                'success': True,
+                'archived': True,
+                'message': f'Este servicio está siendo usado en citas o ventas, por lo que será desactivado. '
+                          f'No se puede eliminar porque está en uso en: {", ".join(relaciones)}.'
+            })
+        
+        # HARD DELETE: Si NO tiene relaciones, intentar eliminación física con ORM
         try:
-            servicio = get_object_or_404(Servicio, idServicio=servicio_id)
-            nombre_servicio = servicio.nombre
-            
-            # Verificar si el servicio está siendo usado en otras tablas
-            relaciones = []
-            
-            with connection.cursor() as cursor:
-                # Verificar en agenda (citas)
-                cursor.execute('SELECT COUNT(*) FROM agenda_cita WHERE servicio_id = %s', [servicio_id])
-                count_citas = cursor.fetchone()[0]
-                if count_citas > 0:
-                    relaciones.append(f"{count_citas} citas")
-                
-                # Verificar en detalles de ventas de caja
-                cursor.execute('SELECT COUNT(*) FROM caja_detalleventa WHERE servicio_id = %s', [servicio_id])
-                count_ventas = cursor.fetchone()[0]
-                if count_ventas > 0:
-                    relaciones.append(f"{count_ventas} ventas")
-            
-            # Si tiene relaciones, archivar en lugar de eliminar
-            if relaciones:
-                servicio.activo = False
-                servicio._usuario_modificacion = request.user
-                servicio.save()
-                print(f"📁 Archivado (en uso en: {', '.join(relaciones)}): {nombre_servicio}")
-                
-                return JsonResponse({
-                    'success': True,
-                    'archived': True,
-                    'message': f'El servicio "{nombre_servicio}" está siendo usado en {", ".join(relaciones)}. Se ha archivado en lugar de eliminarse.'
-                })
-            
-            # Si no tiene relaciones, eliminar físicamente de la DB
-            print(f"🗑️ Eliminación física: {nombre_servicio} (sin relaciones)")
-            with connection.cursor() as cursor:
-                cursor.execute('DELETE FROM "Servicio" WHERE "idServicio" = %s', [servicio_id])
+            print(f"🗑️ HARD DELETE - Eliminación física con ORM: {nombre_servicio}")
+            # ORM eliminará automáticamente los ServicioInsumo asociados (CASCADE)
+            servicio.delete()
+            print(f"✅ Eliminado permanentemente (incluye ServicioInsumo asociados): {nombre_servicio}")
             
             return JsonResponse({
                 'success': True,
                 'archived': False,
-                'message': 'Servicio eliminado exitosamente de la base de datos'
+                'message': f'Servicio "{nombre_servicio}" eliminado exitosamente'
             })
             
-        except Exception as e:
-            print(f"Error al eliminar servicio: {str(e)}")
-            traceback.print_exc()
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
-    
-    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+        except ProtectedError as e:
+            # FALLBACK: Si ORM detecta referencias PROTECT no validadas manualmente
+            print(f"⚠️ ProtectedError detectado - Aplicando soft delete como fallback")
+            servicio.activo = False
+            servicio._usuario_modificacion = request.user
+            servicio.save()
+            
+            return JsonResponse({
+                'success': True,
+                'archived': True,
+                'message': 'Este servicio está siendo usado en citas o ventas, por lo que será desactivado.'
+            })
+        
+    except Servicio.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Servicio no encontrado'}, status=404)
+        
+    except Exception as e:
+        # Capturar cualquier otro error inesperado sin exponer detalles técnicos
+        print(f"❌ ERROR al eliminar servicio: {str(e)}")
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': 'Ocurrió un error al procesar la solicitud. Por favor, contacta al administrador.'
+        }, status=400)
 
 
 @csrf_exempt
