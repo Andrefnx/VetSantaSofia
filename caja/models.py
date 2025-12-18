@@ -324,7 +324,7 @@ class AuditoriaCaja(models.Model):
     )
     
     accion = models.CharField(max_length=30, choices=ACCION_CHOICES)
-    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True)
     fecha = models.DateTimeField(auto_now_add=True)
     
     descripcion = models.TextField()
@@ -337,4 +337,5 @@ class AuditoriaCaja(models.Model):
         ordering = ['-fecha']
     
     def __str__(self):
-        return f"{self.get_accion_display()} - {self.usuario.nombre} - {self.fecha.strftime('%d/%m/%Y %H:%M')}"
+        usuario_str = self.usuario.nombre if self.usuario else "Usuario desconocido"
+        return f"{self.get_accion_display()} - {usuario_str} - {self.fecha.strftime('%d/%m/%Y %H:%M')}"
