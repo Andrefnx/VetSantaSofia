@@ -374,14 +374,14 @@ def exportar_inventario_excel(request):
             venta__estado='pagado'
         ).count()
         
-        nombre = insumo.nombre[:38] if len(insumo.nombre) > 38 else insumo.nombre
-        marca = insumo.marca[:18] if len(insumo.marca) > 18 else insumo.marca
-        stock = str(insumo.cantidad)
-        precio = f"${insumo.precio_venta:,.2f}"
+        medicamento = insumo.medicamento[:38] if len(insumo.medicamento) > 38 else insumo.medicamento
+        marca = (insumo.marca[:18] if len(insumo.marca) > 18 else insumo.marca) if insumo.marca else "-"
+        stock = str(insumo.stock_actual)
+        precio = f"${insumo.precio_venta:,.2f}" if insumo.precio_venta else "$0.00"
         vendido = str(veces_vendido)
-        estado = "Activo" if insumo.disponible else "No Disponible"
+        estado = "Activo" if not insumo.archivado else "Archivado"
         
-        resultados_texto.append(f"{nombre:<40} {marca:<20} {stock:<10} {precio:<15} {vendido:<10} {estado:<15}")
+        resultados_texto.append(f"{medicamento:<40} {marca:<20} {stock:<10} {precio:<15} {vendido:<10} {estado:<15}")
     
     if insumos.count() > 100:
         resultados_texto.append(f"\n... y {insumos.count() - 100} registros más")
