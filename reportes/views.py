@@ -67,26 +67,26 @@ def exportar_inventario_excel(request):
     
     return response
 
-@login_required
 
+@login_required
 def reporte_caja(request):
-    from django.urls import reverse
+    ventas = Venta.objects.select_related('usuario_cobro').order_by('-fecha_creacion')
     context = {
         'ventas': ventas,
         'url_exportar': reverse('reportes:exportar_caja_excel')
     }
     return render(request, 'reportes/caja.html', context)
 
-@login_required
 
+@login_required
 def exportar_caja_excel(request):
-    from caja.models import Venta
-    
+    # Crear workbook y hoja
+    wb = Workbook()
     ws = wb.active
     ws.title = "Caja"
     
     # Encabezados
-    headers = ['Fecha', 'N\u00famero Venta', 'Total', 'Estado', 'Usuario']
+    headers = ['Fecha', 'Número Venta', 'Total', 'Estado', 'Usuario']
     ws.append(headers)
     
     # Obtener datos
@@ -121,29 +121,29 @@ def exportar_caja_excel(request):
     wb.save(response)
     
     return response
+
+
 @login_required
-
-
 def reporte_clinica(request):
-    from clinica.models import Consulta
     consultas = Consulta.objects.select_related(
         'paciente', 'veterinario'
     ).prefetch_related('servicios').order_by('-fecha')
     context = {
-        'consultas': consultas
+        'consultas': consultas,
+        'url_exportar': reverse('reportes:exportar_clinica_excel')
     }
     return render(request, 'reportes/clinica.html', context)
+
+
 @login_required
-
-
 def exportar_clinica_excel(request):
-    from clinica.models import Consulta
-    
     # Crear workbook y hoja
     wb = Workbook()
     ws = wb.active
+    ws.title = "Clínica"
+    
     # Encabezados
-    headers = ['Fecha', 'Paciente', 'Tipo de Atenci\u00f3n', 'Servicios', 'Veterinario']
+    headers = ['Fecha', 'Paciente', 'Tipo de Atención', 'Servicios', 'Veterinario']
     ws.append(headers)
     
     # Obtener datos
@@ -190,18 +190,20 @@ def reporte_hospitalizacion(request):
     ).order_by('-fecha_ingreso')
     
     context = {
-        'hospitalizaciones': hospitalizaciones
+        'hospitalizaciones': hospitalizaciones,
+        'url_exportar': reverse('reportes:exportar_hospitalizacion_excel')
     }
     return render(request, 'reportes/hospitalizacion.html', context)
 
 
 @login_required
 def exportar_hospitalizacion_excel(request):
-    
     # Crear workbook y hoja
     wb = Workbook()
     ws = wb.active
-    ws.title = "Hospitalizaci\u00f3n"
+    ws.title = "Hospitalización"
+    
+    # Encabezados
     headers = ['Fecha Ingreso', 'Fecha Alta', 'Paciente', 'Motivo', 'Estado', 'Veterinario']
     ws.append(headers)
     
@@ -246,21 +248,19 @@ def exportar_hospitalizacion_excel(request):
 
 @login_required
 def reporte_servicios(request):
-    from caja.models import DetalleVenta
     servicios_vendidos = DetalleVenta.objects.filter(
         tipo='servicio'
     ).select_related('venta', 'venta__usuario_cobro', 'servicio').order_by('-venta__fecha_creacion')
     
     context = {
-        'servicios_vendidos': servicios_vendidos
+        'servicios_vendidos': servicios_vendidos,
+        'url_exportar': reverse('reportes:exportar_servicios_excel')
     }
     return render(request, 'reportes/servicios.html', context)
 
 
 @login_required
 def exportar_servicios_excel(request):
-    from caja.models import DetalleVenta
-    
     # Crear workbook y hoja
     wb = Workbook()
     ws = wb.active
