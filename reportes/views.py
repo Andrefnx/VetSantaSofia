@@ -82,41 +82,45 @@ def reporte_inventario(request):
     fecha_desde = validar_fecha(request.GET.get('fecha_desde', ''))
     fecha_hasta = validar_fecha(request.GET.get('fecha_hasta', ''))
     
-    # Solo aplicar filtros avanzados si se solicitan explícitamente
+    # Construir filtro para anotación (debe coincidir con criterios de filtrado)
+    filtro_count = Q()
+    if fecha_desde:
+        filtro_count &= Q(detalleventa__venta__fecha_creacion__date__gte=fecha_desde)
+    if fecha_hasta:
+        filtro_count &= Q(detalleventa__venta__fecha_creacion__date__lte=fecha_hasta)
+    
+    # Agregar filtros de tipo de origen al contador
+    if en_consultas == 'si' and en_hospitalizaciones == 'si':
+        filtro_count &= Q(detalleventa__venta__tipo_origen__in=['consulta', 'hospitalizacion'])
+    elif en_consultas == 'si':
+        filtro_count &= Q(detalleventa__venta__tipo_origen='consulta')
+    elif en_hospitalizaciones == 'si':
+        filtro_count &= Q(detalleventa__venta__tipo_origen='hospitalizacion')
+    
+    # Aplicar filtros avanzados
     try:
-        # Construir filtro completo para DetalleVenta
-        filtro_detalle = Q()
-        
-        # Agregar filtros de fecha si existen
-        if fecha_desde:
-            filtro_detalle &= Q(venta__fecha_creacion__date__gte=fecha_desde)
-        if fecha_hasta:
-            filtro_detalle &= Q(venta__fecha_creacion__date__lte=fecha_hasta)
-        
-        # Construir filtro de tipo de origen (OR entre consultas y hospitalizaciones si ambos = 'si')
-        filtro_tipo_origen = None
-        
-        if en_consultas == 'si' and en_hospitalizaciones == 'si':
-            # Ambos seleccionados: consultas O hospitalizaciones
-            filtro_tipo_origen = Q(venta__tipo_origen='consulta') | Q(venta__tipo_origen='hospitalizacion')
-        elif en_consultas == 'si':
-            # Solo consultas
-            filtro_tipo_origen = Q(venta__tipo_origen='consulta')
-        elif en_hospitalizaciones == 'si':
-            # Solo hospitalizaciones
-            filtro_tipo_origen = Q(venta__tipo_origen='hospitalizacion')
-        
-        # Combinar filtro de tipo de origen si existe
-        if filtro_tipo_origen:
-            filtro_detalle &= filtro_tipo_origen
-        
-        # Aplicar filtro de vendidos/no vendidos
         if vendidos == 'si':
-            # Mostrar solo insumos vendidos (con los filtros de fecha y tipo aplicados)
+            # Construir filtro completo para DetalleVenta
+            filtro_detalle = Q()
+            if fecha_desde:
+                filtro_detalle &= Q(venta__fecha_creacion__date__gte=fecha_desde)
+            if fecha_hasta:
+                filtro_detalle &= Q(venta__fecha_creacion__date__lte=fecha_hasta)
+            
+            # Agregar filtro de tipo de origen
+            if en_consultas == 'si' and en_hospitalizaciones == 'si':
+                filtro_detalle &= Q(venta__tipo_origen='consulta') | Q(venta__tipo_origen='hospitalizacion')
+            elif en_consultas == 'si':
+                filtro_detalle &= Q(venta__tipo_origen='consulta')
+            elif en_hospitalizaciones == 'si':
+                filtro_detalle &= Q(venta__tipo_origen='hospitalizacion')
+            
+            # Filtrar solo insumos que cumplan los criterios
             ids_filtrados = DetalleVenta.objects.filter(filtro_detalle).values_list('insumo_id', flat=True).distinct()
             insumos = insumos.filter(id__in=list(ids_filtrados)) if ids_filtrados else insumos.filter(id__in=[])
+            
         elif vendidos == 'no':
-            # Mostrar solo insumos NO vendidos (en el rango de fechas si aplica)
+            # Mostrar solo insumos NO vendidos
             filtro_base = Q()
             if fecha_desde:
                 filtro_base &= Q(venta__fecha_creacion__date__gte=fecha_desde)
@@ -125,12 +129,26 @@ def reporte_inventario(request):
             ids_vendidos = DetalleVenta.objects.filter(filtro_base).values_list('insumo_id', flat=True).distinct()
             if ids_vendidos:
                 insumos = insumos.exclude(id__in=list(ids_vendidos))
-        elif filtro_tipo_origen:
-            # Si no hay filtro vendidos pero sí de tipo origen, aplicar solo ese
-            ids_filtrados = DetalleVenta.objects.filter(filtro_detalle).values_list('insumo_id', flat=True).distinct()
-            insumos = insumos.filter(id__in=list(ids_filtrados)) if ids_filtrados else insumos.filter(id__in=[])
+        else:
+            # Si no se seleccionó vendidos pero sí tipo de origen, filtrar por eso
+            if en_consultas == 'si' or en_hospitalizaciones == 'si':
+                filtro_detalle = Q()
+                if fecha_desde:
+                    filtro_detalle &= Q(venta__fecha_creacion__date__gte=fecha_desde)
+                if fecha_hasta:
+                    filtro_detalle &= Q(venta__fecha_creacion__date__lte=fecha_hasta)
+                
+                if en_consultas == 'si' and en_hospitalizaciones == 'si':
+                    filtro_detalle &= Q(venta__tipo_origen='consulta') | Q(venta__tipo_origen='hospitalizacion')
+                elif en_consultas == 'si':
+                    filtro_detalle &= Q(venta__tipo_origen='consulta')
+                elif en_hospitalizaciones == 'si':
+                    filtro_detalle &= Q(venta__tipo_origen='hospitalizacion')
+                
+                ids_filtrados = DetalleVenta.objects.filter(filtro_detalle).values_list('insumo_id', flat=True).distinct()
+                insumos = insumos.filter(id__in=list(ids_filtrados)) if ids_filtrados else insumos.filter(id__in=[])
         
-        # Manejar filtros negativos (no en consultas, no en hospitalizaciones)
+        # Manejar filtros negativos
         if en_consultas == 'no':
             filtro_excl = Q(venta__tipo_origen='consulta')
             if fecha_desde:
@@ -151,23 +169,12 @@ def reporte_inventario(request):
             if ids_excl:
                 insumos = insumos.exclude(id__in=list(ids_excl))
     except Exception as e:
-        # Si hay error en filtros avanzados, log y continuar
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"Error en filtros avanzados: {str(e)}")
     
-    # Anotar veces vendido (con filtro de fecha si aplica)
-    if fecha_desde or fecha_hasta:
-        # Contar solo ventas en el rango de fechas
-        filtro_count = Q()
-        if fecha_desde:
-            filtro_count &= Q(detalleventa__venta__fecha_creacion__date__gte=fecha_desde)
-        if fecha_hasta:
-            filtro_count &= Q(detalleventa__venta__fecha_creacion__date__lte=fecha_hasta)
-        insumos = insumos.annotate(veces_vendido=Count('detalleventa', filter=filtro_count)).order_by('medicamento')
-    else:
-        # Contar todas las ventas
-        insumos = insumos.annotate(veces_vendido=Count('detalleventa')).order_by('medicamento')
+    # Anotar veces vendido usando el mismo filtro
+    insumos = insumos.annotate(veces_vendido=Count('detalleventa', filter=filtro_count)).order_by('medicamento')
     
     # Obtener marcas únicas para el filtro
     marcas = Insumo.objects.exclude(marca__isnull=True).exclude(marca='').values_list('marca', flat=True).distinct().order_by('marca')
@@ -236,41 +243,45 @@ def exportar_inventario_excel(request):
     fecha_desde = validar_fecha(request.GET.get('fecha_desde', ''))
     fecha_hasta = validar_fecha(request.GET.get('fecha_hasta', ''))
     
-    # Solo aplicar filtros avanzados si se solicitan explícitamente
+    # Construir filtro para anotación (debe coincidir con criterios de filtrado)
+    filtro_count = Q()
+    if fecha_desde:
+        filtro_count &= Q(detalleventa__venta__fecha_creacion__date__gte=fecha_desde)
+    if fecha_hasta:
+        filtro_count &= Q(detalleventa__venta__fecha_creacion__date__lte=fecha_hasta)
+    
+    # Agregar filtros de tipo de origen al contador
+    if en_consultas == 'si' and en_hospitalizaciones == 'si':
+        filtro_count &= Q(detalleventa__venta__tipo_origen__in=['consulta', 'hospitalizacion'])
+    elif en_consultas == 'si':
+        filtro_count &= Q(detalleventa__venta__tipo_origen='consulta')
+    elif en_hospitalizaciones == 'si':
+        filtro_count &= Q(detalleventa__venta__tipo_origen='hospitalizacion')
+    
+    # Aplicar filtros avanzados
     try:
-        # Construir filtro completo para DetalleVenta
-        filtro_detalle = Q()
-        
-        # Agregar filtros de fecha si existen
-        if fecha_desde:
-            filtro_detalle &= Q(venta__fecha_creacion__date__gte=fecha_desde)
-        if fecha_hasta:
-            filtro_detalle &= Q(venta__fecha_creacion__date__lte=fecha_hasta)
-        
-        # Construir filtro de tipo de origen (OR entre consultas y hospitalizaciones si ambos = 'si')
-        filtro_tipo_origen = None
-        
-        if en_consultas == 'si' and en_hospitalizaciones == 'si':
-            # Ambos seleccionados: consultas O hospitalizaciones
-            filtro_tipo_origen = Q(venta__tipo_origen='consulta') | Q(venta__tipo_origen='hospitalizacion')
-        elif en_consultas == 'si':
-            # Solo consultas
-            filtro_tipo_origen = Q(venta__tipo_origen='consulta')
-        elif en_hospitalizaciones == 'si':
-            # Solo hospitalizaciones
-            filtro_tipo_origen = Q(venta__tipo_origen='hospitalizacion')
-        
-        # Combinar filtro de tipo de origen si existe
-        if filtro_tipo_origen:
-            filtro_detalle &= filtro_tipo_origen
-        
-        # Aplicar filtro de vendidos/no vendidos
         if vendidos == 'si':
-            # Mostrar solo insumos vendidos (con los filtros de fecha y tipo aplicados)
+            # Construir filtro completo para DetalleVenta
+            filtro_detalle = Q()
+            if fecha_desde:
+                filtro_detalle &= Q(venta__fecha_creacion__date__gte=fecha_desde)
+            if fecha_hasta:
+                filtro_detalle &= Q(venta__fecha_creacion__date__lte=fecha_hasta)
+            
+            # Agregar filtro de tipo de origen
+            if en_consultas == 'si' and en_hospitalizaciones == 'si':
+                filtro_detalle &= Q(venta__tipo_origen='consulta') | Q(venta__tipo_origen='hospitalizacion')
+            elif en_consultas == 'si':
+                filtro_detalle &= Q(venta__tipo_origen='consulta')
+            elif en_hospitalizaciones == 'si':
+                filtro_detalle &= Q(venta__tipo_origen='hospitalizacion')
+            
+            # Filtrar solo insumos que cumplan los criterios
             ids_filtrados = DetalleVenta.objects.filter(filtro_detalle).values_list('insumo_id', flat=True).distinct()
             insumos = insumos.filter(id__in=list(ids_filtrados)) if ids_filtrados else insumos.filter(id__in=[])
+            
         elif vendidos == 'no':
-            # Mostrar solo insumos NO vendidos (en el rango de fechas si aplica)
+            # Mostrar solo insumos NO vendidos
             filtro_base = Q()
             if fecha_desde:
                 filtro_base &= Q(venta__fecha_creacion__date__gte=fecha_desde)
@@ -279,12 +290,26 @@ def exportar_inventario_excel(request):
             ids_vendidos = DetalleVenta.objects.filter(filtro_base).values_list('insumo_id', flat=True).distinct()
             if ids_vendidos:
                 insumos = insumos.exclude(id__in=list(ids_vendidos))
-        elif filtro_tipo_origen:
-            # Si no hay filtro vendidos pero sí de tipo origen, aplicar solo ese
-            ids_filtrados = DetalleVenta.objects.filter(filtro_detalle).values_list('insumo_id', flat=True).distinct()
-            insumos = insumos.filter(id__in=list(ids_filtrados)) if ids_filtrados else insumos.filter(id__in=[])
+        else:
+            # Si no se seleccionó vendidos pero sí tipo de origen, filtrar por eso
+            if en_consultas == 'si' or en_hospitalizaciones == 'si':
+                filtro_detalle = Q()
+                if fecha_desde:
+                    filtro_detalle &= Q(venta__fecha_creacion__date__gte=fecha_desde)
+                if fecha_hasta:
+                    filtro_detalle &= Q(venta__fecha_creacion__date__lte=fecha_hasta)
+                
+                if en_consultas == 'si' and en_hospitalizaciones == 'si':
+                    filtro_detalle &= Q(venta__tipo_origen='consulta') | Q(venta__tipo_origen='hospitalizacion')
+                elif en_consultas == 'si':
+                    filtro_detalle &= Q(venta__tipo_origen='consulta')
+                elif en_hospitalizaciones == 'si':
+                    filtro_detalle &= Q(venta__tipo_origen='hospitalizacion')
+                
+                ids_filtrados = DetalleVenta.objects.filter(filtro_detalle).values_list('insumo_id', flat=True).distinct()
+                insumos = insumos.filter(id__in=list(ids_filtrados)) if ids_filtrados else insumos.filter(id__in=[])
         
-        # Manejar filtros negativos (no en consultas, no en hospitalizaciones)
+        # Manejar filtros negativos
         if en_consultas == 'no':
             filtro_excl = Q(venta__tipo_origen='consulta')
             if fecha_desde:
@@ -305,23 +330,12 @@ def exportar_inventario_excel(request):
             if ids_excl:
                 insumos = insumos.exclude(id__in=list(ids_excl))
     except Exception as e:
-        # Si hay error en filtros avanzados, log y continuar
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"Error en filtros avanzados: {str(e)}")
     
-    # Anotar veces vendido (con filtro de fecha si aplica)
-    if fecha_desde or fecha_hasta:
-        # Contar solo ventas en el rango de fechas
-        filtro_count = Q()
-        if fecha_desde:
-            filtro_count &= Q(detalleventa__venta__fecha_creacion__date__gte=fecha_desde)
-        if fecha_hasta:
-            filtro_count &= Q(detalleventa__venta__fecha_creacion__date__lte=fecha_hasta)
-        insumos = insumos.annotate(veces_vendido=Count('detalleventa', filter=filtro_count)).order_by('medicamento')
-    else:
-        # Contar todas las ventas
-        insumos = insumos.annotate(veces_vendido=Count('detalleventa')).order_by('medicamento')
+    # Anotar veces vendido usando el mismo filtro
+    insumos = insumos.annotate(veces_vendido=Count('detalleventa', filter=filtro_count)).order_by('medicamento')
     
     # Crear workbook y hoja
     wb = Workbook()
