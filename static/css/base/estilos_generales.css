@@ -2582,6 +2582,26 @@ html.sidebar-is-collapsed .vet-sidebar {
     display: none;
 }
 
+/* Submenu styles */
+.vet-nav-submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.vet-nav-sublink {
+    padding-left: 50px;
+}
+
+.vet-nav-sublink i {
+    font-size: 1rem;
+}
+
+.vet-sidebar.collapsed .vet-nav-submenu {
+    display: none;
+}
+
 /* Main Panel Adjustment */
 .main-panel {
     margin-left: var(--sidebar-width, 260px) !important;

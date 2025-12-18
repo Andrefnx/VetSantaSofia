@@ -91,6 +91,46 @@
                     </a>
                 </li>
 
+                <!-- REPORTES (Colapsable) -->
+                <li class="vet-nav-item">
+                    <a href="#reportesSubmenu" class="vet-nav-link" data-bs-toggle="collapse" aria-expanded="false">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Reportes</span>
+                    </a>
+                </li>
+                <ul class="collapse vet-nav-submenu" id="reportesSubmenu">
+                    <li class="vet-nav-item">
+                        <a href="{% url 'reportes:inventario' %}" class="vet-nav-link vet-nav-sublink">
+                            <i class="bi bi-box-seam"></i>
+                            <span>Inventario</span>
+                        </a>
+                    </li>
+                    <li class="vet-nav-item">
+                        <a href="{% url 'reportes:caja' %}" class="vet-nav-link vet-nav-sublink">
+                            <i class="bi bi-cash-stack"></i>
+                            <span>Caja / Ventas</span>
+                        </a>
+                    </li>
+                    <li class="vet-nav-item">
+                        <a href="{% url 'reportes:clinica' %}" class="vet-nav-link vet-nav-sublink">
+                            <i class="fas fa-notes-medical"></i>
+                            <span>Clínica</span>
+                        </a>
+                    </li>
+                    <li class="vet-nav-item">
+                        <a href="{% url 'reportes:hospitalizacion' %}" class="vet-nav-link vet-nav-sublink">
+                            <i class="fas fa-hospital"></i>
+                            <span>Hospitalización</span>
+                        </a>
+                    </li>
+                    <li class="vet-nav-item">
+                        <a href="{% url 'reportes:servicios' %}" class="vet-nav-link vet-nav-sublink">
+                            <i class="bi bi-prescription2"></i>
+                            <span>Servicios</span>
+                        </a>
+                    </li>
+                </ul>
+
             </ul>
             
             <!-- Usuario y Logout -->
