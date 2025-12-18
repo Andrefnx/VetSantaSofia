@@ -120,22 +120,27 @@ def reporte_inventario(request):
         logger = logging.getLogger(__name__)
         logger.error(f"Error en filtros positivos: {str(e)}")
     
-    # Filtros negativos - FUERA del try-except
-    if en_consultas == 'no':
-        ids_excl = list(DetalleVenta.objects.filter(
-            venta__tipo_origen='consulta',
-            insumo_id__isnull=False
-        ).values_list('insumo_id', flat=True).distinct())
-        if ids_excl:
-            insumos = insumos.exclude(id__in=ids_excl)
-    
-    if en_hospitalizaciones == 'no':
-        ids_excl = list(DetalleVenta.objects.filter(
-            venta__tipo_origen='hospitalizacion',
-            insumo_id__isnull=False
-        ).values_list('insumo_id', flat=True).distinct())
-        if ids_excl:
-            insumos = insumos.exclude(id__in=ids_excl)
+    # Filtros negativos - Con manejo de errores
+    try:
+        if en_consultas == 'no':
+            ids_excl = list(DetalleVenta.objects.filter(
+                venta__tipo_origen='consulta',
+                insumo_id__isnull=False
+            ).values_list('insumo_id', flat=True).distinct())
+            if ids_excl:
+                insumos = insumos.exclude(id__in=ids_excl)
+        
+        if en_hospitalizaciones == 'no':
+            ids_excl = list(DetalleVenta.objects.filter(
+                venta__tipo_origen='hospitalizacion',
+                insumo_id__isnull=False
+            ).values_list('insumo_id', flat=True).distinct())
+            if ids_excl:
+                insumos = insumos.exclude(id__in=ids_excl)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error en filtros negativos: {str(e)}")
     
     # Anotar veces vendido
     insumos = insumos.annotate(veces_vendido=Count('detalleventa', filter=filtro_count)).order_by('medicamento')
@@ -254,22 +259,27 @@ def exportar_inventario_excel(request):
         logger = logging.getLogger(__name__)
         logger.error(f"Error en filtros positivos: {str(e)}")
     
-    # Filtros negativos - FUERA del try-except
-    if en_consultas == 'no':
-        ids_excl = list(DetalleVenta.objects.filter(
-            venta__tipo_origen='consulta',
-            insumo_id__isnull=False
-        ).values_list('insumo_id', flat=True).distinct())
-        if ids_excl:
-            insumos = insumos.exclude(id__in=ids_excl)
-    
-    if en_hospitalizaciones == 'no':
-        ids_excl = list(DetalleVenta.objects.filter(
-            venta__tipo_origen='hospitalizacion',
-            insumo_id__isnull=False
-        ).values_list('insumo_id', flat=True).distinct())
-        if ids_excl:
-            insumos = insumos.exclude(id__in=ids_excl)
+    # Filtros negativos - Con manejo de errores
+    try:
+        if en_consultas == 'no':
+            ids_excl = list(DetalleVenta.objects.filter(
+                venta__tipo_origen='consulta',
+                insumo_id__isnull=False
+            ).values_list('insumo_id', flat=True).distinct())
+            if ids_excl:
+                insumos = insumos.exclude(id__in=ids_excl)
+        
+        if en_hospitalizaciones == 'no':
+            ids_excl = list(DetalleVenta.objects.filter(
+                venta__tipo_origen='hospitalizacion',
+                insumo_id__isnull=False
+            ).values_list('insumo_id', flat=True).distinct())
+            if ids_excl:
+                insumos = insumos.exclude(id__in=ids_excl)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error en filtros negativos: {str(e)}")
     
     # Anotar veces vendido
     insumos = insumos.annotate(veces_vendido=Count('detalleventa', filter=filtro_count)).order_by('medicamento')
