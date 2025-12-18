@@ -658,8 +658,8 @@ def procesar_pago(venta, usuario, metodo_pago, sesion_caja=None):
             
             insumos_descontados.append({
                 'insumo': detalle.insumo.medicamento,
-                'cantidad': detalle.cantidad,
-                'stock_final': detalle.insumo.stock_actual
+                'cantidad': float(detalle.cantidad),
+                'stock_final': float(detalle.insumo.stock_actual)
             })
             
             logger.info(f"     ✅ Descontado - Stock final: {detalle.insumo.stock_actual}")
