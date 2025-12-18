@@ -491,8 +491,8 @@ if (formNuevaConsulta) {
             // Mostrar advertencia
             const confirmacion = confirm(
                 '⚠️ ATENCIÓN: Finalizar Consulta\n\n' +
-                'Esta acción validará que hay stock disponible y creará un cobro pendiente.\n\n' +
-                'El descuento de inventario ocurrirá al confirmar el pago en caja.\n\n' +
+                'Esta acción cerrará la consulta y enviará el cobro pendiente a caja.\n\n' +
+                'Una vez finalizada, la consulta quedará registrada.\n\n' +
                 '¿Desea continuar?'
             );
             
