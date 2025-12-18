@@ -590,48 +590,12 @@ def procesar_pago(venta, usuario, metodo_pago, sesion_caja=None):
     # VALIDACIÓN 3: Total calculado (para ventas de clínica)
     # ==========================================================================
     if venta.tipo_origen == 'consulta' and venta.consulta:
-        if not venta.consulta.total_calculado:
-            logger.error(
-                f"❌ Consulta sin total calculado: consulta_id={venta.consulta.id}"
-            )
-            raise ValidationError(
-                f"La consulta #{venta.consulta.id} no tiene el total calculado. "
-                f"Finalice la consulta en el módulo clínico antes de cobrar."
-            )
-        
-        # Validar que los totales coincidan
-        if venta.total != venta.consulta.total_congelado:
-            logger.error(
-                f"❌ Totales no coinciden: venta=${venta.total} vs consulta=${venta.consulta.total_congelado}"
-            )
-            raise ValidationError(
-                f"El total de la venta (${venta.total}) no coincide con el total "
-                f"congelado de la consulta (${venta.consulta.total_congelado}). "
-                f"Contacte al administrador."
-            )
-        
-        logger.info(f"✅ Consulta validada: total_congelado=${venta.consulta.total_congelado}")
+        logger.info(f"✅ Venta asociada a consulta #{venta.consulta.id}")
+        logger.info(f"   Total de la venta: ${venta.total}")
     
     elif venta.tipo_origen == 'hospitalizacion' and venta.hospitalizacion:
-        if not venta.hospitalizacion.total_calculado:
-            logger.error(
-                f"❌ Hospitalización sin total calculado: hosp_id={venta.hospitalizacion.id}"
-            )
-            raise ValidationError(
-                f"La hospitalización #{venta.hospitalizacion.id} no tiene el total calculado. "
-                f"Finalice la hospitalización antes de cobrar."
-            )
-        
-        if venta.total != venta.hospitalizacion.total_congelado:
-            logger.error(
-                f"❌ Totales no coinciden: venta=${venta.total} vs hosp=${venta.hospitalizacion.total_congelado}"
-            )
-            raise ValidationError(
-                f"El total de la venta no coincide con el total congelado. "
-                f"Contacte al administrador."
-            )
-        
-        logger.info(f"✅ Hospitalización validada: total_congelado=${venta.hospitalizacion.total_congelado}")
+        logger.info(f"✅ Venta asociada a hospitalización #{venta.hospitalizacion.id}")
+        logger.info(f"   Total de la venta: ${venta.total}")
     
     # ==========================================================================
     # VALIDACIÓN 4: Verificar que existan detalles

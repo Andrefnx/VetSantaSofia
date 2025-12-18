@@ -763,7 +763,7 @@ if (formNuevaConsulta) {
             
             // Mostrar mensaje apropiado
             if (esFinalizacion) {
-                alert('✅ Consulta finalizada exitosamente\n\nLos insumos han sido descontados del inventario.');
+                alert('✅ Consulta finalizada exitosamente\n\nSe ha validado el stock y creado el cobro pendiente en caja.\n\nEl stock se descontará al confirmar el pago.');
             } else {
                 alert('✅ Borrador guardado\n\nLa consulta se guardó sin descontar insumos.');
             }

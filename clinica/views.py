@@ -633,26 +633,34 @@ def crear_consulta(request, paciente_id):
         elif cita_id and not finalizar:
             print(f'  ℹ️ MODO BORRADOR: Cita {cita_id} NO se marca como completada')
         
-        # ⭐ CREAR COBRO PENDIENTE (siempre, incluso en modo borrador)
-        print('=' * 50)
-        print('💰 CREANDO COBRO PENDIENTE')
-        print('=' * 50)
-        
-        from caja.services import crear_cobro_pendiente_desde_consulta
-        
-        try:
-            venta = crear_cobro_pendiente_desde_consulta(consulta, request.user)
-            if venta:
-                print(f'✅ Cobro pendiente creado: Venta #{venta.id}')
-                print(f'   - Estado: {venta.estado}')
-                print(f'   - Total: ${venta.total}')
-                print(f'   - Detalles: {venta.detalles.count()} items')
-            else:
-                print(f'⚠️ No se creó cobro pendiente (sin servicios ni insumos)')
-        except Exception as e:
-            print(f'❌ Error al crear cobro pendiente: {str(e)}')
-            import traceback
-            traceback.print_exc()
+        # ⭐ CREAR COBRO PENDIENTE solo si se finaliza
+        if finalizar:
+            print('=' * 50)
+            print('💰 CREANDO COBRO PENDIENTE')
+            print('=' * 50)
+            
+            from caja.services import crear_cobro_pendiente_desde_consulta
+            
+            try:
+                venta = crear_cobro_pendiente_desde_consulta(consulta, request.user)
+                if venta:
+                    print(f'✅ Cobro pendiente creado: Venta #{venta.id}')
+                    print(f'   - Estado: {venta.estado}')
+                    print(f'   - Total: ${venta.total}')
+                    print(f'   - Detalles: {venta.detalles.count()} items')
+                    
+                    # ⭐ Marcar consulta como finalizada (usa campo legacy insumos_descontados)
+                    consulta.insumos_descontados = True
+                    consulta.save(update_fields=['insumos_descontados'])
+                    print(f'✅ Consulta marcada como finalizada (insumos_descontados=True)')
+                else:
+                    print(f'⚠️ No se creó cobro pendiente (sin servicios ni insumos)')
+            except Exception as e:
+                print(f'❌ Error al crear cobro pendiente: {str(e)}')
+                import traceback
+                traceback.print_exc()
+        else:
+            print(f'ℹ️ MODO BORRADOR: No se crea cobro pendiente')
         
         print('=' * 50)
         print(f'✅ CONSULTA CREADA EXITOSAMENTE')
@@ -836,26 +844,34 @@ def actualizar_consulta(request, consulta_id):
         # Verificar estado final
         print(f'📊 Estado final - insumos_descontados: {consulta.insumos_descontados}')
         
-        # ⭐ CREAR/ACTUALIZAR COBRO PENDIENTE (siempre)
-        print('=' * 50)
-        print('💰 CREANDO/ACTUALIZANDO COBRO PENDIENTE')
-        print('=' * 50)
-        
-        from caja.services import crear_cobro_pendiente_desde_consulta
-        
-        try:
-            venta = crear_cobro_pendiente_desde_consulta(consulta, request.user)
-            if venta:
-                print(f'✅ Cobro pendiente creado/actualizado: Venta #{venta.id}')
-                print(f'   - Estado: {venta.estado}')
-                print(f'   - Total: ${venta.total}')
-                print(f'   - Detalles: {venta.detalles.count()} items')
-            else:
-                print(f'⚠️ No se creó cobro pendiente (sin servicios ni insumos)')
-        except Exception as e:
-            print(f'❌ Error al crear cobro pendiente: {str(e)}')
-            import traceback
-            traceback.print_exc()
+        # ⭐ CREAR/ACTUALIZAR COBRO PENDIENTE solo si se finaliza
+        if finalizar:
+            print('=' * 50)
+            print('💰 CREANDO/ACTUALIZANDO COBRO PENDIENTE')
+            print('=' * 50)
+            
+            from caja.services import crear_cobro_pendiente_desde_consulta
+            
+            try:
+                venta = crear_cobro_pendiente_desde_consulta(consulta, request.user)
+                if venta:
+                    print(f'✅ Cobro pendiente creado/actualizado: Venta #{venta.id}')
+                    print(f'   - Estado: {venta.estado}')
+                    print(f'   - Total: ${venta.total}')
+                    print(f'   - Detalles: {venta.detalles.count()} items')
+                    
+                    # ⭐ Marcar consulta como finalizada
+                    consulta.insumos_descontados = True
+                    consulta.save(update_fields=['insumos_descontados'])
+                    print(f'✅ Consulta marcada como finalizada (insumos_descontados=True)')
+                else:
+                    print(f'⚠️ No se creó cobro pendiente (sin servicios ni insumos)')
+            except Exception as e:
+                print(f'❌ Error al crear cobro pendiente: {str(e)}')
+                import traceback
+                traceback.print_exc()
+        else:
+            print(f'ℹ️ MODO BORRADOR: No se crea cobro pendiente')
         
         print('=' * 50)
         print(f'✅ CONSULTA ACTUALIZADA EXITOSAMENTE')
