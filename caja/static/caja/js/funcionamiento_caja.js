@@ -669,15 +669,13 @@ async function cargarPagosPendientes() {
 
         if (data.cobros.length === 0) {
             // No hay pagos pendientes
-            contentDiv.style.display = 'block';
+            contentDiv.style.display = 'none';
             noPagosDiv.style.display = 'block';
-            document.querySelector('#pagosPendientesContent .table-responsive').style.display = 'none';
             actualizarBadgePagosPendientes(0);
         } else {
             // Mostrar tabla con pagos
             contentDiv.style.display = 'block';
             noPagosDiv.style.display = 'none';
-            document.querySelector('#pagosPendientesContent .table-responsive').style.display = 'block';
             renderizarPagosPendientes(data.cobros);
             actualizarBadgePagosPendientes(data.cobros.length);
         }
