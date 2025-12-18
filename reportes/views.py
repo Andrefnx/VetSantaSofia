@@ -70,7 +70,9 @@ def exportar_inventario_excel(request):
 
 @login_required
 def reporte_caja(request):
-    ventas = Venta.objects.select_related('usuario_cobro').order_by('-fecha_creacion')
+    ventas = Venta.objects.select_related(
+        'usuario_cobro', 'usuario_creacion', 'paciente'
+    ).order_by('-fecha_creacion')
     context = {
         'ventas': ventas,
         'url_exportar': reverse('reportes:exportar_caja_excel')
@@ -90,7 +92,9 @@ def exportar_caja_excel(request):
     ws.append(headers)
     
     # Obtener datos
-    ventas = Venta.objects.select_related('usuario_cobro').order_by('-fecha_creacion')
+    ventas = Venta.objects.select_related(
+        'usuario_cobro', 'usuario_creacion', 'paciente'
+    ).order_by('-fecha_creacion')
     
     # Agregar datos
     for venta in ventas:
@@ -250,7 +254,9 @@ def exportar_hospitalizacion_excel(request):
 def reporte_servicios(request):
     servicios_vendidos = DetalleVenta.objects.filter(
         tipo='servicio'
-    ).select_related('venta', 'venta__usuario_cobro', 'servicio').order_by('-venta__fecha_creacion')
+    ).select_related(
+        'venta', 'venta__usuario_cobro', 'venta__usuario_creacion', 'servicio'
+    ).order_by('-venta__fecha_creacion')
     
     context = {
         'servicios_vendidos': servicios_vendidos,
@@ -273,7 +279,9 @@ def exportar_servicios_excel(request):
     # Obtener datos
     servicios_vendidos = DetalleVenta.objects.filter(
         tipo='servicio'
-    ).select_related('venta', 'venta__usuario_cobro').order_by('-venta__fecha_creacion')
+    ).select_related(
+        'venta', 'venta__usuario_cobro', 'venta__usuario_creacion'
+    ).order_by('-venta__fecha_creacion')
     
     # Agregar datos
     for detalle in servicios_vendidos:
