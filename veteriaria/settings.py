@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'login',
     'cuentas',
     'agenda',
+    'reportes',
 ]
 
 MIDDLEWARE = [
