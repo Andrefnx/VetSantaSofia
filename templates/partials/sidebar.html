@@ -91,45 +91,13 @@
                     </a>
                 </li>
 
-                <!-- REPORTES (Colapsable) -->
+                <!-- GENERADOR DE REPORTES -->
                 <li class="vet-nav-item {% if request.resolver_match.namespace == 'reportes' %}active{% endif %}">
-                    <a href="#reportesSubmenu" class="vet-nav-link" data-bs-toggle="collapse" aria-expanded="{% if request.resolver_match.namespace == 'reportes' %}true{% else %}false{% endif %}">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Reportes</span>
+                    <a href="{% url 'reportes:inventario' %}" class="vet-nav-link">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Generador de Reportes</span>
                     </a>
                 </li>
-                <ul class="collapse vet-nav-submenu {% if request.resolver_match.namespace == 'reportes' %}show{% endif %}" id="reportesSubmenu">
-                    <li class="vet-nav-item">
-                        <a href="{% url 'reportes:inventario' %}" class="vet-nav-link vet-nav-sublink">
-                            <i class="bi bi-box-seam"></i>
-                            <span>Inventario</span>
-                        </a>
-                    </li>
-                    <li class="vet-nav-item">
-                        <a href="{% url 'reportes:caja' %}" class="vet-nav-link vet-nav-sublink">
-                            <i class="bi bi-cash-stack"></i>
-                            <span>Caja / Ventas</span>
-                        </a>
-                    </li>
-                    <li class="vet-nav-item">
-                        <a href="{% url 'reportes:clinica' %}" class="vet-nav-link vet-nav-sublink">
-                            <i class="fas fa-notes-medical"></i>
-                            <span>Clínica</span>
-                        </a>
-                    </li>
-                    <li class="vet-nav-item">
-                        <a href="{% url 'reportes:hospitalizacion' %}" class="vet-nav-link vet-nav-sublink">
-                            <i class="fas fa-hospital"></i>
-                            <span>Hospitalización</span>
-                        </a>
-                    </li>
-                    <li class="vet-nav-item">
-                        <a href="{% url 'reportes:servicios' %}" class="vet-nav-link vet-nav-sublink">
-                            <i class="bi bi-prescription2"></i>
-                            <span>Servicios</span>
-                        </a>
-                    </li>
-                </ul>
 
             </ul>
             
