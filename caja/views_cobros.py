@@ -197,54 +197,68 @@ def detalle_cobro_pendiente(request, venta_id):
 
 @login_required
 @user_passes_test(es_admin_o_recepcion)
+@login_required
+@user_passes_test(es_admin_o_recepcion)
 @require_http_methods(["GET"])
 def api_cobros_pendientes(request):
     """
     API: Retorna cobros pendientes en formato JSON para cargar en el carrito de caja
     """
-    cobros = obtener_cobros_pendientes()
+    try:
+        cobros = obtener_cobros_pendientes()
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al obtener cobros: {str(e)}'
+        }, status=500)
     
-    # Filtro opcional por paciente
-    paciente_id = request.GET.get('paciente')
-    if paciente_id:
-        cobros = cobros.filter(paciente_id=paciente_id)
-    
-    # Serializar cobros con sus detalles
-    cobros_data = []
-    for venta in cobros:
-        detalles_data = []
-        for detalle in venta.detalles.all():
-            detalles_data.append({
-                'id': detalle.id,
-                'tipo': detalle.tipo,
-                'servicio_id': detalle.servicio.id if detalle.servicio else None,
-                'insumo_id': detalle.insumo.id if detalle.insumo else None,
-                'descripcion': detalle.descripcion,
-                'cantidad': float(detalle.cantidad),
-                'precio_unitario': float(detalle.precio_unitario),
-                'subtotal': float(detalle.subtotal),
+    try:
+        # Filtro opcional por paciente
+        paciente_id = request.GET.get('paciente')
+        if paciente_id:
+            cobros = cobros.filter(paciente_id=paciente_id)
+        
+        # Serializar cobros con sus detalles
+        cobros_data = []
+        for venta in cobros:
+            detalles_data = []
+            for detalle in venta.detalles.all():
+                detalles_data.append({
+                    'id': detalle.id,
+                    'tipo': detalle.tipo,
+                    'servicio_id': detalle.servicio.id if detalle.servicio else None,
+                    'insumo_id': detalle.insumo.id if detalle.insumo else None,
+                    'descripcion': detalle.descripcion,
+                    'cantidad': float(detalle.cantidad),
+                    'precio_unitario': float(detalle.precio_unitario),
+                    'subtotal': float(detalle.subtotal),
+                })
+            
+            cobros_data.append({
+                'id': venta.id,
+                'numero_venta': venta.numero_venta,
+                'tipo_origen': venta.tipo_origen,
+                'tipo_origen_display': venta.get_tipo_origen_display(),
+                'paciente': venta.paciente.nombre if venta.paciente else 'Sin paciente',
+                'paciente_id': venta.paciente.id if venta.paciente else None,
+                'subtotal_servicios': float(venta.subtotal_servicios),
+                'subtotal_insumos': float(venta.subtotal_insumos),
+                'descuento': float(venta.descuento),
+                'total': float(venta.total),
+                'fecha_creacion': venta.fecha_creacion.strftime('%d/%m/%Y %H:%M'),
+                'detalles': detalles_data,
             })
         
-        cobros_data.append({
-            'id': venta.id,
-            'numero_venta': venta.numero_venta,
-            'tipo_origen': venta.tipo_origen,
-            'tipo_origen_display': venta.get_tipo_origen_display(),
-            'paciente': venta.paciente.nombre if venta.paciente else 'Sin paciente',
-            'paciente_id': venta.paciente.id if venta.paciente else None,
-            'subtotal_servicios': float(venta.subtotal_servicios),
-            'subtotal_insumos': float(venta.subtotal_insumos),
-            'descuento': float(venta.descuento),
-            'total': float(venta.total),
-            'fecha_creacion': venta.fecha_creacion.strftime('%d/%m/%Y %H:%M'),
-            'detalles': detalles_data,
+        return JsonResponse({
+            'success': True,
+            'cobros': cobros_data,
+            'total_cobros': len(cobros_data),
         })
-    
-    return JsonResponse({
-        'success': True,
-        'cobros': cobros_data,
-        'total_cobros': len(cobros_data),
-    })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al procesar cobros: {str(e)}'
+        }, status=500)
 
 
 @login_required
