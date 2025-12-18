@@ -79,21 +79,23 @@ def procesar_venta(request):
                         nombre = item['name']
                         cantidad = Decimal(str(item['quantity']))
                         precio_unitario = Decimal(str(item['price']))
+                        tipo = item.get('tipo', 'insumo')
+                        item_id = item.get('id')
                         subtotal = cantidad * precio_unitario
                         
-                        # Determinar si es servicio o insumo
+                        # Obtener el objeto usando tipo e ID
                         servicio = None
                         insumo = None
-                        tipo = 'insumo'
                         
-                        try:
-                            servicio = Servicio.objects.get(nombre=nombre)
-                            tipo = 'servicio'
-                            subtotal_servicios += subtotal
-                        except Servicio.DoesNotExist:
+                        if tipo == 'servicio' and item_id:
                             try:
-                                insumo = Insumo.objects.get(medicamento=nombre)
-                                tipo = 'insumo'
+                                servicio = Servicio.objects.get(pk=item_id)
+                                subtotal_servicios += subtotal
+                            except Servicio.DoesNotExist:
+                                pass
+                        elif tipo == 'insumo' and item_id:
+                            try:
+                                insumo = Insumo.objects.get(pk=item_id)
                                 subtotal_insumos += subtotal
                             except Insumo.DoesNotExist:
                                 pass

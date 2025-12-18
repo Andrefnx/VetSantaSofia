@@ -31,18 +31,18 @@ function filterProducts() {
     });
 }
 
-function addToCart(name, price) {
+function addToCart(name, price, tipo, id) {
     if (!cashOpen) {
         alert('La caja está cerrada. Por favor, abre la caja para realizar ventas.');
         return;
     }
 
-    const existingItem = cart.find(item => item.name === name);
+    const existingItem = cart.find(item => item.name === name && item.tipo === tipo && item.id === id);
 
     if (existingItem) {
         existingItem.quantity++;
     } else {
-        cart.push({ name, price, quantity: 1 });
+        cart.push({ name, price, quantity: 1, tipo: tipo, id: id });
     }
 
     updateCart();
@@ -278,7 +278,9 @@ async function procesarVentaDirecto() {
                 items: cart.map(item => ({
                     name: item.name,
                     quantity: item.quantity,
-                    price: item.price
+                    price: item.price,
+                    tipo: item.tipo,
+                    id: item.id
                 })),
                 cliente: cliente || 'Cliente General',
                 metodo_pago: metodoPagoPrincipal,
@@ -510,7 +512,9 @@ async function guardarBorrador() {
                 items: cart.map(item => ({
                     name: item.name,
                     quantity: item.quantity,
-                    price: item.price
+                    price: item.price,
+                    tipo: item.tipo,
+                    id: item.id
                 }))
             };
             
@@ -540,7 +544,9 @@ async function guardarBorrador() {
                 items: cart.map(item => ({
                     name: item.name,
                     quantity: item.quantity,
-                    price: item.price
+                    price: item.price,
+                    tipo: item.tipo,
+                    id: item.id
                 })),
                 cliente: cliente || 'Cliente General'
             };
@@ -742,7 +748,7 @@ async function cargarPagoPendiente(ventaId) {
         // Agregar cada detalle al carrito
         venta.detalles.forEach(detalle => {
             cart.push({
-                id: detalle.id,
+                id: detalle.tipo === 'servicio' ? detalle.servicio_id : detalle.insumo_id,
                 name: detalle.descripcion,
                 price: detalle.precio_unitario,
                 quantity: detalle.cantidad,

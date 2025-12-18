@@ -217,6 +217,8 @@ def api_cobros_pendientes(request):
             detalles_data.append({
                 'id': detalle.id,
                 'tipo': detalle.tipo,
+                'servicio_id': detalle.servicio.id if detalle.servicio else None,
+                'insumo_id': detalle.insumo.id if detalle.insumo else None,
                 'descripcion': detalle.descripcion,
                 'cantidad': float(detalle.cantidad),
                 'precio_unitario': float(detalle.precio_unitario),
@@ -313,20 +315,22 @@ def devolver_cobro_a_pendiente(request, venta_id):
                     nombre = item['name']
                     cantidad = Decimal(str(item['quantity']))
                     precio_unitario = Decimal(str(item['price']))
+                    tipo = item.get('tipo', 'insumo')
+                    item_id = item.get('id')
                     subtotal = cantidad * precio_unitario
                     
-                    # Determinar si es servicio o insumo
+                    # Obtener el objeto usando tipo e ID
                     servicio = None
                     insumo = None
-                    tipo = 'insumo'
                     
-                    try:
-                        servicio = Servicio.objects.get(nombre=nombre)
-                        tipo = 'servicio'
-                    except Servicio.DoesNotExist:
+                    if tipo == 'servicio' and item_id:
                         try:
-                            insumo = Insumo.objects.get(medicamento=nombre)
-                            tipo = 'insumo'
+                            servicio = Servicio.objects.get(pk=item_id)
+                        except Servicio.DoesNotExist:
+                            pass
+                    elif tipo == 'insumo' and item_id:
+                        try:
+                            insumo = Insumo.objects.get(pk=item_id)
                         except Insumo.DoesNotExist:
                             pass
                     
@@ -464,20 +468,22 @@ def guardar_borrador(request):
                 nombre = item['name']
                 cantidad = Decimal(str(item['quantity']))
                 precio_unitario = Decimal(str(item['price']))
+                tipo = item.get('tipo', 'insumo')
+                item_id = item.get('id')
                 subtotal = cantidad * precio_unitario
                 
-                # Determinar si es servicio o insumo
+                # Obtener el objeto usando tipo e ID
                 servicio = None
                 insumo = None
-                tipo = 'insumo'
                 
-                try:
-                    servicio = Servicio.objects.get(nombre=nombre)
-                    tipo = 'servicio'
-                except Servicio.DoesNotExist:
+                if tipo == 'servicio' and item_id:
                     try:
-                        insumo = Insumo.objects.get(medicamento=nombre)
-                        tipo = 'insumo'
+                        servicio = Servicio.objects.get(pk=item_id)
+                    except Servicio.DoesNotExist:
+                        pass
+                elif tipo == 'insumo' and item_id:
+                    try:
+                        insumo = Insumo.objects.get(pk=item_id)
                     except Insumo.DoesNotExist:
                         pass
                 
