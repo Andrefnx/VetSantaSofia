@@ -336,28 +336,23 @@ def exportar_inventario_excel(request):
         'en_hospitalizaciones': en_hospitalizaciones,
     }
     
-    # Crear registro del reporte
+    # Crear registro del reporte (sin guardar archivo físico - Render usa sistema efímero)
     from .models import ReporteGenerado
-    from django.core.files.base import ContentFile
-    import io
     
-    reporte = ReporteGenerado.objects.create(
+    ReporteGenerado.objects.create(
         tipo='inventario',
         usuario=request.user,
         filtros=filtros_dict,
         total_registros=insumos.count()
     )
     
-    # Guardar el Excel en el registro
+    # Preparar respuesta HTTP
+    import io
     excel_buffer = io.BytesIO()
     wb.save(excel_buffer)
     excel_buffer.seek(0)
     
     filename = f'reporte_inventario_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
-    reporte.archivo.save(filename, ContentFile(excel_buffer.read()), save=True)
-    
-    # Preparar respuesta HTTP
-    excel_buffer.seek(0)
     response = HttpResponse(
         excel_buffer.read(),
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
