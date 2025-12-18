@@ -611,8 +611,8 @@ def crear_consulta(request, paciente_id):
                 consulta.delete()  # Revertir creación de consulta
                 return JsonResponse({
                     'success': False,
-            #         'error': f'Error al procesar inventario: {str(e)}'
-            #     }, status=500)
+                    'error': f'Error al validar inventario: {str(e)}'
+                }, status=500)
         elif not finalizar and consulta.servicios.exists():
             print(f'  ℹ️ MODO BORRADOR: Servicios asociados pero NO se descuenta inventario')
         else:
