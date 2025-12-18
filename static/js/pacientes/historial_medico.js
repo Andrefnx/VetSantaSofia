@@ -694,10 +694,15 @@ if (formNuevaConsulta) {
     
     const formData = new FormData(form);
     
+    // 🔍 DEBUG: Verificar valor de servicios_ids
+    const serviciosIdsValue = formData.get('servicios_ids');
+    console.log('🔍 DEBUG servicios_ids del FormData:', serviciosIdsValue);
+    console.log('🔍 DEBUG serviciosSeleccionadosArray:', window.serviciosSeleccionadosArray);
+    
     const data = {
         paciente_id: window.pacienteData.id,
         tipo_consulta: formData.get('tipo_consulta'),
-        servicios_ids: formData.get('servicios_ids'),
+        servicios_ids: serviciosIdsValue,
         temperatura: formData.get('temperatura'),
         peso: formData.get('peso'),
         frecuencia_cardiaca: formData.get('frecuencia_cardiaca'),
@@ -1169,26 +1174,25 @@ window.editarConsulta = async function(consultaId) {
                                 insumos: servicioCompleto?.insumos || []
                             });
                             console.log(`  ✅ Servicio: ${servicio.nombre} (ID: ${servicio.id})`);
+                            
+                            // Si no hay función agregarServicio, actualizar manualmente
+                            if (typeof actualizarServiciosSeleccionados === 'function') {
+                                actualizarServiciosSeleccionados();
+                            }
+                            if (typeof mostrarInsumosServicios === 'function') {
+                                mostrarInsumosServicios();
+                            }
                         }
                     });
                     
-                    // Actualizar input hidden con IDs
+                    console.log('📊 Estado final de serviciosSeleccionadosArray:', window.serviciosSeleccionadosArray);
+                    
+                    // Verificar que el input hidden tenga el valor correcto
                     const serviciosIdsInput = form.querySelector('[name="servicios_ids"]');
                     if (serviciosIdsInput) {
-                        serviciosIdsInput.value = consulta.servicios.map(s => s.id).join(',');
-                        console.log(`✅ servicios_ids actualizado: ${serviciosIdsInput.value}`);
-                    }
-                    
-                    // Actualizar UI de servicios si existe la función
-                    if (typeof actualizarServiciosSeleccionados === 'function') {
-                        actualizarServiciosSeleccionados();
-                        console.log('✅ UI de servicios actualizada');
-                    }
-                    
-                    // Actualizar insumos de servicios si existe la función
-                    if (typeof mostrarInsumosServicios === 'function') {
-                        mostrarInsumosServicios();
-                        console.log('✅ Insumos de servicios actualizados');
+                        console.log(`✅ servicios_ids final: "${serviciosIdsInput.value}"`);
+                    } else {
+                        console.error('❌ No se encontró el input servicios_ids');
                     }
                 }).catch(e => console.warn('⚠️ Error al cargar servicios:', e));
             } else {
