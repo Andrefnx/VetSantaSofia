@@ -97,9 +97,8 @@ def reporte_inventario(request):
     elif en_hospitalizaciones == 'si':
         filtro_count &= Q(detalleventa__venta__tipo_origen='hospitalizacion')
     
-    # Aplicar filtros avanzados
+    # Aplicar filtros positivos
     try:
-        # Filtros positivos de tipo origen
         if en_consultas == 'si' or en_hospitalizaciones == 'si':
             filtro_detalle = Q()
             if fecha_desde:
@@ -116,27 +115,27 @@ def reporte_inventario(request):
             
             ids_filtrados = DetalleVenta.objects.filter(filtro_detalle).values_list('insumo_id', flat=True).distinct()
             insumos = insumos.filter(id__in=list(ids_filtrados)) if ids_filtrados else insumos.filter(id__in=[])
-        
-        # Filtros negativos - excluir insumos usados en estos contextos
-        if en_consultas == 'no':
-            ids_excl = DetalleVenta.objects.filter(
-                venta__tipo_origen='consulta',
-                insumo_id__isnull=False
-            ).values_list('insumo_id', flat=True).distinct()
-            if ids_excl.exists():
-                insumos = insumos.exclude(id__in=list(ids_excl))
-        
-        if en_hospitalizaciones == 'no':
-            ids_excl = DetalleVenta.objects.filter(
-                venta__tipo_origen='hospitalizacion',
-                insumo_id__isnull=False
-            ).values_list('insumo_id', flat=True).distinct()
-            if ids_excl.exists():
-                insumos = insumos.exclude(id__in=list(ids_excl))
     except Exception as e:
         import logging
         logger = logging.getLogger(__name__)
-        logger.error(f"Error en filtros avanzados: {str(e)}")
+        logger.error(f"Error en filtros positivos: {str(e)}")
+    
+    # Filtros negativos - FUERA del try-except
+    if en_consultas == 'no':
+        ids_excl = list(DetalleVenta.objects.filter(
+            venta__tipo_origen='consulta',
+            insumo_id__isnull=False
+        ).values_list('insumo_id', flat=True).distinct())
+        if ids_excl:
+            insumos = insumos.exclude(id__in=ids_excl)
+    
+    if en_hospitalizaciones == 'no':
+        ids_excl = list(DetalleVenta.objects.filter(
+            venta__tipo_origen='hospitalizacion',
+            insumo_id__isnull=False
+        ).values_list('insumo_id', flat=True).distinct())
+        if ids_excl:
+            insumos = insumos.exclude(id__in=ids_excl)
     
     # Anotar veces vendido
     insumos = insumos.annotate(veces_vendido=Count('detalleventa', filter=filtro_count)).order_by('medicamento')
@@ -232,9 +231,8 @@ def exportar_inventario_excel(request):
     elif en_hospitalizaciones == 'si':
         filtro_count &= Q(detalleventa__venta__tipo_origen='hospitalizacion')
     
-    # Aplicar filtros avanzados
+    # Aplicar filtros positivos
     try:
-        # Filtros positivos de tipo origen
         if en_consultas == 'si' or en_hospitalizaciones == 'si':
             filtro_detalle = Q()
             if fecha_desde:
@@ -251,27 +249,27 @@ def exportar_inventario_excel(request):
             
             ids_filtrados = DetalleVenta.objects.filter(filtro_detalle).values_list('insumo_id', flat=True).distinct()
             insumos = insumos.filter(id__in=list(ids_filtrados)) if ids_filtrados else insumos.filter(id__in=[])
-        
-        # Filtros negativos - excluir insumos usados en estos contextos
-        if en_consultas == 'no':
-            ids_excl = DetalleVenta.objects.filter(
-                venta__tipo_origen='consulta',
-                insumo_id__isnull=False
-            ).values_list('insumo_id', flat=True).distinct()
-            if ids_excl.exists():
-                insumos = insumos.exclude(id__in=list(ids_excl))
-        
-        if en_hospitalizaciones == 'no':
-            ids_excl = DetalleVenta.objects.filter(
-                venta__tipo_origen='hospitalizacion',
-                insumo_id__isnull=False
-            ).values_list('insumo_id', flat=True).distinct()
-            if ids_excl.exists():
-                insumos = insumos.exclude(id__in=list(ids_excl))
     except Exception as e:
         import logging
         logger = logging.getLogger(__name__)
-        logger.error(f"Error en filtros avanzados: {str(e)}")
+        logger.error(f"Error en filtros positivos: {str(e)}")
+    
+    # Filtros negativos - FUERA del try-except
+    if en_consultas == 'no':
+        ids_excl = list(DetalleVenta.objects.filter(
+            venta__tipo_origen='consulta',
+            insumo_id__isnull=False
+        ).values_list('insumo_id', flat=True).distinct())
+        if ids_excl:
+            insumos = insumos.exclude(id__in=ids_excl)
+    
+    if en_hospitalizaciones == 'no':
+        ids_excl = list(DetalleVenta.objects.filter(
+            venta__tipo_origen='hospitalizacion',
+            insumo_id__isnull=False
+        ).values_list('insumo_id', flat=True).distinct())
+        if ids_excl:
+            insumos = insumos.exclude(id__in=ids_excl)
     
     # Anotar veces vendido
     insumos = insumos.annotate(veces_vendido=Count('detalleventa', filter=filtro_count)).order_by('medicamento')
