@@ -646,9 +646,17 @@ async function cargarTodasLasAgendas() {
     // Actualizar título de fecha
     document.getElementById('fechaTitulo').textContent = formatearFecha(agendaState.fecha);
     
-    // Mostrar estado de carga
-    document.getElementById('agendaEstado').style.display = 'block';
-    document.getElementById('contenedorAgendas').style.display = 'none';
+    // Mostrar estado de carga con transición
+    const estadoCarga = document.getElementById('agendaEstado');
+    const contenedorAgendas = document.getElementById('contenedorAgendas');
+    
+    contenedorAgendas.style.opacity = '0';
+    setTimeout(() => {
+        contenedorAgendas.style.display = 'none';
+        estadoCarga.style.display = 'block';
+        void estadoCarga.offsetHeight;
+        estadoCarga.style.opacity = '1';
+    }, 200);
     
     const [year, month, day] = agendaState.fecha.split('-');
     
@@ -685,12 +693,25 @@ async function cargarTodasLasAgendas() {
         // Filtrar solo los que trabajan
         const vetsTrabajando = todosDatos.filter(({ data }) => data.trabaja);
         
-        // Si nadie trabaja, mostrar mensaje
+        // Si nadie trabaja, mostrar mensaje con transición
         if (vetsTrabajando.length === 0) {
-            document.getElementById('agendaEstado').style.display = 'none';
-            document.getElementById('agendaSinVets').style.display = 'block';
-            document.getElementById('contenedorAgendas').style.display = 'none';
-            document.getElementById('agendaLeyenda').style.display = 'none';
+            const estado = document.getElementById('agendaEstado');
+            const sinVets = document.getElementById('agendaSinVets');
+            const contenedor = document.getElementById('contenedorAgendas');
+            const leyenda = document.getElementById('agendaLeyenda');
+            
+            estado.style.opacity = '0';
+            setTimeout(() => {
+                estado.style.display = 'none';
+                estado.style.opacity = '1';
+                sinVets.style.display = 'block';
+                contenedor.style.display = 'none';
+                leyenda.style.display = 'none';
+                
+                void sinVets.offsetHeight;
+                sinVets.style.opacity = '1';
+            }, 200);
+            
             document.getElementById('btnNavIzq').style.display = 'none';
             document.getElementById('btnNavDer').style.display = 'none';
             return;
@@ -731,11 +752,27 @@ async function cargarTodasLasAgendas() {
             }
         });
         
-        // Ocultar estado de carga y mostrar agendas
-        document.getElementById('agendaEstado').style.display = 'none';
-        document.getElementById('agendaSinVets').style.display = 'none';
-        document.getElementById('contenedorAgendas').style.display = 'grid';
-        document.getElementById('agendaLeyenda').style.display = 'block';
+        // Ocultar estado de carga y mostrar agendas con transición suave
+        const estado = document.getElementById('agendaEstado');
+        const contenedor = document.getElementById('contenedorAgendas');
+        const sinVets = document.getElementById('agendaSinVets');
+        const leyenda = document.getElementById('agendaLeyenda');
+        
+        // Fade out del loader
+        estado.style.opacity = '0';
+        setTimeout(() => {
+            estado.style.display = 'none';
+            estado.style.opacity = '1';
+            
+            // Mostrar contenedor y aplicar fade in
+            sinVets.style.display = 'none';
+            contenedor.style.display = 'grid';
+            leyenda.style.display = 'block';
+            
+            // Force reflow para que la transición funcione
+            void contenedor.offsetHeight;
+            contenedor.style.opacity = '1';
+        }, 200);
         
         // Actualizar controles de navegación
         actualizarControlesNavegacion();

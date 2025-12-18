@@ -4,6 +4,22 @@
 {% block title %}Agenda Veterinaria{% endblock %}
 
 {% block extra_css %}
+<style>
+    /* Prevenir FOUC (Flash of Unstyled Content) */
+    #agendaEstado {
+        opacity: 1;
+        transition: opacity 0.2s ease-in-out;
+    }
+    #contenedorAgendas,
+    #agendaSinVets {
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+    }
+    #contenedorAgendas[style*="display: grid"],
+    #agendaSinVets[style*="display: block"] {
+        opacity: 1;
+    }
+</style>
 <link rel="stylesheet" href="{% static 'css/agenda/agenda_bloques.css' %}">
 <link rel="stylesheet" href="{% static 'css/base/consulta_loader.css' %}">
 
