@@ -134,9 +134,19 @@ def discount_stock_for_services(services, user, origen_obj):
     """
     Descuenta stock del inventario para los servicios ejecutados.
     
-    Esta función realiza el descuento real de inventario al ejecutar servicios.
-    Utiliza transacciones atómicas para garantizar que TODOS los descuentos
-    se apliquen correctamente o NINGUNO se aplique (no descuentos parciales).
+    ⚠️ IMPORTANTE - CENTRALIZACIÓN DE DESCUENTO DE STOCK
+    =======================================================
+    Esta función está disponible pero NO debe invocarse desde el módulo de clínica.
+    El descuento de stock ocurre ÚNICAMENTE al confirmar el pago en caja/services.py
+    mediante la función descontar_stock_insumo() y procesar_pago().
+    
+    Esto previene:
+    - Doble descuento de inventario
+    - Descuento antes del pago (si el pago falla, el stock ya estaría descontado)
+    - Inconsistencias entre stock y ventas
+    
+    Esta función se mantiene disponible para uso futuro o casos especiales,
+    pero NO debe ser llamada desde clinica/views.py
     
     COMPORTAMIENTO CRÍTICO:
     - Valida stock ANTES de descontar (falla rápido si hay insuficiencia)

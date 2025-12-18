@@ -39,11 +39,12 @@ def descontar_insumos_consulta(consulta, user):
         ValidationError: Si el stock es insuficiente
         Exception: Otros errores
     """
-    from .services.inventario_service import validate_stock_for_services, discount_stock_for_services
+    # ⚠️ Solo validación de stock - Descuento ocurre en caja
+    from .services.inventario_service import validate_stock_for_services
     from inventario.models import Insumo
     
     print('=' * 60)
-    print('🔵 DESCUENTO DE INSUMOS - INICIO')
+    print('🔵 DESCUENTO DE INSUMOS - INICIO (DESACTIVADO)')
     print('=' * 60)
     print(f'📋 Consulta ID: {consulta.id}')
     print(f'🐾 Paciente: {consulta.paciente.nombre}')
@@ -63,34 +64,40 @@ def descontar_insumos_consulta(consulta, user):
     # ============================================================
     # PASO 1: DESCONTAR INSUMOS DE SERVICIOS
     # ============================================================
+    # ⚠️ DESCUENTO DE STOCK CENTRALIZADO EN CAJA
+    # El stock se descuenta ÚNICAMENTE al confirmar el pago en caja/services.py
+    # Esto previene doble descuento y mantiene un único punto de control.
+    # La función discount_stock_for_services() se mantiene disponible pero NO se invoca aquí.
     servicios = consulta.servicios.all()
     if servicios.exists():
         print(f'\n📦 PROCESANDO SERVICIOS ({servicios.count()})')
         print('-' * 60)
+        print('ℹ️ Stock NO se descuenta aquí - se descontará al confirmar pago en caja')
         
-        try:
-            # Validar stock disponible
-            print('🔍 Validando disponibilidad de stock...')
-            validate_stock_for_services(servicios)
-            print('✅ Stock suficiente para todos los servicios')
-            
-            # Descontar inventario
-            print('📉 Descontando insumos de servicios...')
-            resultado = discount_stock_for_services(
-                services=servicios,
-                user=user,
-                origen_obj=consulta
-            )
-            
-            print(f'✅ {resultado["total_items"]} insumos descontados desde servicios')
-            for item in resultado['insumos_descontados']:
-                print(f'  - {item["medicamento"]}: {item["cantidad_descontada"]} unidades')
-                insumos_procesados.append(item)
-                
-        except ValidationError as ve:
-            print(f'❌ ERROR: Stock insuficiente')
-            print(f'   Detalle: {str(ve)}')
-            raise ve  # Re-lanzar para manejo en vista
+        # CÓDIGO COMENTADO - Descuento ahora ocurre en caja al confirmar pago
+        # try:
+        #     # Validar stock disponible
+        #     print('🔍 Validando disponibilidad de stock...')
+        #     validate_stock_for_services(servicios)
+        #     print('✅ Stock suficiente para todos los servicios')
+        #     
+        #     # Descontar inventario
+        #     print('📉 Descontando insumos de servicios...')
+        #     resultado = discount_stock_for_services(
+        #         services=servicios,
+        #         user=user,
+        #         origen_obj=consulta
+        #     )
+        #     
+        #     print(f'✅ {resultado["total_items"]} insumos descontados desde servicios')
+        #     for item in resultado['insumos_descontados']:
+        #         print(f'  - {item["medicamento"]}: {item["cantidad_descontada"]} unidades')
+        #         insumos_procesados.append(item)
+        #         
+        # except ValidationError as ve:
+        #     print(f'❌ ERROR: Stock insuficiente')
+        #     print(f'   Detalle: {str(ve)}')
+        #     raise ve  # Re-lanzar para manejo en vista
     else:
         print('\nℹ️ No hay servicios asociados a esta consulta')
     
@@ -106,25 +113,32 @@ def descontar_insumos_consulta(consulta, user):
             try:
                 insumo = Insumo.objects.get(idInventario=med.inventario_id)
                 
-                # Validar stock
-                if insumo.stock_actual <= 0:
-                    raise ValidationError(
-                        f"Stock insuficiente para {insumo.medicamento}. "
-                        f"Stock actual: {insumo.stock_actual}"
-                    )
+                # ⚠️ DESCUENTO DE STOCK CENTRALIZADO EN CAJA
+                # El stock se descuenta ÚNICAMENTE al confirmar el pago en caja
+                # NO descontar aquí para evitar doble descuento
                 
-                # Descontar 1 unidad
-                insumo.stock_actual -= 1
-                insumo.save(update_fields=['stock_actual'])
+                # CÓDIGO COMENTADO - Descuento ahora ocurre en caja al confirmar pago
+                # # Validar stock
+                # if insumo.stock_actual <= 0:
+                #     raise ValidationError(
+                #         f"Stock insuficiente para {insumo.medicamento}. "
+                #         f"Stock actual: {insumo.stock_actual}"
+                #     )
+                # 
+                # # Descontar 1 unidad
+                # insumo.stock_actual -= 1
+                # insumo.save(update_fields=['stock_actual'])
+                # 
+                # print(f'✅ {insumo.medicamento}: descontada 1 unidad (stock: {insumo.stock_actual + 1} → {insumo.stock_actual})')
+                # 
+                # insumos_procesados.append({
+                #     'medicamento': insumo.medicamento,
+                #     'cantidad_descontada': 1,
+                #     'stock_anterior': insumo.stock_actual + 1,
+                #     'stock_actual': insumo.stock_actual
+                # })
                 
-                print(f'✅ {insumo.medicamento}: descontada 1 unidad (stock: {insumo.stock_actual + 1} → {insumo.stock_actual})')
-                
-                insumos_procesados.append({
-                    'medicamento': insumo.medicamento,
-                    'cantidad_descontada': 1,
-                    'stock_anterior': insumo.stock_actual + 1,
-                    'stock_actual': insumo.stock_actual
-                })
+                print(f'ℹ️ {insumo.medicamento}: registrado (descuento ocurrirá en caja)')
                 
             except Insumo.DoesNotExist:
                 print(f'⚠️ Insumo con ID {med.inventario_id} no encontrado en inventario')
@@ -532,21 +546,21 @@ def crear_consulta(request, paciente_id):
                 import traceback
                 traceback.print_exc()
 
-        # ⭐ DESCUENTO DE INVENTARIO POR SERVICIOS (solo si finalizar=True)
-        # Descontar insumos del inventario según los servicios ejecutados
+        # ⭐ VALIDACIÓN DE STOCK (sin descuento)
+        # ⚠️ Se valida stock disponible pero NO se descuenta aquí
+        # El descuento ocurre ÚNICAMENTE al confirmar el pago en caja/services.py
         if finalizar and consulta.servicios.exists():
             try:
-                from .services.inventario_service import validate_stock_for_services, discount_stock_for_services
-                
-                # ⭐ PASO 1: VALIDAR STOCK ANTES DE DESCONTAR
+                # PASO 1: VALIDAR STOCK DISPONIBLE
                 print(f'🔍 Validando disponibilidad de stock...')
                 servicios = consulta.servicios.all()
                 
                 try:
                     validate_stock_for_services(servicios)
                     print(f'  ✅ Stock suficiente para todos los insumos')
+                    print(f'  📦 Descuento de stock ocurrirá al confirmar pago en caja')
                 except ValidationError as stock_error:
-                    # Stock insuficiente detectado ANTES de descontar
+                    # Stock insuficiente detectado - bloquear finalización
                     print(f'  ⚠️ Stock insuficiente detectado:')
                     print(f'     {str(stock_error)}')
                     
@@ -570,22 +584,19 @@ def crear_consulta(request, paciente_id):
                         'detalles': str(stock_error)
                     }, status=400)
                 
-                # ⭐ PASO 2: DESCONTAR INVENTARIO (solo si validación pasó)
-                print(f'📦 Iniciando descuento de inventario para servicios...')
-                
-                resultado = discount_stock_for_services(
-                    services=servicios,
-                    user=request.user,
-                    origen_obj=consulta
-                )
-                
-                print(f'  ✅ Inventario descontado exitosamente')
-                print(f'  📊 Items descontados: {resultado["total_items"]}')
-                for item in resultado['insumos_descontados']:
-                    print(f'    - {item["medicamento"]}: {item["cantidad_descontada"]} unidades (quedan {item["stock_restante"]})')
+                # PASO 2: DESCUENTO DESACTIVADO - Ocurre en caja
+                # ⚠️ NO descontar aquí, solo validar
+                # CÓDIGO COMENTADO - Descuento ahora ocurre en caja al confirmar pago
+                # resultado = discount_stock_for_services(
+                #     services=servicios,
+                #     user=request.user,
+                #     origen_obj=consulta
+                # )
+                # print(f'  ✅ Inventario descontado exitosamente')
+                # print(f'  📊 Items descontados: {resultado["total_items"]}')
                 
             except ValidationError as ve:
-                # Si hay error de validación (backup por si acaso)
+                # Si hay error de validación
                 print(f'  ⚠️ Error de validación en inventario: {str(ve)}')
                 consulta.delete()  # Revertir creación de consulta
                 return JsonResponse({
@@ -595,13 +606,13 @@ def crear_consulta(request, paciente_id):
                     'detalles': str(ve)
                 }, status=400)
             except Exception as e:
-                # Cualquier otro error en el descuento
-                print(f'  ❌ Error inesperado al descontar inventario: {str(e)}')
+                # Cualquier otro error en la validación
+                print(f'  ❌ Error inesperado al validar inventario: {str(e)}')
                 consulta.delete()  # Revertir creación de consulta
                 return JsonResponse({
                     'success': False,
-                    'error': f'Error al procesar inventario: {str(e)}'
-                }, status=500)
+            #         'error': f'Error al procesar inventario: {str(e)}'
+            #     }, status=500)
         elif not finalizar and consulta.servicios.exists():
             print(f'  ℹ️ MODO BORRADOR: Servicios asociados pero NO se descuenta inventario')
         else:
@@ -1642,45 +1653,52 @@ def crear_alta_medica(request, hospitalizacion_id):
             else:
                 print(f'  ⚠️  Cirugía: {cirugia.tipo_cirugia} - Sin servicio asociado')
         
-        print(f'\n📦 Total de servicios a descontar: {len(servicios_cirugias)}')
+        print(f'\n📦 Total de servicios: {len(servicios_cirugias)}')
         
-        # ⭐ PASO 2: DESCONTAR INVENTARIO POR SERVICIOS (si hay servicios)
+        # ⭐ PASO 2: VALIDACIÓN DE STOCK (sin descuento)
+        # ⚠️ Se valida stock disponible pero NO se descuenta aquí
+        # El descuento ocurre ÚNICAMENTE al confirmar el pago en caja/services.py
         if servicios_cirugias:
             try:
-                from .services.inventario_service import discount_stock_for_services
+                from .services.inventario_service import validate_stock_for_services
                 
-                print(f'\n💰 Iniciando descuento de inventario...')
+                print(f'\n🔍 Validando disponibilidad de stock para cirugías...')
                 
-                # Llamar al servicio de descuento
-                resultado = discount_stock_for_services(
-                    services=servicios_cirugias,
-                    user=request.user,
-                    origen_obj=hospitalizacion
-                )
+                # Validar que hay stock suficiente
+                validate_stock_for_services(servicios_cirugias)
+                print(f'  ✅ Stock suficiente para todos los insumos de cirugías')
+                print(f'  💰 Descuento de stock ocurrirá al confirmar pago en caja')
                 
-                print(f'  ✅ Inventario descontado exitosamente')
-                print(f'  📊 Items descontados: {resultado["total_items"]}')
-                for item in resultado['insumos_descontados']:
-                    print(f'    - {item["medicamento"]}: {item["cantidad_descontada"]} unidades (quedan {item["stock_restante"]})')
+                # CÓDIGO COMENTADO - Descuento ahora ocurre en caja al confirmar pago
+                # resultado = discount_stock_for_services(
+                #     services=servicios_cirugias,
+                #     user=request.user,
+                #     origen_obj=hospitalizacion
+                # )
+                # print(f'  ✅ Inventario descontado exitosamente')
+                # print(f'  📊 Items descontados: {resultado["total_items"]}')
                 
             except ValidationError as ve:
-                # Error de validación (stock insuficiente o ya descontado)
-                print(f'\n❌ Error de validación en inventario: {str(ve)}')
+                # Error de validación (stock insuficiente)
+                print(f'\n❌ Stock insuficiente para dar de alta:')
+                print(f'   {str(ve)}')
                 return JsonResponse({
                     'success': False,
-                    'error': f'Error de inventario: {str(ve)}'
+                    'error': 'stock_insuficiente',
+                    'message': f'⚠️ Stock insuficiente\n\n{str(ve)}\n\nRegistre nuevos ingresos de inventario antes de dar de alta.',
+                    'detalles': str(ve)
                 }, status=400)
             except Exception as e:
-                # Cualquier otro error en el descuento
-                print(f'\n❌ Error inesperado al descontar inventario: {str(e)}')
+                # Cualquier otro error en la validación
+                print(f'\n❌ Error al validar inventario: {str(e)}')
                 import traceback
                 traceback.print_exc()
                 return JsonResponse({
                     'success': False,
-                    'error': f'Error al procesar inventario: {str(e)}'
+                    'error': f'Error al validar inventario: {str(e)}'
                 }, status=500)
         else:
-            print(f'\n  ℹ️  No hay servicios de cirugías para descontar inventario')
+            print(f'\n  ℹ️  No hay servicios de cirugías asociados')
         
         # ⭐ PASO 3: CREAR ALTA MÉDICA (solo si inventario fue exitoso o no aplica)
         print(f'\n📄 Creando registro de alta médica...')

@@ -337,7 +337,6 @@
 .product-list-item:hover {
     border-color: var(--primary-color);
     background: linear-gradient(135deg, rgba(175, 225, 175, 0.05) 0%, rgba(137, 197, 124, 0.05) 100%);
-    transform: translateX(5px);
 }
 
 .product-list-item .icon {
