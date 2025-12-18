@@ -82,67 +82,50 @@ def reporte_inventario(request):
     fecha_desde = validar_fecha(request.GET.get('fecha_desde', ''))
     fecha_hasta = validar_fecha(request.GET.get('fecha_hasta', ''))
     
-    # Construir filtro para anotación (solo fechas + filtros positivos)
+    # Filtros de uso en consultas - LÓGICA SIMPLE
+    if en_consultas == 'si':
+        # Mostrar SOLO los que fueron usados en consultas
+        ids_usados = list(DetalleVenta.objects.filter(
+            tipo='insumo',
+            venta__tipo_origen='consulta',
+            insumo_id__isnull=False
+        ).values_list('insumo_id', flat=True).distinct())
+        insumos = insumos.filter(id__in=ids_usados) if ids_usados else insumos.none()
+    elif en_consultas == 'no':
+        # Excluir los que fueron usados en consultas
+        ids_usados = list(DetalleVenta.objects.filter(
+            tipo='insumo',
+            venta__tipo_origen='consulta',
+            insumo_id__isnull=False
+        ).values_list('insumo_id', flat=True).distinct())
+        if ids_usados:
+            insumos = insumos.exclude(id__in=ids_usados)
+    
+    # Filtros de uso en hospitalizaciones - LÓGICA SIMPLE
+    if en_hospitalizaciones == 'si':
+        # Mostrar SOLO los que fueron usados en hospitalizaciones
+        ids_usados = list(DetalleVenta.objects.filter(
+            tipo='insumo',
+            venta__tipo_origen='hospitalizacion',
+            insumo_id__isnull=False
+        ).values_list('insumo_id', flat=True).distinct())
+        insumos = insumos.filter(id__in=ids_usados) if ids_usados else insumos.none()
+    elif en_hospitalizaciones == 'no':
+        # Excluir los que fueron usados en hospitalizaciones
+        ids_usados = list(DetalleVenta.objects.filter(
+            tipo='insumo',
+            venta__tipo_origen='hospitalizacion',
+            insumo_id__isnull=False
+        ).values_list('insumo_id', flat=True).distinct())
+        if ids_usados:
+            insumos = insumos.exclude(id__in=ids_usados)
+    
+    # Construir filtro para anotación de veces vendido
     filtro_count = Q()
     if fecha_desde:
         filtro_count &= Q(detalleventa__venta__fecha_creacion__date__gte=fecha_desde)
     if fecha_hasta:
         filtro_count &= Q(detalleventa__venta__fecha_creacion__date__lte=fecha_hasta)
-    
-    # Solo agregar filtros POSITIVOS de tipo al contador
-    if en_consultas == 'si' and en_hospitalizaciones == 'si':
-        filtro_count &= Q(detalleventa__venta__tipo_origen__in=['consulta', 'hospitalizacion'])
-    elif en_consultas == 'si':
-        filtro_count &= Q(detalleventa__venta__tipo_origen='consulta')
-    elif en_hospitalizaciones == 'si':
-        filtro_count &= Q(detalleventa__venta__tipo_origen='hospitalizacion')
-    
-    # Aplicar filtros positivos
-    try:
-        if en_consultas == 'si' or en_hospitalizaciones == 'si':
-            filtro_detalle = Q()
-            if fecha_desde:
-                filtro_detalle &= Q(venta__fecha_creacion__date__gte=fecha_desde)
-            if fecha_hasta:
-                filtro_detalle &= Q(venta__fecha_creacion__date__lte=fecha_hasta)
-            
-            if en_consultas == 'si' and en_hospitalizaciones == 'si':
-                filtro_detalle &= Q(venta__tipo_origen='consulta') | Q(venta__tipo_origen='hospitalizacion')
-            elif en_consultas == 'si':
-                filtro_detalle &= Q(venta__tipo_origen='consulta')
-            elif en_hospitalizaciones == 'si':
-                filtro_detalle &= Q(venta__tipo_origen='hospitalizacion')
-            
-            ids_filtrados = DetalleVenta.objects.filter(filtro_detalle).values_list('insumo_id', flat=True).distinct()
-            insumos = insumos.filter(id__in=list(ids_filtrados)) if ids_filtrados else insumos.filter(id__in=[])
-    except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.error(f"Error en filtros positivos: {str(e)}")
-    
-    # Filtros negativos - Con manejo de errores
-    try:
-        if en_consultas == 'no':
-            ids_excl = list(DetalleVenta.objects.filter(
-                tipo='insumo',
-                venta__tipo_origen='consulta',
-                insumo_id__isnull=False
-            ).values_list('insumo_id', flat=True).distinct())
-            if ids_excl:
-                insumos = insumos.exclude(id__in=ids_excl)
-        
-        if en_hospitalizaciones == 'no':
-            ids_excl = list(DetalleVenta.objects.filter(
-                tipo='insumo',
-                venta__tipo_origen='hospitalizacion',
-                insumo_id__isnull=False
-            ).values_list('insumo_id', flat=True).distinct())
-            if ids_excl:
-                insumos = insumos.exclude(id__in=ids_excl)
-    except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.error(f"Error en filtros negativos: {str(e)}")
     
     # Anotar veces vendido
     insumos = insumos.annotate(veces_vendido=Count('detalleventa', filter=filtro_count)).order_by('medicamento')
@@ -152,9 +135,6 @@ def reporte_inventario(request):
         insumos = insumos.filter(veces_vendido__gt=0)
     elif vendidos == 'no':
         insumos = insumos.filter(veces_vendido=0)
-    # Si hay filtros positivos de tipo origen, también asegurar veces_vendido > 0
-    elif en_consultas == 'si' or en_hospitalizaciones == 'si':
-        insumos = insumos.filter(veces_vendido__gt=0)
     
     # Obtener marcas únicas para el filtro
     marcas = Insumo.objects.exclude(marca__isnull=True).exclude(marca='').values_list('marca', flat=True).distinct().order_by('marca')
@@ -223,67 +203,50 @@ def exportar_inventario_excel(request):
     fecha_desde = validar_fecha(request.GET.get('fecha_desde', ''))
     fecha_hasta = validar_fecha(request.GET.get('fecha_hasta', ''))
     
-    # Construir filtro para anotación (solo fechas + filtros positivos)
+    # Filtros de uso en consultas - LÓGICA SIMPLE
+    if en_consultas == 'si':
+        # Mostrar SOLO los que fueron usados en consultas
+        ids_usados = list(DetalleVenta.objects.filter(
+            tipo='insumo',
+            venta__tipo_origen='consulta',
+            insumo_id__isnull=False
+        ).values_list('insumo_id', flat=True).distinct())
+        insumos = insumos.filter(id__in=ids_usados) if ids_usados else insumos.none()
+    elif en_consultas == 'no':
+        # Excluir los que fueron usados en consultas
+        ids_usados = list(DetalleVenta.objects.filter(
+            tipo='insumo',
+            venta__tipo_origen='consulta',
+            insumo_id__isnull=False
+        ).values_list('insumo_id', flat=True).distinct())
+        if ids_usados:
+            insumos = insumos.exclude(id__in=ids_usados)
+    
+    # Filtros de uso en hospitalizaciones - LÓGICA SIMPLE
+    if en_hospitalizaciones == 'si':
+        # Mostrar SOLO los que fueron usados en hospitalizaciones
+        ids_usados = list(DetalleVenta.objects.filter(
+            tipo='insumo',
+            venta__tipo_origen='hospitalizacion',
+            insumo_id__isnull=False
+        ).values_list('insumo_id', flat=True).distinct())
+        insumos = insumos.filter(id__in=ids_usados) if ids_usados else insumos.none()
+    elif en_hospitalizaciones == 'no':
+        # Excluir los que fueron usados en hospitalizaciones
+        ids_usados = list(DetalleVenta.objects.filter(
+            tipo='insumo',
+            venta__tipo_origen='hospitalizacion',
+            insumo_id__isnull=False
+        ).values_list('insumo_id', flat=True).distinct())
+        if ids_usados:
+            insumos = insumos.exclude(id__in=ids_usados)
+    
+    # Construir filtro para anotación de veces vendido
     filtro_count = Q()
     if fecha_desde:
         filtro_count &= Q(detalleventa__venta__fecha_creacion__date__gte=fecha_desde)
     if fecha_hasta:
         filtro_count &= Q(detalleventa__venta__fecha_creacion__date__lte=fecha_hasta)
-    
-    # Solo agregar filtros POSITIVOS de tipo al contador
-    if en_consultas == 'si' and en_hospitalizaciones == 'si':
-        filtro_count &= Q(detalleventa__venta__tipo_origen__in=['consulta', 'hospitalizacion'])
-    elif en_consultas == 'si':
-        filtro_count &= Q(detalleventa__venta__tipo_origen='consulta')
-    elif en_hospitalizaciones == 'si':
-        filtro_count &= Q(detalleventa__venta__tipo_origen='hospitalizacion')
-    
-    # Aplicar filtros positivos
-    try:
-        if en_consultas == 'si' or en_hospitalizaciones == 'si':
-            filtro_detalle = Q()
-            if fecha_desde:
-                filtro_detalle &= Q(venta__fecha_creacion__date__gte=fecha_desde)
-            if fecha_hasta:
-                filtro_detalle &= Q(venta__fecha_creacion__date__lte=fecha_hasta)
-            
-            if en_consultas == 'si' and en_hospitalizaciones == 'si':
-                filtro_detalle &= Q(venta__tipo_origen='consulta') | Q(venta__tipo_origen='hospitalizacion')
-            elif en_consultas == 'si':
-                filtro_detalle &= Q(venta__tipo_origen='consulta')
-            elif en_hospitalizaciones == 'si':
-                filtro_detalle &= Q(venta__tipo_origen='hospitalizacion')
-            
-            ids_filtrados = DetalleVenta.objects.filter(filtro_detalle).values_list('insumo_id', flat=True).distinct()
-            insumos = insumos.filter(id__in=list(ids_filtrados)) if ids_filtrados else insumos.filter(id__in=[])
-    except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.error(f"Error en filtros positivos: {str(e)}")
-    
-    # Filtros negativos - Con manejo de errores
-    try:
-        if en_consultas == 'no':
-            ids_excl = list(DetalleVenta.objects.filter(
-                tipo='insumo',
-                venta__tipo_origen='consulta',
-                insumo_id__isnull=False
-            ).values_list('insumo_id', flat=True).distinct())
-            if ids_excl:
-                insumos = insumos.exclude(id__in=ids_excl)
-        
-        if en_hospitalizaciones == 'no':
-            ids_excl = list(DetalleVenta.objects.filter(
-                tipo='insumo',
-                venta__tipo_origen='hospitalizacion',
-                insumo_id__isnull=False
-            ).values_list('insumo_id', flat=True).distinct())
-            if ids_excl:
-                insumos = insumos.exclude(id__in=ids_excl)
-    except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.error(f"Error en filtros negativos: {str(e)}")
     
     # Anotar veces vendido
     insumos = insumos.annotate(veces_vendido=Count('detalleventa', filter=filtro_count)).order_by('medicamento')
@@ -293,9 +256,6 @@ def exportar_inventario_excel(request):
         insumos = insumos.filter(veces_vendido__gt=0)
     elif vendidos == 'no':
         insumos = insumos.filter(veces_vendido=0)
-    # Si hay filtros positivos de tipo origen, también asegurar veces_vendido > 0
-    elif en_consultas == 'si' or en_hospitalizaciones == 'si':
-        insumos = insumos.filter(veces_vendido__gt=0)
     
     # Crear workbook y hoja
     wb = Workbook()
