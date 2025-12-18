@@ -8,6 +8,13 @@
     <h2><i class="bi bi-box-seam"></i> Reporte de Inventario</h2>
 </div>
 
+{% if error_message %}
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle"></i> {{ error_message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
 <!-- Filtros -->
 <div class="row mb-3">
     <div class="col-12">
