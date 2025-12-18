@@ -393,6 +393,47 @@ def devolver_cobro_a_pendiente(request, venta_id):
         }, status=400)
 
 
+@csrf_exempt
+@login_required
+@user_passes_test(es_admin_o_recepcion)
+@require_http_methods(["POST"])
+def recuperar_ventas_en_proceso(request):
+    """
+    Recupera ventas que quedaron en estado 'en_proceso' (huérfanas)
+    Las devuelve automáticamente a 'pendiente'
+    Esto puede pasar si el usuario recargó la página o cerró el navegador
+    """
+    try:
+        # Buscar ventas en_proceso (sin filtrar por usuario para recuperar todas)
+        ventas_huerfanas = Venta.objects.filter(estado='en_proceso')
+        
+        count = 0
+        for venta in ventas_huerfanas:
+            venta.estado = 'pendiente'
+            venta.save(update_fields=['estado'])
+            
+            # Registrar auditoría
+            AuditoriaCaja.objects.create(
+                venta=venta,
+                accion='recuperar_venta',
+                usuario=request.user,
+                descripcion=f"Venta recuperada automáticamente de estado 'en_proceso' a 'pendiente'"
+            )
+            count += 1
+        
+        return JsonResponse({
+            'success': True,
+            'ventas_recuperadas': count,
+            'message': f'{count} venta(s) recuperada(s)' if count > 0 else 'No hay ventas por recuperar'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
 @login_required
 @user_passes_test(es_admin_o_recepcion)
 @require_http_methods(["POST", "DELETE"])

@@ -390,9 +390,70 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('cashAmount').textContent = '$0';
     }
 
+    // Recuperar ventas huérfanas en estado 'en_proceso' al cargar
+    recuperarVentasEnProceso();
+
     // Cargar contador de pagos pendientes al iniciar
     cargarContadorPagosPendientes();
 });
+
+/**
+ * Detecta cuando se va a cerrar o recargar la página
+ * Si hay una venta en proceso, la devuelve automáticamente a pendiente
+ */
+window.addEventListener('beforeunload', function (e) {
+    if (ventaEnProcesoId && cart.length > 0) {
+        // Usar fetch con keepalive para garantizar que se envíe antes de cerrar
+        const url = window.CAJA_URLS.devolverAPendiente.replace('{id}', ventaEnProcesoId);
+        
+        const borradorData = {
+            items: cart.map(item => ({
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+                tipo: item.tipo,
+                id: item.id
+            }))
+        };
+        
+        // Usar fetch con keepalive para garantizar envío incluso al cerrar
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(borradorData),
+            keepalive: true  // Crucial: permite que la petición se complete aunque se cierre la página
+        }).catch(err => console.error('Error al devolver venta:', err));
+        
+        // Nota: No se puede usar async/await aquí porque beforeunload debe ser síncrono
+    }
+});
+
+/**
+ * Recupera ventas que quedaron en estado 'en_proceso' (huérfanas)
+ * Esto puede pasar si el usuario recargó la página o cerró el navegador
+ */
+async function recuperarVentasEnProceso() {
+    try {
+        const response = await fetch('/caja/api/recuperar-ventas-proceso/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.ventas_recuperadas > 0) {
+            console.log(`✅ ${result.ventas_recuperadas} venta(s) devuelta(s) a pendiente`);
+        }
+    } catch (error) {
+        console.error('Error al recuperar ventas en proceso:', error);
+    }
+}
 
 // =========== FUNCIONES PARA PAGOS PENDIENTES ===========
 

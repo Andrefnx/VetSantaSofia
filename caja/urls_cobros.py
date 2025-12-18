@@ -21,6 +21,7 @@ urlpatterns = [
     path('cobros-pendientes/', views_cobros.lista_cobros_pendientes, name='lista_cobros'),
     path('cobro/<int:venta_id>/', views_cobros.detalle_cobro_pendiente, name='detalle_cobro'),
     path('api/cobros-pendientes/', views_cobros.api_cobros_pendientes, name='api_cobros_pendientes'),
+    path('api/recuperar-ventas-proceso/', views_cobros.recuperar_ventas_en_proceso, name='recuperar_ventas_proceso'),
     
     # Venta libre
     path('venta-libre/', views_cobros.crear_venta_libre_view, name='crear_venta_libre'),
