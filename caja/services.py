@@ -103,29 +103,40 @@ def obtener_datos_faltantes_insumo(insumo):
 @transaction.atomic
 def crear_cobro_pendiente_desde_consulta(consulta, usuario):
     """
-    Crea un cobro pendiente automáticamente desde una consulta
+    Crea o actualiza un cobro pendiente automáticamente desde una consulta
+    
+    Si ya existe una venta asociada, la actualiza en lugar de crear una nueva.
+    Esto permite editar consultas en borrador y actualizar el cobro correspondiente.
     
     Pasos:
-    1. Crea la venta en estado pendiente
-    2. Agrega servicios
-    3. Agrega insumos calculados
-    4. Calcula totales
-    5. Registra auditoría
+    1. Verifica si ya existe una venta asociada
+    2. Si existe, elimina detalles antiguos y los recrea
+    3. Si no existe, crea una nueva venta
+    4. Agrega servicios e insumos
+    5. Calcula totales
+    6. Registra auditoría
     """
     from clinica.models import ConsultaInsumo
     
-    # Verificar que no exista ya un cobro para esta consulta
+    # Verificar si ya existe un cobro para esta consulta
     if hasattr(consulta, 'venta') and consulta.venta:
-        raise ValidationError("Esta consulta ya tiene un cobro asociado")
-    
-    # Crear la venta
-    venta = Venta.objects.create(
-        tipo_origen='consulta',
-        consulta=consulta,
-        paciente=consulta.paciente,
-        estado='pendiente',
-        usuario_creacion=usuario
-    )
+        # Actualizar venta existente
+        venta = consulta.venta
+        print(f"🔄 Actualizando venta existente #{venta.id}")
+        
+        # Eliminar detalles antiguos para recrearlos
+        venta.detalles.all().delete()
+        print(f"🗑️ Detalles anteriores eliminados")
+    else:
+        # Crear nueva venta
+        venta = Venta.objects.create(
+            tipo_origen='consulta',
+            consulta=consulta,
+            paciente=consulta.paciente,
+            estado='pendiente',
+            usuario_creacion=usuario
+        )
+        print(f"✅ Nueva venta creada #{venta.id}")
     
     # Agregar servicios
     for servicio in consulta.servicios.all():

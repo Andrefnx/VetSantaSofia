@@ -484,15 +484,15 @@ if (formNuevaConsulta) {
         btnFinalizarConsulta.onclick = function() {
             // Verificar si ya está deshabilitado
             if (btnFinalizarConsulta.disabled) {
-                alert('⚠️ Esta consulta ya fue finalizada\n\nLos insumos ya fueron descontados del inventario.');
+                alert('⚠️ Esta consulta ya fue finalizada\n\nSe ha creado un cobro pendiente en caja.');
                 return;
             }
             
             // Mostrar advertencia
             const confirmacion = confirm(
                 '⚠️ ATENCIÓN: Finalizar Consulta\n\n' +
-                'Esta acción descontará los medicamentos e insumos del inventario.\n\n' +
-                'Una vez finalizada, la consulta quedará registrada y no se podrá volver a descontar insumos.\n\n' +
+                'Esta acción validará que hay stock disponible y creará un cobro pendiente.\n\n' +
+                'El descuento de inventario ocurrirá al confirmar el pago en caja.\n\n' +
                 '¿Desea continuar?'
             );
             
@@ -1525,9 +1525,9 @@ window.confirmConsulta = async function(consultaId) {
     // Mostrar confirmación con advertencia
     const confirmacion = confirm(
         '⚠️ ATENCIÓN: Confirmar Consulta\n\n' +
-        'Esta acción descontará los medicamentos e insumos del inventario.\n\n' +
-        '• Los insumos se restarán del stock disponible\n' +
-        '• Esta acción NO se puede revertir\n' +
+        'Esta acción validará stock disponible y creará un cobro pendiente.\n\n' +
+        '• Se verificará que hay stock suficiente\n' +
+        '• El descuento ocurrirá al confirmar el pago en caja\n' +
         '• La consulta quedará marcada como finalizada\n\n' +
         '¿Desea continuar con la confirmación?'
     );

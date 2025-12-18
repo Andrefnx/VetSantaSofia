@@ -664,7 +664,10 @@ def crear_consulta(request, paciente_id):
         print(f'   Insumos descontados: {consulta.insumos_descontados}')
         print('=' * 50)
         
-        mensaje = 'Consulta finalizada exitosamente' if finalizar else 'Borrador de consulta guardado'
+        if finalizar:
+            mensaje = '✅ Consulta finalizada exitosamente\n\nSe ha validado el stock y creado el cobro pendiente en caja.'
+        else:
+            mensaje = '✅ Borrador guardado\n\nLa consulta se ha guardado pero no se ha finalizado. Puede editarla más tarde.'
         
         return JsonResponse({
             'success': True,
@@ -860,7 +863,10 @@ def actualizar_consulta(request, consulta_id):
         print(f'   Insumos descontados: {consulta.insumos_descontados}')
         print('=' * 50)
         
-        mensaje = 'Consulta actualizada y finalizada exitosamente' if finalizar else 'Borrador de consulta actualizado'
+        if finalizar:
+            mensaje = '✅ Consulta finalizada exitosamente\n\nSe ha validado el stock y creado/actualizado el cobro pendiente en caja.'
+        else:
+            mensaje = '✅ Borrador actualizado\n\nLa consulta se ha guardado pero no se ha finalizado.'
         
         return JsonResponse({
             'success': True,
