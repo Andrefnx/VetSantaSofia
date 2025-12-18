@@ -92,13 +92,13 @@
                 </li>
 
                 <!-- REPORTES (Colapsable) -->
-                <li class="vet-nav-item">
-                    <a href="#reportesSubmenu" class="vet-nav-link" data-bs-toggle="collapse" aria-expanded="false">
+                <li class="vet-nav-item {% if request.resolver_match.namespace == 'reportes' %}active{% endif %}">
+                    <a href="#reportesSubmenu" class="vet-nav-link" data-bs-toggle="collapse" aria-expanded="{% if request.resolver_match.namespace == 'reportes' %}true{% else %}false{% endif %}">
                         <i class="fas fa-chart-line"></i>
                         <span>Reportes</span>
                     </a>
                 </li>
-                <ul class="collapse vet-nav-submenu" id="reportesSubmenu">
+                <ul class="collapse vet-nav-submenu {% if request.resolver_match.namespace == 'reportes' %}show{% endif %}" id="reportesSubmenu">
                     <li class="vet-nav-item">
                         <a href="{% url 'reportes:inventario' %}" class="vet-nav-link vet-nav-sublink">
                             <i class="bi bi-box-seam"></i>
