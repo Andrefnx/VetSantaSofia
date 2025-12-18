@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 from inventario.models import Insumo
 from caja.models import Venta, DetalleVenta
 from clinica.models import Consulta, Hospitalizacion
@@ -8,10 +9,12 @@ from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 
 
+@login_required
 def index(request):
     return render(request, 'reportes/index.html')
 
 
+@login_required
 def reporte_inventario(request):
     insumos = Insumo.objects.all().order_by('medicamento')
     context = {
@@ -21,6 +24,7 @@ def reporte_inventario(request):
     return render(request, 'reportes/inventario.html', context)
 
 
+@login_required
 def exportar_inventario_excel(request):
     # Crear workbook y hoja
     wb = Workbook()
@@ -63,6 +67,7 @@ def exportar_inventario_excel(request):
     
     return response
 
+@login_required
 
 def reporte_caja(request):
     from django.urls import reverse
@@ -72,6 +77,7 @@ def reporte_caja(request):
     }
     return render(request, 'reportes/caja.html', context)
 
+@login_required
 
 def exportar_caja_excel(request):
     from caja.models import Venta
@@ -115,6 +121,7 @@ def exportar_caja_excel(request):
     wb.save(response)
     
     return response
+@login_required
 
 
 def reporte_clinica(request):
@@ -126,6 +133,7 @@ def reporte_clinica(request):
         'consultas': consultas
     }
     return render(request, 'reportes/clinica.html', context)
+@login_required
 
 
 def exportar_clinica_excel(request):
@@ -175,6 +183,7 @@ def exportar_clinica_excel(request):
     return response
 
 
+@login_required
 def reporte_hospitalizacion(request):
     hospitalizaciones = Hospitalizacion.objects.select_related(
         'paciente', 'veterinario'
@@ -186,6 +195,7 @@ def reporte_hospitalizacion(request):
     return render(request, 'reportes/hospitalizacion.html', context)
 
 
+@login_required
 def exportar_hospitalizacion_excel(request):
     
     # Crear workbook y hoja
@@ -234,6 +244,7 @@ def exportar_hospitalizacion_excel(request):
     return response
 
 
+@login_required
 def reporte_servicios(request):
     from caja.models import DetalleVenta
     servicios_vendidos = DetalleVenta.objects.filter(
@@ -241,10 +252,12 @@ def reporte_servicios(request):
     ).select_related('venta', 'venta__usuario_cobro', 'servicio').order_by('-venta__fecha_creacion')
     
     context = {
+        'servicios_vendidos': servicios_vendidos
     }
     return render(request, 'reportes/servicios.html', context)
 
 
+@login_required
 def exportar_servicios_excel(request):
     from caja.models import DetalleVenta
     
@@ -253,6 +266,8 @@ def exportar_servicios_excel(request):
     ws = wb.active
     ws.title = "Servicios"
     
+    # Encabezados
+    headers = ['Fecha', 'Servicio', 'Precio', 'Estado', 'Usuario', 'Número Venta']
     ws.append(headers)
     
     # Obtener datos
