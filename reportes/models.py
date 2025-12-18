@@ -19,12 +19,14 @@ class ReporteGenerado(models.Model):
     
     # Filtros aplicados (formato JSON)
     filtros = models.JSONField(default=dict, blank=True)
+    resumen_filtros = models.TextField(blank=True, help_text='Resumen legible de los filtros aplicados')
     
     # Archivo Excel generado
     archivo = models.FileField(upload_to='reportes/excel/', null=True, blank=True)
     
     # Estadísticas
     total_registros = models.IntegerField(default=0)
+    observaciones = models.TextField(blank=True, null=True, help_text='Información adicional sobre el reporte')
     
     class Meta:
         verbose_name = 'Reporte Generado'

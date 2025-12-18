@@ -336,6 +336,33 @@ def exportar_inventario_excel(request):
         'en_hospitalizaciones': en_hospitalizaciones,
     }
     
+    # Generar resumen legible de filtros
+    resumen_parts = []
+    if marca:
+        resumen_parts.append(f"Marca: {marca}")
+    if estado:
+        resumen_parts.append(f"Estado: {dict([('disponible','Disponible'),('no_disponible','No Disponible')]).get(estado, estado)}")
+    if stock_min:
+        resumen_parts.append(f"Stock mínimo: {stock_min}")
+    if stock_max:
+        resumen_parts.append(f"Stock máximo: {stock_max}")
+    if precio_min:
+        resumen_parts.append(f"Precio desde: ${precio_min}")
+    if precio_max:
+        resumen_parts.append(f"Precio hasta: ${precio_max}")
+    if fecha_desde:
+        resumen_parts.append(f"Desde: {fecha_desde}")
+    if fecha_hasta:
+        resumen_parts.append(f"Hasta: {fecha_hasta}")
+    if vendidos:
+        resumen_parts.append(f"Vendidos: {dict([('si','Sí'),('no','No')]).get(vendidos, vendidos)}")
+    if en_consultas:
+        resumen_parts.append(f"En consultas: {dict([('si','Sí'),('no','No')]).get(en_consultas, en_consultas)}")
+    if en_hospitalizaciones:
+        resumen_parts.append(f"En hospitalizaciones: {dict([('si','Sí'),('no','No')]).get(en_hospitalizaciones, en_hospitalizaciones)}")
+    
+    resumen_filtros = " | ".join(resumen_parts) if resumen_parts else "Sin filtros aplicados"
+    
     # Crear registro del reporte (sin guardar archivo físico - Render usa sistema efímero)
     from .models import ReporteGenerado
     
@@ -343,7 +370,9 @@ def exportar_inventario_excel(request):
         tipo='inventario',
         usuario=request.user,
         filtros=filtros_dict,
-        total_registros=insumos.count()
+        resumen_filtros=resumen_filtros,
+        total_registros=insumos.count(),
+        observaciones=f"Reporte generado desde: {request.META.get('REMOTE_ADDR', 'IP no disponible')}"
     )
     
     # Preparar respuesta HTTP
