@@ -714,18 +714,18 @@ function renderizarPagosPendientes(cobros) {
 
         return `
                 <tr>
-                    <td><strong>${cobro.numero_venta}</strong></td>
-                    <td>${origenTexto}</td>
-                    <td>${cobro.paciente || '-'}</td>
-                    <td style="font-size: 0.85rem;">${listaServicios}</td>
-                    <td style="font-size: 0.85rem;">${listaInsumos}</td>
-                    <td><strong style="color: #10b981;">$${cobro.total.toLocaleString()}</strong></td>
-                    <td style="font-size: 0.85rem;">${cobro.fecha_creacion}</td>
-                    <td style="white-space: nowrap;">
-                        <button class="btn btn-sm btn-primary" onclick="cargarPagoPendiente(${cobro.id})" style="margin-right: 5px; display: inline-block;">
+                    <td><strong style="font-size: 0.9rem;">${cobro.numero_venta}</strong></td>
+                    <td><span style="font-size: 0.85rem;">${origenTexto}</span></td>
+                    <td><span style="font-size: 0.85rem;">${cobro.paciente || '-'}</span></td>
+                    <td style="font-size: 0.8rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="${servicios.map(s => `${s.descripcion} (x${s.cantidad})`).join(', ')}">${listaServicios}</td>
+                    <td style="font-size: 0.8rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="${insumos.map(i => `${i.descripcion} (x${i.cantidad})`).join(', ')}">${listaInsumos}</td>
+                    <td style="text-align: right;"><strong style="color: #10b981; font-size: 0.9rem;">$${cobro.total.toLocaleString()}</strong></td>
+                    <td><span style="font-size: 0.8rem;">${cobro.fecha_creacion}</span></td>
+                    <td style="white-space: nowrap; text-align: center;">
+                        <button class="btn btn-sm btn-primary" onclick="cargarPagoPendiente(${cobro.id})" style="margin-right: 3px; padding: 4px 8px; font-size: 0.8rem;" title="Cargar en caja">
                             <i class="fas fa-download"></i> Cargar
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="eliminarCobroPendiente(${cobro.id}, '${cobro.numero_venta}')" title="Cancelar cobro" style="display: inline-block;">
+                        <button class="btn btn-sm btn-danger" onclick="eliminarCobroPendiente(${cobro.id}, '${cobro.numero_venta}')" title="Cancelar cobro" style="padding: 4px 8px; font-size: 0.8rem;">
                             <i class="fas fa-times"></i>
                         </button>
                     </td>

@@ -376,12 +376,12 @@
 
 <!-- Modal: Pagos Pendientes -->
 <div id="pagosPendientesModal" class="vet-modal-overlay hide" onclick="cerrarModalPagosPendientes()">
-    <div class="vet-modal-panel" role="dialog" aria-modal="true" onclick="event.stopPropagation()" style="max-width: 1200px;">
+    <div class="vet-modal-panel" role="dialog" aria-modal="true" onclick="event.stopPropagation()" style="max-width: 95vw; width: 1400px;">
         <div class="vet-custom-modal-title">
             <h3><i class="fas fa-file-invoice-dollar"></i> Pagos Pendientes</h3>
             <i class="bi bi-x" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalPagosPendientes()"></i>
         </div>
-        <div class="vet-modal-body">
+        <div class="vet-modal-body" style="padding: 20px; overflow-x: hidden;">
             <div id="pagosPendientesLoading" style="text-align: center; padding: 40px;">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Cargando...</span>
@@ -391,18 +391,18 @@
             
             <div id="pagosPendientesContent" style="display: none;">
                 <!-- Tabla de pagos pendientes -->
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
+                <div style="overflow-x: auto; width: 100%;">
+                    <table class="table table-hover table-sm" style="font-size: 0.9rem; white-space: nowrap; margin-bottom: 0;">
+                        <thead style="background-color: #f8f9fa;">
                             <tr>
-                                <th>N° Venta</th>
-                                <th>Origen</th>
-                                <th>Paciente</th>
-                                <th>Servicios</th>
-                                <th>Insumos</th>
-                                <th>Total</th>
-                                <th>Fecha</th>
-                                <th>Acción</th>
+                                <th style="min-width: 100px;">N° Venta</th>
+                                <th style="min-width: 100px;">Origen</th>
+                                <th style="min-width: 100px;">Paciente</th>
+                                <th style="min-width: 180px;">Servicios</th>
+                                <th style="min-width: 180px;">Insumos</th>
+                                <th style="min-width: 100px; text-align: right;">Total</th>
+                                <th style="min-width: 120px;">Fecha</th>
+                                <th style="min-width: 140px; text-align: center;">Acción</th>
                             </tr>
                         </thead>
                         <tbody id="pagosPendientesList">
