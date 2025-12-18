@@ -21,11 +21,6 @@ def reporte_inventario(request):
     # Query base
     insumos = Insumo.objects.all()
     
-    # Aplicar filtros
-    # Fechas
-    fecha_desde = request.GET.get('fecha_desde')
-    fecha_hasta = request.GET.get('fecha_hasta')
-    
     # Marca
     marca = request.GET.get('marca')
     if marca:
@@ -41,104 +36,81 @@ def reporte_inventario(request):
     # Stock
     stock_min = request.GET.get('stock_min')
     if stock_min:
-        insumos = insumos.filter(stock_actual__gte=float(stock_min))
+        try:
+            insumos = insumos.filter(stock_actual__gte=float(stock_min))
+        except (ValueError, TypeError):
+            pass
     
     stock_max = request.GET.get('stock_max')
     if stock_max:
-        insumos = insumos.filter(stock_actual__lte=float(stock_max))
+        try:
+            insumos = insumos.filter(stock_actual__lte=float(stock_max))
+        except (ValueError, TypeError):
+            pass
     
     # Precio
     precio_min = request.GET.get('precio_min')
     if precio_min:
-        insumos = insumos.filter(precio_venta__gte=float(precio_min))
+        try:
+            insumos = insumos.filter(precio_venta__gte=float(precio_min))
+        except (ValueError, TypeError):
+            pass
     
     precio_max = request.GET.get('precio_max')
     if precio_max:
-        insumos = insumos.filter(precio_venta__lte=float(precio_max))
+        try:
+            insumos = insumos.filter(precio_venta__lte=float(precio_max))
+        except (ValueError, TypeError):
+            pass
     
-    # Vendidos
+    # Filtros que requieren subconsultas
+    fecha_desde = request.GET.get('fecha_desde')
+    fecha_hasta = request.GET.get('fecha_hasta')
     vendidos = request.GET.get('vendidos')
+    en_consultas = request.GET.get('en_consultas')
+    en_hospitalizaciones = request.GET.get('en_hospitalizaciones')
+    
+    # Construir filtro de ventas base
+    filtro_ventas = Q(tipo='insumo', insumo__isnull=False)
+    
+    # Agregar filtro de fechas si existe
+    if fecha_desde:
+        filtro_ventas &= Q(venta__fecha_creacion__date__gte=fecha_desde)
+    if fecha_hasta:
+        filtro_ventas &= Q(venta__fecha_creacion__date__lte=fecha_hasta)
+    
+    # Aplicar filtro de vendidos
     if vendidos == 'si':
-        # Filtrar insumos que tienen ventas
-        insumos_vendidos = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False
-        ).values_list('insumo_id', flat=True).distinct()
+        insumos_vendidos = DetalleVenta.objects.filter(filtro_ventas).values_list('insumo_id', flat=True).distinct()
         insumos = insumos.filter(id__in=insumos_vendidos)
     elif vendidos == 'no':
-        # Filtrar insumos sin ventas
-        insumos_vendidos = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False
-        ).values_list('insumo_id', flat=True).distinct()
+        insumos_vendidos = DetalleVenta.objects.filter(filtro_ventas).values_list('insumo_id', flat=True).distinct()
         insumos = insumos.exclude(id__in=insumos_vendidos)
     
-    # Usados en consultas
-    en_consultas = request.GET.get('en_consultas')
+    # Filtro de consultas
     if en_consultas == 'si':
-        # Insumos usados en consultas (ventas con origen consulta)
-        insumos_consultas = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False,
-            venta__tipo_origen='consulta'
-        ).values_list('insumo_id', flat=True).distinct()
+        filtro_consultas = filtro_ventas & Q(venta__tipo_origen='consulta')
+        insumos_consultas = DetalleVenta.objects.filter(filtro_consultas).values_list('insumo_id', flat=True).distinct()
         insumos = insumos.filter(id__in=insumos_consultas)
     elif en_consultas == 'no':
-        insumos_consultas = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False,
-            venta__tipo_origen='consulta'
-        ).values_list('insumo_id', flat=True).distinct()
+        filtro_consultas = filtro_ventas & Q(venta__tipo_origen='consulta')
+        insumos_consultas = DetalleVenta.objects.filter(filtro_consultas).values_list('insumo_id', flat=True).distinct()
         insumos = insumos.exclude(id__in=insumos_consultas)
     
-    # Usados en hospitalizaciones
-    en_hospitalizaciones = request.GET.get('en_hospitalizaciones')
+    # Filtro de hospitalizaciones
     if en_hospitalizaciones == 'si':
-        insumos_hosp = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False,
-            venta__tipo_origen='hospitalizacion'
-        ).values_list('insumo_id', flat=True).distinct()
+        filtro_hosp = filtro_ventas & Q(venta__tipo_origen='hospitalizacion')
+        insumos_hosp = DetalleVenta.objects.filter(filtro_hosp).values_list('insumo_id', flat=True).distinct()
         insumos = insumos.filter(id__in=insumos_hosp)
     elif en_hospitalizaciones == 'no':
-        insumos_hosp = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False,
-            venta__tipo_origen='hospitalizacion'
-        ).values_list('insumo_id', flat=True).distinct()
+        filtro_hosp = filtro_ventas & Q(venta__tipo_origen='hospitalizacion')
+        insumos_hosp = DetalleVenta.objects.filter(filtro_hosp).values_list('insumo_id', flat=True).distinct()
         insumos = insumos.exclude(id__in=insumos_hosp)
     
-    # Filtro de fechas en ventas (si se especificaron)
-    if fecha_desde and fecha_hasta:
-        insumos_en_rango = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False,
-            venta__fecha_creacion__date__gte=fecha_desde,
-            venta__fecha_creacion__date__lte=fecha_hasta
-        ).values_list('insumo_id', flat=True).distinct()
-        insumos = insumos.filter(id__in=insumos_en_rango)
-    elif fecha_desde:
-        insumos_en_rango = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False,
-            venta__fecha_creacion__date__gte=fecha_desde
-        ).values_list('insumo_id', flat=True).distinct()
-        insumos = insumos.filter(id__in=insumos_en_rango)
-    elif fecha_hasta:
-        insumos_en_rango = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False,
-            venta__fecha_creacion__date__lte=fecha_hasta
-        ).values_list('insumo_id', flat=True).distinct()
-        insumos = insumos.filter(id__in=insumos_en_rango)
-    
-    # Anotar veces vendido
+    # Anotar veces vendido (usando related_name correcto)
     insumos = insumos.annotate(
-        veces_vendido=Count('detalleventa', filter=Q(detalleventa__tipo='insumo'))
-    )
-    
-    # Ordenar
-    insumos = insumos.order_by('medicamento')
+        veces_vendido=Count('detalleventa_set', filter=Q(detalleventa_set__tipo='insumo'))
+    ).order_by('medicamento')
     
     # Obtener marcas únicas para el filtro
     marcas = Insumo.objects.exclude(marca__isnull=True).exclude(marca='').values_list('marca', flat=True).distinct().order_by('marca')
@@ -173,100 +145,80 @@ def exportar_inventario_excel(request):
     # Stock
     stock_min = request.GET.get('stock_min')
     if stock_min:
-        insumos = insumos.filter(stock_actual__gte=float(stock_min))
+        try:
+            insumos = insumos.filter(stock_actual__gte=float(stock_min))
+        except (ValueError, TypeError):
+            pass
     
     stock_max = request.GET.get('stock_max')
     if stock_max:
-        insumos = insumos.filter(stock_actual__lte=float(stock_max))
+        try:
+            insumos = insumos.filter(stock_actual__lte=float(stock_max))
+        except (ValueError, TypeError):
+            pass
     
     # Precio
     precio_min = request.GET.get('precio_min')
     if precio_min:
-        insumos = insumos.filter(precio_venta__gte=float(precio_min))
+        try:
+            insumos = insumos.filter(precio_venta__gte=float(precio_min))
+        except (ValueError, TypeError):
+            pass
     
     precio_max = request.GET.get('precio_max')
     if precio_max:
-        insumos = insumos.filter(precio_venta__lte=float(precio_max))
+        try:
+            insumos = insumos.filter(precio_venta__lte=float(precio_max))
+        except (ValueError, TypeError):
+            pass
     
-    # Vendidos
-    vendidos = request.GET.get('vendidos')
-    if vendidos == 'si':
-        insumos_vendidos = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False
-        ).values_list('insumo_id', flat=True).distinct()
-        insumos = insumos.filter(id__in=insumos_vendidos)
-    elif vendidos == 'no':
-        insumos_vendidos = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False
-        ).values_list('insumo_id', flat=True).distinct()
-        insumos = insumos.exclude(id__in=insumos_vendidos)
-    
-    # Usados en consultas
-    en_consultas = request.GET.get('en_consultas')
-    if en_consultas == 'si':
-        insumos_consultas = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False,
-            venta__tipo_origen='consulta'
-        ).values_list('insumo_id', flat=True).distinct()
-        insumos = insumos.filter(id__in=insumos_consultas)
-    elif en_consultas == 'no':
-        insumos_consultas = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False,
-            venta__tipo_origen='consulta'
-        ).values_list('insumo_id', flat=True).distinct()
-        insumos = insumos.exclude(id__in=insumos_consultas)
-    
-    # Usados en hospitalizaciones
-    en_hospitalizaciones = request.GET.get('en_hospitalizaciones')
-    if en_hospitalizaciones == 'si':
-        insumos_hosp = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False,
-            venta__tipo_origen='hospitalizacion'
-        ).values_list('insumo_id', flat=True).distinct()
-        insumos = insumos.filter(id__in=insumos_hosp)
-    elif en_hospitalizaciones == 'no':
-        insumos_hosp = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False,
-            venta__tipo_origen='hospitalizacion'
-        ).values_list('insumo_id', flat=True).distinct()
-        insumos = insumos.exclude(id__in=insumos_hosp)
-    
-    # Filtro de fechas
+    # Filtros que requieren subconsultas
     fecha_desde = request.GET.get('fecha_desde')
     fecha_hasta = request.GET.get('fecha_hasta')
+    vendidos = request.GET.get('vendidos')
+    en_consultas = request.GET.get('en_consultas')
+    en_hospitalizaciones = request.GET.get('en_hospitalizaciones')
     
-    if fecha_desde and fecha_hasta:
-        insumos_en_rango = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False,
-            venta__fecha_creacion__date__gte=fecha_desde,
-            venta__fecha_creacion__date__lte=fecha_hasta
-        ).values_list('insumo_id', flat=True).distinct()
-        insumos = insumos.filter(id__in=insumos_en_rango)
-    elif fecha_desde:
-        insumos_en_rango = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False,
-            venta__fecha_creacion__date__gte=fecha_desde
-        ).values_list('insumo_id', flat=True).distinct()
-        insumos = insumos.filter(id__in=insumos_en_rango)
-    elif fecha_hasta:
-        insumos_en_rango = DetalleVenta.objects.filter(
-            tipo='insumo',
-            insumo__isnull=False,
-            venta__fecha_creacion__date__lte=fecha_hasta
-        ).values_list('insumo_id', flat=True).distinct()
-        insumos = insumos.filter(id__in=insumos_en_rango)
+    # Construir filtro de ventas base
+    filtro_ventas = Q(tipo='insumo', insumo__isnull=False)
     
-    # Anotar veces vendido
+    # Agregar filtro de fechas si existe
+    if fecha_desde:
+        filtro_ventas &= Q(venta__fecha_creacion__date__gte=fecha_desde)
+    if fecha_hasta:
+        filtro_ventas &= Q(venta__fecha_creacion__date__lte=fecha_hasta)
+    
+    # Aplicar filtro de vendidos
+    if vendidos == 'si':
+        insumos_vendidos = DetalleVenta.objects.filter(filtro_ventas).values_list('insumo_id', flat=True).distinct()
+        insumos = insumos.filter(id__in=insumos_vendidos)
+    elif vendidos == 'no':
+        insumos_vendidos = DetalleVenta.objects.filter(filtro_ventas).values_list('insumo_id', flat=True).distinct()
+        insumos = insumos.exclude(id__in=insumos_vendidos)
+    
+    # Filtro de consultas
+    if en_consultas == 'si':
+        filtro_consultas = filtro_ventas & Q(venta__tipo_origen='consulta')
+        insumos_consultas = DetalleVenta.objects.filter(filtro_consultas).values_list('insumo_id', flat=True).distinct()
+        insumos = insumos.filter(id__in=insumos_consultas)
+    elif en_consultas == 'no':
+        filtro_consultas = filtro_ventas & Q(venta__tipo_origen='consulta')
+        insumos_consultas = DetalleVenta.objects.filter(filtro_consultas).values_list('insumo_id', flat=True).distinct()
+        insumos = insumos.exclude(id__in=insumos_consultas)
+    
+    # Filtro de hospitalizaciones
+    if en_hospitalizaciones == 'si':
+        filtro_hosp = filtro_ventas & Q(venta__tipo_origen='hospitalizacion')
+        insumos_hosp = DetalleVenta.objects.filter(filtro_hosp).values_list('insumo_id', flat=True).distinct()
+        insumos = insumos.filter(id__in=insumos_hosp)
+    elif en_hospitalizaciones == 'no':
+        filtro_hosp = filtro_ventas & Q(venta__tipo_origen='hospitalizacion')
+        insumos_hosp = DetalleVenta.objects.filter(filtro_hosp).values_list('insumo_id', flat=True).distinct()
+        insumos = insumos.exclude(id__in=insumos_hosp)
+    
+    # Anotar veces vendido (usando related_name correcto)
     insumos = insumos.annotate(
-        veces_vendido=Count('detalleventa', filter=Q(detalleventa__tipo='insumo'))
+        veces_vendido=Count('detalleventa_set', filter=Q(detalleventa_set__tipo='insumo'))
     ).order_by('medicamento')
     
     # Crear workbook y hoja
