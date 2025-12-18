@@ -99,8 +99,8 @@ def reporte_inventario(request):
             filtro_detalle &= filtro_tipo_origen
         
         # Aplicar filtro de vendidos/no vendidos
-        if vendidos == 'si' or filtro_tipo_origen:
-            # Si hay algún filtro de ventas, aplicarlo
+        if vendidos == 'si':
+            # Mostrar solo insumos vendidos (con los filtros de fecha y tipo aplicados)
             ids_filtrados = DetalleVenta.objects.filter(filtro_detalle).values_list('insumo_id', flat=True).distinct()
             insumos = insumos.filter(id__in=list(ids_filtrados)) if ids_filtrados else insumos.filter(id__in=[])
         elif vendidos == 'no':
@@ -113,6 +113,10 @@ def reporte_inventario(request):
             ids_vendidos = DetalleVenta.objects.filter(filtro_base).values_list('insumo_id', flat=True).distinct()
             if ids_vendidos:
                 insumos = insumos.exclude(id__in=list(ids_vendidos))
+        elif filtro_tipo_origen:
+            # Si no hay filtro vendidos pero sí de tipo origen, aplicar solo ese
+            ids_filtrados = DetalleVenta.objects.filter(filtro_detalle).values_list('insumo_id', flat=True).distinct()
+            insumos = insumos.filter(id__in=list(ids_filtrados)) if ids_filtrados else insumos.filter(id__in=[])
         
         # Manejar filtros negativos (no en consultas, no en hospitalizaciones)
         if en_consultas == 'no':
@@ -249,8 +253,8 @@ def exportar_inventario_excel(request):
             filtro_detalle &= filtro_tipo_origen
         
         # Aplicar filtro de vendidos/no vendidos
-        if vendidos == 'si' or filtro_tipo_origen:
-            # Si hay algún filtro de ventas, aplicarlo
+        if vendidos == 'si':
+            # Mostrar solo insumos vendidos (con los filtros de fecha y tipo aplicados)
             ids_filtrados = DetalleVenta.objects.filter(filtro_detalle).values_list('insumo_id', flat=True).distinct()
             insumos = insumos.filter(id__in=list(ids_filtrados)) if ids_filtrados else insumos.filter(id__in=[])
         elif vendidos == 'no':
@@ -263,6 +267,10 @@ def exportar_inventario_excel(request):
             ids_vendidos = DetalleVenta.objects.filter(filtro_base).values_list('insumo_id', flat=True).distinct()
             if ids_vendidos:
                 insumos = insumos.exclude(id__in=list(ids_vendidos))
+        elif filtro_tipo_origen:
+            # Si no hay filtro vendidos pero sí de tipo origen, aplicar solo ese
+            ids_filtrados = DetalleVenta.objects.filter(filtro_detalle).values_list('insumo_id', flat=True).distinct()
+            insumos = insumos.filter(id__in=list(ids_filtrados)) if ids_filtrados else insumos.filter(id__in=[])
         
         # Manejar filtros negativos (no en consultas, no en hospitalizaciones)
         if en_consultas == 'no':
