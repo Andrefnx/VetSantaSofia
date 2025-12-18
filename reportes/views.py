@@ -1,6 +1,9 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.urls import reverse
 from inventario.models import Insumo
+from caja.models import Venta, DetalleVenta
+from clinica.models import Consulta, Hospitalizacion
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 
@@ -10,7 +13,6 @@ def index(request):
 
 
 def reporte_inventario(request):
-    from django.urls import reverse
     insumos = Insumo.objects.all().order_by('medicamento')
     context = {
         'insumos': insumos,
@@ -64,8 +66,6 @@ def exportar_inventario_excel(request):
 
 def reporte_caja(request):
     from django.urls import reverse
-    from caja.models import Venta
-    ventas = Venta.objects.select_related('usuario_cobro', 'paciente').order_by('-fecha_creacion')
     context = {
         'ventas': ventas,
         'url_exportar': reverse('reportes:exportar_caja_excel')
@@ -76,8 +76,6 @@ def reporte_caja(request):
 def exportar_caja_excel(request):
     from caja.models import Venta
     
-    # Crear workbook y hoja
-    wb = Workbook()
     ws = wb.active
     ws.title = "Caja"
     
@@ -124,7 +122,6 @@ def reporte_clinica(request):
     consultas = Consulta.objects.select_related(
         'paciente', 'veterinario'
     ).prefetch_related('servicios').order_by('-fecha')
-    
     context = {
         'consultas': consultas
     }
@@ -137,8 +134,6 @@ def exportar_clinica_excel(request):
     # Crear workbook y hoja
     wb = Workbook()
     ws = wb.active
-    ws.title = "Cl\u00ednica"
-    
     # Encabezados
     headers = ['Fecha', 'Paciente', 'Tipo de Atenci\u00f3n', 'Servicios', 'Veterinario']
     ws.append(headers)
@@ -181,7 +176,6 @@ def exportar_clinica_excel(request):
 
 
 def reporte_hospitalizacion(request):
-    from clinica.models import Hospitalizacion
     hospitalizaciones = Hospitalizacion.objects.select_related(
         'paciente', 'veterinario'
     ).order_by('-fecha_ingreso')
@@ -193,14 +187,11 @@ def reporte_hospitalizacion(request):
 
 
 def exportar_hospitalizacion_excel(request):
-    from clinica.models import Hospitalizacion
     
     # Crear workbook y hoja
     wb = Workbook()
     ws = wb.active
     ws.title = "Hospitalizaci\u00f3n"
-    
-    # Encabezados
     headers = ['Fecha Ingreso', 'Fecha Alta', 'Paciente', 'Motivo', 'Estado', 'Veterinario']
     ws.append(headers)
     
@@ -250,7 +241,6 @@ def reporte_servicios(request):
     ).select_related('venta', 'venta__usuario_cobro', 'servicio').order_by('-venta__fecha_creacion')
     
     context = {
-        'servicios_vendidos': servicios_vendidos
     }
     return render(request, 'reportes/servicios.html', context)
 
@@ -263,8 +253,6 @@ def exportar_servicios_excel(request):
     ws = wb.active
     ws.title = "Servicios"
     
-    # Encabezados
-    headers = ['Fecha', 'Servicio', 'Precio', 'Estado Venta', 'Usuario', 'N\u00famero Venta']
     ws.append(headers)
     
     # Obtener datos
