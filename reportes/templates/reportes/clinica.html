@@ -6,13 +6,46 @@
 {% block content %}
 <div class="page-header">
     <h2><i class="fas fa-notes-medical"></i> Reporte de Clínica</h2>
+    <div>
+        {% url 'reportes:exportar_clinica_excel' as url_exportar_clinica %}
+        {% include 'partials/reportes/export_excel_button.html' with export_url=url_exportar_clinica label="Exportar Excel" %}
+    </div>
 </div>
 
 <div class="row">
     <div class="col-12">
         <div class="card">
             <div class="card-body">
-                <p>Contenido del reporte de clínica.</p>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Paciente</th>
+                                <th>Tipo de Atenci\u00f3n</th>
+                                <th>Servicios</th>
+                                <th>Veterinario</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for consulta in consultas %}
+                            <tr>
+                                <td>{{ consulta.fecha|date:"d/m/Y H:i" }}</td>
+                                <td>{{ consulta.paciente.nombre }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ consulta.get_tipo_consulta_display }}</span>
+                                </td>
+                                <td>{{ consulta.servicios_nombres }}</td>
+                                <td>{{ consulta.veterinario.get_full_name|default:"-" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No hay consultas registradas</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
