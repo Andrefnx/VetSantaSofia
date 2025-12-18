@@ -248,31 +248,55 @@ async function procesarVentaDirecto() {
     }
 
     try {
-        // Preparar datos para enviar al backend
-        const ventaData = {
-            items: cart.map(item => ({
-                name: item.name,
-                quantity: item.quantity,
-                price: item.price
-            })),
-            cliente: cliente || 'Cliente General',
-            metodo_pago: metodoPagoPrincipal,
-            detalles_pago: metodoPagoMap,
-            total: total,
-            venta_en_proceso_id: ventaEnProcesoId  // Si hay una venta en proceso
-        };
+        let response, result;
+        
+        // ⭐ SI HAY UNA VENTA EN PROCESO (cobro pendiente), usar endpoint de confirmar pago
+        if (ventaEnProcesoId) {
+            console.log(`🔵 Confirmando pago de venta pendiente ID: ${ventaEnProcesoId}`);
+            
+            const url = `/caja/api/cobro/${ventaEnProcesoId}/confirmar-pago/`;
+            response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    metodo_pago: metodoPagoPrincipal
+                })
+            });
+            
+            result = await response.json();
+            
+            // Limpiar ventaEnProcesoId después de procesar
+            ventaEnProcesoId = null;
+        } else {
+            // ⭐ VENTA LIBRE DIRECTA - crear nueva venta
+            console.log('🟢 Procesando venta libre directa');
+            
+            const ventaData = {
+                items: cart.map(item => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price
+                })),
+                cliente: cliente || 'Cliente General',
+                metodo_pago: metodoPagoPrincipal,
+                detalles_pago: metodoPagoMap,
+                total: total
+            };
 
-        // Enviar al backend
-        const response = await fetch(window.CAJA_URLS.procesarVenta, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify(ventaData)
-        });
-
-        const result = await response.json();
+            response = await fetch(window.CAJA_URLS.procesarVenta, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(ventaData)
+            });
+            
+            result = await response.json();
+        }
 
         if (result.success) {
             // Mostrar mensaje de éxito

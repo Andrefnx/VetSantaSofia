@@ -14,4 +14,5 @@ urlpatterns = [
     path('api/cobro/<int:venta_id>/marcar-en-proceso/', views_cobros.marcar_cobro_en_proceso, name='marcar_cobro_en_proceso'),  # Marcar como en proceso
     path('api/cobro/<int:venta_id>/devolver-a-pendiente/', views_cobros.devolver_cobro_a_pendiente, name='devolver_cobro_a_pendiente'),  # Devolver a pendiente (borrador)
     path('api/cobro/<int:venta_id>/eliminar/', views_cobros.eliminar_cobro_pendiente, name='eliminar_cobro_pendiente'),  # Eliminar cobro pendiente
+    path('api/cobro/<int:venta_id>/confirmar-pago/', views_cobros.confirmar_pago_venta, name='confirmar_pago_venta'),  # Confirmar pago y descontar stock
 ]

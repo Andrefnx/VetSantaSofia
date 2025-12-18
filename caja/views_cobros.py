@@ -739,6 +739,7 @@ def confirmar_pago_venta(request, venta_id):
         return JsonResponse({
             'success': True,
             'mensaje': 'Pago confirmado y stock descontado',
+            'venta_id': venta.id,
             'numero_venta': venta.numero_venta,
             'total': str(venta.total)
         })
