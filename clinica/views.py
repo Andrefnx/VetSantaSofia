@@ -551,6 +551,8 @@ def crear_consulta(request, paciente_id):
         # El descuento ocurre ÚNICAMENTE al confirmar el pago en caja/services.py
         if finalizar and consulta.servicios.exists():
             try:
+                from .services.inventario_service import validate_stock_for_services
+                
                 # PASO 1: VALIDAR STOCK DISPONIBLE
                 print(f'🔍 Validando disponibilidad de stock...')
                 servicios = consulta.servicios.all()
