@@ -661,7 +661,7 @@ async function cargarTodasLasAgendas() {
     const [year, month, day] = agendaState.fecha.split('-');
     
     // Obtener todos los veterinarios de los contenedores
-    const contenedorAgendas = document.getElementById('contenedorAgendas');
+    // Ya declarado arriba, no redeclarar
     const gridsVeterinarios = contenedorAgendas.querySelectorAll('[id^="agendaBloques"]');
     
     // Extraer IDs de veterinarios de los atributos id
