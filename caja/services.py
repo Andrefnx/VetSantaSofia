@@ -571,7 +571,8 @@ def procesar_pago(venta, usuario, metodo_pago, sesion_caja=None):
     # ==========================================================================
     # VALIDACIÓN 1: Estado de la venta
     # ==========================================================================
-    if venta.estado != 'pendiente':
+    # Aceptar ventas 'pendiente' o 'en_proceso' (cargadas en caja)
+    if venta.estado not in ['pendiente', 'en_proceso']:
         logger.error(f"❌ Venta ya procesada: estado={venta.estado}")
         raise ValidationError(
             f"Esta venta ya fue {venta.get_estado_display().lower()}. "

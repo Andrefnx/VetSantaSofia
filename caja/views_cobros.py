@@ -722,7 +722,8 @@ def confirmar_pago_venta(request, venta_id):
     AQUÍ SE DESCUENTA EL STOCK
     """
     try:
-        venta = get_object_or_404(Venta, pk=venta_id, estado='pendiente')
+        # Aceptar ventas con estado 'pendiente' o 'en_proceso'
+        venta = get_object_or_404(Venta, pk=venta_id, estado__in=['pendiente', 'en_proceso'])
         data = json.loads(request.body)
         
         metodo_pago = data.get('metodo_pago', 'efectivo')
