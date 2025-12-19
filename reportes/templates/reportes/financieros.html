@@ -238,12 +238,14 @@ function exportarExcel() {
     const formData = new FormData(form);
     const params = new URLSearchParams(formData);
     
-    // TODO: Cuando se implemente el backend, descomentar la siguiente línea
-    // const exportUrl = '/reportes/financieros/exportar-excel/?' + params.toString();
-    // window.location.href = exportUrl;
+    // Obtener los parámetros del formulario
+    const form = document.getElementById('filtrosForm');
+    const formData = new FormData(form);
+    const params = new URLSearchParams(formData);
     
-    // Placeholder temporal: mostrar alerta
-    alert('Funcionalidad de exportación pendiente de implementación');
+    // Construir URL de exportación con filtros
+    const exportUrl = '{% url "reportes:exportar_financieros_excel" %}?' + params.toString();
+    window.location.href = exportUrl;
 }
 </script>
 

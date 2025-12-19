@@ -98,6 +98,167 @@ def reporte_financieros(request):
 
 
 @login_required
+def exportar_financieros_excel(request):
+    """Exporta el reporte financiero a Excel con sesiones y ventas"""
+    from django.db.models import Sum
+    from caja.models import SesionCaja, Venta
+    from django.utils import timezone
+    from datetime import datetime, timedelta
+    import io
+    
+    # Obtener filtros (mismos que en reporte_financieros)
+    fecha_desde = validar_fecha(request.GET.get('fecha_desde', ''))
+    fecha_hasta = validar_fecha(request.GET.get('fecha_hasta', ''))
+    metodo_pago = request.GET.get('metodo_pago', '').strip()
+    
+    # Query de sesiones de caja
+    sesiones = SesionCaja.objects.all().prefetch_related('ventas')
+    
+    # Filtro por fecha desde
+    if fecha_desde:
+        fecha_desde_dt = datetime.strptime(fecha_desde, '%Y-%m-%d')
+        sesiones = sesiones.filter(fecha_apertura__date__gte=fecha_desde_dt.date())
+    
+    # Filtro por fecha hasta
+    if fecha_hasta:
+        fecha_hasta_dt = datetime.strptime(fecha_hasta, '%Y-%m-%d')
+        fecha_hasta_dt = fecha_hasta_dt + timedelta(days=1)
+        sesiones = sesiones.filter(fecha_apertura__date__lt=fecha_hasta_dt.date())
+    
+    # Procesar cada sesión con sus ventas filtradas
+    sesiones_data = []
+    total_periodo = Decimal('0.00')
+    
+    for sesion in sesiones:
+        # Obtener todas las ventas pagadas de la sesión
+        ventas = sesion.ventas.filter(estado='pagado')
+        
+        # Aplicar filtros a las ventas si se especificaron
+        if metodo_pago:
+            ventas = ventas.filter(metodo_pago=metodo_pago)
+        
+        # Filtrar por fecha de pago si se especificó
+        if fecha_desde:
+            fecha_desde_dt = datetime.strptime(fecha_desde, '%Y-%m-%d')
+            ventas = ventas.filter(fecha_pago__date__gte=fecha_desde_dt.date())
+        
+        if fecha_hasta:
+            fecha_hasta_dt = datetime.strptime(fecha_hasta, '%Y-%m-%d')
+            fecha_hasta_dt = fecha_hasta_dt + timedelta(days=1)
+            ventas = ventas.filter(fecha_pago__date__lt=fecha_hasta_dt.date())
+        
+        # Solo incluir sesiones que tengan ventas después de aplicar filtros
+        if ventas.exists():
+            total_sesion = ventas.aggregate(Sum('total'))['total__sum'] or Decimal('0.00')
+            total_periodo += total_sesion
+            
+            sesiones_data.append({
+                'sesion': sesion,
+                'ventas': ventas.order_by('-fecha_pago'),
+                'total_sesion': total_sesion,
+            })
+    
+    # Crear workbook y hoja
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Reportes Financieros"
+    
+    # Encabezado del reporte
+    ws.append(['REPORTE FINANCIERO - SESIONES DE CAJA'])
+    ws.append(['Fecha de generación:', timezone.now().strftime('%d/%m/%Y %H:%M')])
+    ws.append(['Generado por:', request.user.nombre if hasattr(request.user, 'nombre') else request.user.username])
+    ws.append([])  # Línea en blanco
+    
+    # Mostrar filtros aplicados
+    ws.append(['FILTROS APLICADOS:'])
+    if fecha_desde:
+        ws.append(['Fecha desde:', fecha_desde])
+    if fecha_hasta:
+        ws.append(['Fecha hasta:', fecha_hasta])
+    if metodo_pago:
+        metodo_display = dict(Venta.METODO_PAGO_CHOICES).get(metodo_pago, metodo_pago)
+        ws.append(['Método de pago:', metodo_display])
+    ws.append([])  # Línea en blanco
+    ws.append(['Total de sesiones:', len(sesiones_data)])
+    ws.append(['Total del período:', f'${total_periodo:,.2f}'])
+    ws.append([])  # Línea en blanco
+    
+    # Tablas de sesiones y ventas
+    for idx, item in enumerate(sesiones_data, 1):
+        sesion = item['sesion']
+        ventas = item['ventas']
+        total_sesion = item['total_sesion']
+        
+        # Encabezado de sesión
+        ws.append([f'SESIÓN {idx}'])
+        ws.append(['Fecha Apertura:', sesion.fecha_apertura.strftime('%d/%m/%Y %H:%M')])
+        ws.append(['Usuario Apertura:', f"{sesion.usuario_apertura.nombre} {sesion.usuario_apertura.apellido}"])
+        
+        if sesion.fecha_cierre:
+            ws.append(['Fecha Cierre:', sesion.fecha_cierre.strftime('%d/%m/%Y %H:%M')])
+        if sesion.usuario_cierre:
+            ws.append(['Usuario Cierre:', f"{sesion.usuario_cierre.nombre} {sesion.usuario_cierre.apellido}"])
+        
+        estado_sesion = 'Cerrada' if sesion.esta_cerrada else 'Abierta'
+        ws.append(['Estado:', estado_sesion])
+        ws.append([])  # Línea en blanco
+        
+        # Tabla de ventas de esta sesión
+        headers_venta = ['Fecha/Hora', 'Nº Venta', 'Paciente', 'Método de Pago', 'Origen', 'Total']
+        ws.append(headers_venta)
+        
+        for venta in ventas:
+            paciente_nombre = venta.paciente.nombre if venta.paciente else '-'
+            metodo_display = dict(Venta.METODO_PAGO_CHOICES).get(venta.metodo_pago, venta.metodo_pago) if venta.metodo_pago else '-'
+            
+            # Mapear tipo_origen a nombre legible
+            tipo_origen_map = {
+                'consulta': 'Consulta',
+                'hospitalizacion': 'Hospitalización',
+                'venta_libre': 'Venta Libre'
+            }
+            tipo_origen_display = tipo_origen_map.get(venta.tipo_origen, venta.tipo_origen)
+            
+            ws.append([
+                venta.fecha_pago.strftime('%d/%m/%Y %H:%M') if venta.fecha_pago else '-',
+                venta.numero_venta,
+                paciente_nombre,
+                metodo_display,
+                tipo_origen_display,
+                float(venta.total)
+            ])
+        
+        # Subtotal de sesión
+        ws.append(['', '', '', 'Subtotal sesión:', '', float(total_sesion)])
+        ws.append([])  # Línea en blanco
+    
+    # Total del período
+    ws.append(['', '', '', 'TOTAL DEL PERÍODO:', '', float(total_periodo)])
+    
+    # Ajustar ancho de columnas
+    ws.column_dimensions['A'].width = 20
+    ws.column_dimensions['B'].width = 20
+    ws.column_dimensions['C'].width = 20
+    ws.column_dimensions['D'].width = 20
+    ws.column_dimensions['E'].width = 15
+    ws.column_dimensions['F'].width = 15
+    
+    # Generar respuesta HTTP
+    excel_buffer = io.BytesIO()
+    wb.save(excel_buffer)
+    excel_buffer.seek(0)
+    
+    filename = f'reporte_financiero_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    response = HttpResponse(
+        excel_buffer.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename={filename}'
+    
+    return response
+
+
+@login_required
 def reporte_inventario(request):
     from django.db.models import Count, Q
     

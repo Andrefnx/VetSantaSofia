@@ -8,6 +8,7 @@ urlpatterns = [
     path('inventario/', views.reporte_inventario, name='inventario'),
     path('inventario/exportar-excel/', views.exportar_inventario_excel, name='exportar_inventario_excel'),
     path('financieros/', views.reporte_financieros, name='financieros'),
+    path('financieros/exportar-excel/', views.exportar_financieros_excel, name='exportar_financieros_excel'),
     path('caja/', views.reporte_caja, name='caja'),
     path('caja/exportar-excel/', views.exportar_caja_excel, name='exportar_caja_excel'),
     path('clinica/', views.reporte_clinica, name='clinica'),
