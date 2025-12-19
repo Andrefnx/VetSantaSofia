@@ -87,17 +87,28 @@ function addToCart(name, price, tipo, id) {
         return;
     }
 
-    const existingItem = cart.find(item => item.name === name && item.tipo === tipo && item.id === id);
+    // Validar que id sea un número
+    if (!id || isNaN(id)) {
+        console.error('❌ Error: ID no válido', { name, price, tipo, id });
+        alert(`❌ Error al agregar ${name}: ID no válido (${id}). Recarga la página e intenta de nuevo.`);
+        return;
+    }
+
+    // Convertir id a número
+    const numId = parseInt(id);
+
+    const existingItem = cart.find(item => item.name === name && item.tipo === tipo && item.id === numId);
 
     if (existingItem) {
         existingItem.quantity++;
     } else {
-        cart.push({ name, price, quantity: 1, tipo: tipo, id: id });
+        console.log(`✅ Agregando al carrito: ${name} (tipo=${tipo}, id=${numId})`);
+        cart.push({ name, price, quantity: 1, tipo: tipo, id: numId });
     }
 
     // Actualizar stock visual solo para insumos
     if (tipo === 'insumo' || tipo === 0) {
-        actualizarStockVisual(id, -1);
+        actualizarStockVisual(numId, -1);
     }
 
     updateCart();

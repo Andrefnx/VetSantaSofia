@@ -109,17 +109,17 @@ def procesar_venta(request):
                         logger.info(f"\n  Item {idx}:")
                         logger.info(f"    - Datos raw: {item}")
                         
-                        nombre = item['name']
-                        cantidad = Decimal(str(item['quantity']))
-                        precio_unitario = Decimal(str(item['price']))
+                        nombre = item.get('name', 'SIN NOMBRE')
+                        cantidad = Decimal(str(item.get('quantity', 1)))
+                        precio_unitario = Decimal(str(item.get('price', 0)))
                         tipo_raw = item.get('tipo', 'insumo')
                         item_id = item.get('id')
                         
                         logger.info(f"    - Nombre: {nombre}")
                         logger.info(f"    - Cantidad: {cantidad}")
                         logger.info(f"    - Precio: {precio_unitario}")
-                        logger.info(f"    - Tipo raw: {tipo_raw}")
-                        logger.info(f"    - ID: {item_id}")
+                        logger.info(f"    - Tipo raw: {tipo_raw} (type: {type(tipo_raw).__name__})")
+                        logger.info(f"    - ID: {item_id} (type: {type(item_id).__name__})")
                         
                         # Normalizar tipo (puede venir como string o número)
                         if tipo_raw == 0 or tipo_raw == 'insumo':
@@ -130,6 +130,18 @@ def procesar_venta(request):
                             tipo = 'insumo'  # Por defecto
                         
                         logger.info(f"    - Tipo normalizado: {tipo}")
+                        
+                        # Validar que el ID sea un número si existe
+                        if item_id is not None:
+                            try:
+                                item_id = int(item_id)
+                                logger.info(f"    - ID convertido a int: {item_id}")
+                            except (ValueError, TypeError) as e:
+                                logger.error(f"    - ❌ ID no es un número válido: {item_id} ({type(item_id).__name__})")
+                                return JsonResponse({
+                                    'success': False,
+                                    'error': f'ID inválido para item "{nombre}": {item_id}. Debe ser un número.'
+                                }, status=400)
                         
                         # Obtener el objeto usando tipo e ID
                         servicio = None
