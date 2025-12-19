@@ -88,7 +88,7 @@ class Paciente(models.Model):
     edad_anos = models.IntegerField(blank=True, null=True)
     edad_meses = models.IntegerField(blank=True, null=True)
     
-    microchip = models.CharField(max_length=50, blank=True, null=True, unique=True)
+    microchip = models.CharField(max_length=50, blank=True, null=True)
     ultimo_peso = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
     
     # ⭐ ANTECEDENTES MÉDICOS CRÍTICOS
