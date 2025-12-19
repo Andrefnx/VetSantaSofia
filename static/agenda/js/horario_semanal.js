@@ -13,13 +13,25 @@ const DIAS_SEMANA = [
 
 let horarioState = {
     veterinarioId: null,
-    horarios: {} // { 0: [{start: '08:00', end: '12:00'}, ...], 1: [...], ... }
+    horarios: {}, // { 0: [{start: '08:00', end: '12:00'}, ...], 1: [...], ... }
+    clipboard: null // Guardará los rangos copiados para pegar
 };
 
-function crearSelectHora(valorInicial) {
+function crearSelectHora(valorInicial, esInicio = true) {
     const select = document.createElement('select');
     select.className = 'form-select form-select-sm';
     select.style.cssText = 'flex: 1;';
+    
+    // Agregar opción placeholder
+    if (!valorInicial) {
+        const placeholderOpt = document.createElement('option');
+        placeholderOpt.value = '';
+        placeholderOpt.textContent = esInicio ? '-- Hora inicio --' : '-- Hora término --';
+        placeholderOpt.disabled = true;
+        placeholderOpt.selected = true;
+        select.appendChild(placeholderOpt);
+    }
+    
     const inicioMin = 6 * 60; // 06:00
     const finMin = 22 * 60; // 22:00
     for (let m = inicioMin; m <= finMin; m += 15) {
@@ -62,6 +74,10 @@ function crearDiaWidget(dia) {
     titulo.style.cssText = 'margin: 0; font-weight: 600;';
     titulo.textContent = dia.nombre;
     
+    // Contenedor para botones
+    const botonesDiv = document.createElement('div');
+    botonesDiv.style.cssText = 'display: flex; gap: 0.5rem;';
+    
     const btnCopiar = document.createElement('button');
     btnCopiar.type = 'button';
     btnCopiar.className = 'btn btn-secondary btn-sm';
@@ -69,11 +85,25 @@ function crearDiaWidget(dia) {
     btnCopiar.innerHTML = '<i class="fas fa-copy"></i> Copiar';
     btnCopiar.onclick = function(e) { 
         e.preventDefault();
-        togglePanelCopiar(diaDiv, dia.id);
+        copiarRangosAlPortapapeles(dia.id);
     };
     
+    const btnPegar = document.createElement('button');
+    btnPegar.type = 'button';
+    btnPegar.className = 'btn btn-success btn-sm btn-pegar';
+    btnPegar.style.cssText = 'padding: 6px 10px !important; font-size: 0.8rem !important; display: none;';
+    btnPegar.innerHTML = '<i class="fas fa-paste"></i> Pegar';
+    btnPegar.dataset.dia = dia.id;
+    btnPegar.onclick = function(e) { 
+        e.preventDefault();
+        pegarRangosDesdePortapapeles(dia.id);
+    };
+    
+    botonesDiv.appendChild(btnCopiar);
+    botonesDiv.appendChild(btnPegar);
+    
     header.appendChild(titulo);
-    header.appendChild(btnCopiar);
+    header.appendChild(botonesDiv);
     diaDiv.appendChild(header);
     
     // Contenedor de rangos
@@ -151,62 +181,77 @@ function crearDiaWidget(dia) {
     return diaDiv;
 }
 
-function togglePanelCopiar(diaDiv, diaOrigen) {
-    // Verificar rangos del día origen
-    const rangosDiv = diaDiv.querySelector(`.rangos-dia[data-dia="${diaOrigen}"]`);
+function copiarRangosAlPortapapeles(diaOrigen) {
+    const rangosDiv = document.querySelector(`.rangos-dia[data-dia="${diaOrigen}"]`);
     const rangos = rangosDiv.querySelectorAll('.rango-horario');
+    
     if (rangos.length === 0) {
         alert('El día no tiene rangos para copiar');
         return;
     }
-    const panel = diaDiv.querySelector('.panel-copiar');
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    
+    // Guardar rangos en el portapapeles
+    horarioState.clipboard = [];
+    rangos.forEach(rangoEl => {
+        const inicio = rangoEl.querySelector('.rango-inicio').value;
+        const fin = rangoEl.querySelector('.rango-fin').value;
+        if (inicio && fin) {
+            horarioState.clipboard.push({ start: inicio, end: fin });
+        }
+    });
+    
+    // Mostrar botones de pegar en todos los días
+    document.querySelectorAll('.btn-pegar').forEach(btn => {
+        btn.style.display = 'inline-block';
+    });
+    
+    const diaInfo = DIAS_SEMANA.find(d => d.id === diaOrigen);
+    mostrarMensaje(`Rangos de ${diaInfo.nombre} copiados. Haz clic en "Pegar" en el día donde quieras pegarlos.`, 'info');
 }
 
-function copiarRangos(diaOrigen, selectorDiv) {
-    const rangosDiv = document.querySelector(`.rangos-dia[data-dia="${diaOrigen}"]`);
-    const rangos = rangosDiv.querySelectorAll('.rango-horario');
+function pegarRangosDesdePortapapeles(diaDestino) {
+    if (!horarioState.clipboard || horarioState.clipboard.length === 0) {
+        alert('No hay rangos copiados');
+        return;
+    }
     
-    if (rangos.length === 0) return;
+    const rangosDest = document.querySelector(`.rangos-dia[data-dia="${diaDestino}"]`);
     
-    // Obtener días destino seleccionados
-    const checkboxes = selectorDiv.querySelectorAll('.destino-checkbox:checked');
+    // Preguntar si desea reemplazar o agregar
+    const confirmacion = confirm('¿Desea reemplazar los rangos existentes?\n\nOK = Reemplazar todo\nCancelar = Agregar a los existentes');
     
-    checkboxes.forEach(checkbox => {
-        const diaDestino = checkbox.dataset.dia;
-        const rangosDest = document.querySelector(`.rangos-dia[data-dia="${diaDestino}"]`);
-        
+    if (confirmacion) {
         // Limpiar rangos existentes
         rangosDest.querySelectorAll('.rango-horario').forEach(el => el.remove());
+    }
+    
+    // Pegar rangos
+    horarioState.clipboard.forEach(rango => {
+        const rangoDiv = document.createElement('div');
+        rangoDiv.className = 'rango-horario';
+        rangoDiv.style.cssText = 'display: flex; gap: 0.75rem; align-items: center;';
         
-        // Copiar rangos
-        rangos.forEach(rangoEl => {
-            const inicio = rangoEl.querySelector('.rango-inicio').value;
-            const fin = rangoEl.querySelector('.rango-fin').value;
-            
-            const rangoDiv = document.createElement('div');
-            rangoDiv.className = 'rango-horario';
-            rangoDiv.style.cssText = 'display: flex; gap: 0.75rem; align-items: center;';
-            
-            const inputInicio = crearSelectHora(inicio);
-            inputInicio.classList.add('rango-inicio');
-            
-            const inputFin = crearSelectHora(fin);
-            inputFin.classList.add('rango-fin');
-            
-            const btnEliminar = document.createElement('button');
-            btnEliminar.type = 'button';
-            btnEliminar.className = 'btn btn-danger btn-sm';
-            btnEliminar.innerHTML = '<i class="fas fa-trash"></i>';
-            btnEliminar.onclick = function() { rangoDiv.remove(); };
-            
-            rangoDiv.appendChild(inputInicio);
-            rangoDiv.appendChild(inputFin);
-            rangoDiv.appendChild(btnEliminar);
-            
-            rangosDest.insertBefore(rangoDiv, rangosDest.lastElementChild);
-        });
+        const inputInicio = crearSelectHora(rango.start, true);
+        inputInicio.classList.add('rango-inicio');
+        
+        const inputFin = crearSelectHora(rango.end, false);
+        inputFin.classList.add('rango-fin');
+        
+        const btnEliminar = document.createElement('button');
+        btnEliminar.type = 'button';
+        btnEliminar.className = 'btn btn-danger btn-sm';
+        btnEliminar.innerHTML = '<i class="fas fa-trash"></i>';
+        btnEliminar.onclick = function() { rangoDiv.remove(); };
+        
+        rangoDiv.appendChild(inputInicio);
+        rangoDiv.appendChild(inputFin);
+        rangoDiv.appendChild(btnEliminar);
+        
+        rangosDest.appendChild(rangoDiv);
     });
+    
+    const diaInfo = DIAS_SEMANA.find(d => d.id === diaDestino);
+    mostrarMensaje(`Rangos pegados en ${diaInfo.nombre}`, 'success');
 }
 
 function aplicarHorariosATodo() {
@@ -230,9 +275,9 @@ function aplicarHorariosATodo() {
             const rangoDiv = document.createElement('div');
             rangoDiv.className = 'rango-horario';
             rangoDiv.style.cssText = 'display: flex; gap: 0.75rem; align-items: center;';
-            const inputInicio = crearSelectHora(inicio);
+            const inputInicio = crearSelectHora(inicio, true);
             inputInicio.classList.add('rango-inicio');
-            const inputFin = crearSelectHora(fin);
+            const inputFin = crearSelectHora(fin, false);
             inputFin.classList.add('rango-fin');
             const btnEliminar = document.createElement('button');
             btnEliminar.type = 'button';
@@ -242,7 +287,8 @@ function aplicarHorariosATodo() {
             rangoDiv.appendChild(inputInicio);
             rangoDiv.appendChild(inputFin);
             rangoDiv.appendChild(btnEliminar);
-            rangosDest.insertBefore(rangoDiv, rangosDest.lastElementChild);
+            // Agregar al final en lugar de al principio
+            rangosDest.appendChild(rangoDiv);
         });
     });
     alert('Horarios de Lunes aplicados a todos los días');
@@ -254,10 +300,11 @@ function agregarRangoDia(diaId) {
     rangoDiv.className = 'rango-horario';
     rangoDiv.style.cssText = 'display: flex; gap: 0.75rem; align-items: center;';
     
-    const inputInicio = crearSelectHora();
+    // Crear selects sin valor inicial para mostrar placeholders
+    const inputInicio = crearSelectHora(null, true);
     inputInicio.classList.add('rango-inicio');
     
-    const inputFin = crearSelectHora();
+    const inputFin = crearSelectHora(null, false);
     inputFin.classList.add('rango-fin');
     
     const btnEliminar = document.createElement('button');
@@ -270,7 +317,8 @@ function agregarRangoDia(diaId) {
     rangoDiv.appendChild(inputFin);
     rangoDiv.appendChild(btnEliminar);
     
-    rangosDiv.insertBefore(rangoDiv, rangosDiv.lastElementChild);
+    // Agregar al final (appendChild en lugar de insertBefore)
+    rangosDiv.appendChild(rangoDiv);
 }
 
 function cargarHorarioSemanal() {
@@ -298,10 +346,10 @@ function cargarHorarioSemanal() {
                         rangoDiv.className = 'rango-horario';
                         rangoDiv.style.cssText = 'display: flex; gap: 0.75rem; align-items: center;';
                         
-                        const inputInicio = crearSelectHora(rango.start);
+                        const inputInicio = crearSelectHora(rango.start, true);
                         inputInicio.classList.add('rango-inicio');
                         
-                        const inputFin = crearSelectHora(rango.end);
+                        const inputFin = crearSelectHora(rango.end, false);
                         inputFin.classList.add('rango-fin');
                         
                         const btnEliminar = document.createElement('button');
@@ -314,7 +362,8 @@ function cargarHorarioSemanal() {
                         rangoDiv.appendChild(inputFin);
                         rangoDiv.appendChild(btnEliminar);
                         
-                        rangosDiv.insertBefore(rangoDiv, rangosDiv.lastElementChild);
+                        // Agregar al final
+                        rangosDiv.appendChild(rangoDiv);
                     });
                 });
             }
