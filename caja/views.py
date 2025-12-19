@@ -129,9 +129,15 @@ def procesar_venta(request):
                         else:
                             tipo = 'insumo'  # Por defecto
                         
+                        logger.info(f"    - Tipo normalizado: {tipo}")
+                        
                         # Obtener el objeto usando tipo e ID
                         servicio = None
                         insumo = None
+                        
+                        # Verificar si tenemos un ID válido
+                        if not item_id:
+                            logger.warning(f"    - ⚠️  Item sin ID: {nombre} (tipo={tipo}, id={item_id})")
                         
                         if tipo == 'servicio' and item_id:
                             try:
