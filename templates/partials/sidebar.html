@@ -10,6 +10,13 @@
     if (savedState === 'collapsed') {
         document.documentElement.classList.add('sidebar-is-collapsed');
     }
+    
+    // Enable transitions AFTER initial render to prevent layout shift
+    window.addEventListener('DOMContentLoaded', function() {
+        requestAnimationFrame(function() {
+            document.documentElement.classList.add('loaded');
+        });
+    });
 })();
 </script>
 

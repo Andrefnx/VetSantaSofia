@@ -2284,10 +2284,14 @@ body {
     height: 100vh;
     background: #1a2035;
     z-index: 1000;
-    transition: min-width 0.35s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
     display: flex;
     flex-direction: column;
+}
+
+/* Transition enabled ONLY after page load to prevent layout shift */
+html.loaded .vet-sidebar {
+    transition: min-width 0.35s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .vet-sidebar:not(.collapsed) {
@@ -2605,10 +2609,14 @@ html.sidebar-is-collapsed .vet-sidebar {
 /* Main Panel Adjustment */
 .main-panel {
     margin-left: var(--sidebar-width, 260px) !important;
-    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
     width: calc(100% - var(--sidebar-width, 260px)) !important;
     position: relative;
     min-height: 100vh;
+}
+
+/* Transition enabled ONLY after page load to prevent layout shift */
+html.loaded .main-panel {
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .main-panel.sidebar-collapsed,
