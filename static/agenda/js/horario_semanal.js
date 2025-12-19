@@ -90,7 +90,7 @@ function crearDiaWidget(dia) {
     
     const btnPegar = document.createElement('button');
     btnPegar.type = 'button';
-    btnPegar.className = 'btn btn-success btn-sm btn-pegar';
+    btnPegar.className = 'btn btn-secondary btn-sm btn-pegar';
     btnPegar.style.cssText = 'padding: 6px 10px !important; font-size: 0.8rem !important; display: none;';
     btnPegar.innerHTML = '<i class="fas fa-paste"></i> Pegar';
     btnPegar.dataset.dia = dia.id;
