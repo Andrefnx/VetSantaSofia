@@ -9,6 +9,7 @@ from clinica.models import Consulta, Hospitalizacion
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from datetime import datetime
+from decimal import Decimal
 
 
 def validar_fecha(fecha_str):
@@ -29,11 +30,73 @@ def index(request):
 
 @login_required
 def reporte_financieros(request):
-    """Vista para reportes financieros (ventas/caja)"""
-    # Preparar contexto básico para el template
+    """Vista para reportes financieros (ventas/caja) con sesiones expandibles"""
+    from django.db.models import Sum, Q
+    from caja.models import SesionCaja, Venta
+    from django.utils import timezone
+    from datetime import datetime, timedelta
+    
+    # Obtener filtros
+    fecha_desde = validar_fecha(request.GET.get('fecha_desde', ''))
+    fecha_hasta = validar_fecha(request.GET.get('fecha_hasta', ''))
+    estado_venta = request.GET.get('estado', '').strip()
+    metodo_pago = request.GET.get('metodo_pago', '').strip()
+    
+    # Query de sesiones de caja
+    sesiones = SesionCaja.objects.all().prefetch_related('ventas')
+    
+    # Filtro por fecha desde
+    if fecha_desde:
+        fecha_desde_dt = datetime.strptime(fecha_desde, '%Y-%m-%d')
+        sesiones = sesiones.filter(fecha_apertura__date__gte=fecha_desde_dt.date())
+    
+    # Filtro por fecha hasta
+    if fecha_hasta:
+        fecha_hasta_dt = datetime.strptime(fecha_hasta, '%Y-%m-%d')
+        # Sumar 1 día para incluir todo el día hasta
+        fecha_hasta_dt = fecha_hasta_dt + timedelta(days=1)
+        sesiones = sesiones.filter(fecha_apertura__date__lt=fecha_hasta_dt.date())
+    
+    # Procesar cada sesión con sus ventas filtradas
+    sesiones_data = []
+    total_periodo = Decimal('0.00')
+    
+    for sesion in sesiones:
+        # Obtener ventas de la sesión
+        ventas = sesion.ventas.filter(estado='pagado')  # Solo ventas pagadas
+        
+        # Aplicar filtros a las ventas
+        if estado_venta:
+            ventas = ventas.filter(estado=estado_venta)
+        
+        if metodo_pago:
+            ventas = ventas.filter(metodo_pago=metodo_pago)
+        
+        # Filtrar por fecha si se especificó
+        if fecha_desde:
+            fecha_desde_dt = datetime.strptime(fecha_desde, '%Y-%m-%d')
+            ventas = ventas.filter(fecha_pago__date__gte=fecha_desde_dt.date())
+        
+        if fecha_hasta:
+            fecha_hasta_dt = datetime.strptime(fecha_hasta, '%Y-%m-%d')
+            fecha_hasta_dt = fecha_hasta_dt + timedelta(days=1)
+            ventas = ventas.filter(fecha_pago__date__lt=fecha_hasta_dt.date())
+        
+        # Solo incluir sesiones que tengan ventas
+        if ventas.exists():
+            total_sesion = ventas.aggregate(Sum('total'))['total__sum'] or Decimal('0.00')
+            total_periodo += total_sesion
+            
+            sesiones_data.append({
+                'sesion': sesion,
+                'ventas': ventas.order_by('-fecha_pago'),
+                'total_sesion': total_sesion,
+            })
+    
+    # Contexto para el template
     context = {
-        'ventas': [],  # Se llenará con lógica futura
-        'total_periodo': 0,  # Se calculará con lógica futura
+        'sesiones': sesiones_data,
+        'total_periodo': total_periodo,
     }
     return render(request, 'reportes/financieros.html', context)
 

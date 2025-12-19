@@ -46,9 +46,9 @@
                                 <label class="form-label">Estado de Venta</label>
                                 <select class="form-select" name="estado">
                                     <option value="">Todos</option>
+                                    <option value="pagado" {% if request.GET.estado == "pagado" %}selected{% endif %}>Pagada</option>
                                     <option value="pendiente" {% if request.GET.estado == "pendiente" %}selected{% endif %}>Pendiente</option>
-                                    <option value="pagada" {% if request.GET.estado == "pagada" %}selected{% endif %}>Pagada</option>
-                                    <option value="cancelada" {% if request.GET.estado == "cancelada" %}selected{% endif %}>Cancelada</option>
+                                    <option value="cancelado" {% if request.GET.estado == "cancelado" %}selected{% endif %}>Cancelada</option>
                                 </select>
                             </div>
                             
@@ -60,6 +60,7 @@
                                     <option value="efectivo" {% if request.GET.metodo_pago == "efectivo" %}selected{% endif %}>Efectivo</option>
                                     <option value="tarjeta" {% if request.GET.metodo_pago == "tarjeta" %}selected{% endif %}>Tarjeta</option>
                                     <option value="transferencia" {% if request.GET.metodo_pago == "transferencia" %}selected{% endif %}>Transferencia</option>
+                                    <option value="mixto" {% if request.GET.metodo_pago == "mixto" %}selected{% endif %}>Mixto</option>
                                 </select>
                             </div>
                         </div>
@@ -81,109 +82,170 @@
     </div>
 </div>
 
-<!-- Resultados -->
+<!-- Resultados - Sesiones de Caja Expandibles -->
 <div class="row">
     <div class="col-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Resultados: {{ ventas|length }} venta{{ ventas|length|pluralize }}</h5>
+                <h5 class="mb-0">Sesiones de Caja: {{ sesiones|length }} sesión{{ sesiones|length|pluralize }}</h5>
                 <button type="button" class="btn btn-success" onclick="exportarExcel()">
                     <i class="bi bi-file-earmark-excel"></i> Exportar Excel
                 </button>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Nº Venta</th>
-                                <th>Usuario</th>
-                                <th>Método de Pago</th>
-                                <th class="text-center">Estado</th>
-                                <th class="text-end">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for venta in ventas %}
-                            <tr>
-                                <td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
-                                <td><strong>#{{ venta.numero }}</strong></td>
-                                <td>{{ venta.usuario }}</td>
-                                <td>{{ venta.metodo_pago|capfirst }}</td>
-                                <td class="text-center">
-                                    {% if venta.estado == "pagada" %}
-                                        <span class="badge bg-success">Pagada</span>
-                                    {% elif venta.estado == "pendiente" %}
-                                        <span class="badge bg-warning text-dark">Pendiente</span>
-                                    {% elif venta.estado == "cancelada" %}
-                                        <span class="badge bg-danger">Cancelada</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">{{ venta.estado|capfirst }}</span>
-                                    {% endif %}
-                                </td>
-                                <td class="text-end"><strong>${{ venta.total|floatformat:2 }}</strong></td>
-                            </tr>
-                            {% empty %}
-                            <!-- Estado vacío -->
-                            <!--
-                            <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
-                                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
-                                    <p class="mb-0 mt-2">No hay ventas que coincidan con los filtros seleccionados</p>
-                                </td>
-                            </tr>
-                            -->
-                            
-                            <!-- Fila de ejemplo con datos falsos (temporal) -->
-                            <tr>
-                                <td>19/12/2025 14:30</td>
-                                <td><strong>#001</strong></td>
-                                <td>Usuario Demo</td>
-                                <td>Efectivo</td>
-                                <td class="text-center">
-                                    <span class="badge bg-success">Pagada</span>
-                                </td>
-                                <td class="text-end"><strong>$45,500.00</strong></td>
-                            </tr>
-                            <tr>
-                                <td>19/12/2025 10:15</td>
-                                <td><strong>#002</strong></td>
-                                <td>Usuario Demo</td>
-                                <td>Tarjeta</td>
-                                <td class="text-center">
-                                    <span class="badge bg-warning text-dark">Pendiente</span>
-                                </td>
-                                <td class="text-end"><strong>$28,750.00</strong></td>
-                            </tr>
-                            <tr>
-                                <td>18/12/2025 16:45</td>
-                                <td><strong>#003</strong></td>
-                                <td>Usuario Demo</td>
-                                <td>Transferencia</td>
-                                <td class="text-center">
-                                    <span class="badge bg-success">Pagada</span>
-                                </td>
-                                <td class="text-end"><strong>$67,200.00</strong></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                        <tfoot class="table-light">
-                            <tr>
-                                <td colspan="5" class="text-end"><strong>Total del período:</strong></td>
-                                <td class="text-end">
-                                    <strong class="text-primary" style="font-size: 1.1rem;">
-                                        {% if total_periodo %}
-                                            ${{ total_periodo|floatformat:2 }}
-                                        {% else %}
-                                            $141,450.00
-                                        {% endif %}
-                                    </strong>
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
+                {% if sesiones %}
+                    <div class="accordion" id="acordeonSesiones">
+                        {% for item in sesiones %}
+                            {% with sesion=item.sesion ventas=item.ventas total_sesion=item.total_sesion %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                            data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false" 
+                                            aria-controls="collapse{{ forloop.counter }}">
+                                        <div class="w-100">
+                                            <div class="row align-items-center mb-2">
+                                                <div class="col-md-8">
+                                                    <strong>
+                                                        <i class="bi bi-cash-register"></i>
+                                                        Sesión {{ forloop.counter }} - 
+                                                        {{ sesion.fecha_apertura|date:"d/m/Y H:i" }}
+                                                    </strong>
+                                                    <span class="ms-2 small">
+                                                        {% if sesion.esta_cerrada %}
+                                                            <span style="color: #28a745; font-weight: 500;">Cerrada</span>
+                                                        {% else %}
+                                                            <span style="color: #ffc107; font-weight: 500;">Abierta</span>
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                                <div class="col-md-4 text-end">
+                                                    <strong style="color: #000; font-size: 1.05rem;">
+                                                        ${{ total_sesion|floatformat:2 }}
+                                                    </strong>
+                                                </div>
+                                            </div>
+                                            <div class="row small text-muted">
+                                                <div class="col-md-4">
+                                                    <i class="bi bi-person"></i>
+                                                    Apertura: {{ sesion.usuario_apertura.nombre }} {{ sesion.usuario_apertura.apellido }}
+                                                </div>
+                                                {% if sesion.usuario_cierre %}
+                                                <div class="col-md-4">
+                                                    <i class="bi bi-person"></i>
+                                                    Cierre: {{ sesion.usuario_cierre.nombre }} {{ sesion.usuario_cierre.apellido }}
+                                                </div>
+                                                {% endif %}
+                                                {% if sesion.fecha_cierre %}
+                                                <div class="col-md-4 text-end">
+                                                    <i class="bi bi-clock"></i>
+                                                    Cierre: {{ sesion.fecha_cierre|date:"d/m/Y H:i" }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" 
+                                     aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#acordeonSesiones">
+                                    <div class="accordion-body p-0">
+                                        <!-- Tabla de ventas dentro de la sesión -->
+                                        <div class="table-responsive">
+                                            <table class="table table-hover table-sm mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Fecha/Hora</th>
+                                                        <th>Nº Venta</th>
+                                                        <th>Paciente</th>
+                                                        <th>Método de Pago</th>
+                                                        <th class="text-center">Origen</th>
+                                                        <th class="text-end">Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for venta in ventas %}
+                                                    <tr>
+                                                        <td>{{ venta.fecha_pago|date:"d/m/Y H:i" }}</td>
+                                                        <td><strong>#{{ venta.numero_venta }}</strong></td>
+                                                        <td>
+                                                            {% if venta.paciente %}
+                                                                {{ venta.paciente.nombre }}
+                                                            {% else %}
+                                                                <em class="text-muted">-</em>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if venta.metodo_pago %}
+                                                                <span style="font-size: 0.9rem;">
+                                                                    {% if venta.metodo_pago == "efectivo" %}
+                                                                        💵
+                                                                    {% elif venta.metodo_pago == "tarjeta" %}
+                                                                        💳
+                                                                    {% elif venta.metodo_pago == "transferencia" %}
+                                                                        🏦
+                                                                    {% elif venta.metodo_pago == "mixto" %}
+                                                                        🔄
+                                                                    {% endif %}
+                                                                </span>
+                                                                {{ venta.get_metodo_pago_display|capfirst }}
+                                                            {% else %}
+                                                                <em class="text-muted">-</em>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="text-center">
+                                                            {% if venta.tipo_origen == "consulta" %}
+                                                                <span style="color: #007bff; font-size: 0.9rem;">Consulta</span>
+                                                            {% elif venta.tipo_origen == "hospitalizacion" %}
+                                                                <span style="color: #dc3545; font-size: 0.9rem;">Hosp.</span>
+                                                            {% else %}
+                                                                <span style="color: #6c757d; font-size: 0.9rem;">Libre</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="text-end"><strong>${{ venta.total|floatformat:2 }}</strong></td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                    <!-- Fila subtotal de sesión -->
+                                                    <tr class="table-light" style="border-top: 2px solid #dee2e6;">
+                                                        <td colspan="5" class="text-end">
+                                                            <strong>Subtotal sesión:</strong>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <strong style="color: #495057; font-size: 1rem;">
+                                                                ${{ total_sesion|floatformat:2 }}
+                                                            </strong>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endwith %}
+                        {% endfor %}
+                    </div>
+
+                    <!-- Total del período -->
+                    <div class="mt-4 pt-3" style="border-top: 3px solid #dee2e6;">
+                        <div class="row">
+                            <div class="col-12 text-end">
+                                <p class="mb-1" style="font-size: 1rem; color: #6c757d;">
+                                    <strong>Total del período:</strong>
+                                </p>
+                                <h4 style="color: #000; font-weight: 700; margin: 0;">
+                                    ${{ total_periodo|floatformat:2 }}
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Estado vacío -->
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox" style="font-size: 3rem; color: #dee2e6;"></i>
+                        <p class="mb-0 mt-3 text-muted">
+                            No hay sesiones de caja que coincidan con los filtros seleccionados
+                        </p>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -198,7 +260,7 @@ function exportarExcel() {
     const params = new URLSearchParams(formData);
     
     // TODO: Cuando se implemente el backend, descomentar la siguiente línea
-    // const exportUrl = '{% url "reportes:exportar_financieros_excel" %}?' + params.toString();
+    // const exportUrl = '/reportes/financieros/exportar-excel/?' + params.toString();
     // window.location.href = exportUrl;
     
     // Placeholder temporal: mostrar alerta
