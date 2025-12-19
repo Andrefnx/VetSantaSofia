@@ -87,17 +87,36 @@ function addToCart(name, price, tipo, id) {
         return;
     }
 
-    const existingItem = cart.find(item => item.name === name && item.tipo === tipo && item.id === id);
+    // Asegurar que price sea número (puede venir como string)
+    const numPrice = parseFloat(price);
+    if (isNaN(numPrice)) {
+        console.error('❌ Error: price no válido', { name, price, tipo, id });
+        alert(`❌ Error al agregar ${name}: precio no válido (${price}).`);
+        return;
+    }
+
+    // Validar que id sea un número
+    if (!id || isNaN(id)) {
+        console.error('❌ Error: ID no válido', { name, price, tipo, id });
+        alert(`❌ Error al agregar ${name}: ID no válido (${id}). Recarga la página e intenta de nuevo.`);
+        return;
+    }
+
+    // Convertir id a número
+    const numId = parseInt(id);
+
+    const existingItem = cart.find(item => item.name === name && item.tipo === tipo && item.id === numId);
 
     if (existingItem) {
         existingItem.quantity++;
     } else {
-        cart.push({ name, price, quantity: 1, tipo: tipo, id: id });
+        console.log(`✅ Agregando al carrito: ${name} (tipo=${tipo}, id=${numId})`);
+        cart.push({ name, price: numPrice, quantity: 1, tipo: tipo, id: numId });
     }
 
     // Actualizar stock visual solo para insumos
     if (tipo === 'insumo' || tipo === 0) {
-        actualizarStockVisual(id, -1);
+        actualizarStockVisual(numId, -1);
     }
 
     updateCart();
@@ -348,6 +367,15 @@ async function procesarVentaDirecto() {
         } else {
             // ⭐ VENTA LIBRE DIRECTA - crear nueva venta
             console.log('🟢 Procesando venta libre directa');
+            console.log('📦 Datos de venta:', {
+                items: cart.map(item => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price,
+                    tipo: item.tipo,
+                    id: item.id
+                }))
+            });
             
             const ventaData = {
                 items: cart.map(item => ({
@@ -372,7 +400,9 @@ async function procesarVentaDirecto() {
                 body: JSON.stringify(ventaData)
             });
             
+            console.log('📡 Status de respuesta:', response.status);
             result = await response.json();
+            console.log('📋 Respuesta JSON:', result);
         }
 
         if (result.success) {
@@ -397,7 +427,9 @@ async function procesarVentaDirecto() {
             // Actualizar contador de pagos pendientes
             await actualizarBadgePagosPendientes();
         } else {
-            alert(`❌ Error al procesar la venta: ${result.error || 'Error desconocido'}`);
+            console.error('❌ Error en respuesta:', result);
+            const errorMsg = result.error || result.detail || 'Error desconocido';
+            alert(`❌ Error al procesar la venta:\n\n${errorMsg}`);
         }
 
     } catch (error) {
