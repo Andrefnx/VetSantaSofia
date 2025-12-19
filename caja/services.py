@@ -303,6 +303,9 @@ def crear_venta_libre(usuario, items_servicios=None, items_insumos=None, pacient
     if items_servicios:
         for item in items_servicios:
             servicio = Servicio.objects.get(pk=item['servicio_id'])
+            # Validar que el servicio esté activo
+            if not servicio.activo:
+                raise ValidationError(f'El servicio "{servicio.nombre}" no está disponible para la venta (inactivo).')
             DetalleVenta.objects.create(
                 venta=venta,
                 tipo='servicio',
@@ -316,6 +319,9 @@ def crear_venta_libre(usuario, items_servicios=None, items_insumos=None, pacient
     if items_insumos:
         for item in items_insumos:
             insumo = Insumo.objects.get(pk=item['insumo_id'])
+            # Validar que el insumo no esté archivado
+            if insumo.archivado:
+                raise ValidationError(f'El producto "{insumo.medicamento}" no está disponible para la venta (archivado).')
             DetalleVenta.objects.create(
                 venta=venta,
                 tipo='insumo',
@@ -377,6 +383,9 @@ def agregar_detalle_venta(venta, tipo, item_id, cantidad, usuario, precio_manual
     # Obtener el item
     if tipo == 'servicio':
         servicio = Servicio.objects.get(pk=item_id)
+        # Validar que el servicio esté activo
+        if not servicio.activo:
+            raise ValidationError(f'El servicio "{servicio.nombre}" no está disponible para la venta (inactivo).')
         detalle = DetalleVenta.objects.create(
             venta=venta,
             tipo='servicio',
@@ -387,6 +396,9 @@ def agregar_detalle_venta(venta, tipo, item_id, cantidad, usuario, precio_manual
         )
     else:  # insumo
         insumo = Insumo.objects.get(pk=item_id)
+        # Validar que el insumo no esté archivado
+        if insumo.archivado:
+            raise ValidationError(f'El producto "{insumo.medicamento}" no está disponible para la venta (archivado).')
         detalle = DetalleVenta.objects.create(
             venta=venta,
             tipo='insumo',

@@ -28,6 +28,17 @@ def index(request):
 
 
 @login_required
+def reporte_financieros(request):
+    """Vista para reportes financieros (ventas/caja)"""
+    # Preparar contexto básico para el template
+    context = {
+        'ventas': [],  # Se llenará con lógica futura
+        'total_periodo': 0,  # Se calculará con lógica futura
+    }
+    return render(request, 'reportes/financieros.html', context)
+
+
+@login_required
 def reporte_inventario(request):
     from django.db.models import Count, Q
     

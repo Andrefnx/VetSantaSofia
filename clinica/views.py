@@ -415,6 +415,12 @@ def crear_consulta(request, paciente_id):
                 # Si es un solo servicio, intentar mapear su categoría
                 try:
                     servicio = Servicio.objects.get(idServicio=ids_list[0])
+                    # Validar que el servicio esté activo
+                    if not servicio.activo:
+                        return JsonResponse({
+                            'success': False,
+                            'error': f'El servicio "{servicio.nombre}" no está disponible (inactivo).'
+                        }, status=400)
                     categoria = servicio.categoria.lower() if servicio.categoria else ''
                     
                     # Mapear categoría a tipo de consulta válido
@@ -530,6 +536,12 @@ def crear_consulta(request, paciente_id):
                 from inventario.models import Insumo
                 try:
                     insumo = Insumo.objects.get(idInventario=med.get('id'))
+                    # Validar que el insumo no esté archivado
+                    if insumo.archivado:
+                        return JsonResponse({
+                            'success': False,
+                            'error': f'El producto "{insumo.medicamento}" no está disponible (archivado).'
+                        }, status=400)
                     ConsultaInsumo.objects.create(
                         consulta=consulta,
                         insumo=insumo,
@@ -1079,6 +1091,12 @@ def guardar_consulta(request, paciente_id):
                 if insumo_id and peso_paciente:
                     try:
                         insumo = Insumo.objects.get(id=insumo_id)
+                        # Validar que el insumo no esté archivado
+                        if insumo.archivado:
+                            return JsonResponse({
+                                'success': False,
+                                'error': f'El producto "{insumo.medicamento}" no está disponible (archivado).'
+                            }, status=400)
                         peso_decimal = Decimal(str(peso_paciente))
                         
                         # Extraer números de la dosis
@@ -1313,7 +1331,7 @@ def obtener_servicios(request):
         from servicios.models import ServicioInsumo
         
         categoria = request.GET.get('categoria')
-        qs = Servicio.objects.all()
+        qs = Servicio.objects.filter(activo=True)
         if categoria:
             qs = qs.filter(categoria__iexact=categoria)
 
@@ -1389,7 +1407,7 @@ def obtener_insumos(request):
     """Retorna insumos de inventario para selección en cirugía/registro"""
     try:
         from inventario.models import Insumo
-        insumos = Insumo.objects.all().order_by('medicamento')
+        insumos = Insumo.objects.filter(archivado=False).order_by('medicamento')
         data = []
         for ins in insumos:
             data.append({
@@ -1445,7 +1463,15 @@ def crear_hospitalizacion(request, paciente_id):
         if insumos_ids:
             from inventario.models import Insumo
             # Insumo usa pk = idInventario
-            insumos_qs = Insumo.objects.filter(idInventario__in=insumos_ids)
+            insumos_qs = Insumo.objects.filter(idInventario__in=insumos_ids, archivado=False)
+            # Validar si alguno está archivado
+            if len(insumos_qs) != len(insumos_ids):
+                archivados = Insumo.objects.filter(idInventario__in=insumos_ids, archivado=True)
+                if archivados.exists():
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'Algunos productos no están disponibles (archivados): {", ".join([i.medicamento for i in archivados])}'
+                    }, status=400)
             hospitalizacion.insumos.set(insumos_qs)
         
         return JsonResponse({
@@ -1474,6 +1500,12 @@ def crear_cirugia(request, hospitalizacion_id):
         if servicio_id:
             try:
                 servicio = Servicio.objects.get(idServicio=servicio_id)
+                # Validar que el servicio esté activo
+                if not servicio.activo:
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'El servicio "{servicio.nombre}" no está disponible (inactivo).'
+                    }, status=400)
                 print(f'✅ Servicio encontrado: {servicio.nombre} (Categoría: {servicio.categoria})')
             except Servicio.DoesNotExist:
                 servicio = None
@@ -1513,6 +1545,12 @@ def crear_cirugia(request, hospitalizacion_id):
                     if isinstance(med_data, (int, str)):
                         med_id = int(med_data) if isinstance(med_data, str) else med_data
                         insumo = Insumo.objects.get(idInventario=med_id)
+                        # Validar que el insumo no esté archivado
+                        if insumo.archivado:
+                            return JsonResponse({
+                                'success': False,
+                                'error': f'El producto "{insumo.medicamento}" no está disponible (archivado).'
+                            }, status=400)
                         cirugia.medicamentos.add(insumo)
                         print(f'  ✅ Insumo agregado (sin dosis): {insumo.medicamento}')
                         continue
@@ -1522,6 +1560,12 @@ def crear_cirugia(request, hospitalizacion_id):
                     dosis_str = med_data.get('dosis', '')
                     
                     insumo = Insumo.objects.get(idInventario=med_id)
+                    # Validar que el insumo no esté archivado
+                    if insumo.archivado:
+                        return JsonResponse({
+                            'success': False,
+                            'error': f'El producto "{insumo.medicamento}" no está disponible (archivado).'
+                        }, status=400)
                     cirugia.medicamentos.add(insumo)
                     print(f'  ✅ Insumo agregado a ManyToMany: {insumo.medicamento}')
                     

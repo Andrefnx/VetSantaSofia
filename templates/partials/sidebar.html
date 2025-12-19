@@ -110,6 +110,14 @@
                     </a>
                 </li>
 
+                <!-- REPORTES FINANCIEROS -->
+                <li class="vet-nav-item {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'financieros' %}active{% endif %}">
+                    <a href="{% url 'reportes:financieros' %}" class="vet-nav-link">
+                        <i class="bi bi-cash-coin"></i>
+                        <span>Reportes Financieros</span>
+                    </a>
+                </li>
+
             </ul>
             
             <!-- Usuario y Logout -->

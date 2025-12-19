@@ -1,0 +1,209 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Reportes Financieros{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="bi bi-cash-coin"></i> Reportes Financieros</h2>
+</div>
+
+{% if error_message %}
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle"></i> {{ error_message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<!-- Filtros -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-funnel"></i> Filtros
+                    <button class="btn btn-sm btn-link float-end" type="button" data-bs-toggle="collapse" data-bs-target="#filtrosCollapse">
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                </h5>
+            </div>
+            <div class="collapse show" id="filtrosCollapse">
+                <div class="card-body">
+                    <form method="get" id="filtrosForm">
+                        <div class="row g-3">
+                            <!-- Fechas -->
+                            <div class="col-md-6 col-lg-3">
+                                <label class="form-label">Fecha Desde</label>
+                                <input type="date" class="form-control" name="fecha_desde" value="{{ request.GET.fecha_desde }}">
+                            </div>
+                            <div class="col-md-6 col-lg-3">
+                                <label class="form-label">Fecha Hasta</label>
+                                <input type="date" class="form-control" name="fecha_hasta" value="{{ request.GET.fecha_hasta }}">
+                            </div>
+                            
+                            <!-- Estado de Venta -->
+                            <div class="col-md-6 col-lg-3">
+                                <label class="form-label">Estado de Venta</label>
+                                <select class="form-select" name="estado">
+                                    <option value="">Todos</option>
+                                    <option value="pendiente" {% if request.GET.estado == "pendiente" %}selected{% endif %}>Pendiente</option>
+                                    <option value="pagada" {% if request.GET.estado == "pagada" %}selected{% endif %}>Pagada</option>
+                                    <option value="cancelada" {% if request.GET.estado == "cancelada" %}selected{% endif %}>Cancelada</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Método de Pago -->
+                            <div class="col-md-6 col-lg-3">
+                                <label class="form-label">Método de Pago</label>
+                                <select class="form-select" name="metodo_pago">
+                                    <option value="">Todos</option>
+                                    <option value="efectivo" {% if request.GET.metodo_pago == "efectivo" %}selected{% endif %}>Efectivo</option>
+                                    <option value="tarjeta" {% if request.GET.metodo_pago == "tarjeta" %}selected{% endif %}>Tarjeta</option>
+                                    <option value="transferencia" {% if request.GET.metodo_pago == "transferencia" %}selected{% endif %}>Transferencia</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search"></i> Aplicar Filtros
+                                </button>
+                                <a href="{% url 'reportes:financieros' %}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Limpiar
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resultados -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Resultados: {{ ventas|length }} venta{{ ventas|length|pluralize }}</h5>
+                <button type="button" class="btn btn-success" onclick="exportarExcel()">
+                    <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Nº Venta</th>
+                                <th>Usuario</th>
+                                <th>Método de Pago</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for venta in ventas %}
+                            <tr>
+                                <td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
+                                <td><strong>#{{ venta.numero }}</strong></td>
+                                <td>{{ venta.usuario }}</td>
+                                <td>{{ venta.metodo_pago|capfirst }}</td>
+                                <td class="text-center">
+                                    {% if venta.estado == "pagada" %}
+                                        <span class="badge bg-success">Pagada</span>
+                                    {% elif venta.estado == "pendiente" %}
+                                        <span class="badge bg-warning text-dark">Pendiente</span>
+                                    {% elif venta.estado == "cancelada" %}
+                                        <span class="badge bg-danger">Cancelada</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ venta.estado|capfirst }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end"><strong>${{ venta.total|floatformat:2 }}</strong></td>
+                            </tr>
+                            {% empty %}
+                            <!-- Estado vacío -->
+                            <!--
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                    <p class="mb-0 mt-2">No hay ventas que coincidan con los filtros seleccionados</p>
+                                </td>
+                            </tr>
+                            -->
+                            
+                            <!-- Fila de ejemplo con datos falsos (temporal) -->
+                            <tr>
+                                <td>19/12/2025 14:30</td>
+                                <td><strong>#001</strong></td>
+                                <td>Usuario Demo</td>
+                                <td>Efectivo</td>
+                                <td class="text-center">
+                                    <span class="badge bg-success">Pagada</span>
+                                </td>
+                                <td class="text-end"><strong>$45,500.00</strong></td>
+                            </tr>
+                            <tr>
+                                <td>19/12/2025 10:15</td>
+                                <td><strong>#002</strong></td>
+                                <td>Usuario Demo</td>
+                                <td>Tarjeta</td>
+                                <td class="text-center">
+                                    <span class="badge bg-warning text-dark">Pendiente</span>
+                                </td>
+                                <td class="text-end"><strong>$28,750.00</strong></td>
+                            </tr>
+                            <tr>
+                                <td>18/12/2025 16:45</td>
+                                <td><strong>#003</strong></td>
+                                <td>Usuario Demo</td>
+                                <td>Transferencia</td>
+                                <td class="text-center">
+                                    <span class="badge bg-success">Pagada</span>
+                                </td>
+                                <td class="text-end"><strong>$67,200.00</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="5" class="text-end"><strong>Total del período:</strong></td>
+                                <td class="text-end">
+                                    <strong class="text-primary" style="font-size: 1.1rem;">
+                                        {% if total_periodo %}
+                                            ${{ total_periodo|floatformat:2 }}
+                                        {% else %}
+                                            $141,450.00
+                                        {% endif %}
+                                    </strong>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script para exportar a Excel (sin funcionalidad backend aún) -->
+<script>
+function exportarExcel() {
+    // Obtener los parámetros del formulario
+    const form = document.getElementById('filtrosForm');
+    const formData = new FormData(form);
+    const params = new URLSearchParams(formData);
+    
+    // TODO: Cuando se implemente el backend, descomentar la siguiente línea
+    // const exportUrl = '{% url "reportes:exportar_financieros_excel" %}?' + params.toString();
+    // window.location.href = exportUrl;
+    
+    // Placeholder temporal: mostrar alerta
+    alert('Funcionalidad de exportación pendiente de implementación');
+}
+</script>
+
+{% endblock %}

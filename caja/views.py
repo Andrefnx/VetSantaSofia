@@ -23,9 +23,9 @@ def caja(request):
     if not (request.user.is_superuser or request.user.is_staff or request.user.rol in ['recepcion', 'administracion']):
         return redirect('dashboard:dashboard')
 
-    productos = Insumo.objects.all()
+    productos = Insumo.objects.filter(archivado=False)
     # Traer todos los servicios veterinarios
-    servicios = Servicio.objects.all()
+    servicios = Servicio.objects.filter(activo=True)
 
     return render(request, 'cash_register.html', {
         'productos': productos,
@@ -113,11 +113,23 @@ def procesar_venta(request):
                         if tipo == 'servicio' and item_id:
                             try:
                                 servicio = Servicio.objects.get(pk=item_id)
+                                # Validar que el servicio esté activo
+                                if not servicio.activo:
+                                    return JsonResponse({
+                                        'success': False,
+                                        'error': f'El servicio "{servicio.nombre}" no está disponible para la venta (inactivo).'
+                                    }, status=400)
                             except Servicio.DoesNotExist:
                                 pass
                         elif tipo == 'insumo' and item_id:
                             try:
                                 insumo = Insumo.objects.get(pk=item_id)
+                                # Validar que el insumo no esté archivado
+                                if insumo.archivado:
+                                    return JsonResponse({
+                                        'success': False,
+                                        'error': f'El producto "{insumo.medicamento}" no está disponible para la venta (archivado).'
+                                    }, status=400)
                             except Insumo.DoesNotExist:
                                 pass
                         

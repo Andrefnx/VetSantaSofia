@@ -490,8 +490,8 @@ def api_productos(request):
         especie_filtro = request.GET.get('especie', '').lower()
         peso_filtro = request.GET.get('peso', None)
         
-        # Query base
-        productos = Insumo.objects.filter(stock_actual__gt=0)
+        # Query base - excluir productos archivados
+        productos = Insumo.objects.filter(stock_actual__gt=0, archivado=False)
         
         # Filtrar por especie
         if especie_filtro:

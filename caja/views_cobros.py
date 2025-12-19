@@ -188,8 +188,8 @@ def detalle_cobro_pendiente(request, venta_id):
         'venta': venta,
         'detalles': venta.detalles.all(),
         'puede_editar': True,
-        'servicios_disponibles': Servicio.objects.all(),
-        'insumos_disponibles': Insumo.objects.filter(stock_actual__gt=0),
+        'servicios_disponibles': Servicio.objects.filter(activo=True),
+        'insumos_disponibles': Insumo.objects.filter(stock_actual__gt=0, archivado=False),
     }
     
     return render(request, 'caja/detalle_cobro_pendiente.html', context)
@@ -408,11 +408,23 @@ def devolver_cobro_a_pendiente(request, venta_id):
                     if tipo == 'servicio' and item_id:
                         try:
                             servicio = Servicio.objects.get(pk=item_id)
+                            # Validar que el servicio esté activo
+                            if not servicio.activo:
+                                return JsonResponse({
+                                    'success': False,
+                                    'error': f'El servicio "{servicio.nombre}" no está disponible para la venta (inactivo).'
+                                }, status=400)
                         except Servicio.DoesNotExist:
                             pass
                     elif tipo == 'insumo' and item_id:
                         try:
                             insumo = Insumo.objects.get(pk=item_id)
+                            # Validar que el insumo no esté archivado
+                            if insumo.archivado:
+                                return JsonResponse({
+                                    'success': False,
+                                    'error': f'El producto "{insumo.medicamento}" no está disponible para la venta (archivado).'
+                                }, status=400)
                         except Insumo.DoesNotExist:
                             pass
                     
@@ -602,11 +614,23 @@ def guardar_borrador(request):
                 if tipo == 'servicio' and item_id:
                     try:
                         servicio = Servicio.objects.get(pk=item_id)
+                        # Validar que el servicio esté activo
+                        if not servicio.activo:
+                            return JsonResponse({
+                                'success': False,
+                                'error': f'El servicio "{servicio.nombre}" no está disponible para la venta (inactivo).'
+                            }, status=400)
                     except Servicio.DoesNotExist:
                         pass
                 elif tipo == 'insumo' and item_id:
                     try:
                         insumo = Insumo.objects.get(pk=item_id)
+                        # Validar que el insumo no esté archivado
+                        if insumo.archivado:
+                            return JsonResponse({
+                                'success': False,
+                                'error': f'El producto "{insumo.medicamento}" no está disponible para la venta (archivado).'
+                            }, status=400)
                     except Insumo.DoesNotExist:
                         pass
                 
@@ -705,8 +729,8 @@ def crear_venta_libre_view(request):
     
     # GET: Formulario de venta libre
     context = {
-        'servicios': Servicio.objects.all(),
-        'insumos': Insumo.objects.filter(stock_actual__gt=0),
+        'servicios': Servicio.objects.filter(activo=True),
+        'insumos': Insumo.objects.filter(stock_actual__gt=0, archivado=False),
         'pacientes': Paciente.objects.filter(activo=True),
     }
     
@@ -982,7 +1006,7 @@ def buscar_servicio(request):
     """API para buscar servicios"""
     query = request.GET.get('q', '')
     
-    servicios = Servicio.objects.filter(nombre__icontains=query)[:10]
+    servicios = Servicio.objects.filter(nombre__icontains=query, activo=True)[:10]
     
     return JsonResponse({
         'servicios': [
@@ -1004,7 +1028,8 @@ def buscar_insumo(request):
     
     insumos = Insumo.objects.filter(
         medicamento__icontains=query,
-        stock_actual__gt=0
+        stock_actual__gt=0,
+        archivado=False
     )[:10]
     
     return JsonResponse({
