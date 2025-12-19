@@ -68,7 +68,7 @@
                 <!-- ============================ -->
                 {% for servicio in servicios %}
                 <div class="product-list-item caja-controlable" data-category="servicios"
-                    onclick="addToCart('{{ servicio.nombre|escapejs }}', {{ servicio.precio }}, 'servicio', {{ servicio.id }})">
+                    onclick="addToCart('{{ servicio.nombre|escapejs }}', {{ servicio.precio|floatformat:2 }}, 'servicio', {{ servicio.idServicio }})">
 
                     <div class="icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                         <i class="fas fa-stethoscope"></i>
@@ -93,7 +93,7 @@
 <div class="product-list-item caja-controlable" data-category="productos"
     data-product-id="{{ producto.idInventario }}"
     data-stock-inicial="{{ producto.stock_actual }}"
-    onclick="addToCart('{{ producto.medicamento|escapejs }}', {{ producto.precio_venta }}, 'insumo', {{ producto.idInventario }})">
+    onclick="addToCart('{{ producto.medicamento|escapejs }}', {{ producto.precio_venta|floatformat:2 }}, 'insumo', {{ producto.idInventario }})">
 
     <div class="icon">
         <i class="fas fa-box"></i>
