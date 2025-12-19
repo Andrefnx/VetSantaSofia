@@ -20,6 +20,26 @@
         <!-- LEFT: Products List -->
         <div class="products-section">
 
+            <!-- ============================================ -->
+            <!-- BLOQUE DE ESTADO DE CAJA (UI SOLAMENTE)     -->
+            <!-- ============================================ -->
+            <div class="mb-3 p-3" style="background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; position: relative; z-index: 1;">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-cash-coin" style="font-size: 1.2rem; color: #6c757d;"></i>
+                        <div>
+                            <span class="text-muted" style="font-size: 0.75rem; display: block; line-height: 1;">Estado</span>
+                            <span id="estadoCajaTexto" style="font-size: 0.9rem; font-weight: 600; color: #dc3545;">
+                                <i class="bi bi-lock-fill" style="font-size: 0.85rem;"></i> Caja Cerrada
+                            </span>
+                        </div>
+                    </div>
+                    <button id="btnToggleCaja" class="btn btn-sm" style="background-color: #10b981; color: white; border: none; font-size: 0.85rem;" onclick="toggleCaja()">
+                        <i class="bi bi-unlock-fill"></i> Abrir
+                    </button>
+                </div>
+            </div>
+
             <!-- SEARCH -->
             <div class="search-bar">
                 <input type="text" class="form-control" placeholder="Buscar producto o servicio..." id="searchInput"
@@ -429,6 +449,158 @@
         </div>
     </div>
 </div>
+
+<!-- ============================================ -->
+<!-- MODAL: ABRIR CAJA (UI SIMULADA)             -->
+<!-- ============================================ -->
+<div class="vet-modal-overlay hide" id="modalAbrirCaja">
+    <div class="vet-custom-modal" style="max-width: 480px;">
+        <div class="vet-modal-content">
+            
+            <!-- Título -->
+            <div class="vet-custom-modal-title">
+                <h3><i class="bi bi-unlock-fill"></i> Apertura de Caja</h3>
+                <i class="bi bi-x" onclick="closeVetModal('modalAbrirCaja')"
+                    style="cursor:pointer;margin-left:auto;"></i>
+            </div>
+
+            <!-- Cuerpo -->
+            <div class="vet-modal-body">
+                <div class="alert alert-info d-flex align-items-center" style="border-left: 4px solid #3b82f6; margin-bottom: 20px;">
+                    <i class="bi bi-info-circle-fill me-2" style="font-size: 1.5rem;"></i>
+                    <div style="font-size: 0.9rem;">
+                        Registra el monto inicial en efectivo con el que inicia el turno de caja.
+                    </div>
+                </div>
+
+                <form id="formAbrirCaja">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-cash-stack"></i> Monto Inicial en Efectivo
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="montoInicialInput" 
+                                   placeholder="0.00" step="0.01" min="0" required>
+                        </div>
+                        <small class="text-muted">Ejemplo: 50000 para $50.000</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-chat-left-text"></i> Observaciones
+                        </label>
+                        <textarea class="form-control" id="observacionesAperturaInput" 
+                                  rows="3" placeholder="Notas o comentarios sobre la apertura (opcional)"></textarea>
+                    </div>
+                </form>
+
+                <!-- Botones -->
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="vet-btn vet-btn-grey" onclick="closeVetModal('modalAbrirCaja')">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="button" class="vet-btn vet-btn-primary" onclick="confirmarAperturaCaja()" style="background-color: #10b981; border-color: #10b981;">
+                        <i class="bi bi-check-circle-fill"></i> Confirmar Apertura
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- MODAL: CERRAR CAJA (UI SIMULADA)            -->
+<!-- ============================================ -->
+<div class="vet-modal-overlay hide" id="modalCerrarCaja">
+    <div class="vet-custom-modal" style="max-width: 550px;">
+        <div class="vet-modal-content">
+            
+            <!-- Título -->
+            <div class="vet-custom-modal-title">
+                <h3><i class="bi bi-lock-fill"></i> Cierre de Caja</h3>
+                <i class="bi bi-x" onclick="closeVetModal('modalCerrarCaja')"
+                    style="cursor:pointer;margin-left:auto;"></i>
+            </div>
+
+            <!-- Cuerpo -->
+            <div class="vet-modal-body">
+                <div class="alert alert-warning d-flex align-items-center" style="border-left: 4px solid #f59e0b; margin-bottom: 20px;">
+                    <i class="bi bi-exclamation-triangle-fill me-2" style="font-size: 1.5rem;"></i>
+                    <div style="font-size: 0.9rem;">
+                        <strong>Atención:</strong> Al cerrar la caja no se podrán realizar más ventas hasta una nueva apertura.
+                    </div>
+                </div>
+
+                <!-- Resumen del Día (DATOS FALSOS) -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-0" style="background-color: #f0fdf4; border-left: 4px solid #10b981 !important;">
+                            <div class="card-body py-2">
+                                <small class="text-muted d-block mb-1">
+                                    <i class="bi bi-cart-check"></i> Total Ventas del Día
+                                </small>
+                                <h4 class="mb-0" style="color: #10b981; font-weight: 700;">$245.600</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0" style="background-color: #fffbeb; border-left: 4px solid #f59e0b !important;">
+                            <div class="card-body py-2">
+                                <small class="text-muted d-block mb-1">
+                                    <i class="bi bi-cash-stack"></i> Total Efectivo
+                                </small>
+                                <h4 class="mb-0" style="color: #f59e0b; font-weight: 700;">$180.400</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="formCerrarCaja">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-calculator"></i> Monto Contado en Efectivo
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="montoContadoInput" 
+                                   placeholder="0.00" step="0.01" min="0" required>
+                        </div>
+                        <small class="text-muted">Ingresa el efectivo físicamente contado en caja</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-chat-left-text"></i> Observaciones de Cierre
+                        </label>
+                        <textarea class="form-control" id="observacionesCierreInput" 
+                                  rows="3" placeholder="Comentarios sobre el cierre de caja (opcional)"></textarea>
+                    </div>
+                </form>
+
+                <div class="alert alert-light border mt-3" style="background-color: #f9fafb;">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i> 
+                        <strong>Nota:</strong> Se generará automáticamente un reporte con las diferencias encontradas entre el efectivo contado y el calculado.
+                    </small>
+                </div>
+
+                <!-- Botones -->
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="vet-btn vet-btn-grey" onclick="closeVetModal('modalCerrarCaja')">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="button" class="vet-btn vet-btn-primary" onclick="confirmarCierreCaja()" style="background-color: #dc3545; border-color: #dc3545;">
+                        <i class="bi bi-lock-fill"></i> Confirmar Cierre
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -445,4 +617,133 @@
     };
 </script>
 <script src="{% static 'caja/js/funcionamiento_caja.js' %}"></script>
+
+<!-- ============================================ -->
+<!-- SCRIPT: CONTROL DE ESTADO DE CAJA (UI FAKE) -->
+<!-- ============================================ -->
+<script>
+    // Estado simulado de caja (solo visual, no persiste)
+    let cajaAbierta = false;
+
+    /**
+     * Toggle del estado de caja - Abre modal correspondiente
+     */
+    function toggleCaja() {
+        if (cajaAbierta) {
+            // Si está abierta, mostrar modal de cierre
+            openVetModal('modalCerrarCaja');
+        } else {
+            // Si está cerrada, mostrar modal de apertura
+            openVetModal('modalAbrirCaja');
+        }
+    }
+
+    /**
+     * Confirmar apertura de caja (simulado)
+     */
+    function confirmarAperturaCaja() {
+        const montoInicial = document.getElementById('montoInicialInput').value;
+        const observaciones = document.getElementById('observacionesAperturaInput').value;
+
+        // Validación básica
+        if (!montoInicial || parseFloat(montoInicial) < 0) {
+            alert('Por favor ingresa un monto inicial válido');
+            return;
+        }
+
+        // Cambiar estado visual a "abierta"
+        cajaAbierta = true;
+        actualizarEstadoVisual();
+
+        // Cerrar modal
+        closeVetModal('modalAbrirCaja');
+
+        // Limpiar formulario
+        document.getElementById('formAbrirCaja').reset();
+
+        // Notificación visual (opcional)
+        mostrarNotificacion('Caja abierta exitosamente', 'success');
+    }
+
+    /**
+     * Confirmar cierre de caja (simulado)
+     */
+    function confirmarCierreCaja() {
+        const montoContado = document.getElementById('montoContadoInput').value;
+        const observaciones = document.getElementById('observacionesCierreInput').value;
+
+        // Validación básica
+        if (!montoContado || parseFloat(montoContado) < 0) {
+            alert('Por favor ingresa el monto contado en efectivo');
+            return;
+        }
+
+        // Cambiar estado visual a "cerrada"
+        cajaAbierta = false;
+        actualizarEstadoVisual();
+
+        // Cerrar modal
+        closeVetModal('modalCerrarCaja');
+
+        // Limpiar formulario
+        document.getElementById('formCerrarCaja').reset();
+
+        // Notificación visual (opcional)
+        mostrarNotificacion('Caja cerrada exitosamente', 'danger');
+    }
+
+    /**
+     * Actualiza el estado visual del texto y botón según el estado
+     */
+    function actualizarEstadoVisual() {
+        const texto = document.getElementById('estadoCajaTexto');
+        const boton = document.getElementById('btnToggleCaja');
+
+        if (cajaAbierta) {
+            // Caja ABIERTA
+            texto.style.color = '#10b981';
+            texto.innerHTML = '<i class="bi bi-unlock-fill" style="font-size: 0.85rem;"></i> Caja Abierta';
+            
+            boton.style.backgroundColor = '#dc3545';
+            boton.innerHTML = '<i class="bi bi-lock-fill"></i> Cerrar';
+        } else {
+            // Caja CERRADA
+            texto.style.color = '#dc3545';
+            texto.innerHTML = '<i class="bi bi-lock-fill" style="font-size: 0.85rem;"></i> Caja Cerrada';
+            
+            boton.style.backgroundColor = '#10b981';
+            boton.innerHTML = '<i class="bi bi-unlock-fill"></i> Abrir';
+        }
+    }
+
+    /**
+     * Mostrar notificación temporal (opcional)
+     */
+    function mostrarNotificacion(mensaje, tipo) {
+        // Crear elemento de notificación
+        const notif = document.createElement('div');
+        notif.className = `alert alert-${tipo} position-fixed top-0 start-50 translate-middle-x mt-3`;
+        notif.style.zIndex = '9999';
+        notif.style.minWidth = '300px';
+        notif.innerHTML = `
+            <i class="bi ${tipo === 'success' ? 'bi-check-circle-fill' : 'bi-lock-fill'}"></i>
+            ${mensaje}
+        `;
+        
+        document.body.appendChild(notif);
+
+        // Auto-ocultar después de 3 segundos
+        setTimeout(() => {
+            notif.style.opacity = '0';
+            notif.style.transition = 'opacity 0.5s';
+            setTimeout(() => notif.remove(), 500);
+        }, 3000);
+    }
+
+    // Inicializar estado visual al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        actualizarEstadoVisual();
+    });
+</script>
+
 {% endblock %}
