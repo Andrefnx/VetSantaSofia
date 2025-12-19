@@ -87,6 +87,14 @@ function addToCart(name, price, tipo, id) {
         return;
     }
 
+    // Asegurar que price sea número (puede venir como string)
+    const numPrice = parseFloat(price);
+    if (isNaN(numPrice)) {
+        console.error('❌ Error: price no válido', { name, price, tipo, id });
+        alert(`❌ Error al agregar ${name}: precio no válido (${price}).`);
+        return;
+    }
+
     // Validar que id sea un número
     if (!id || isNaN(id)) {
         console.error('❌ Error: ID no válido', { name, price, tipo, id });
@@ -103,7 +111,7 @@ function addToCart(name, price, tipo, id) {
         existingItem.quantity++;
     } else {
         console.log(`✅ Agregando al carrito: ${name} (tipo=${tipo}, id=${numId})`);
-        cart.push({ name, price, quantity: 1, tipo: tipo, id: numId });
+        cart.push({ name, price: numPrice, quantity: 1, tipo: tipo, id: numId });
     }
 
     // Actualizar stock visual solo para insumos
