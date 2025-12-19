@@ -310,7 +310,7 @@
     <td>{{ paciente.nombre }}</td>
     <td>{{ paciente.get_especie_display|default:paciente.especie|capfirst }}</td>
     <td>{{ paciente.raza|default:"-" }}</td>
-    <td>{{ paciente.edad_formateada }}</td>
+    <td>{{ paciente.edad_formateada|cut:"~" }}</td>
     <td>{{ paciente.get_sexo_display|default:paciente.sexo|capfirst }}</td>
     <td>{{ paciente.propietario.nombre_completo|default:"-" }}</td>
     <td>
