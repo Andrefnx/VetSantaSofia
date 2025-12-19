@@ -135,28 +135,36 @@ def procesar_venta(request):
                         
                         if tipo == 'servicio' and item_id:
                             try:
+                                logger.info(f"    - Buscando servicio con ID {item_id}...")
                                 servicio = Servicio.objects.get(pk=item_id)
+                                logger.info(f"    - Servicio encontrado: {servicio.nombre}")
                                 # Validar que el servicio esté activo
                                 if not servicio.activo:
+                                    logger.error(f"    - ❌ Servicio inactivo: {servicio.nombre}")
                                     return JsonResponse({
                                         'success': False,
                                         'error': f'El servicio "{servicio.nombre}" no está disponible para la venta (inactivo).'
                                     }, status=400)
                             except Servicio.DoesNotExist:
+                                logger.error(f"    - ❌ Servicio no encontrado con ID {item_id}")
                                 return JsonResponse({
                                     'success': False,
                                     'error': f'Servicio con ID {item_id} no encontrado.'
                                 }, status=400)
                         elif tipo == 'insumo' and item_id:
                             try:
+                                logger.info(f"    - Buscando insumo con ID {item_id}...")
                                 insumo = Insumo.objects.get(pk=item_id)
+                                logger.info(f"    - Insumo encontrado: {insumo.medicamento}")
                                 # Validar que el insumo no esté archivado
                                 if insumo.archivado:
+                                    logger.error(f"    - ❌ Insumo archivado: {insumo.medicamento}")
                                     return JsonResponse({
                                         'success': False,
                                         'error': f'El producto "{insumo.medicamento}" no está disponible para la venta (archivado).'
                                     }, status=400)
                             except Insumo.DoesNotExist:
+                                logger.error(f"    - ❌ Insumo no encontrado con ID {item_id}")
                                 return JsonResponse({
                                     'success': False,
                                     'error': f'Producto con ID {item_id} no encontrado.'
@@ -164,10 +172,13 @@ def procesar_venta(request):
                         
                         # Validar que al menos uno esté presente
                         if not servicio and not insumo:
+                            logger.error(f"    - ❌ No se pudo identificar el item: {nombre} (tipo={tipo}, id={item_id})")
                             return JsonResponse({
                                 'success': False,
                                 'error': f'No se pudo identificar el item "{nombre}". Verifica que el producto o servicio exista.'
                             }, status=400)
+                        
+                        logger.info(f"    - ✅ Item validado correctamente")
                         
                         # Crear detalle de venta
                         DetalleVenta.objects.create(

@@ -348,6 +348,15 @@ async function procesarVentaDirecto() {
         } else {
             // ⭐ VENTA LIBRE DIRECTA - crear nueva venta
             console.log('🟢 Procesando venta libre directa');
+            console.log('📦 Datos de venta:', {
+                items: cart.map(item => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price,
+                    tipo: item.tipo,
+                    id: item.id
+                }))
+            });
             
             const ventaData = {
                 items: cart.map(item => ({
@@ -372,7 +381,9 @@ async function procesarVentaDirecto() {
                 body: JSON.stringify(ventaData)
             });
             
+            console.log('📡 Status de respuesta:', response.status);
             result = await response.json();
+            console.log('📋 Respuesta JSON:', result);
         }
 
         if (result.success) {
@@ -397,7 +408,9 @@ async function procesarVentaDirecto() {
             // Actualizar contador de pagos pendientes
             await actualizarBadgePagosPendientes();
         } else {
-            alert(`❌ Error al procesar la venta: ${result.error || 'Error desconocido'}`);
+            console.error('❌ Error en respuesta:', result);
+            const errorMsg = result.error || result.detail || 'Error desconocido';
+            alert(`❌ Error al procesar la venta:\n\n${errorMsg}`);
         }
 
     } catch (error) {
