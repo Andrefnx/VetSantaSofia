@@ -39,14 +39,27 @@ def procesar_venta(request):
     Procesa una venta desde la caja registradora
     Crea la venta, agrega detalles, descuenta stock y marca como pagada
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     if request.method == 'POST':
         try:
+            logger.info("=" * 80)
+            logger.info("🛒 PROCESAR VENTA - Inicio")
+            logger.info("=" * 80)
+            
             data = json.loads(request.body)
             items = data.get('items', [])
             metodo_pago = data.get('metodo_pago', 'efectivo')
             cliente = data.get('cliente', 'Cliente General')
             venta_en_proceso_id = data.get('venta_en_proceso_id')
             detalles_pago = data.get('detalles_pago', {})  # Dict con desglose de pagos mixtos
+            
+            logger.info(f"📊 Datos recibidos:")
+            logger.info(f"   - Items: {len(items)}")
+            logger.info(f"   - Método pago: {metodo_pago}")
+            logger.info(f"   - Cliente: {cliente}")
+            logger.info(f"   - Venta en proceso ID: {venta_en_proceso_id}")
             
             from .models import Venta, DetalleVenta
             from .services import obtener_sesion_activa, procesar_pago
@@ -91,12 +104,22 @@ def procesar_venta(request):
                     )
                     
                     # Crear detalles de venta
-                    for item in items:
+                    logger.info(f"\n📦 Procesando {len(items)} items:")
+                    for idx, item in enumerate(items, 1):
+                        logger.info(f"\n  Item {idx}:")
+                        logger.info(f"    - Datos raw: {item}")
+                        
                         nombre = item['name']
                         cantidad = Decimal(str(item['quantity']))
                         precio_unitario = Decimal(str(item['price']))
                         tipo_raw = item.get('tipo', 'insumo')
                         item_id = item.get('id')
+                        
+                        logger.info(f"    - Nombre: {nombre}")
+                        logger.info(f"    - Cantidad: {cantidad}")
+                        logger.info(f"    - Precio: {precio_unitario}")
+                        logger.info(f"    - Tipo raw: {tipo_raw}")
+                        logger.info(f"    - ID: {item_id}")
                         
                         # Normalizar tipo (puede venir como string o número)
                         if tipo_raw == 0 or tipo_raw == 'insumo':
@@ -120,7 +143,10 @@ def procesar_venta(request):
                                         'error': f'El servicio "{servicio.nombre}" no está disponible para la venta (inactivo).'
                                     }, status=400)
                             except Servicio.DoesNotExist:
-                                pass
+                                return JsonResponse({
+                                    'success': False,
+                                    'error': f'Servicio con ID {item_id} no encontrado.'
+                                }, status=400)
                         elif tipo == 'insumo' and item_id:
                             try:
                                 insumo = Insumo.objects.get(pk=item_id)
@@ -131,7 +157,17 @@ def procesar_venta(request):
                                         'error': f'El producto "{insumo.medicamento}" no está disponible para la venta (archivado).'
                                     }, status=400)
                             except Insumo.DoesNotExist:
-                                pass
+                                return JsonResponse({
+                                    'success': False,
+                                    'error': f'Producto con ID {item_id} no encontrado.'
+                                }, status=400)
+                        
+                        # Validar que al menos uno esté presente
+                        if not servicio and not insumo:
+                            return JsonResponse({
+                                'success': False,
+                                'error': f'No se pudo identificar el item "{nombre}". Verifica que el producto o servicio exista.'
+                            }, status=400)
                         
                         # Crear detalle de venta
                         DetalleVenta.objects.create(
@@ -163,9 +199,21 @@ def procesar_venta(request):
                 })
                 
         except ValidationError as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"❌ ValidationError en procesar_venta: {str(e)}")
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+            import logging
+            import traceback
+            logger = logging.getLogger(__name__)
+            logger.error(f"❌ Exception en procesar_venta: {str(e)}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            return JsonResponse({
+                'success': False, 
+                'error': f'Error interno del servidor: {str(e)}',
+                'detail': str(type(e).__name__)
+            }, status=500)
     
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
