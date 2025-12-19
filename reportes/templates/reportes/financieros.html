@@ -46,9 +46,10 @@
                                 <label class="form-label">Estado de Venta</label>
                                 <select class="form-select" name="estado">
                                     <option value="">Todos</option>
-                                    <option value="pagado" {% if request.GET.estado == "pagado" %}selected{% endif %}>Pagada</option>
                                     <option value="pendiente" {% if request.GET.estado == "pendiente" %}selected{% endif %}>Pendiente</option>
-                                    <option value="cancelado" {% if request.GET.estado == "cancelado" %}selected{% endif %}>Cancelada</option>
+                                    <option value="en_proceso" {% if request.GET.estado == "en_proceso" %}selected{% endif %}>En Proceso</option>
+                                    <option value="pagado" {% if request.GET.estado == "pagado" %}selected{% endif %}>Pagado</option>
+                                    <option value="cancelado" {% if request.GET.estado == "cancelado" %}selected{% endif %}>Cancelado</option>
                                 </select>
                             </div>
                             
@@ -60,6 +61,7 @@
                                     <option value="efectivo" {% if request.GET.metodo_pago == "efectivo" %}selected{% endif %}>Efectivo</option>
                                     <option value="tarjeta" {% if request.GET.metodo_pago == "tarjeta" %}selected{% endif %}>Tarjeta</option>
                                     <option value="transferencia" {% if request.GET.metodo_pago == "transferencia" %}selected{% endif %}>Transferencia</option>
+                                    <option value="cheque" {% if request.GET.metodo_pago == "cheque" %}selected{% endif %}>Cheque</option>
                                     <option value="mixto" {% if request.GET.metodo_pago == "mixto" %}selected{% endif %}>Mixto</option>
                                 </select>
                             </div>
@@ -175,17 +177,6 @@
                                                         </td>
                                                         <td>
                                                             {% if venta.metodo_pago %}
-                                                                <span style="font-size: 0.9rem;">
-                                                                    {% if venta.metodo_pago == "efectivo" %}
-                                                                        💵
-                                                                    {% elif venta.metodo_pago == "tarjeta" %}
-                                                                        💳
-                                                                    {% elif venta.metodo_pago == "transferencia" %}
-                                                                        🏦
-                                                                    {% elif venta.metodo_pago == "mixto" %}
-                                                                        🔄
-                                                                    {% endif %}
-                                                                </span>
                                                                 {{ venta.get_metodo_pago_display|capfirst }}
                                                             {% else %}
                                                                 <em class="text-muted">-</em>
@@ -197,7 +188,7 @@
                                                             {% elif venta.tipo_origen == "hospitalizacion" %}
                                                                 <span style="color: #dc3545; font-size: 0.9rem;">Hosp.</span>
                                                             {% else %}
-                                                                <span style="color: #6c757d; font-size: 0.9rem;">Libre</span>
+                                                                <span style="color: #6c757d; font-size: 0.9rem;">Venta Libre</span>
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-end"><strong>${{ venta.total|floatformat:2 }}</strong></td>

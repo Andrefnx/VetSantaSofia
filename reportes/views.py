@@ -62,17 +62,18 @@ def reporte_financieros(request):
     total_periodo = Decimal('0.00')
     
     for sesion in sesiones:
-        # Obtener ventas de la sesión
-        ventas = sesion.ventas.filter(estado='pagado')  # Solo ventas pagadas
+        # Obtener todas las ventas pagadas de la sesión
+        ventas = sesion.ventas.filter(estado='pagado')
         
-        # Aplicar filtros a las ventas
+        # Aplicar filtros a las ventas si se especificaron
         if estado_venta:
-            ventas = ventas.filter(estado=estado_venta)
+            # Si el usuario filtra por estado, mostrar solo ese estado
+            ventas = sesion.ventas.filter(estado=estado_venta)
         
         if metodo_pago:
             ventas = ventas.filter(metodo_pago=metodo_pago)
         
-        # Filtrar por fecha si se especificó
+        # Filtrar por fecha de pago si se especificó
         if fecha_desde:
             fecha_desde_dt = datetime.strptime(fecha_desde, '%Y-%m-%d')
             ventas = ventas.filter(fecha_pago__date__gte=fecha_desde_dt.date())
@@ -82,7 +83,7 @@ def reporte_financieros(request):
             fecha_hasta_dt = fecha_hasta_dt + timedelta(days=1)
             ventas = ventas.filter(fecha_pago__date__lt=fecha_hasta_dt.date())
         
-        # Solo incluir sesiones que tengan ventas
+        # Solo incluir sesiones que tengan ventas después de aplicar filtros
         if ventas.exists():
             total_sesion = ventas.aggregate(Sum('total'))['total__sum'] or Decimal('0.00')
             total_periodo += total_sesion
