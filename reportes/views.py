@@ -39,7 +39,6 @@ def reporte_financieros(request):
     # Obtener filtros
     fecha_desde = validar_fecha(request.GET.get('fecha_desde', ''))
     fecha_hasta = validar_fecha(request.GET.get('fecha_hasta', ''))
-    estado_venta = request.GET.get('estado', '').strip()
     metodo_pago = request.GET.get('metodo_pago', '').strip()
     
     # Query de sesiones de caja
@@ -66,10 +65,6 @@ def reporte_financieros(request):
         ventas = sesion.ventas.filter(estado='pagado')
         
         # Aplicar filtros a las ventas si se especificaron
-        if estado_venta:
-            # Si el usuario filtra por estado, mostrar solo ese estado
-            ventas = sesion.ventas.filter(estado=estado_venta)
-        
         if metodo_pago:
             ventas = ventas.filter(metodo_pago=metodo_pago)
         
