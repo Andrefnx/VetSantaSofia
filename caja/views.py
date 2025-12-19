@@ -46,9 +46,19 @@ def procesar_venta(request):
             metodo_pago = data.get('metodo_pago', 'efectivo')
             cliente = data.get('cliente', 'Cliente General')
             venta_en_proceso_id = data.get('venta_en_proceso_id')
+            detalles_pago = data.get('detalles_pago', {})  # Dict con desglose de pagos mixtos
             
             from .models import Venta, DetalleVenta
+            from .services import obtener_sesion_activa
             from django.utils import timezone
+            
+            # VALIDACIÓN CRÍTICA: Verificar que hay sesión de caja abierta
+            sesion_activa = obtener_sesion_activa()
+            if not sesion_activa:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'No hay sesión de caja abierta. Por favor, solicita a un administrador que abra la caja.'
+                }, status=400)
             
             with transaction.atomic():
                 # Si hay una venta en proceso, usarla. Si no, crear una nueva
@@ -59,16 +69,26 @@ def procesar_venta(request):
                     venta.usuario_cobro = request.user
                     venta.fecha_pago = timezone.now()
                     venta.estado = 'pagado'
+                    venta.sesion = sesion_activa  # Asignar sesión activa
+                    # Guardar desglose de pago mixto en observaciones
+                    if detalles_pago and metodo_pago == 'mixto':
+                        venta.observaciones = f"Desglose pago: {json.dumps(detalles_pago)}"
                     venta.save()
                 else:
-                    # Crear nueva venta
+                    # Crear nueva venta y guardar desglose si es mixto
+                    observaciones_venta = None
+                    if detalles_pago and metodo_pago == 'mixto':
+                        observaciones_venta = f"Desglose pago: {json.dumps(detalles_pago)}"
+                    
                     venta = Venta.objects.create(
                         tipo_origen='venta_libre',
                         usuario_creacion=request.user,
                         usuario_cobro=request.user,
                         metodo_pago=metodo_pago,
                         estado='pagado',
-                        fecha_pago=timezone.now()
+                        fecha_pago=timezone.now(),
+                        sesion=sesion_activa,  # Asignar sesión activa
+                        observaciones=observaciones_venta
                     )
                     
                     # Crear detalles de venta
@@ -128,6 +148,10 @@ def procesar_venta(request):
                     venta.subtotal_insumos = subtotal_insumos
                     venta.total = subtotal_servicios + subtotal_insumos
                     venta.save()
+                
+                # CRÍTICO: Recalcular totales para asegurar consistencia
+                # (especialmente importante para ventas que vienen de cobros pendientes)
+                venta.calcular_totales()
                 
                 return JsonResponse({
                     'success': True,

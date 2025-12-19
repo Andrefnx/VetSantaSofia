@@ -580,9 +580,18 @@ def procesar_pago(venta, usuario, metodo_pago, sesion_caja=None):
         )
     
     # ==========================================================================
-    # VALIDACIÓN 2: Sesión de caja
+    # VALIDACIÓN 2: Sesión de caja (CRÍTICA)
     # ==========================================================================
-    if sesion_caja and sesion_caja.esta_cerrada:
+    # Verificar que exista sesión activa
+    if not sesion_caja:
+        logger.error(f"❌ No hay sesión de caja activa")
+        raise ValidationError(
+            "No hay sesión de caja abierta. "
+            "Por favor, solicita a un administrador que abra la caja antes de procesar pagos."
+        )
+    
+    # Verificar que la sesión no esté cerrada
+    if sesion_caja.esta_cerrada:
         logger.error(f"❌ Sesión de caja cerrada: sesion_id={sesion_caja.id}")
         raise ValidationError("La sesión de caja está cerrada")
     

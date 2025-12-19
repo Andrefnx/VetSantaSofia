@@ -262,6 +262,74 @@ def api_cobros_pendientes(request):
 
 
 @login_required
+@require_http_methods(["GET"])
+def api_sesion_activa(request):
+    """
+    API: Retorna el estado de la sesión de caja activa (solo lectura)
+    
+    Respuesta:
+    - Si hay sesión activa: JSON con datos de la sesión
+    - Si no hay sesión: {"hay_sesion": false}
+    """
+    sesion = obtener_sesion_activa()
+    
+    if sesion:
+        # Obtener nombre completo del usuario o username como fallback
+        usuario_apertura = sesion.usuario_apertura
+        nombre_usuario = (
+            usuario_apertura.get_full_name() 
+            if hasattr(usuario_apertura, 'get_full_name') and usuario_apertura.get_full_name()
+            else usuario_apertura.username
+        )
+        
+        # Calcular totales para el modal de cierre
+        from django.db.models import Sum
+        import json
+        ventas_pagadas = sesion.ventas.filter(estado='pagado')
+        
+        # Total de todas las ventas pagadas
+        total_ventas_dia = ventas_pagadas.aggregate(total=Sum('total'))['total'] or Decimal('0.00')
+        
+        # Total de efectivo: incluir ventas 100% efectivo + parte efectivo de mixtos
+        total_efectivo = ventas_pagadas.filter(metodo_pago='efectivo').aggregate(total=Sum('total'))['total'] or Decimal('0.00')
+        
+        # Sumar efectivo de pagos mixtos (parseando observaciones)
+        ventas_mixtas = ventas_pagadas.filter(metodo_pago='mixto')
+        for venta in ventas_mixtas:
+            if venta.observaciones and 'Desglose pago:' in venta.observaciones:
+                try:
+                    # Extraer JSON del formato "Desglose pago: {...}"
+                    json_str = venta.observaciones.replace('Desglose pago: ', '')
+                    desglose = json.loads(json_str)
+                    # Sumar monto de efectivo
+                    monto_efectivo = Decimal(str(desglose.get('efectivo', 0)))
+                    total_efectivo += monto_efectivo
+                except (json.JSONDecodeError, ValueError, KeyError):
+                    pass  # Si no se puede parsear, ignorar
+        
+        return JsonResponse({
+            'hay_sesion': True,
+            'sesion': {
+                'id': sesion.id,
+                'estado': 'abierta',
+                'fecha_apertura': sesion.fecha_apertura.isoformat(),
+                'usuario_apertura': {
+                    'id': usuario_apertura.id,
+                    'username': usuario_apertura.username,
+                    'nombre_completo': nombre_usuario,
+                },
+                'total_vendido': float(sesion.calcular_total_vendido()),
+                'total_ventas_dia': float(total_ventas_dia),
+                'total_efectivo': float(total_efectivo),
+            }
+        })
+    else:
+        return JsonResponse({
+            'hay_sesion': False
+        })
+
+
+@login_required
 @user_passes_test(es_admin_o_recepcion)
 @require_http_methods(["POST"])
 def marcar_cobro_en_proceso(request, venta_id):
@@ -788,7 +856,13 @@ def confirmar_pago_venta(request, venta_id):
         data = json.loads(request.body)
         
         metodo_pago = data.get('metodo_pago', 'efectivo')
+        desglose_pago = data.get('desglose_pago')  # JSON string del desglose si es mixto
         sesion_activa = obtener_sesion_activa()
+        
+        # Guardar desglose si es pago mixto
+        if desglose_pago and metodo_pago == 'mixto':
+            venta.observaciones = f"Desglose pago: {desglose_pago}"
+            venta.save()
         
         # Procesar pago (descuenta stock automáticamente)
         procesar_pago(

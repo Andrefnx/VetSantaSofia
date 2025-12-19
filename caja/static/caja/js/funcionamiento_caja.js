@@ -262,7 +262,9 @@ async function procesarVentaDirecto() {
                     'X-CSRFToken': getCookie('csrftoken')
                 },
                 body: JSON.stringify({
-                    metodo_pago: metodoPagoPrincipal
+                    metodo_pago: metodoPagoPrincipal,
+                    desglose_pago: metodoPagoPrincipal === 'mixto' ? JSON.stringify(metodoPagoMap) : null,
+                    detalles_pago: metodoPagoMap  // Enviar también como objeto
                 })
             });
             

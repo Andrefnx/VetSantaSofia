@@ -67,7 +67,7 @@
                 <!--          SERVICIOS           -->
                 <!-- ============================ -->
                 {% for servicio in servicios %}
-                <div class="product-list-item" data-category="servicios"
+                <div class="product-list-item caja-controlable" data-category="servicios"
                     onclick="addToCart('{{ servicio.nombre|escapejs }}', {{ servicio.precio }}, 'servicio', {{ servicio.id }})">
 
                     <div class="icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
@@ -90,7 +90,7 @@
 <!--          PRODUCTOS           -->
 <!-- ============================ -->
 {% for producto in productos %}
-<div class="product-list-item" data-category="productos"
+<div class="product-list-item caja-controlable" data-category="productos"
     onclick="addToCart('{{ producto.medicamento|escapejs }}', {{ producto.precio_venta }}, 'insumo', {{ producto.idInventario }})">
 
     <div class="icon">
@@ -113,23 +113,23 @@
         </div>
 
         <!-- RIGHT: Shopping Cart -->
-        <div class="cart-section">
+        <div class="cart-section" id="cartSection">
             <!-- Cart Header -->
             <div class="cart-header" style="overflow: visible;">
                 <h5><i class="bi bi-bag-check-fill"></i> Carrito de Venta</h5>
 
                 <div class="cart-header-inner" style="overflow: visible;">
                     <div class="cart-header-actions" style="overflow: visible;">
-                        <button class="save-draft-btn" onclick="abrirModalPagosPendientes()" style="margin-right: 8px; position: relative; overflow: visible !important;">
+                        <button id="btnPagosPendientes" class="save-draft-btn" onclick="abrirModalPagosPendientes()" style="margin-right: 8px; position: relative; overflow: visible !important;">
                             <i class="fas fa-file-invoice-dollar"></i>
                             <span>Pagos Pendientes</span>
                             <span id="badgePagosPendientes" style="display: block; position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; min-width: 22px; height: 22px; padding: 0 6px; font-size: 12px; font-weight: bold; line-height: 22px; text-align: center; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.5); border: 2px solid white; z-index: 1000;">0</span>
                         </button>
-                        <button class="save-draft-btn" onclick="guardarBorrador()">
+                        <button id="btnBorrador" class="save-draft-btn" onclick="guardarBorrador()">
                             <i class="fas fa-save"></i>
                             <span>Borrador</span>
                         </button>
-                        <button class="clear-cart-btn" onclick="clearCart()" title="Vaciar carrito">
+                        <button id="btnVaciarCarrito" class="clear-cart-btn" onclick="clearCart()" title="Vaciar carrito">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -179,7 +179,7 @@
                                         <div class="mb-3">
                                             <label class="form-label"
                                                 style="font-size: 0.85rem; font-weight: 600; color: var(--text-dark);">Cliente</label>
-                                            <input type="text" class="form-control form-control-sm"
+                                            <input type="text" class="form-control form-control-sm caja-input-controlable"
                                                 placeholder="Buscar o crear cliente..." id="clienteInput">
                                         </div>
 
@@ -188,7 +188,7 @@
                                                 style="font-size: 0.85rem; font-weight: 600; color: var(--text-dark); margin-bottom: 8px;">Métodos
                                                 de Pago</label>
 
-                                            <div class="payment-section">
+                                            <div class="payment-section" id="paymentSection">
                                                 <div class="payment-row">
                                                     <button class="payment-method-compact" data-method="efectivo"
                                                         onclick="togglePaymentMethod(this, 'efectivo')">
@@ -290,7 +290,7 @@
 
                             <!-- Action Buttons - Fijos en la parte inferior -->
                             <div class="cart-actions">
-                                <button class="btn btn-primary btn-sm" onclick="procesarVentaDirecto()">
+                                <button id="btnConfirmarVenta" class="btn btn-primary btn-sm" onclick="procesarVentaDirecto()">
                                     <i class="fas fa-check"></i> Confirmar
                                 </button>
                             </div>
@@ -541,7 +541,7 @@
                                 <small class="text-muted d-block mb-1">
                                     <i class="bi bi-cart-check"></i> Total Ventas del Día
                                 </small>
-                                <h4 class="mb-0" style="color: #10b981; font-weight: 700;">$245.600</h4>
+                                <h4 class="mb-0" id="totalVentasDia" style="color: #10b981; font-weight: 700;">$0</h4>
                             </div>
                         </div>
                     </div>
@@ -551,7 +551,7 @@
                                 <small class="text-muted d-block mb-1">
                                     <i class="bi bi-cash-stack"></i> Total Efectivo
                                 </small>
-                                <h4 class="mb-0" style="color: #f59e0b; font-weight: 700;">$180.400</h4>
+                                <h4 class="mb-0" id="totalEfectivo" style="color: #f59e0b; font-weight: 700;">$0</h4>
                             </div>
                         </div>
                     </div>
@@ -619,18 +619,69 @@
 <script src="{% static 'caja/js/funcionamiento_caja.js' %}"></script>
 
 <!-- ============================================ -->
-<!-- SCRIPT: CONTROL DE ESTADO DE CAJA (UI FAKE) -->
+<!-- SCRIPT: CONTROL DE ESTADO DE CAJA (REAL)    -->
 <!-- ============================================ -->
 <script>
-    // Estado simulado de caja (solo visual, no persiste)
+    // Estado real de caja (consultado desde backend)
     let cajaAbierta = false;
+    
+    // Datos completos de la sesión activa (almacenados globalmente)
+    window.sesionCajaActiva = null;
+
+    /**
+     * Consulta el estado real de la sesión de caja desde el backend
+     */
+    async function consultarEstadoCaja() {
+        const texto = document.getElementById('estadoCajaTexto');
+        
+        // Mostrar loading
+        if (texto) {
+            texto.style.color = '#6b7280';
+            texto.innerHTML = '<i class="bi bi-hourglass-split" style="font-size: 0.85rem;"></i> Consultando estado...';
+        }
+
+        try {
+            const response = await fetch('/caja/api/sesion-activa/');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            // Guardar datos de sesión en variable global
+            window.sesionCajaActiva = data.hay_sesion ? data.sesion : null;
+            cajaAbierta = data.hay_sesion;
+            
+            // Actualizar UI con datos reales
+            actualizarEstadoVisual(data);
+            
+        } catch (error) {
+            console.warn('⚠️ Error al consultar estado de caja:', error);
+            
+            // Mostrar error en UI sin romper la experiencia
+            if (texto) {
+                texto.style.color = '#f59e0b';
+                texto.innerHTML = '<i class="bi bi-exclamation-triangle-fill" style="font-size: 0.85rem;"></i> Estado no disponible';
+            }
+            
+            // Resetear estado
+            window.sesionCajaActiva = null;
+            cajaAbierta = false;
+            
+            // Aplicar bloqueo por seguridad (sin sesión = bloqueado)
+            actualizarBloqueoCaja();
+        }
+    }
 
     /**
      * Toggle del estado de caja - Abre modal correspondiente
      */
-    function toggleCaja() {
-        if (cajaAbierta) {
-            // Si está abierta, mostrar modal de cierre
+    async function toggleCaja() {
+        if (cajaAbierta && window.sesionCajaActiva) {
+            // Si está abierta, refrescar datos desde backend antes de mostrar modal
+            await consultarEstadoCaja();
+            actualizarDatosModalCierre();
             openVetModal('modalCerrarCaja');
         } else {
             // Si está cerrada, mostrar modal de apertura
@@ -639,9 +690,33 @@
     }
 
     /**
-     * Confirmar apertura de caja (simulado)
+     * Actualizar datos del modal de cierre con información real del backend
      */
-    function confirmarAperturaCaja() {
+    function actualizarDatosModalCierre() {
+        if (!window.sesionCajaActiva) return;
+        
+        const totalVentas = window.sesionCajaActiva.total_ventas_dia || 0;
+        const totalEfectivo = window.sesionCajaActiva.total_efectivo || 0;
+        
+        // Formatear y actualizar los valores
+        document.getElementById('totalVentasDia').textContent = formatearMoneda(totalVentas);
+        document.getElementById('totalEfectivo').textContent = formatearMoneda(totalEfectivo);
+    }
+
+    /**
+     * Formatear número como moneda
+     */
+    function formatearMoneda(valor) {
+        return '$' + parseFloat(valor).toLocaleString('es-CL', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+    }
+
+    /**
+     * Confirmar apertura de caja - Conectado con backend real
+     */
+    async function confirmarAperturaCaja() {
         const montoInicial = document.getElementById('montoInicialInput').value;
         const observaciones = document.getElementById('observacionesAperturaInput').value;
 
@@ -651,24 +726,44 @@
             return;
         }
 
-        // Cambiar estado visual a "abierta"
-        cajaAbierta = true;
-        actualizarEstadoVisual();
+        try {
+            // Llamar al endpoint de apertura
+            const response = await fetch('/caja/abrir/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: new URLSearchParams({
+                    'monto_inicial': montoInicial,
+                    'observaciones': observaciones
+                })
+            });
 
-        // Cerrar modal
-        closeVetModal('modalAbrirCaja');
+            const data = await response.json();
 
-        // Limpiar formulario
-        document.getElementById('formAbrirCaja').reset();
-
-        // Notificación visual (opcional)
-        mostrarNotificacion('Caja abierta exitosamente', 'success');
+            if (data.success) {
+                // Cerrar modal
+                closeVetModal('modalAbrirCaja');
+                
+                // Limpiar formulario
+                document.getElementById('formAbrirCaja').reset();
+                
+                // Refrescar página para habilitar todos los controles
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error al abrir caja:', error);
+            alert('Error al conectar con el servidor');
+        }
     }
 
     /**
-     * Confirmar cierre de caja (simulado)
+     * Confirmar cierre de caja - Conectado con backend real
      */
-    function confirmarCierreCaja() {
+    async function confirmarCierreCaja() {
         const montoContado = document.getElementById('montoContadoInput').value;
         const observaciones = document.getElementById('observacionesCierreInput').value;
 
@@ -678,41 +773,271 @@
             return;
         }
 
-        // Cambiar estado visual a "cerrada"
-        cajaAbierta = false;
-        actualizarEstadoVisual();
+        if (!window.sesionCajaActiva || !window.sesionCajaActiva.id) {
+            alert('No se encontró la sesión activa');
+            return;
+        }
 
-        // Cerrar modal
-        closeVetModal('modalCerrarCaja');
+        try {
+            // Llamar al endpoint de cierre
+            const response = await fetch(`/caja/cerrar/${window.sesionCajaActiva.id}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: new URLSearchParams({
+                    'monto_contado': montoContado,
+                    'observaciones': observaciones
+                })
+            });
 
-        // Limpiar formulario
-        document.getElementById('formCerrarCaja').reset();
+            const data = await response.json();
 
-        // Notificación visual (opcional)
-        mostrarNotificacion('Caja cerrada exitosamente', 'danger');
+            if (data.success) {
+                // Cerrar modal
+                closeVetModal('modalCerrarCaja');
+                
+                // Limpiar formulario
+                document.getElementById('formCerrarCaja').reset();
+                
+                // Actualizar estado desde backend
+                await consultarEstadoCaja();
+                
+                // Mostrar info de diferencia si existe
+                if (data.diferencia && parseFloat(data.diferencia) !== 0) {
+                    mostrarNotificacion(
+                        `Caja cerrada. Diferencia: $${data.diferencia}`,
+                        parseFloat(data.diferencia) > 0 ? 'warning' : 'danger'
+                    );
+                } else {
+                    mostrarNotificacion('Caja cerrada sin diferencias', 'success');
+                }
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error al cerrar caja:', error);
+            alert('Error al conectar con el servidor');
+        }
     }
 
     /**
-     * Actualiza el estado visual del texto y botón según el estado
+     * Obtener cookie CSRF para peticiones POST
      */
-    function actualizarEstadoVisual() {
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    /**
+     * Actualiza el estado visual del texto y botón según el estado REAL
+     * @param {Object} data - Respuesta del API con datos de sesión
+     */
+    function actualizarEstadoVisual(data = null) {
         const texto = document.getElementById('estadoCajaTexto');
         const boton = document.getElementById('btnToggleCaja');
 
-        if (cajaAbierta) {
-            // Caja ABIERTA
-            texto.style.color = '#10b981';
-            texto.innerHTML = '<i class="bi bi-unlock-fill" style="font-size: 0.85rem;"></i> Caja Abierta';
+        if (!texto || !boton) return;
+
+        if (cajaAbierta && data && data.sesion) {
+            // ✅ CAJA ABIERTA (datos reales)
+            const sesion = data.sesion;
+            const nombreUsuario = sesion.usuario_apertura.nombre_completo || sesion.usuario_apertura.username;
             
+            // Formatear hora de apertura (HH:MM)
+            const fechaApertura = new Date(sesion.fecha_apertura);
+            const horaApertura = fechaApertura.toLocaleTimeString('es-CL', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            // Actualizar texto con información real (formato mejorado)
+            texto.style.color = '#10b981';
+            texto.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <div>
+                        <i class="bi bi-unlock-fill" style="font-size: 0.85rem;"></i> 
+                        <strong>Caja Abierta</strong>
+                    </div>
+                    <div style="font-size: 0.75rem; opacity: 0.9;">
+                        ${nombreUsuario} • ${horaApertura}
+                    </div>
+                </div>
+            `;
+            
+            // Botón de cerrar (habilitado para admin/recepción)
             boton.style.backgroundColor = '#dc3545';
+            boton.style.opacity = '1';
+            boton.style.cursor = 'pointer';
             boton.innerHTML = '<i class="bi bi-lock-fill"></i> Cerrar';
+            boton.disabled = false;
+            
         } else {
-            // Caja CERRADA
+            // 🔒 CAJA CERRADA
             texto.style.color = '#dc3545';
             texto.innerHTML = '<i class="bi bi-lock-fill" style="font-size: 0.85rem;"></i> Caja Cerrada';
             
+            // Botón de abrir (habilitado para admin/recepción)
             boton.style.backgroundColor = '#10b981';
+            boton.style.opacity = '1';
+            boton.style.cursor = 'pointer';
             boton.innerHTML = '<i class="bi bi-unlock-fill"></i> Abrir';
+            boton.disabled = false;
+        }
+
+        // Actualizar bloqueo de UI usando estado real
+        actualizarBloqueoCaja();
+    }
+
+    /**
+     * BLOQUEO REAL DE CAJA - Usa el estado real de window.sesionCajaActiva
+     * Controla habilitación/deshabilitación de elementos según sesión activa
+     */
+    function actualizarBloqueoCaja() {
+        // ===== ELEMENTOS A CONTROLAR =====
+        
+        // 1. Items de productos y servicios (botones de agregar)
+        const itemsProductos = document.querySelectorAll('.product-list-item.caja-controlable');
+        
+        // 2. Botón confirmar venta
+        const btnConfirmar = document.getElementById('btnConfirmarVenta');
+        
+        // 3. Input de cliente
+        const inputCliente = document.getElementById('clienteInput');
+        
+        // 4. Sección de métodos de pago
+        const paymentSection = document.getElementById('paymentSection');
+        const paymentButtons = paymentSection ? paymentSection.querySelectorAll('.payment-method-compact') : [];
+        const paymentInputs = paymentSection ? paymentSection.querySelectorAll('.payment-amount-input') : [];
+        
+        // 5. Botones del carrito (Pagos Pendientes, Borrador, Vaciar)
+        const btnPagosPendientes = document.getElementById('btnPagosPendientes');
+        const btnBorrador = document.getElementById('btnBorrador');
+        const btnVaciarCarrito = document.getElementById('btnVaciarCarrito');
+        
+        // 6. Sección completa del carrito
+        const cartSection = document.getElementById('cartSection');
+        
+        // ===== VERIFICAR ESTADO REAL =====
+        const haySesionActiva = window.sesionCajaActiva !== null;
+        
+        // ===== APLICAR ESTADO =====
+        
+        if (haySesionActiva) {
+            // ✅ CAJA ABIERTA: Habilitar todo
+            
+            // Habilitar items de productos
+            itemsProductos.forEach(item => {
+                item.style.opacity = '1';
+                item.style.pointerEvents = 'auto';
+                item.style.cursor = 'pointer';
+            });
+            
+            // Habilitar botón confirmar
+            if (btnConfirmar) {
+                btnConfirmar.disabled = false;
+                btnConfirmar.style.opacity = '1';
+                btnConfirmar.style.cursor = 'pointer';
+            }
+            
+            // Habilitar input cliente
+            if (inputCliente) {
+                inputCliente.disabled = false;
+            }
+            
+            // Habilitar métodos de pago (los botones se controlan por lógica de negocio)
+            // Los inputs se habilitan cuando se selecciona el método
+            
+            // Habilitar botones del carrito
+            if (btnPagosPendientes) {
+                btnPagosPendientes.disabled = false;
+                btnPagosPendientes.style.opacity = '1';
+                btnPagosPendientes.style.cursor = 'pointer';
+            }
+            if (btnBorrador) {
+                btnBorrador.disabled = false;
+                btnBorrador.style.opacity = '1';
+                btnBorrador.style.cursor = 'pointer';
+            }
+            if (btnVaciarCarrito) {
+                btnVaciarCarrito.disabled = false;
+                btnVaciarCarrito.style.opacity = '1';
+                btnVaciarCarrito.style.cursor = 'pointer';
+            }
+            
+            // Habilitar visualmente el carrito completo
+            if (cartSection) {
+                cartSection.style.opacity = '1';
+                cartSection.style.pointerEvents = 'auto';
+            }
+            
+        } else {
+            // 🔒 CAJA CERRADA: Bloquear operaciones de venta
+            
+            // Deshabilitar items de productos (visual + funcional)
+            itemsProductos.forEach(item => {
+                item.style.opacity = '0.5';
+                item.style.pointerEvents = 'none';
+                item.style.cursor = 'not-allowed';
+            });
+            
+            // Deshabilitar botón confirmar
+            if (btnConfirmar) {
+                btnConfirmar.disabled = true;
+                btnConfirmar.style.opacity = '0.5';
+                btnConfirmar.style.cursor = 'not-allowed';
+            }
+            
+            // Deshabilitar input cliente
+            if (inputCliente) {
+                inputCliente.disabled = true;
+            }
+            
+            // Deshabilitar botones de métodos de pago
+            paymentButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
+                btn.style.cursor = 'not-allowed';
+            });
+            
+            // Deshabilitar inputs de montos
+            paymentInputs.forEach(input => {
+                input.disabled = true;
+            });
+            
+            // Deshabilitar botones del carrito
+            if (btnPagosPendientes) {
+                btnPagosPendientes.disabled = true;
+                btnPagosPendientes.style.opacity = '0.5';
+                btnPagosPendientes.style.cursor = 'not-allowed';
+            }
+            if (btnBorrador) {
+                btnBorrador.disabled = true;
+                btnBorrador.style.opacity = '0.5';
+                btnBorrador.style.cursor = 'not-allowed';
+            }
+            if (btnVaciarCarrito) {
+                btnVaciarCarrito.disabled = true;
+                btnVaciarCarrito.style.opacity = '0.5';
+                btnVaciarCarrito.style.cursor = 'not-allowed';
+            }
+            
+            // Deshabilitar visualmente el carrito completo
+            if (cartSection) {
+                cartSection.style.opacity = '0.5';
+                cartSection.style.pointerEvents = 'none';
+            }
         }
     }
 
@@ -740,9 +1065,13 @@
         }, 3000);
     }
 
-    // Inicializar estado visual al cargar la página
+    // Inicializar: consultar estado real al cargar la página
     document.addEventListener('DOMContentLoaded', function() {
-        actualizarEstadoVisual();
+        // Consultar estado real desde el backend
+        consultarEstadoCaja();
+        
+        // Opcional: Refrescar estado cada 60 segundos
+        // setInterval(consultarEstadoCaja, 60000);
     });
 </script>
 

@@ -102,14 +102,39 @@ class SesionCaja(models.Model):
             total=models.Sum('total')
         )['total'] or Decimal('0.00')
     
+    def calcular_total_efectivo(self):
+        """Calcula el total de efectivo recibido (efectivo puro + parte efectivo de mixtos)"""
+        import json
+        ventas_pagadas = self.ventas.filter(estado='pagado')
+        
+        # Ventas 100% en efectivo
+        total_efectivo = ventas_pagadas.filter(metodo_pago='efectivo').aggregate(
+            total=models.Sum('total')
+        )['total'] or Decimal('0.00')
+        
+        # Sumar parte efectivo de pagos mixtos
+        ventas_mixtas = ventas_pagadas.filter(metodo_pago='mixto')
+        for venta in ventas_mixtas:
+            if venta.observaciones and 'Desglose pago:' in venta.observaciones:
+                try:
+                    json_str = venta.observaciones.replace('Desglose pago: ', '')
+                    desglose = json.loads(json_str)
+                    monto_efectivo = Decimal(str(desglose.get('efectivo', 0)))
+                    total_efectivo += monto_efectivo
+                except (json.JSONDecodeError, ValueError, KeyError):
+                    pass
+        
+        return total_efectivo
+    
     def cerrar_sesion(self, usuario, monto_contado, observaciones=''):
-        """Cierra la sesión y calcula diferencias"""
+        """Cierra la sesión y calcula diferencias basándose solo en efectivo"""
         if self.esta_cerrada:
             raise ValidationError("Esta sesión ya está cerrada")
         
         self.fecha_cierre = timezone.now()
         self.usuario_cierre = usuario
-        self.monto_final_calculado = self.monto_inicial + self.calcular_total_vendido()
+        # Calcular con base en EFECTIVO recibido (no total vendido)
+        self.monto_final_calculado = self.monto_inicial + self.calcular_total_efectivo()
         self.monto_final_contado = monto_contado
         self.diferencia = self.monto_final_contado - self.monto_final_calculado
         self.observaciones_cierre = observaciones
