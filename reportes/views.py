@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
@@ -10,6 +10,7 @@ from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from datetime import datetime
 from decimal import Decimal
+from functools import wraps
 
 
 def validar_fecha(fecha_str):
@@ -23,12 +24,35 @@ def validar_fecha(fecha_str):
         return ''
 
 
-@login_required
+def admin_required(view_func):
+    """Decorador que verifica si el usuario es admin (staff/superuser/rol administracion)"""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        # Verificar si el usuario está autenticado
+        if not request.user.is_authenticated:
+            return redirect('login')
+        
+        # Verificar si es admin/staff/superuser
+        if request.user.is_staff or request.user.is_superuser:
+            return view_func(request, *args, **kwargs)
+        
+        # Verificar si tiene rol de administración
+        if hasattr(request.user, 'rol') and request.user.rol == 'administracion':
+            return view_func(request, *args, **kwargs)
+        
+        # Si no es admin, mostrar error 403
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden('No tiene permiso para acceder a este recurso.')
+    
+    return wrapper
+
+
+@admin_required
 def index(request):
     return render(request, 'reportes/index.html')
 
 
-@login_required
+@admin_required
 def reporte_financieros(request):
     """Vista para reportes financieros (ventas/caja) con sesiones expandibles"""
     from django.db.models import Sum, Q
@@ -97,7 +121,7 @@ def reporte_financieros(request):
     return render(request, 'reportes/financieros.html', context)
 
 
-@login_required
+@admin_required
 def exportar_financieros_excel(request):
     """Exporta el reporte financiero a Excel con sesiones y ventas"""
     from django.db.models import Sum
@@ -258,7 +282,7 @@ def exportar_financieros_excel(request):
     return response
 
 
-@login_required
+@admin_required
 def reporte_inventario(request):
     from django.db.models import Count, Q
     
@@ -379,7 +403,7 @@ def reporte_inventario(request):
     return render(request, 'reportes/inventario.html', context)
 
 
-@login_required
+@admin_required
 def exportar_inventario_excel(request):
     from django.db.models import Count, Q
     
@@ -653,7 +677,7 @@ Generado desde IP: {request.META.get('REMOTE_ADDR', 'IP no disponible')}"""
     return response
 
 
-@login_required
+@admin_required
 def reporte_caja(request):
     ventas = Venta.objects.select_related(
         'usuario_cobro', 'usuario_creacion', 'paciente'
@@ -665,7 +689,7 @@ def reporte_caja(request):
     return render(request, 'reportes/caja.html', context)
 
 
-@login_required
+@admin_required
 def exportar_caja_excel(request):
     # Crear workbook y hoja
     wb = Workbook()
@@ -712,7 +736,7 @@ def exportar_caja_excel(request):
     return response
 
 
-@login_required
+@admin_required
 def reporte_clinica(request):
     consultas = Consulta.objects.select_related(
         'paciente', 'veterinario'
@@ -724,7 +748,7 @@ def reporte_clinica(request):
     return render(request, 'reportes/clinica.html', context)
 
 
-@login_required
+@admin_required
 def exportar_clinica_excel(request):
     # Crear workbook y hoja
     wb = Workbook()
@@ -772,7 +796,7 @@ def exportar_clinica_excel(request):
     return response
 
 
-@login_required
+@admin_required
 def reporte_hospitalizacion(request):
     hospitalizaciones = Hospitalizacion.objects.select_related(
         'paciente', 'veterinario'
@@ -785,7 +809,7 @@ def reporte_hospitalizacion(request):
     return render(request, 'reportes/hospitalizacion.html', context)
 
 
-@login_required
+@admin_required
 def exportar_hospitalizacion_excel(request):
     # Crear workbook y hoja
     wb = Workbook()
@@ -835,7 +859,7 @@ def exportar_hospitalizacion_excel(request):
     return response
 
 
-@login_required
+@admin_required
 def reporte_servicios(request):
     servicios_vendidos = DetalleVenta.objects.filter(
         tipo='servicio'
@@ -850,7 +874,7 @@ def reporte_servicios(request):
     return render(request, 'reportes/servicios.html', context)
 
 
-@login_required
+@admin_required
 def exportar_servicios_excel(request):
     # Crear workbook y hoja
     wb = Workbook()

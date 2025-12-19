@@ -1,60 +1,7 @@
-
-{# Hospitalizaciones - bloque de tabla #}
+{# Hospitalizaciones ya se muestran en hospitalizaciones.html para admin #}
 {% load static %}
 
-{% if user.rol == 'administracion' or user.is_superuser %}
-<div class="card vet-card card-round">
-    <div class="card-header">
-        <div class="card-head-row">
-            <div class="card-title">
-                <i class="fas fa-hospital me-2"></i>
-                Hospitalizaciones Activas
-            </div>
-        </div>
-    </div>
-    <div class="card-body">
-        {% if mis_hospitalizaciones %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Paciente</th>
-                        <th>Propietario</th>
-                        <th>Veterinario</th>
-                        <th>Ingreso</th>
-                        <th>Días</th>
-                        <th class="text-end">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for hosp in mis_hospitalizaciones %}
-                    <tr>
-                        <td><strong>{{ hosp.paciente.nombre }}</strong></td>
-                        <td>{{ hosp.paciente.propietario.nombre_completo }}</td>
-                        <td>{{ hosp.veterinario.nombre|default:"" }}</td>
-                        <td>{{ hosp.fecha_ingreso|date:"d/m/Y H:i" }}</td>
-                        <td>{{ hosp.dias_hospitalizacion }}</td>
-                        <td class="text-end">
-                            <a href="{% url 'pacientes:ficha_mascota' hosp.paciente.id %}?tab=hosp&hosp_id={{ hosp.id }}#hosp" class="vet-btn vet-btn-sm">
-                                <i class="fas fa-eye me-1"></i>
-                                Ver
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="text-center py-4">
-            <i class="fas fa-heart fa-2x text-muted mb-2"></i>
-            <p class="text-muted">No hay hospitalizaciones activas</p>
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-{% elif user.rol == 'veterinario' %}
+{% if user.rol == 'veterinario' %}
 <div class="card vet-card card-round">
     <div class="card-header">
         <div class="card-head-row">

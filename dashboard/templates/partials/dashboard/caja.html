@@ -14,8 +14,7 @@
                 <i class="fas fa-cash-register me-2"></i>
                 Caja
             </div>
-            {# Badge de estado oculto por requerimiento #}
-            <div style="display: none;">
+            <div>
                 {% if caja_stats.estado == 'cerrada' %}
                 <span class="badge badge-danger">
                     <i class="fas fa-lock me-1"></i>
@@ -31,28 +30,27 @@
         </div>
     </div>
     <div class="card-body">
-        {# Vista Admin: Resumen simple #}
-        {# Estado y Total Vendido ocultos por requerimiento #}
-        <div class="card-stats" style="display: none;">
-            <div class="row">
-                <div class="col-md-6">
-                    <h6>Estado</h6>
+        {# Vista Admin: Estado y Total del día #}
+        <div class="card-stats mb-3">
+            <div class="row text-center">
+                <div class="col-6">
+                    <h6 class="text-muted mb-1">Estado</h6>
                     <h5 class="mb-0">
                         {% if caja_stats.estado == 'cerrada' %}
-                        <span class="text-danger">Cerrada</span>
+                        <span class="text-danger"><i class="fas fa-lock me-1"></i>Cerrada</span>
                         {% else %}
-                        <span class="text-success">Abierta</span>
+                        <span class="text-success"><i class="fas fa-unlock me-1"></i>Abierta</span>
                         {% endif %}
                     </h5>
                 </div>
-                <div class="col-md-6">
-                    <h6>Total Vendido</h6>
-                    <h5 class="mb-0">${{ caja_stats.total_vendido_hoy|default:0|floatformat:2 }}</h5>
+                <div class="col-6">
+                    <h6 class="text-muted mb-1">Total Vendido Hoy</h6>
+                    <h5 class="mb-0 text-primary">${{ caja_stats.total_vendido_hoy|default:0|floatformat:2 }}</h5>
                 </div>
             </div>
         </div>
 
-        <hr style="display: none;">
+        <hr>
 
         <div class="row">
             <div class="col-md-6 text-center">
@@ -122,8 +120,7 @@
                 <i class="fas fa-cash-register me-2"></i>
                 Caja
             </div>
-            {# Badge de estado oculto por requerimiento #}
-            <div style="display: none;">
+            <div>
                 {% if caja_stats.estado == 'cerrada' %}
                 <span class="badge badge-danger">
                     <i class="fas fa-lock me-1"></i>
@@ -139,37 +136,38 @@
         </div>
     </div>
     <div class="card-body">
-        {# Vista Recepción: Detallada con cobros pendientes #}
-        {# Estado y Total Acumulado ocultos por requerimiento #}
-        <div class="rd-stats-summary" style="display: none;">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <h6>Estado</h6>
+        {# Vista Recepción: Estado y Total Acumulado #}
+        <div class="rd-stats-summary mb-3">
+            <div class="row text-center">
+                <div class="col-6">
+                    <h6 class="text-muted mb-1">Estado</h6>
                     <h5 class="mb-0">
                         {% if caja_stats.estado == 'cerrada' %}
-                        <span class="text-danger">Cerrada</span>
+                        <span class="text-danger"><i class="fas fa-lock me-1"></i>Cerrada</span>
                         {% else %}
-                        <span class="text-success">Abierta</span>
+                        <span class="text-success"><i class="fas fa-unlock me-1"></i>Abierta</span>
                         {% endif %}
                     </h5>
                 </div>
-                <div class="col-md-6">
-                    <h6>Total Acumulado</h6>
+                <div class="col-6">
+                    <h6 class="text-muted mb-1">Total Acumulado Hoy</h6>
                     <h5 class="mb-0 text-primary">${{ caja_stats.total_acumulado|default:0|floatformat:2 }}</h5>
                 </div>
             </div>
 
-            {% if caja_stats.estado != 'cerrada' %}
-            <div class="row">
-                <div class="col-md-12">
-                    <h6 class="text-muted">Operación Activa</h6>
-                    <p class="mb-0">Sesión en curso</p>
+            {% if caja_stats.estado != 'cerrada' and caja_stats.sesion %}
+            <div class="row mt-3">
+                <div class="col-12 text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>
+                        Sesión iniciada: {{ caja_stats.sesion.fecha_apertura|date:"d/m/Y H:i" }}
+                    </small>
                 </div>
             </div>
             {% endif %}
         </div>
 
-        <hr style="display: none;">
+        <hr>
 
         <h6 class="mb-3">
             <i class="fas fa-file-invoice-dollar me-2"></i>
