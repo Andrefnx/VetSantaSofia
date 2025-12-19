@@ -260,12 +260,12 @@ strong {
 
 .text-success,
 .text-success a {
-   color: #31ce36 !important
+   color: #76ca79 !important
 }
 
 .text-success a:hover,
 .text-success:hover {
-   color: #31ce36 !important
+   color: #76ca79 !important
 }
 
 .text-warning,
@@ -1137,27 +1137,27 @@ body {
 .sidebar[data-background-color=white] .nav.nav-success>.nav-item a:focus i,
 .sidebar[data-background-color=white] .nav.nav-success>.nav-item a:hover i,
 .sidebar[data-background-color=white] .nav.nav-success>.nav-item a[data-toggle=collapse][aria-expanded=true] i {
-   color: #31ce36 !important
+   color: #76ca79 !important
 }
 
 .sidebar .nav.nav-success>.nav-item a[data-toggle=collapse][aria-expanded=true]:before,
 .sidebar[data-background-color=white] .nav.nav-success>.nav-item a[data-toggle=collapse][aria-expanded=true]:before {
-   background: #31ce36 !important
+   background: #76ca79 !important
 }
 
 .sidebar .nav.nav-success>.nav-item.active a:before,
 .sidebar[data-background-color=white] .nav.nav-success>.nav-item.active a:before {
-   background: #31ce36 !important
+   background: #76ca79 !important
 }
 
 .sidebar .nav.nav-success>.nav-item.active a i,
 .sidebar[data-background-color=white] .nav.nav-success>.nav-item.active a i {
-   color: #31ce36 !important
+   color: #76ca79 !important
 }
 
 .sidebar .nav.nav-success>.nav-item .nav-collapse li.active>a,
 .sidebar[data-background-color=white] .nav.nav-success>.nav-item .nav-collapse li.active>a {
-   color: #31ce36 !important
+   color: #76ca79 !important
 }
 
 .sidebar .nav.nav-warning>.nav-item a:focus i,
@@ -1562,7 +1562,7 @@ body {
 }
 
 .sidebar.sidebar-style-2 .nav.nav-success>.nav-item.active>a {
-   background: #31ce36 !important;
+   background: #76ca79 !important;
    box-shadow: 4px 4px 10px 0 rgba(0, 0, 0, .1), 4px 4px 15px -5px rgba(49, 206, 54, .4)
 }
 
@@ -2183,7 +2183,7 @@ body[data-background-color=dark] .border-top {
 }
 
 .logo-header[data-background-color=green] {
-   background: #31ce36 !important
+   background: #76ca79 !important
 }
 
 .logo-header[data-background-color=green2] {
@@ -2191,7 +2191,7 @@ body[data-background-color=dark] .border-top {
 }
 
 .navbar-header[data-background-color=green] {
-   background: #31ce36 !important
+   background: #76ca79 !important
 }
 
 .navbar-header[data-background-color=green2] {
@@ -2398,7 +2398,7 @@ body[data-background-color=dark] .border-top {
 }
 
 .avatar-online::before {
-   background-color: #31ce36
+   background-color: #76ca79
 }
 
 .avatar-offline::before {
@@ -3081,7 +3081,7 @@ label {
 }
 
 .card-success {
-   background: #31ce36 !important
+   background: #76ca79 !important
 }
 
 .card-warning {
@@ -3208,7 +3208,7 @@ label {
 }
 
 .card-pricing.card-success .btn-light {
-   color: #31ce36 !important
+   color: #76ca79 !important
 }
 
 .card-pricing.card-secondary .specification-list li {
@@ -3584,41 +3584,41 @@ label {
 }
 
 .card-pricing2.card-success {
-   border-bottom-color: #31ce36
+   border-bottom-color: #76ca79
 }
 
 .card-pricing2.card-success .price-value:before,
 .card-pricing2.card-success .value:before {
-   border-left-color: #31ce36;
-   border-top-color: #31ce36
+   border-left-color: #76ca79;
+   border-top-color: #76ca79
 }
 
 .card-pricing2.card-success .price-value,
 .card-pricing2.card-success .value {
-   border-right-color: #31ce36
+   border-right-color: #76ca79
 }
 
 .card-pricing2.card-success .price-value:after,
 .card-pricing2.card-success .value:after {
-   border-right-color: #31ce36
+   border-right-color: #76ca79
 }
 
 .card-pricing2.card-success .price-value:after,
 .card-pricing2.card-success .value:after {
-   border-bottom-color: #31ce36
+   border-bottom-color: #76ca79
 }
 
 .card-pricing2.card-success .value {
-   color: #31ce36
+   color: #76ca79
 }
 
 .card-pricing2.card-success:before {
-   background: #31ce36
+   background: #76ca79
 }
 
 .card-pricing2.card-success .price-value,
 .card-pricing2.card-success .value {
-   border-left-color: #31ce36
+   border-left-color: #76ca79
 }
 
 .card-pricing2.card-warning {
@@ -3841,7 +3841,7 @@ label {
 }
 
 .card-annoucement.card-success .btn-light {
-   color: #31ce36 !important
+   color: #76ca79 !important
 }
 
 .card-annoucement.card-secondary .btn-light {
@@ -4080,11 +4080,11 @@ label {
 }
 
 .accordion.accordion-success .card .card-header {
-   color: #31ce36
+   color: #76ca79
 }
 
 .accordion.accordion-success .card .card-header .btn-link {
-   color: #31ce36 !important
+   color: #76ca79 !important
 }
 
 .accordion.accordion-warning .card .card-header {
@@ -4407,7 +4407,7 @@ label {
 }
 
 .custom-checkbox.checkbox-success .custom-control-input:checked~.custom-control-label::before {
-   background-color: #31ce36
+   background-color: #76ca79
 }
 
 .custom-checkbox.checkbox-warning .custom-control-input:checked~.custom-control-label::before {
@@ -4587,17 +4587,17 @@ label {
 }
 
 .has-success label {
-   color: #31ce36 !important
+   color: #76ca79 !important
 }
 
 .has-success .form-control {
-   border-color: #31ce36 !important;
-   color: #31ce36 !important
+   border-color: #76ca79 !important;
+   color: #76ca79 !important
 }
 
 .has-success .input-group-text {
-   border-color: #31ce36 !important;
-   background: #31ce36 !important;
+   border-color: #76ca79 !important;
+   background: #76ca79 !important;
    color: #fff !important
 }
 
@@ -4661,7 +4661,7 @@ label {
 }
 
 .has-success .form-control-feedback {
-   color: #31ce36
+   color: #76ca79
 }
 
 .has-error .form-control-feedback {
@@ -4675,8 +4675,8 @@ label {
 
 .input-group.has-icon.has-success,
 .input-group.has-success {
-   border: 1px solid #31ce36 !important;
-   color: #31ce36
+   border: 1px solid #76ca79 !important;
+   color: #76ca79
 }
 
 .input-group.has-error {
@@ -4956,7 +4956,7 @@ label.error {
 
 .table-bordered-bd-success td,
 .table-bordered-bd-success th {
-   border: 1px solid #31ce36 !important
+   border: 1px solid #76ca79 !important
 }
 
 .table-bordered-bd-warning td,
@@ -4992,7 +4992,7 @@ label.error {
 }
 
 .table-head-bg-success thead {
-   border: 1px solid #31ce36 !important
+   border: 1px solid #76ca79 !important
 }
 
 .table-head-bg-warning thead {
@@ -5033,7 +5033,7 @@ label.error {
 
 .table-head-bg-success thead th,
 .table-striped-bg-success tbody tr:nth-of-type(odd) {
-   background: #31ce36 !important;
+   background: #76ca79 !important;
    color: #fff !important;
    border: 0 !important
 }
@@ -5134,7 +5134,7 @@ label.error {
 
 .navbar .navbar-nav .notification {
    position: absolute;
-   background-color: #31ce36;
+   background-color: #76ca79;
    text-align: center;
    border-radius: 10px;
    min-width: 17px;
@@ -5251,11 +5251,11 @@ label.error {
 }
 
 .navbar-nav.page-navigation.page-navigation-success .nav-item.active .nav-link {
-   color: #31ce36 !important
+   color: #76ca79 !important
 }
 
 .navbar-nav.page-navigation.page-navigation-success .nav-item .nav-link:hover {
-   color: #31ce36 !important
+   color: #76ca79 !important
 }
 
 .navbar-nav.page-navigation.page-navigation-warning .nav-item.active .nav-link {
@@ -5354,7 +5354,7 @@ label.error {
 }
 
 .navbar-line .navbar-nav.page-navigation.page-navigation-success .nav-item.active::before {
-   background: #31ce36 !important
+   background: #76ca79 !important
 }
 
 .navbar-line .navbar-nav.page-navigation.page-navigation-warning .nav-item.active::before {
@@ -5521,7 +5521,7 @@ label.error {
 }
 
 .badge-success {
-   background-color: #31ce36
+   background-color: #76ca79
 }
 
 .badge-warning {
@@ -5638,7 +5638,7 @@ label.error {
 
 .messages-notif-box .notif-center a .notif-icon.notif-success,
 .notif-box .notif-center a .notif-icon.notif-success {
-   background: #31ce36 !important
+   background: #76ca79 !important
 }
 
 .messages-notif-box .notif-center a .notif-icon.notif-warning,
@@ -5913,15 +5913,15 @@ label.error {
 }
 
 .quick-actions.quick-actions-success:after {
-   border-bottom-color: #31ce36 !important
+   border-bottom-color: #76ca79 !important
 }
 
 .quick-actions.quick-actions-success .quick-actions-header {
-   background: #31ce36
+   background: #76ca79
 }
 
 .quick-actions.quick-actions-success .quick-actions-item {
-   color: #31ce36
+   color: #76ca79
 }
 
 .quick-actions.quick-actions-danger:after {
@@ -6110,11 +6110,11 @@ label.error {
 }
 
 .alert-success {
-   border-left: 4px solid #31ce36
+   border-left: 4px solid #76ca79
 }
 
 .alert-success [data-notify=icon]:before {
-   background: #31ce36
+   background: #76ca79
 }
 
 .alert-warning {
@@ -6277,16 +6277,16 @@ label.error {
 }
 
 .btn-success {
-   background: #31ce36 !important;
-   border-color: #31ce36 !important
+   background: #76ca79 !important;
+   border-color: #76ca79 !important
 }
 
 .btn-success:disabled,
 .btn-success:focus,
 .btn-success:hover {
    color: #fff !important;
-   background: #31ce36 !important;
-   border-color: #31ce36 !important
+   background: #76ca79 !important;
+   border-color: #76ca79 !important
 }
 
 .btn-warning {
@@ -6393,14 +6393,14 @@ label.error {
 
 .btn-label-success {
    background: rgba(49, 206, 54, .1);
-   color: #31ce36 !important;
+   color: #76ca79 !important;
    border-color: transparent
 }
 
 .btn-label-success:disabled,
 .btn-label-success:focus,
 .btn-label-success:hover {
-   background: #31ce36;
+   background: #76ca79;
    color: #fff !important;
    opacity: 1
 }
@@ -6480,8 +6480,8 @@ label.error {
 }
 
 .btn-border.btn-success {
-   color: #31ce36 !important;
-   border: 1px solid #31ce36 !important
+   color: #76ca79 !important;
+   border: 1px solid #76ca79 !important
 }
 
 .btn-border.btn-warning {
@@ -6548,11 +6548,11 @@ label.error {
 }
 
 .btn-link.btn-success {
-   color: #31ce36 !important
+   color: #76ca79 !important
 }
 
 .btn-link.btn-success:hover {
-   color: #31ce36 !important
+   color: #76ca79 !important
 }
 
 .btn-link.btn-warning {
@@ -6752,8 +6752,8 @@ label.error {
 }
 
 .nav-pills.nav-success .nav-link.active {
-   background: #31ce36;
-   border: 1px solid #31ce36
+   background: #76ca79;
+   border: 1px solid #76ca79
 }
 
 .nav-pills.nav-warning .nav-link.active {
@@ -6835,11 +6835,11 @@ label.error {
 
 .nav.nav-simple.nav-color-success .nav-link:focus,
 .nav.nav-simple.nav-color-success .nav-link:hover {
-   color: #31ce36
+   color: #76ca79
 }
 
 .nav.nav-simple.nav-color-success .nav-link.active {
-   color: #31ce36
+   color: #76ca79
 }
 
 .nav.nav-simple.nav-color-danger .nav-link:focus,
@@ -6931,15 +6931,15 @@ label.error {
 
 .nav.nav-line.nav-color-success .nav-link:focus,
 .nav.nav-line.nav-color-success .nav-link:hover {
-   color: #31ce36
+   color: #76ca79
 }
 
 .nav.nav-line.nav-color-success .nav-link.active {
-   color: #31ce36
+   color: #76ca79
 }
 
 .nav.nav-line.nav-color-success .nav-link.active {
-   border-color: #31ce36
+   border-color: #76ca79
 }
 
 .nav.nav-line.nav-color-danger .nav-link:focus,
@@ -7128,8 +7128,8 @@ label.error {
 .pagination.pg-success>li.active:last-child>span,
 .pagination.pg-success>li.active>a,
 .pagination.pg-success>li.active>span {
-   background: #31ce36;
-   border-color: #31ce36;
+   background: #76ca79;
+   border-color: #76ca79;
    color: #fff
 }
 
@@ -7172,7 +7172,7 @@ label.error {
 }
 
 .slider-success .ui-slider-range {
-   background: #31ce36
+   background: #76ca79
 }
 
 .slider-warning .ui-slider-range {
@@ -7268,7 +7268,7 @@ label.error {
 }
 
 .feed-item-success::after {
-   background: #31ce36 !important
+   background: #76ca79 !important
 }
 
 .feed-item-danger::after {
@@ -7456,7 +7456,7 @@ label.error {
 }
 
 .timeline-badge.success {
-   background-color: #31ce36 !important
+   background-color: #76ca79 !important
 }
 
 .timeline-badge.warning {
@@ -7863,14 +7863,14 @@ label.error {
 }
 
 .selectgroup.selectgroup-success .selectgroup-input:checked+.selectgroup-button {
-   border-color: #31ce36;
-   color: #31ce36;
+   border-color: #76ca79;
+   color: #76ca79;
    background: rgba(49, 206, 54, .15)
 }
 
 .selectgroup.selectgroup-success .selectgroup-input:focus+.selectgroup-button {
-   border-color: #31ce36;
-   color: #31ce36;
+   border-color: #76ca79;
+   color: #76ca79;
    box-shadow: 0 0 0 2px rgba(49, 206, 54, .25)
 }
 
@@ -9989,7 +9989,7 @@ body[data-background-color=dark] .jvm-zoom-btn {
 }
 
 .bg-success {
-   background-color: #31ce36 !important
+   background-color: #76ca79 !important
 }
 
 .bg-success2 {
@@ -10045,9 +10045,9 @@ body[data-background-color=dark] .jvm-zoom-btn {
 }
 
 .bg-success-gradient {
-   background: #31ce36 !important;
-   background: -webkit-linear-gradient(legacy-direction(-45deg), #179d08, #31ce36) !important;
-   background: linear-gradient(-45deg, #179d08, #31ce36) !important
+   background: #76ca79 !important;
+   background: -webkit-linear-gradient(legacy-direction(-45deg), #179d08, #76ca79) !important;
+   background: linear-gradient(-45deg, #179d08, #76ca79) !important
 }
 
 .bg-warning-gradient {
