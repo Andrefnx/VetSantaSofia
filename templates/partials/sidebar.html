@@ -98,11 +98,15 @@
                     </a>
                 </li>
 
-                <!-- GENERADOR DE REPORTES -->
-                <li class="vet-nav-item {% if request.resolver_match.namespace == 'reportes' %}active{% endif %}">
+                <li class="vet-nav-section">
+                    <h4 class="vet-nav-section-title"> Reportes</h4>
+                </li>
+
+                <!-- REPORTES DE INVENTARIO -->
+                <li class="vet-nav-item {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'inventario' %}active{% endif %}">
                     <a href="{% url 'reportes:inventario' %}" class="vet-nav-link">
-                        <i class="fas fa-file-invoice"></i>
-                        <span>Generador de Reportes</span>
+                        <i class="bi bi-box-seam"></i>
+                        <span>Reportes de Inventario</span>
                     </a>
                 </li>
 

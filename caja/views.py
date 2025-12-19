@@ -49,7 +49,7 @@ def procesar_venta(request):
             detalles_pago = data.get('detalles_pago', {})  # Dict con desglose de pagos mixtos
             
             from .models import Venta, DetalleVenta
-            from .services import obtener_sesion_activa
+            from .services import obtener_sesion_activa, procesar_pago
             from django.utils import timezone
             
             # VALIDACIÓN CRÍTICA: Verificar que hay sesión de caja abierta
@@ -64,18 +64,20 @@ def procesar_venta(request):
                 # Si hay una venta en proceso, usarla. Si no, crear una nueva
                 if venta_en_proceso_id:
                     venta = Venta.objects.get(id=venta_en_proceso_id, estado='en_proceso')
-                    # Actualizar datos
-                    venta.metodo_pago = metodo_pago
-                    venta.usuario_cobro = request.user
-                    venta.fecha_pago = timezone.now()
-                    venta.estado = 'pagado'
-                    venta.sesion = sesion_activa  # Asignar sesión activa
                     # Guardar desglose de pago mixto en observaciones
                     if detalles_pago and metodo_pago == 'mixto':
                         venta.observaciones = f"Desglose pago: {json.dumps(detalles_pago)}"
-                    venta.save()
+                        venta.save()
+                    
+                    # Usar procesar_pago para confirmar y descontar stock
+                    procesar_pago(
+                        venta=venta,
+                        usuario=request.user,
+                        metodo_pago=metodo_pago,
+                        sesion_caja=sesion_activa
+                    )
                 else:
-                    # Crear nueva venta y guardar desglose si es mixto
+                    # Crear nueva venta en estado pendiente
                     observaciones_venta = None
                     if detalles_pago and metodo_pago == 'mixto':
                         observaciones_venta = f"Desglose pago: {json.dumps(detalles_pago)}"
@@ -83,25 +85,26 @@ def procesar_venta(request):
                     venta = Venta.objects.create(
                         tipo_origen='venta_libre',
                         usuario_creacion=request.user,
-                        usuario_cobro=request.user,
-                        metodo_pago=metodo_pago,
-                        estado='pagado',
-                        fecha_pago=timezone.now(),
-                        sesion=sesion_activa,  # Asignar sesión activa
+                        estado='pendiente',  # Crear como pendiente primero
+                        sesion=sesion_activa,
                         observaciones=observaciones_venta
                     )
                     
                     # Crear detalles de venta
-                    subtotal_servicios = Decimal('0.00')
-                    subtotal_insumos = Decimal('0.00')
-                    
                     for item in items:
                         nombre = item['name']
                         cantidad = Decimal(str(item['quantity']))
                         precio_unitario = Decimal(str(item['price']))
-                        tipo = item.get('tipo', 'insumo')
+                        tipo_raw = item.get('tipo', 'insumo')
                         item_id = item.get('id')
-                        subtotal = cantidad * precio_unitario
+                        
+                        # Normalizar tipo (puede venir como string o número)
+                        if tipo_raw == 0 or tipo_raw == 'insumo':
+                            tipo = 'insumo'
+                        elif tipo_raw == 1 or tipo_raw == 'servicio':
+                            tipo = 'servicio'
+                        else:
+                            tipo = 'insumo'  # Por defecto
                         
                         # Obtener el objeto usando tipo e ID
                         servicio = None
@@ -110,48 +113,35 @@ def procesar_venta(request):
                         if tipo == 'servicio' and item_id:
                             try:
                                 servicio = Servicio.objects.get(pk=item_id)
-                                subtotal_servicios += subtotal
                             except Servicio.DoesNotExist:
                                 pass
                         elif tipo == 'insumo' and item_id:
                             try:
                                 insumo = Insumo.objects.get(pk=item_id)
-                                subtotal_insumos += subtotal
                             except Insumo.DoesNotExist:
                                 pass
                         
                         # Crear detalle de venta
-                        detalle = DetalleVenta.objects.create(
+                        DetalleVenta.objects.create(
                             venta=venta,
                             tipo=tipo,
                             servicio=servicio,
                             insumo=insumo,
                             descripcion=nombre,
                             cantidad=cantidad,
-                            precio_unitario=precio_unitario,
-                            subtotal=subtotal
+                            precio_unitario=precio_unitario
                         )
-                        
-                        # Descontar stock si es insumo
-                        if tipo == 'insumo' and insumo:
-                            if insumo.stock_actual >= cantidad:
-                                insumo.stock_actual -= cantidad
-                                insumo.save()
-                                detalle.stock_descontado = True
-                                detalle.fecha_descuento_stock = timezone.now()
-                                detalle.save()
-                            else:
-                                raise ValidationError(f'Stock insuficiente para {nombre}')
                     
-                    # Actualizar totales de la venta
-                    venta.subtotal_servicios = subtotal_servicios
-                    venta.subtotal_insumos = subtotal_insumos
-                    venta.total = subtotal_servicios + subtotal_insumos
-                    venta.save()
-                
-                # CRÍTICO: Recalcular totales para asegurar consistencia
-                # (especialmente importante para ventas que vienen de cobros pendientes)
-                venta.calcular_totales()
+                    # Recalcular totales
+                    venta.calcular_totales()
+                    
+                    # Procesar pago (esto descuenta stock automáticamente)
+                    procesar_pago(
+                        venta=venta,
+                        usuario=request.user,
+                        metodo_pago=metodo_pago,
+                        sesion_caja=sesion_activa
+                    )
                 
                 return JsonResponse({
                     'success': True,

@@ -79,7 +79,7 @@
                         <p>{{ servicio.categoria }}</p>
                     </div>
 
-                    <div class="price">${{ servicio.precio|intcomma }}</div>
+                    <div class="price" data-precio="{{ servicio.precio }}"></div>
                     <button class="add-btn">+</button>
                 </div>
                 {% empty %}
@@ -91,6 +91,8 @@
 <!-- ============================ -->
 {% for producto in productos %}
 <div class="product-list-item caja-controlable" data-category="productos"
+    data-product-id="{{ producto.idInventario }}"
+    data-stock-inicial="{{ producto.stock_actual }}"
     onclick="addToCart('{{ producto.medicamento|escapejs }}', {{ producto.precio_venta }}, 'insumo', {{ producto.idInventario }})">
 
     <div class="icon">
@@ -99,10 +101,10 @@
 
     <div class="info">
         <h6>{{ producto.medicamento }}</h6>
-        <p>Stock: {{ producto.stock_actual }} {{ producto.unidad_medida }}</p>
+        <p class="stock-display">Stock: <span class="stock-value">{{ producto.stock_actual }}</span> {{ producto.unidad_medida }}</p>
     </div>
 
-    <div class="price">${{ producto.precio_venta|intcomma }}</div>
+    <div class="price" data-precio="{{ producto.precio_venta }}"></div>
     <button class="add-btn">+</button>
 </div>
 {% empty %}
@@ -1069,6 +1071,12 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Consultar estado real desde el backend
         consultarEstadoCaja();
+        
+        // Formatear todos los precios en formato chileno
+        document.querySelectorAll('.price[data-precio]').forEach(function(priceElement) {
+            const precio = parseFloat(priceElement.getAttribute('data-precio'));
+            priceElement.textContent = '$' + formatearPrecioChileno(precio);
+        });
         
         // Opcional: Refrescar estado cada 60 segundos
         // setInterval(consultarEstadoCaja, 60000);

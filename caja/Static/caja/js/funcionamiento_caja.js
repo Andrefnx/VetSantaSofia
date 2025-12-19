@@ -4,6 +4,56 @@ let cashOpen = true;
 let currentCategory = 'all';
 let ventaEnProcesoId = null;  // Guardar el ID de la venta en proceso cargada
 
+// Función para formatear precios en formato chileno (sin decimales, con punto de miles)
+function formatearPrecioChileno(valor) {
+    return Math.round(valor).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+// Función para actualizar el stock visual de un producto
+function actualizarStockVisual(productId, cambio) {
+    const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+    if (!productElement) return;
+
+    const stockDisplay = productElement.querySelector('.stock-display');
+    const stockValueElement = productElement.querySelector('.stock-value');
+    if (!stockValueElement) return;
+
+    const stockActual = parseInt(stockValueElement.textContent);
+    const nuevoStock = stockActual + cambio;
+
+    stockValueElement.textContent = Math.max(0, nuevoStock);
+
+    // Cambiar color según el stock
+    if (nuevoStock <= 0) {
+        stockDisplay.style.color = '#dc3545'; // rojo
+    } else if (nuevoStock <= 5) {
+        stockDisplay.style.color = '#f59e0b'; // naranja
+    } else {
+        stockDisplay.style.color = ''; // normal
+    }
+}
+
+// Función para resetear todos los stocks visuales a sus valores iniciales
+function resetearStocksVisuales() {
+    const productElements = document.querySelectorAll('[data-product-id]');
+    productElements.forEach(productElement => {
+        const stockValueElement = productElement.querySelector('.stock-value');
+        const stockInicial = productElement.getAttribute('data-stock-inicial');
+        if (stockValueElement && stockInicial) {
+            stockValueElement.textContent = stockInicial;
+            const stockDisplay = productElement.querySelector('.stock-display');
+            const stock = parseInt(stockInicial);
+            if (stock <= 0) {
+                stockDisplay.style.color = '#dc3545';
+            } else if (stock <= 5) {
+                stockDisplay.style.color = '#f59e0b';
+            } else {
+                stockDisplay.style.color = '';
+            }
+        }
+    });
+}
+
 function switchCategory(element, category) {
     document.querySelectorAll('.product-tab').forEach(tab => {
         tab.classList.remove('active');
@@ -43,6 +93,11 @@ function addToCart(name, price, tipo, id) {
         existingItem.quantity++;
     } else {
         cart.push({ name, price, quantity: 1, tipo: tipo, id: id });
+    }
+
+    // Actualizar stock visual solo para insumos
+    if (tipo === 'insumo' || tipo === 0) {
+        actualizarStockVisual(id, -1);
     }
 
     updateCart();
@@ -88,34 +143,52 @@ function updateCart() {
     const subtotal = Math.round(total / 1.19);
     const iva = total - subtotal;
 
-    document.getElementById('subtotal').textContent = '$' + subtotal.toLocaleString();
-    document.getElementById('iva').textContent = '$' + iva.toLocaleString();
-    document.getElementById('total').textContent = '$' + total.toLocaleString();
+    document.getElementById('subtotal').textContent = '$' + formatearPrecioChileno(subtotal);
+    document.getElementById('iva').textContent = '$' + formatearPrecioChileno(iva);
+    document.getElementById('total').textContent = '$' + formatearPrecioChileno(total);
 
     cartTotalDiv.style.display = 'block';
     calcularPagos();
 }
 
 function increaseQty(index) {
-    cart[index].quantity++;
-    updateCart();
-}
-
-function decreaseQty(index) {
-    if (cart[index].quantity > 1) {
-        cart[index].quantity--;
-    } else {
-        cart.splice(index, 1);
+    const item = cart[index];
+    item.quantity++;
+    // Restar 1 unidad del stock visual
+    if (item.tipo === 'insumo' || item.tipo === 0) {
+        actualizarStockVisual(item.id, -1);
     }
     updateCart();
 }
 
+function decreaseQty(index) {
+    const item = cart[index];
+    if (item.quantity > 1) {
+        item.quantity--;
+        // Devolver 1 unidad al stock visual
+        if (item.tipo === 'insumo' || item.tipo === 0) {
+            actualizarStockVisual(item.id, 1);
+        }
+        updateCart();
+    } else {
+        removeFromCart(index);
+    }
+}
+
 function removeFromCart(index) {
+    const item = cart[index];
+    // Devolver stock visual
+    if (item.tipo === 'insumo' || item.tipo === 0) {
+        actualizarStockVisual(item.id, item.quantity);
+    }
     cart.splice(index, 1);
     updateCart();
 }
 
 function clearCart() {
+    // Resetear stocks visuales antes de limpiar
+    resetearStocksVisuales();
+    
     cart = [];
     ventaEnProcesoId = null;  // Limpiar ID de venta en proceso
     document.getElementById('clienteInput').value = '';
@@ -170,19 +243,19 @@ function calcularPagos() {
 
     if (selectedPaymentMethods.size > 0) {
         document.getElementById('paymentSummary').style.display = 'block';
-        document.getElementById('totalRecibido').textContent = '$' + totalRecibido.toLocaleString();
-        document.getElementById('totalAPagar').textContent = '$' + total.toLocaleString();
+        document.getElementById('totalRecibido').textContent = '$' + formatearPrecioChileno(totalRecibido);
+        document.getElementById('totalAPagar').textContent = '$' + formatearPrecioChileno(total);
 
         const diferenciaElement = document.getElementById('diferencia');
         const diferenciaLabel = document.getElementById('diferenciaLabel');
 
         if (diferencia > 0) {
-            diferenciaElement.textContent = '$' + diferencia.toLocaleString();
+            diferenciaElement.textContent = '$' + formatearPrecioChileno(diferencia);
             diferenciaLabel.textContent = 'Vuelto:';
             diferenciaElement.classList.remove('negative', 'exact');
             diferenciaElement.classList.add('positive');
         } else if (diferencia < 0) {
-            diferenciaElement.textContent = '-$' + Math.abs(diferencia).toLocaleString();
+            diferenciaElement.textContent = '-$' + formatearPrecioChileno(Math.abs(diferencia));
             diferenciaLabel.textContent = 'Falta:';
             diferenciaElement.classList.remove('positive', 'exact');
             diferenciaElement.classList.add('negative');
@@ -235,7 +308,7 @@ async function procesarVentaDirecto() {
     const diferencia = totalRecibido - total;
 
     if (diferencia < 0) {
-        alert(`Falta dinero: $${Math.abs(diferencia).toLocaleString()}`);
+        alert(`Falta dinero: $${formatearPrecioChileno(Math.abs(diferencia))}`);
         return;
     }
 
@@ -304,10 +377,10 @@ async function procesarVentaDirecto() {
 
         if (result.success) {
             // Mostrar mensaje de éxito
-            let mensaje = `¡Venta procesada exitosamente!\n\nVenta N°: ${result.numero_venta}\nTotal: $${total.toLocaleString()}`;
+            let mensaje = `¡Venta procesada exitosamente!\n\nVenta N°: ${result.numero_venta}\nTotal: $${formatearPrecioChileno(total)}`;
             
             if (diferencia > 0) {
-                mensaje += `\nVuelto: $${diferencia.toLocaleString()}`;
+                mensaje += `\nVuelto: $${formatearPrecioChileno(diferencia)}`;
             }
             
             alert(mensaje);
@@ -719,7 +792,7 @@ function renderizarPagosPendientes(cobros) {
                     <td><span style="font-size: 0.85rem;">${cobro.paciente || '-'}</span></td>
                     <td style="font-size: 0.8rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="${servicios.map(s => `${s.descripcion} (x${s.cantidad})`).join(', ')}">${listaServicios}</td>
                     <td style="font-size: 0.8rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="${insumos.map(i => `${i.descripcion} (x${i.cantidad})`).join(', ')}">${listaInsumos}</td>
-                    <td style="text-align: right;"><strong style="color: #10b981; font-size: 0.9rem;">$${cobro.total.toLocaleString()}</strong></td>
+                    <td style="text-align: right;"><strong style="color: #10b981; font-size: 0.9rem;">$${formatearPrecioChileno(cobro.total)}</strong></td>
                     <td><span style="font-size: 0.8rem;">${cobro.fecha_creacion}</span></td>
                     <td style="white-space: nowrap; text-align: center;">
                         <button class="btn btn-sm btn-primary" onclick="cargarPagoPendiente(${cobro.id})" style="margin-right: 3px; padding: 4px 8px; font-size: 0.8rem;" title="Cargar en caja">
@@ -827,7 +900,7 @@ async function cargarPagoPendiente(ventaId) {
         cerrarModalPagosPendientes();
 
         // Mostrar mensaje de éxito
-        alert(`Pago pendiente ${venta.numero_venta} cargado exitosamente.\nTotal: $${venta.total.toLocaleString()}`);
+        alert(`Pago pendiente ${venta.numero_venta} cargado exitosamente.\nTotal: $${formatearPrecioChileno(venta.total)}`);
 
         // Si hay paciente, establecerlo (opcional)
         if (venta.paciente) {
