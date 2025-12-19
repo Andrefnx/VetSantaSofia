@@ -686,17 +686,6 @@ textarea.is-invalid:focus {
     color: white;
 }
 
-/* ⭐ Botón de editar (para borradores) */
-.timeline-btn.btn-warning {
-    border-color: #ffc107;
-    color: #856404;
-}
-
-.timeline-btn.btn-warning:hover {
-    background: #ffc107;
-    color: #212529;
-}
-
 /* Badge de borrador */
 .timeline-item-subtitle .badge {
     font-size: 0.75rem;
