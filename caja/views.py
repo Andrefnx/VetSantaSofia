@@ -175,16 +175,14 @@ def procesar_venta(request):
                                     'success': False,
                                     'error': f'Producto con ID {item_id} no encontrado.'
                                 }, status=400)
+                        elif not item_id:
+                            # Si no hay ID, se permite crear un item "libre" con solo descripción y precio
+                            # Esto es útil para artículos que no están catalogados en el sistema
+                            logger.warning(f"    - ⚠️  Item libre (sin referencia a producto/servicio catalogado)")
                         
-                        # Validar que al menos uno esté presente
-                        if not servicio and not insumo:
-                            logger.error(f"    - ❌ No se pudo identificar el item: {nombre} (tipo={tipo}, id={item_id})")
-                            return JsonResponse({
-                                'success': False,
-                                'error': f'No se pudo identificar el item "{nombre}". Verifica que el producto o servicio exista.'
-                            }, status=400)
-                        
-                        logger.info(f"    - ✅ Item validado correctamente")
+                        # NOTA: Se permite que servicio e insumo sean None para items "libres"
+                        # Estos son items sin referencia a productos catalogados en el sistema
+                        logger.info(f"    - ✅ Item validado: servicio={servicio}, insumo={insumo}")
                         
                         # Crear detalle de venta
                         DetalleVenta.objects.create(
