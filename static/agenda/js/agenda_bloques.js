@@ -1600,7 +1600,7 @@ function mostrarDetalleCita(bloque) {
     const btnTelefono = document.getElementById('detalleTelefonoPropietario');
     if (bloque.propietario_telefono) {
         btnTelefono.href = `https://wa.me/${bloque.propietario_telefono.replace(/\D/g, '')}`;
-        btnTelefono.textContent = `📞 ${bloque.propietario_telefono}`;
+        btnTelefono.textContent = `+${bloque.propietario_telefono}`;
         btnTelefono.target = '_blank';
     } else {
         btnTelefono.textContent = '-';
@@ -1611,7 +1611,7 @@ function mostrarDetalleCita(bloque) {
     const btnEmail = document.getElementById('detalleEmailPropietario');
     if (bloque.propietario_email) {
         btnEmail.href = `mailto:${bloque.propietario_email}`;
-        btnEmail.textContent = `📧 ${bloque.propietario_email}`;
+        btnEmail.textContent = bloque.propietario_email;
     } else {
         btnEmail.textContent = '-';
         btnEmail.href = '#';
