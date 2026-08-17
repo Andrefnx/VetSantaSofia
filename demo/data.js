@@ -58,3 +58,41 @@ try {
     localStorage.setItem(key, JSON.stringify(window.VET_DEMO_SEED));
   }
 } catch {}
+
+document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{
+  const style=document.createElement('style');
+  style.textContent=`
+    #upcomingList .appointment{grid-template-columns:70px minmax(0,1fr) auto;align-items:center;border-radius:10px;cursor:pointer;transition:.16s;background:#fff}
+    #upcomingList .appointment:hover{background:#f5faf5;transform:translateX(2px)}
+    #upcomingList .appointment-status{display:inline-flex;align-items:center;justify-content:center;min-width:96px;padding:6px 10px;border-radius:999px;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.02em;border:1px solid transparent;white-space:nowrap}
+    #upcomingList .appointment-status.confirmada{background:#e8f3ff;color:#2d5f8b;border-color:#c8def3}
+    #upcomingList .appointment-status.pendiente{background:#fff7e6;color:#8a5c00;border-color:#efd9a8}
+    #upcomingList .appointment-status.completada{background:#eaf7ed;color:#2e6a38;border-color:#cbe8d0}
+    #upcomingList .appointment-status.hospitalizado{background:#fff0f0;color:#a33a3a;border-color:#efc3c3}
+    #upcomingList .appointment-main small{display:block;color:#6b7280;margin-top:2px}
+    #upcomingList .appointment-main .patient-state{margin-top:5px;color:#4b5563;font-size:.78rem}
+  `;
+  document.head.appendChild(style);
+
+  const baseRender=window.renderDashboard;
+  const enhanceDashboard=()=>{
+    const container=document.getElementById('upcomingList');
+    if(!container||typeof state==='undefined')return;
+    const apps=state.appointments.filter(a=>a.date===DEFAULT_DATE).sort((a,b)=>a.time.localeCompare(b.time));
+    container.innerHTML=apps.map(a=>{
+      const p=patient(a.patientId),s=service(a.serviceId),v=vet(a.vetId);
+      const hospitalized=(state.hospitalizations?.[a.patientId]||[]).some(h=>h.status==='activa');
+      const status=hospitalized?'hospitalizado':a.status;
+      const label=hospitalized?'Hospitalizado':({confirmada:'Confirmada',pendiente:'Pendiente',completada:'Completada'}[a.status]||a.status);
+      const patientState=hospitalized?'Paciente actualmente ingresado':'Abrir ficha clínica';
+      return `<div class="appointment" data-dashboard-patient="${p.id}" role="button" tabindex="0" aria-label="Abrir ficha clínica de ${p.name}"><time>${a.time}</time><div class="appointment-main"><strong>${p.name} · ${s.name}</strong><small>${v.name} · ${a.reason}</small><div class="patient-state">${patientState}</div></div><span class="appointment-status ${status}">${label}</span></div>`;
+    }).join('');
+    container.querySelectorAll('[data-dashboard-patient]').forEach(row=>{
+      const openFicha=()=>{selectedPatientId=Number(row.dataset.dashboardPatient);go('ficha')};
+      row.onclick=openFicha;
+      row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openFicha()}};
+    });
+  };
+  if(typeof baseRender==='function')window.renderDashboard=function(){baseRender();enhanceDashboard()};
+  enhanceDashboard();
+},0));
