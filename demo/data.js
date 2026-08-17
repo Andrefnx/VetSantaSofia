@@ -59,40 +59,56 @@ try {
   }
 } catch {}
 
-document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{
+window.addEventListener('load',()=>{
   const style=document.createElement('style');
   style.textContent=`
-    #upcomingList .appointment{grid-template-columns:70px minmax(0,1fr) auto;align-items:center;border-radius:10px;cursor:pointer;transition:.16s;background:#fff}
-    #upcomingList .appointment:hover{background:#f5faf5;transform:translateX(2px)}
-    #upcomingList .appointment-status{display:inline-flex;align-items:center;justify-content:center;min-width:96px;padding:6px 10px;border-radius:999px;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.02em;border:1px solid transparent;white-space:nowrap}
-    #upcomingList .appointment-status.confirmada{background:#e8f3ff;color:#2d5f8b;border-color:#c8def3}
-    #upcomingList .appointment-status.pendiente{background:#fff7e6;color:#8a5c00;border-color:#efd9a8}
-    #upcomingList .appointment-status.completada{background:#eaf7ed;color:#2e6a38;border-color:#cbe8d0}
-    #upcomingList .appointment-status.hospitalizado{background:#fff0f0;color:#a33a3a;border-color:#efc3c3}
-    #upcomingList .appointment-main small{display:block;color:#6b7280;margin-top:2px}
-    #upcomingList .appointment-main .patient-state{margin-top:5px;color:#4b5563;font-size:.78rem}
+    #upcomingList{display:grid!important;gap:8px!important;margin-top:12px!important;min-width:0!important}
+    #upcomingList .demo-consult-row{appearance:none!important;width:100%!important;display:grid!important;grid-template-columns:64px minmax(0,1fr) minmax(220px,auto)!important;gap:14px!important;align-items:center!important;border:1px solid #e4e9e5!important;border-radius:10px!important;background:#fff!important;padding:12px 14px!important;cursor:pointer!important;text-align:left!important;transition:.15s!important;overflow:hidden!important;color:#18241c!important}
+    #upcomingList .demo-consult-row:hover{border-color:#8fbd95!important;background:#f7fbf7!important;box-shadow:0 3px 10px rgba(49,92,52,.08)!important}
+    #upcomingList .demo-consult-time{font-size:.92rem!important;font-weight:800!important;color:#34443a!important}
+    #upcomingList .demo-consult-main{min-width:0!important}
+    #upcomingList .demo-consult-main strong{display:block!important;font-size:.94rem!important;color:#18241c!important;white-space:normal!important}
+    #upcomingList .demo-consult-main small{display:block!important;margin-top:3px!important;color:#66736b!important;white-space:normal!important}
+    #upcomingList .demo-consult-side{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;flex-wrap:wrap!important}
+    #upcomingList .demo-status{display:inline-flex!important;align-items:center!important;gap:6px!important;width:auto!important;height:auto!important;min-width:0!important;padding:6px 10px!important;border-radius:999px!important;border:1px solid transparent!important;font-size:.72rem!important;font-weight:800!important;line-height:1!important;white-space:nowrap!important;opacity:1!important;visibility:visible!important;color:#27322b!important;background:#eef2ef!important}
+    #upcomingList .demo-status.confirmada{background:#e7f3ff!important;border-color:#b9d9f7!important;color:#245a87!important}
+    #upcomingList .demo-status.pendiente{background:#fff4dd!important;border-color:#efd29a!important;color:#825d12!important}
+    #upcomingList .demo-status.completada{background:#e7f6e9!important;border-color:#b9ddbe!important;color:#2c6d35!important}
+    #upcomingList .demo-status.hospitalizado{background:#fde8eb!important;border-color:#efb7c0!important;color:#8e2e3e!important}
+    #upcomingList .demo-status.cirugia{background:#f3eafd!important;border-color:#d6bbed!important;color:#66418d!important}
+    #upcomingList .demo-open-file{display:inline-flex!important;align-items:center!important;gap:5px!important;color:#315c34!important;font-weight:800!important;font-size:.76rem!important;white-space:nowrap!important}
+    @media(max-width:760px){#upcomingList .demo-consult-row{grid-template-columns:52px minmax(0,1fr)!important}#upcomingList .demo-consult-side{grid-column:1/-1!important;justify-content:flex-start!important;padding-left:66px!important}}
   `;
   document.head.appendChild(style);
 
-  const baseRender=window.renderDashboard;
-  const enhanceDashboard=()=>{
-    const container=document.getElementById('upcomingList');
-    if(!container||typeof state==='undefined')return;
-    const apps=state.appointments.filter(a=>a.date===DEFAULT_DATE).sort((a,b)=>a.time.localeCompare(b.time));
-    container.innerHTML=apps.map(a=>{
-      const p=patient(a.patientId),s=service(a.serviceId),v=vet(a.vetId);
-      const hospitalized=(state.hospitalizations?.[a.patientId]||[]).some(h=>h.status==='activa');
-      const status=hospitalized?'hospitalizado':a.status;
-      const label=hospitalized?'Hospitalizado':({confirmada:'Confirmada',pendiente:'Pendiente',completada:'Completada'}[a.status]||a.status);
-      const patientState=hospitalized?'Paciente actualmente ingresado':'Abrir ficha clínica';
-      return `<div class="appointment" data-dashboard-patient="${p.id}" role="button" tabindex="0" aria-label="Abrir ficha clínica de ${p.name}"><time>${a.time}</time><div class="appointment-main"><strong>${p.name} · ${s.name}</strong><small>${v.name} · ${a.reason}</small><div class="patient-state">${patientState}</div></div><span class="appointment-status ${status}">${label}</span></div>`;
-    }).join('');
-    container.querySelectorAll('[data-dashboard-patient]').forEach(row=>{
-      const openFicha=()=>{selectedPatientId=Number(row.dataset.dashboardPatient);go('ficha')};
-      row.onclick=openFicha;
-      row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openFicha()}};
-    });
+  const statusFor=(a,s)=>{
+    const activeHosp=(state.hospitalizations?.[a.patientId]||[]).some(h=>h.status==='activa');
+    if(activeHosp)return {label:'Hospitalizado',cls:'hospitalizado',icon:'fa-hospital'};
+    if(s?.category==='Cirugía'&&a.status!=='completada')return {label:'Cirugía programada',cls:'cirugia',icon:'fa-user-doctor'};
+    if(a.status==='completada')return {label:'Atendido',cls:'completada',icon:'fa-check'};
+    if(a.status==='confirmada')return {label:'Ingreso confirmado',cls:'confirmada',icon:'fa-circle-check'};
+    return {label:'Pendiente de ingreso',cls:'pendiente',icon:'fa-clock'};
   };
-  if(typeof baseRender==='function')window.renderDashboard=function(){baseRender();enhanceDashboard()};
-  enhanceDashboard();
-},0));
+
+  const baseRender=window.renderDashboard;
+  const renderConsultRows=()=>{
+    const list=document.getElementById('upcomingList');
+    if(!list||typeof state==='undefined')return;
+    const apps=state.appointments.filter(a=>a.date===DEFAULT_DATE).sort((a,b)=>a.time.localeCompare(b.time));
+    list.innerHTML=apps.map(a=>{
+      const p=patient(a.patientId),s=service(a.serviceId),v=vet(a.vetId),st=statusFor(a,s);
+      return `<button type="button" class="demo-consult-row" data-dashboard-patient="${p.id}" aria-label="Abrir ficha clínica de ${p.name}">
+        <span class="demo-consult-time">${a.time}</span>
+        <span class="demo-consult-main"><strong>${p.name} · ${s.name}</strong><small>${v.name} · ${a.reason}</small></span>
+        <span class="demo-consult-side"><span class="demo-status ${st.cls}"><i class="fas ${st.icon}"></i>${st.label}</span><span class="demo-open-file">Ver ficha <i class="fas fa-arrow-right"></i></span></span>
+      </button>`;
+    }).join('');
+    list.querySelectorAll('[data-dashboard-patient]').forEach(row=>row.addEventListener('click',()=>{
+      selectedPatientId=Number(row.dataset.dashboardPatient);
+      go('ficha');
+    }));
+  };
+
+  if(typeof baseRender==='function')window.renderDashboard=function(){baseRender();renderConsultRows()};
+  renderConsultRows();
+});
