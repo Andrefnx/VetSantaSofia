@@ -8,11 +8,11 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="https://raw.githubusercontent.com/Andrefnx/VetSantaSofia/main/static/css/kaiadmin.min.css">
-  <link rel="stylesheet" href="https://raw.githubusercontent.com/Andrefnx/VetSantaSofia/main/static/css/dashboard_style.css">
-  <link rel="stylesheet" href="https://raw.githubusercontent.com/Andrefnx/VetSantaSofia/main/static/css/base/vet-custom.css">
-  <link rel="stylesheet" href="https://raw.githubusercontent.com/Andrefnx/VetSantaSofia/main/static/css/base/estilos_generales.css">
-  <link rel="stylesheet" href="https://raw.githubusercontent.com/Andrefnx/VetSantaSofia/main/static/css/agenda/agenda_bloques.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Andrefnx/VetSantaSofia@main/static/css/kaiadmin.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Andrefnx/VetSantaSofia@main/static/css/dashboard_style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Andrefnx/VetSantaSofia@main/static/css/base/vet-custom.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Andrefnx/VetSantaSofia@main/static/css/base/estilos_generales.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Andrefnx/VetSantaSofia@main/static/css/agenda/agenda_bloques.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -20,7 +20,7 @@
     <div class="card card-round login-card">
       <div class="card-body p-4">
         <div class="text-center mb-4">
-          <img src="https://raw.githubusercontent.com/Andrefnx/VetSantaSofia/main/static/img/logo.png" alt="VetSantaSofia" class="login-logo">
+          <img src="https://cdn.jsdelivr.net/gh/Andrefnx/VetSantaSofia@main/static/img/logo.png" alt="VetSantaSofia" class="login-logo">
           <h2 class="mt-3 mb-1">VetSantaSofia</h2>
           <p class="text-muted mb-0">Acceso demostrativo · Veterinario</p>
         </div>
@@ -37,38 +37,29 @@
   <div id="app" class="wrapper app-shell hidden">
     <aside class="vet-sidebar sidebar" id="vetSidebar">
       <div class="vet-sidebar-header">
-        <button class="vet-sidebar-logo border-0 bg-transparent" data-go="dashboard">
-          <img src="https://raw.githubusercontent.com/Andrefnx/VetSantaSofia/main/static/img/logo.png" alt="VetSantaSofia" height="40">
-        </button>
+        <button class="vet-sidebar-logo border-0 bg-transparent" data-go="dashboard"><img src="https://cdn.jsdelivr.net/gh/Andrefnx/VetSantaSofia@main/static/img/logo.png" alt="VetSantaSofia" height="40"></button>
         <div class="vet-sidebar-toggle-container"><button class="vet-toggle-btn menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button></div>
       </div>
-      <div class="vet-sidebar-wrapper">
-        <div class="vet-sidebar-content">
-          <div class="vet-user-info"><span class="vet-user-name">Camila Vera</span><small class="d-block text-muted">Veterinaria · Demo</small></div>
-          <nav id="nav">
-            <ul class="vet-nav-menu list-unstyled">
-              <li class="vet-nav-item active"><button data-view="dashboard" class="vet-nav-link nav-item active"><i class="fas fa-home"></i><span>Dashboard</span></button></li>
-              <li class="vet-nav-section"><h4 class="vet-nav-section-title">Clínica</h4></li>
-              <li class="vet-nav-item"><button data-view="agenda" class="vet-nav-link nav-item"><i class="fas fa-calendar-alt"></i><span>Agenda</span></button></li>
-              <li class="vet-nav-item"><button data-view="pacientes" class="vet-nav-link nav-item"><i class="fas fa-paw"></i><span>Pacientes</span></button></li>
-              <li class="vet-nav-item"><button data-view="ficha" class="vet-nav-link nav-item"><i class="fas fa-notes-medical"></i><span>Ficha clínica</span></button></li>
-              <li class="vet-nav-section"><h4 class="vet-nav-section-title">Demo</h4></li>
-              <li class="vet-nav-item"><button id="resetDemo" class="vet-nav-link"><i class="fas fa-rotate-left"></i><span>Restablecer datos</span></button></li>
-            </ul>
-          </nav>
-          <div class="vet-sidebar-user"><div class="vet-sidebar-divider"></div><span class="vet-logout-link"><i class="fas fa-shield-alt"></i><span>Datos ficticios</span></span></div>
-        </div>
-      </div>
+      <div class="vet-sidebar-wrapper"><div class="vet-sidebar-content">
+        <div class="vet-user-info"><span class="vet-user-name">Camila Vera</span><small class="d-block text-muted">Veterinaria · Demo</small></div>
+        <nav id="nav"><ul class="vet-nav-menu list-unstyled">
+          <li class="vet-nav-item active"><button data-view="dashboard" class="vet-nav-link nav-item active"><i class="fas fa-home"></i><span>Dashboard</span></button></li>
+          <li class="vet-nav-section"><h4 class="vet-nav-section-title">Clínica</h4></li>
+          <li class="vet-nav-item"><button data-view="agenda" class="vet-nav-link nav-item"><i class="fas fa-calendar-alt"></i><span>Agenda</span></button></li>
+          <li class="vet-nav-item"><button data-view="pacientes" class="vet-nav-link nav-item"><i class="fas fa-paw"></i><span>Pacientes</span></button></li>
+          <li class="vet-nav-item"><button data-view="ficha" class="vet-nav-link nav-item"><i class="fas fa-notes-medical"></i><span>Ficha clínica</span></button></li>
+          <li class="vet-nav-section"><h4 class="vet-nav-section-title">Demo</h4></li>
+          <li class="vet-nav-item"><button id="resetDemo" class="vet-nav-link"><i class="fas fa-rotate-left"></i><span>Restablecer datos</span></button></li>
+        </ul></nav>
+        <div class="vet-sidebar-user"><div class="vet-sidebar-divider"></div><span class="vet-logout-link"><i class="fas fa-shield-alt"></i><span>Datos ficticios</span></span></div>
+      </div></div>
     </aside>
 
     <div class="main-panel main-content">
       <div class="demo-topbar"><div><strong id="viewTitle">Panel General</strong><small>Demo estática · sin conexión a producción</small></div><span class="badge bg-success">DEMO</span></div>
       <div class="container"><div class="page-inner">
         <section id="dashboard" class="view active-view dashboard-compact">
-          <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
-            <div><h3 class="fw-bold mb-3">Panel General</h3><h6 class="op-7 mb-2">Bienvenida, Camila Vera</h6></div>
-            <div class="ms-md-auto mt-3 mt-md-0"><span class="badge bg-light text-dark border" id="todayLabel"></span></div>
-          </div>
+          <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4"><div><h3 class="fw-bold mb-3">Panel General</h3><h6 class="op-7 mb-2">Bienvenida, Camila Vera</h6></div><div class="ms-md-auto mt-3 mt-md-0"><span class="badge bg-light text-dark border" id="todayLabel"></span></div></div>
           <div class="row mb-4"><div class="col-12"><h4 class="fw-bold mb-3">⚡ Acciones Rápidas</h4></div>
             <div class="col-md-3 mb-3"><button class="quick-action-card action-cita w-100 border-0" data-go="agenda"><div class="icon"><i class="fas fa-calendar-plus"></i></div><h6>Nueva Cita</h6><p>Agendar</p></button></div>
             <div class="col-md-3 mb-3"><button class="quick-action-card action-mascota w-100 border-0" data-go="pacientes"><div class="icon"><i class="fas fa-paw"></i></div><h6>Pacientes</h6><p>Buscar ficha</p></button></div>
@@ -81,26 +72,14 @@
             <div class="col-md-3"><div class="card vet-card"><div class="card-body"><div class="vet-card-content"><div class="vet-card-icon"><i class="fas fa-paw"></i></div><div class="vet-card-info"><p class="vet-card-label">Pacientes demo</p><p class="vet-card-value" id="metricPacientes">0</p></div></div></div></div></div>
             <div class="col-md-3"><div class="card vet-card"><div class="card-body"><div class="vet-card-content"><div class="vet-card-icon"><i class="fas fa-check"></i></div><div class="vet-card-info"><p class="vet-card-label">Atendidos</p><p class="vet-card-value" id="metricAtendidos">0</p></div></div></div></div></div>
           </div>
-          <div class="row"><div class="col-md-8"><div class="card card-round"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><h5 class="fw-bold mb-0"><i class="fas fa-calendar-check me-2"></i>Próximas consultas</h5><button class="btn btn-sm btn-primary" data-go="agenda">Ver agenda</button></div><div id="upcomingList" class="appointment-list"></div></div></div></div>
-          <div class="col-md-4"><div class="card card-round"><div class="card-body"><h5 class="fw-bold mb-3"><i class="fas fa-history me-2"></i>Actividad reciente</h5><div id="recentActivity" class="mini-timeline"></div></div></div></div></div>
+          <div class="row"><div class="col-md-8"><div class="card card-round"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><h5 class="fw-bold mb-0"><i class="fas fa-calendar-check me-2"></i>Próximas consultas</h5><button class="btn btn-sm btn-primary" data-go="agenda">Ver agenda</button></div><div id="upcomingList" class="appointment-list"></div></div></div></div><div class="col-md-4"><div class="card card-round"><div class="card-body"><h5 class="fw-bold mb-3"><i class="fas fa-history me-2"></i>Actividad reciente</h5><div id="recentActivity" class="mini-timeline"></div></div></div></div></div>
         </section>
 
-        <section id="agenda" class="view">
-          <div class="container-fluid p-0"><div class="p-1-5"><div class="d-flex justify-content-between align-items-center"><h1 class="page-title"><i class="fas fa-calendar-alt"></i> Agenda Veterinaria</h1><button id="openBooking" class="btn btn-primary btn-sm"><i class="fas fa-calendar-plus"></i> Agendar cita</button></div></div>
-          <div class="p-1-5"><div class="row"><div class="col-md-3"><div class="section"><h3 class="mb-3">Filtros</h3><div class="mb-3"><label class="form-label"><strong>Fecha:</strong></label><input id="agendaDate" class="form-control form-control-sm" type="date"></div><div class="mb-3"><label class="form-label"><strong>Veterinario:</strong></label><select id="vetFilter" class="form-select form-select-sm"><option>Camila Vera</option></select></div><div class="legend mb-3"><span><i class="dot available"></i>Disponible</span><span><i class="dot occupied"></i>Ocupado</span><span><i class="dot completed"></i>Completado</span></div><button id="todayButton" class="btn btn-primary btn-sm w-100"><i class="fas fa-calendar-day"></i> Hoy</button></div></div>
-          <div class="col-md-9"><div class="d-flex justify-content-between align-items-center mb-3"><h3><i class="fas fa-calendar-alt"></i> <span id="agendaTitle">Agenda del día</span></h3></div><div class="section"><div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0"><i class="fas fa-user-md"></i> Camila Vera</h4><small class="text-muted">Bloques demostrativos</small></div><div id="scheduleGrid" class="agenda-bloques-grid schedule-grid"></div></div></div></div></div></div>
-        </section>
+        <section id="agenda" class="view"><div class="container-fluid p-0"><div class="p-1-5"><div class="d-flex justify-content-between align-items-center"><h1 class="page-title"><i class="fas fa-calendar-alt"></i> Agenda Veterinaria</h1><button id="openBooking" class="btn btn-primary btn-sm"><i class="fas fa-calendar-plus"></i> Agendar cita</button></div></div><div class="p-1-5"><div class="row"><div class="col-md-3"><div class="section"><h3 class="mb-3">Filtros</h3><div class="mb-3"><label class="form-label"><strong>Fecha:</strong></label><input id="agendaDate" class="form-control form-control-sm" type="date"></div><div class="mb-3"><label class="form-label"><strong>Veterinario:</strong></label><select id="vetFilter" class="form-select form-select-sm"><option>Camila Vera</option></select></div><div class="legend mb-3"><span><i class="dot available"></i>Disponible</span><span><i class="dot occupied"></i>Ocupado</span><span><i class="dot completed"></i>Completado</span></div><button id="todayButton" class="btn btn-primary btn-sm w-100"><i class="fas fa-calendar-day"></i> Hoy</button></div></div><div class="col-md-9"><div class="d-flex justify-content-between align-items-center mb-3"><h3><i class="fas fa-calendar-alt"></i> <span id="agendaTitle">Agenda del día</span></h3></div><div class="section"><div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0"><i class="fas fa-user-md"></i> Camila Vera</h4><small class="text-muted">Bloques demostrativos</small></div><div id="scheduleGrid" class="agenda-bloques-grid schedule-grid"></div></div></div></div></div></div></section>
 
-        <section id="pacientes" class="view">
-          <div class="d-flex justify-content-between align-items-center pt-2 pb-4"><div><h3 class="fw-bold mb-2">Pacientes</h3><p class="text-muted mb-0">Registro ficticio de pacientes y propietarios</p></div></div>
-          <div class="card card-round"><div class="card-body"><div class="d-flex gap-3 align-items-center justify-content-between mb-3"><div class="vet-search flex-grow-1"><i class="fas fa-search"></i><input id="patientSearch" placeholder="Buscar paciente, especie o propietario"></div><span id="patientCount" class="text-muted small"></span></div><div class="table-responsive"><table class="table table-hover"><thead><tr><th>Paciente</th><th>Especie</th><th>Propietario</th><th>Edad</th><th>Última atención</th><th></th></tr></thead><tbody id="patientRows"></tbody></table></div></div></div>
-        </section>
+        <section id="pacientes" class="view"><div class="d-flex justify-content-between align-items-center pt-2 pb-4"><div><h3 class="fw-bold mb-2">Pacientes</h3><p class="text-muted mb-0">Registro ficticio de pacientes y propietarios</p></div></div><div class="card card-round"><div class="card-body"><div class="d-flex gap-3 align-items-center justify-content-between mb-3"><div class="vet-search flex-grow-1"><i class="fas fa-search"></i><input id="patientSearch" placeholder="Buscar paciente, especie o propietario"></div><span id="patientCount" class="text-muted small"></span></div><div class="table-responsive"><table class="table table-hover"><thead><tr><th>Paciente</th><th>Especie</th><th>Propietario</th><th>Edad</th><th>Última atención</th><th></th></tr></thead><tbody id="patientRows"></tbody></table></div></div></div></section>
 
-        <section id="ficha" class="view">
-          <div class="d-flex justify-content-between align-items-center pt-2 pb-4"><div><h3 class="fw-bold mb-2">Ficha clínica</h3><p class="text-muted mb-0">Timeline integral del paciente</p></div><button id="addTimelineEvent" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Registrar evolución</button></div>
-          <div class="row"><div class="col-md-4"><div class="card card-round"><div class="card-body text-center"><div class="pet-avatar" id="petAvatar">🐶</div><h3 id="petName">-</h3><p id="petSummary" class="text-muted"></p><div class="detail-list" id="petDetails"></div><div class="text-start mt-3"><label class="form-label fw-semibold">Paciente seleccionado</label><select id="patientSelect" class="form-select"></select></div></div></div></div>
-          <div class="col-md-8"><div class="card card-round"><div class="card-body"><h5 class="fw-bold mb-1">Timeline clínico</h5><p class="text-muted small mb-4">Consultas, vacunas, controles y observaciones</p><div id="timeline" class="timeline"></div></div></div></div></div>
-        </section>
+        <section id="ficha" class="view"><div class="d-flex justify-content-between align-items-center pt-2 pb-4"><div><h3 class="fw-bold mb-2">Ficha clínica</h3><p class="text-muted mb-0">Timeline integral del paciente</p></div><button id="addTimelineEvent" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Registrar evolución</button></div><div class="row"><div class="col-md-4"><div class="card card-round"><div class="card-body text-center"><div class="pet-avatar" id="petAvatar">🐶</div><h3 id="petName">-</h3><p id="petSummary" class="text-muted"></p><div class="detail-list" id="petDetails"></div><div class="text-start mt-3"><label class="form-label fw-semibold">Paciente seleccionado</label><select id="patientSelect" class="form-select"></select></div></div></div></div><div class="col-md-8"><div class="card card-round"><div class="card-body"><h5 class="fw-bold mb-1">Timeline clínico</h5><p class="text-muted small mb-4">Consultas, vacunas, controles y observaciones</p><div id="timeline" class="timeline"></div></div></div></div></div></section>
       </div></div>
     </div>
   </div>
