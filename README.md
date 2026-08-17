@@ -1,6 +1,20 @@
 # VetSantaSofia
 
-Sistema de gestión veterinaria en Django 5.2.7 con PostgreSQL, preparado para una demo pública en Render sin cambiar los flujos funcionales existentes.
+Sistema de gestión veterinaria desarrollado con Django 5.2.7. Incluye autenticación por RUT, gestión clínica, pacientes, agenda, inventario, servicios y caja.
+
+## Demo visual
+
+Una vista rápida del sistema directamente desde GitHub. Las imágenes corresponden a capturas versionadas en este repositorio y no requieren desplegar la aplicación.
+
+### Vista principal
+
+[![Vista principal de VetSantaSofia](---evidencia/2.png)](---evidencia/2.png)
+
+### Flujo del sistema
+
+[![Vista de módulos de VetSantaSofia](---evidencia/3.png)](---evidencia/3.png)
+
+> La demo del README es visual. Para probar formularios, autenticación, base de datos y flujos interactivos es necesario ejecutar o desplegar la aplicación Django.
 
 ## Módulos
 
@@ -13,11 +27,15 @@ Sistema de gestión veterinaria en Django 5.2.7 con PostgreSQL, preparado para u
 - Caja.
 - Administración con Jazzmin.
 
-## Requisitos
+## Stack
 
 - Python 3.12 recomendado.
 - Django 5.2.7.
-- PostgreSQL para producción.
+- PostgreSQL en despliegues persistentes.
+- SQLite disponible como fallback de desarrollo local.
+- Gunicorn como servidor WSGI.
+- WhiteNoise para archivos estáticos.
+- JavaScript existente del proyecto.
 
 ## Instalación local
 
@@ -32,37 +50,49 @@ python manage.py cargar_demo
 python manage.py runserver
 ```
 
-En Windows, copie `.env.example` a `.env` manualmente o use `copy .env.example .env`.
+En Windows puede usar `copy .env.example .env`.
+
+Para desarrollo local puede dejar `DATABASE_URL` sin definir y Django utilizará SQLite. Para un entorno persistente use PostgreSQL.
 
 ## Variables de entorno
 
 | Variable | Uso |
 | --- | --- |
-| `SECRET_KEY` | Clave de Django. Debe generarse fuera del repositorio. |
-| `DEBUG` | `False` en Render. |
-| `ALLOWED_HOSTS` | Hosts separados por coma. |
-| `CSRF_TRUSTED_ORIGINS` | Orígenes HTTPS separados por coma. |
-| `DATABASE_URL` | URL de conexión PostgreSQL. |
+| `SECRET_KEY` | Clave secreta de Django. Debe generarse fuera del repositorio. |
+| `DEBUG` | `False` en producción. |
+| `ALLOWED_HOSTS` | Dominios/hosts permitidos separados por coma. |
+| `CSRF_TRUSTED_ORIGINS` | Orígenes HTTPS confiables separados por coma. |
+| `DATABASE_URL` | URL de conexión. En producción se recomienda PostgreSQL. |
 
-`.env` está ignorado por Git y no debe subirse. Las credenciales que hayan sido publicadas anteriormente deben rotarse.
+Ejemplo sin credenciales reales:
+
+```env
+SECRET_KEY=
+DEBUG=False
+ALLOWED_HOSTS=example.com,www.example.com
+CSRF_TRUSTED_ORIGINS=https://example.com,https://www.example.com
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DATABASE
+```
+
+`.env` está ignorado por Git y no debe versionarse. Cualquier credencial publicada anteriormente debe considerarse comprometida y rotarse.
 
 ## Datos demo
 
-El comando es idempotente y puede ejecutarse más de una vez:
+El comando de carga es idempotente:
 
 ```bash
 python manage.py cargar_demo
 ```
 
-Crea datos completamente ficticios para los tres roles, propietarios, pacientes, servicios, inventario y citas.
+Puede ejecutarse varias veces sin duplicar sus registros. Crea datos completamente ficticios para usuarios por rol, propietarios, pacientes, servicios, inventario y citas.
 
-Usuario público de demostración:
+Usuario navegable de demostración:
 
 - RUT: `22222222-2`
 - Contraseña: `DemoVet2026!`
 - Rol: Veterinario
 
-También se crean usuarios ficticios de administración y recepción para validar los roles, sin publicar sus accesos como cuentas de navegación.
+También se crean usuarios ficticios de administración y recepción para comprobar los roles.
 
 ## Validaciones
 
@@ -74,51 +104,54 @@ python manage.py collectstatic --noinput
 python manage.py test
 ```
 
-La rama de preparación de la demo incluye un workflow que ejecuta estas validaciones con PostgreSQL 16.
+El repositorio incluye un workflow de GitHub Actions que ejecuta estas comprobaciones con PostgreSQL 16.
 
-## Despliegue en Render
+## Despliegue
 
-El archivo `render.yaml` define PostgreSQL y el servicio web. Render genera `SECRET_KEY`, inyecta `DATABASE_URL`, mantiene `DEBUG=False` y ejecuta Gunicorn.
+La aplicación no depende de un proveedor específico. Puede desplegarse en una VM, contenedor o plataforma que permita ejecutar Python y conectarse a PostgreSQL.
 
-El build ejecuta:
+### Preparación
+
+Configure las variables de entorno anteriores y ejecute:
+
+```bash
+pip install -r requirements.txt
+python manage.py migrate --noinput
+python manage.py collectstatic --noinput
+```
+
+El script incluido automatiza instalación, estáticos y migraciones:
 
 ```bash
 ./build.sh
 ```
 
-El servicio inicia con:
+### Inicio del servicio
+
+Para una instancia pública con datos demo:
 
 ```bash
-python manage.py cargar_demo && gunicorn veteriaria.wsgi:application --bind 0.0.0.0:$PORT
+python manage.py cargar_demo
+gunicorn veteriaria.wsgi:application --bind 0.0.0.0:${PORT:-8000}
 ```
 
-Para desplegar con Blueprint:
+Para una instancia sin datos demo:
 
-1. Suba o fusione esta rama en GitHub.
-2. En Render, seleccione **New > Blueprint**.
-3. Conecte `Andrefnx/VetSantaSofia`.
-4. Seleccione la rama que contiene `render.yaml`.
-5. Aplique el Blueprint.
-6. Tras el primer deploy, abra la URL `onrender.com` asignada y use el usuario demo.
-
-Si configura el servicio manualmente, use exactamente:
-
-```text
-Build Command: ./build.sh
-Start Command: python manage.py cargar_demo && gunicorn veteriaria.wsgi:application --bind 0.0.0.0:$PORT
+```bash
+gunicorn veteriaria.wsgi:application --bind 0.0.0.0:${PORT:-8000}
 ```
 
-## Archivos estáticos
+### Requisitos de infraestructura
 
-WhiteNoise sirve los archivos recolectados en `staticfiles/`. `collectstatic` se ejecuta durante el build y usa almacenamiento con manifest y compresión.
+Cualquier plataforma elegida debe proporcionar:
 
-## Capturas
+1. Python 3.12 o compatible.
+2. Variables de entorno persistentes.
+3. Una base PostgreSQL accesible mediante `DATABASE_URL`.
+4. Un puerto HTTP expuesto al proceso Gunicorn.
+5. HTTPS en producción.
 
-Capturas existentes del proyecto:
-
-![Vista del sistema](---evidencia/2.png)
-
-![Vista adicional](---evidencia/3.png)
+No se necesita un servidor separado para los archivos estáticos de esta demo: WhiteNoise sirve el contenido generado por `collectstatic`.
 
 ## Estructura principal
 
@@ -127,7 +160,7 @@ agenda/       citas y disponibilidad
 caja/         gestión financiera
 clinica/      atención clínica
 cuentas/      usuarios y autenticación
- dashboard/   panel principal
+dashboard/    panel principal
 historial/    auditoría y trazabilidad
 inventario/   insumos y stock
 pacientes/    propietarios y pacientes
@@ -139,4 +172,4 @@ veteriaria/   configuración del proyecto
 
 ## Seguridad
 
-No se deben versionar `.env`, claves secretas ni credenciales de bases de datos. La demo usa únicamente datos ficticios. Para producción real, rote cualquier credencial que haya aparecido previamente en el historial del repositorio.
+No se deben versionar archivos `.env`, claves secretas ni credenciales de bases de datos. `DEBUG` debe permanecer desactivado en producción. Los datos generados por `cargar_demo` son ficticios y están destinados únicamente a demostración y pruebas.
