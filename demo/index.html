@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Demo interactiva de VetSantaSofia con datos ficticios.">
+  <title>VetSantaSofia · Demo interactiva</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="brand-mark">VS</div>
+      <h1>VetSantaSofia</h1>
+      <p class="muted">Demo interactiva para GitHub Pages</p>
+      <div class="demo-note">Todos los datos son ficticios. No existe conexión con la base real.</div>
+      <form id="loginForm" class="stack">
+        <label>RUT veterinario
+          <input id="rut" value="22222222-2" autocomplete="off">
+        </label>
+        <label>Contraseña
+          <input id="password" type="password" value="DemoVet2026!">
+        </label>
+        <button class="btn btn-primary" type="submit">Entrar a la demo</button>
+      </form>
+      <small class="muted">Credenciales precargadas sólo para esta demostración.</small>
+    </div>
+  </div>
+
+  <div id="app" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark small">VS</div>
+        <div><strong>VetSantaSofia</strong><span>Demo</span></div>
+      </div>
+      <nav id="nav" class="nav-list">
+        <button data-view="dashboard" class="nav-item active">Panel general</button>
+        <button data-view="agenda" class="nav-item">Agenda</button>
+        <button data-view="pacientes" class="nav-item">Pacientes</button>
+        <button data-view="ficha" class="nav-item">Ficha clínica</button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-chip"><span class="avatar">CV</span><div><strong>Camila Vera</strong><small>Veterinaria</small></div></div>
+        <button id="resetDemo" class="btn btn-ghost btn-small">Restablecer datos</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <button id="menuToggle" class="menu-toggle" aria-label="Abrir menú">☰</button>
+        <div>
+          <strong id="viewTitle">Panel General</strong>
+          <span class="muted">Demo navegable · datos locales</span>
+        </div>
+        <span class="status-pill">● Demo segura</span>
+      </header>
+
+      <section id="dashboard" class="view active-view">
+        <div class="page-heading">
+          <div><h2>Panel General</h2><p>Bienvenida, Camila Vera</p></div>
+          <span class="date-badge" id="todayLabel"></span>
+        </div>
+
+        <h3 class="section-title">Acciones rápidas</h3>
+        <div class="quick-grid">
+          <button class="quick-card" data-go="agenda"><span>＋</span><strong>Nueva cita</strong><small>Agendar consulta</small></button>
+          <button class="quick-card" data-go="pacientes"><span>🐾</span><strong>Pacientes</strong><small>Buscar ficha</small></button>
+          <button class="quick-card" data-go="ficha"><span>🩺</span><strong>Consulta</strong><small>Abrir ficha clínica</small></button>
+          <button class="quick-card" id="completeNext"><span>✓</span><strong>Completar cita</strong><small>Actualizar agenda</small></button>
+        </div>
+
+        <div class="stats-grid">
+          <article class="metric-card"><span class="metric-label">Citas de hoy</span><strong id="metricCitas">0</strong><small>agenda activa</small></article>
+          <article class="metric-card"><span class="metric-label">Pendientes</span><strong id="metricPendientes">0</strong><small>por atender</small></article>
+          <article class="metric-card"><span class="metric-label">Pacientes demo</span><strong id="metricPacientes">0</strong><small>fichas disponibles</small></article>
+          <article class="metric-card"><span class="metric-label">Atendidos</span><strong id="metricAtendidos">0</strong><small>completados</small></article>
+        </div>
+
+        <div class="content-grid two-thirds">
+          <article class="panel">
+            <div class="panel-head"><div><h3>Próximas consultas</h3><p>Agenda de la veterinaria seleccionada</p></div><button class="btn btn-secondary btn-small" data-go="agenda">Ver agenda</button></div>
+            <div id="upcomingList" class="appointment-list"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-head"><div><h3>Actividad reciente</h3><p>Eventos clínicos ficticios</p></div></div>
+            <div id="recentActivity" class="mini-timeline"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="agenda" class="view">
+        <div class="page-heading"><div><h2>Agenda Veterinaria</h2><p>Bloques disponibles y citas del día</p></div><button id="openBooking" class="btn btn-primary">+ Agendar cita</button></div>
+        <div class="agenda-layout">
+          <aside class="panel filters">
+            <h3>Filtros</h3>
+            <label>Fecha<input id="agendaDate" type="date"></label>
+            <label>Veterinario<select id="vetFilter"><option>Camila Vera</option></select></label>
+            <div class="legend"><span><i class="dot available"></i>Disponible</span><span><i class="dot occupied"></i>Ocupado</span><span><i class="dot completed"></i>Completado</span></div>
+            <button id="todayButton" class="btn btn-secondary">Ir a hoy</button>
+          </aside>
+          <article class="panel agenda-panel">
+            <div class="panel-head"><div><h3 id="agendaTitle">Agenda del día</h3><p>Duración de bloques: 30 min</p></div></div>
+            <div id="scheduleGrid" class="schedule-grid"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="pacientes" class="view">
+        <div class="page-heading"><div><h2>Pacientes</h2><p>Registro ficticio de pacientes y propietarios</p></div></div>
+        <article class="panel">
+          <div class="toolbar"><input id="patientSearch" class="search" placeholder="Buscar por paciente, especie o propietario"><span id="patientCount" class="muted"></span></div>
+          <div class="table-wrap">
+            <table><thead><tr><th>Paciente</th><th>Especie</th><th>Propietario</th><th>Edad</th><th>Última atención</th><th></th></tr></thead><tbody id="patientRows"></tbody></table>
+          </div>
+        </article>
+      </section>
+
+      <section id="ficha" class="view">
+        <div class="page-heading"><div><h2>Ficha clínica</h2><p>Timeline integral del paciente</p></div><button id="addTimelineEvent" class="btn btn-primary">+ Registrar evolución</button></div>
+        <div class="patient-layout">
+          <aside class="panel patient-card">
+            <div class="pet-avatar" id="petAvatar">🐶</div>
+            <h3 id="petName">-</h3>
+            <p id="petSummary" class="muted"></p>
+            <div class="detail-list" id="petDetails"></div>
+            <label>Paciente seleccionado<select id="patientSelect"></select></label>
+          </aside>
+          <article class="panel timeline-panel">
+            <div class="panel-head"><div><h3>Timeline clínico</h3><p>Consultas, vacunas, controles y observaciones</p></div></div>
+            <div id="timeline" class="timeline"></div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="bookingModal" class="modal">
+    <form method="dialog" id="bookingForm" class="modal-card">
+      <div class="modal-head"><div><h3>Agendar cita</h3><p>Los cambios se guardan sólo en este navegador.</p></div><button value="cancel" class="icon-btn" aria-label="Cerrar">×</button></div>
+      <div class="form-grid">
+        <label>Paciente<select id="bookingPatient"></select></label>
+        <label>Servicio<select id="bookingService"><option>Consulta general</option><option>Control preventivo</option><option>Vacunación</option><option>Control postoperatorio</option></select></label>
+        <label>Fecha<input id="bookingDate" type="date" required></label>
+        <label>Hora<select id="bookingTime"></select></label>
+        <label class="full">Motivo<textarea id="bookingReason" rows="3" placeholder="Ej: control anual y revisión general"></textarea></label>
+      </div>
+      <div class="modal-actions"><button value="cancel" class="btn btn-secondary">Cancelar</button><button id="saveBooking" value="default" class="btn btn-primary">Guardar cita</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="eventModal" class="modal">
+    <form method="dialog" id="eventForm" class="modal-card">
+      <div class="modal-head"><div><h3>Registrar evolución</h3><p>Nuevo evento en el timeline ficticio.</p></div><button value="cancel" class="icon-btn" aria-label="Cerrar">×</button></div>
+      <div class="form-grid">
+        <label>Tipo<select id="eventType"><option>Consulta</option><option>Control</option><option>Vacuna</option><option>Examen</option><option>Observación</option></select></label>
+        <label>Fecha<input id="eventDate" type="date" required></label>
+        <label class="full">Título<input id="eventTitle" placeholder="Ej: control dermatológico"></label>
+        <label class="full">Detalle<textarea id="eventText" rows="4" placeholder="Hallazgos y recomendaciones ficticias"></textarea></label>
+      </div>
+      <div class="modal-actions"><button value="cancel" class="btn btn-secondary">Cancelar</button><button id="saveEvent" value="default" class="btn btn-primary">Guardar evento</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
