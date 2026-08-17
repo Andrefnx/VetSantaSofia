@@ -8,9 +8,7 @@ admin.site.site_header = 'VetLog'
 admin.site.site_title = 'VetLog Admin'
 
 urlpatterns = [
-    path('admin/', admin.site.urls),  # ← PRIMERO
-    path('admin_tools_stats/', include('admin_tools_stats.urls')),
-    
+    path('admin/', admin.site.urls),
     path('dashboard/', include('dashboard.urls')),
     path('pacientes/', include('pacientes.urls')),
     path('inventario/', include('inventario.urls')),
@@ -18,11 +16,10 @@ urlpatterns = [
     path('clinica/', include('clinica.urls')),
     path('agenda/', include('agenda.urls')),
     path('caja/', include('caja.urls')),
-    path('historial/', include('historial.urls')),  # Sistema de historial
+    path('historial/', include('historial.urls')),
     path('ui/preview/', ui_preview, name='ui_preview'),
-    path('', include('login.urls')),  # ← ÚLTIMO (porque tiene catch-all)
+    path('', include('login.urls')),
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
