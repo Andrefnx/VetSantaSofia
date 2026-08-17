@@ -27,7 +27,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Prepare demo layout
-        run: cat demo/layout.js >> demo/app.js
+        run: |
+          cat demo/layout.js >> demo/app.js
+          cat demo/final-tweaks.js >> demo/app.js
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
