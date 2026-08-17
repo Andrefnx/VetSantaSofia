@@ -3,9 +3,27 @@ window.addEventListener('load',()=>{
   style.textContent=`
     #agenda .agenda-real-layout{align-items:start!important}
     #agenda .agenda-main>div:first-child{margin-left:0!important;padding-left:0!important}
-    #agenda .agenda-main>div:first-child h3{margin:0 0 14px 0!important}
     #agenda .agenda-main{padding-top:0!important}
     #agenda .agenda-filter-panel{margin-top:54px!important}
+    #agenda .agenda-date-heading{transform:translateY(-45px);margin-bottom:-31px!important}
+
+    #agenda .agenda-block.surgery,
+    #dashboard .demo-status.pendiente,
+    .badge-warning,
+    .bg-warning,
+    .alert-warning,
+    .btn-warning{
+      background:#fff3c2!important;
+      color:#000!important;
+      border-color:#d8c67a!important;
+    }
+    #agenda .agenda-block.surgery *,
+    #dashboard .demo-status.pendiente *,
+    .badge-warning *,
+    .bg-warning *,
+    .alert-warning *,
+    .btn-warning *{color:#000!important}
+    .btn-warning:hover{background:#f5e5a9!important;color:#000!important;border-color:#c9b564!important}
 
     .vet-sidebar-header{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:10px!important;padding:14px 12px!important;min-height:94px!important}
     .demo-vet-label{width:100%!important;text-align:center!important;justify-content:center!important}
@@ -30,9 +48,7 @@ window.addEventListener('load',()=>{
   const title=document.querySelector('#agenda #agendaTitle')?.closest('h3');
   const vetContainer=document.getElementById('vetAgendas');
   if(agendaMain&&title&&vetContainer){
-    const firstCol=vetContainer.querySelector('.agenda-vet-col');
-    if(firstCol){
-      title.style.marginLeft='0';
-    }
+    title.classList.add('agenda-date-heading');
+    title.style.marginLeft='0';
   }
 });
