@@ -31,6 +31,7 @@ jobs:
           cat demo/layout.js >> demo/app.js
           cat demo/final-tweaks.js >> demo/app.js
           cat demo/palette-tweaks.js >> demo/app.js
+          cat demo/dashboard-polish.js >> demo/app.js
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
