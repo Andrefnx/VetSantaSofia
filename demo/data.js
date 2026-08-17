@@ -1,3 +1,14 @@
+try {
+  const cached = JSON.parse(localStorage.getItem('vetsantasofia-demo-v4'));
+  const invalidAppointments = cached?.appointments?.some(a => !a.vetId || !a.serviceId);
+  const invalidVets = cached?.vets?.some(v => !Array.isArray(v.availability));
+  if (cached && (invalidAppointments || invalidVets || !Array.isArray(cached.services))) {
+    localStorage.removeItem('vetsantasofia-demo-v4');
+  }
+} catch {
+  localStorage.removeItem('vetsantasofia-demo-v4');
+}
+
 window.VET_DEMO_SEED={
   vets:[
     {id:1,name:'Camila Vera',role:'Veterinaria',availability:['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30']},
@@ -25,7 +36,7 @@ window.VET_DEMO_SEED={
     {id:106,patientId:2,vetId:2,date:'2026-08-17',time:'15:00',serviceId:2,reason:'Control general',status:'pendiente'}
   ],
   timeline:{
-    1:[{id:'e1',date:'2026-08-10',type:'Consulta',title:'Control dermatológico',text:'Prurito leve estacional. Examen general dentro de parámetros.',vet:'Camila Vera',diagnosis:'Dermatitis estacional leve',treatment:'Manejo ambiental y control',supplies:[1]},{id:'e2',date:'2026-06-21',type:'Vacuna',title:'Refuerzo preventivo',text:'Vacunación registrada sin eventos adversos.',vet:'Camila Vera',diagnosis:'Preventivo',treatment:'Vacunación',supplies:[3]}],
+    1:[{id:'e1',date:'2026-08-10',type:'Consulta',title:'Control dermatológico',text:'Prurito leve estacional. Examen general dentro de parámetros.',vet:'Camila Vera',diagnosis:'Dermatitis estacional leve',treatment:'Manejo ambiental y control',supplies:[1]},{id:'e2',date:'2026-06-21',type:'Vacuna',title:'Refuerzo preventivo',text:'Vacunación registrada sin eventos adversos.',vet:'Camila Vera',diagnosis:'Preventivo',treatment:'Vacunación',supplies:[3]},{id:'e6',date:'2026-03-05',type:'Control',title:'Control de peso',text:'Peso estable. Se mantiene actividad regular y pauta de alimentación.',vet:'Camila Vera',diagnosis:'Control nutricional',treatment:'Mantener pauta',supplies:[]}],
     2:[{id:'e3',date:'2026-08-12',type:'Consulta',title:'Chequeo general',text:'Paciente activo e hidratado.',vet:'Camila Vera',diagnosis:'Sin hallazgos',treatment:'Control anual',supplies:[]}],
     3:[{id:'e4',date:'2026-07-29',type:'Control',title:'Control osteoarticular',text:'Rigidez leve después de ejercicio prolongado.',vet:'Ignacio Rojas',diagnosis:'Rigidez leve',treatment:'Reposo relativo y seguimiento',supplies:[4]}],
     4:[{id:'e5',date:'2026-08-04',type:'Consulta',title:'Evaluación digestiva',text:'Apetito variable durante dos días.',vet:'Camila Vera',diagnosis:'Trastorno digestivo leve',treatment:'Dieta blanda y observación',supplies:[2]}]
