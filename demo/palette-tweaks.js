@@ -7,20 +7,20 @@ window.addEventListener('load',()=>{
     .bg-warning,
     .alert-warning,
     .btn-warning{
-      background:#f3b57a!important;
-      color:#000!important;
-      border-color:#df9652!important;
+      background:#f8dfcf!important;
+      color:#2f241f!important;
+      border-color:#e8bfa8!important;
     }
     #agenda .agenda-block.surgery *,
     #dashboard .demo-status.pendiente *,
     .badge-warning *,
     .bg-warning *,
     .alert-warning *,
-    .btn-warning *{color:#000!important}
-    .btn-warning:hover{background:#edaa69!important;color:#000!important;border-color:#d88943!important}
+    .btn-warning *{color:#2f241f!important}
+    .btn-warning:hover{background:#f3d2bf!important;color:#2f241f!important;border-color:#dda98e!important}
 
     #agenda .legend .dot.attended{background:#c9d8cb!important;border-color:#718d75!important}
-    #agenda .legend .dot.surgery{background:#f3b57a!important;border-color:#df9652!important}
+    #agenda .legend .dot.surgery{background:#f8dfcf!important;border-color:#e8bfa8!important}
     #agenda .legend .dot.unavailable{background:#eceeef!important;border-color:#cbd0d4!important}
   `;
   document.head.appendChild(style);
