@@ -6,3 +6,5 @@ __pycache__/
 venv/
 .venv/
 staticfiles/
+db.sqlite3
+backup.sql
