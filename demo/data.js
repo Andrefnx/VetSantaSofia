@@ -46,3 +46,15 @@ window.VET_DEMO_SEED={
   documents:{1:[{id:301,name:'Perfil preventivo.pdf',date:'2026-06-21',description:'Informe clínico'}],2:[],3:[],4:[]},
   audit:{1:[{date:'2026-08-10 12:40',event:'Consulta registrada',user:'Camila Vera'}],2:[],3:[],4:[]}
 };
+
+try {
+  const key = 'vetsantasofia-demo-v4';
+  let cached = null;
+  try {
+    cached = JSON.parse(localStorage.getItem(key));
+  } catch {}
+  const valid = cached && Array.isArray(cached.vets) && cached.vets.length >= 2 && Array.isArray(cached.services) && Array.isArray(cached.patients) && Array.isArray(cached.appointments);
+  if (!valid) {
+    localStorage.setItem(key, JSON.stringify(window.VET_DEMO_SEED));
+  }
+} catch {}
