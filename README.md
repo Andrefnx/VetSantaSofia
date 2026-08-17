@@ -1,204 +1,142 @@
 # VetSantaSofia
 
-Sistema de gestión veterinaria con módulos integrados para administración, pacientes, inventario, servicios y agenda.
+Sistema de gestión veterinaria en Django 5.2.7 con PostgreSQL, preparado para una demo pública en Render sin cambiar los flujos funcionales existentes.
 
-## 🚀 Inicio Rápido
+## Módulos
 
-### Activar Entorno Virtual
+- Dashboard y autenticación por RUT.
+- Pacientes y propietarios.
+- Agenda y disponibilidad veterinaria.
+- Clínica e historial.
+- Inventario.
+- Servicios.
+- Caja.
+- Administración con Jazzmin.
+
+## Requisitos
+
+- Python 3.12 recomendado.
+- Django 5.2.7.
+- PostgreSQL para producción.
+
+## Instalación local
+
 ```bash
-.\venv\Scripts\activate
-```
-
-### Ejecutar Servidor
-```bash
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# Linux/macOS: source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+python manage.py migrate
+python manage.py cargar_demo
 python manage.py runserver
 ```
 
-### Acceder al Sistema
-- **URL**: http://localhost:8000/
-- **Admin**: http://localhost:8000/admin/
-- **Agenda**: http://localhost:8000/agenda/
+En Windows, copie `.env.example` a `.env` manualmente o use `copy .env.example .env`.
 
----
+## Variables de entorno
 
-## 📦 Módulos del Sistema
+| Variable | Uso |
+| --- | --- |
+| `SECRET_KEY` | Clave de Django. Debe generarse fuera del repositorio. |
+| `DEBUG` | `False` en Render. |
+| `ALLOWED_HOSTS` | Hosts separados por coma. |
+| `CSRF_TRUSTED_ORIGINS` | Orígenes HTTPS separados por coma. |
+| `DATABASE_URL` | URL de conexión PostgreSQL. |
 
-### 1. Gestión de Pacientes
-- Registro de mascotas y propietarios
-- Historial médico
-- Fichas clínicas
+`.env` está ignorado por Git y no debe subirse. Las credenciales que hayan sido publicadas anteriormente deben rotarse.
 
-### 2. Inventario
-- Control de insumos y medicamentos
-- Alertas de stock
-- Movimientos
+## Datos demo
 
-### 3. Servicios
-- Catálogo de servicios veterinarios
-- Precios y duraciones
-- Asociación con insumos
+El comando es idempotente y puede ejecutarse más de una vez:
 
-### 4. 🗓️ **AGENDA** (Nuevo)
-Sistema completo de gestión de citas y disponibilidad de veterinarios.
-
-**Características**:
-- ✅ Calendario mensual interactivo
-- ✅ Gestión de disponibilidad por veterinario
-- ✅ Timeline visual por día
-- ✅ Agendamiento con validaciones
-- ✅ Sincronización con servicios
-- ✅ Gestión de vacaciones/licencias
-- ✅ Sin librerías externas
-
-**Documentación**:
-- 📖 [Inicio Rápido](AGENDA_README.md)
-- 📚 [Documentación Técnica](AGENDA_DOCUMENTACION.md)
-- 💡 [Ejemplos de Uso](AGENDA_EJEMPLOS.md)
-- ✅ [Checklist de Verificación](AGENDA_CHECKLIST.md)
-- 📊 [Resumen Ejecutivo](AGENDA_RESUMEN.md)
-
-**Inicializar Agenda**:
 ```bash
-python manage.py inicializar_agenda
+python manage.py cargar_demo
 ```
 
----
+Crea datos completamente ficticios para los tres roles, propietarios, pacientes, servicios, inventario y citas.
 
-## 🛠️ Instalación y Configuración
+Usuario público de demostración:
 
-### Requisitos
-- Python 3.8+
-- Django 4.x
-- SQLite (desarrollo) / PostgreSQL (producción)
+- RUT: `22222222-2`
+- Contraseña: `DemoVet2026!`
+- Rol: Veterinario
 
-### Migraciones
+También se crean usuarios ficticios de administración y recepción para validar los roles, sin publicar sus accesos como cuentas de navegación.
+
+## Validaciones
+
 ```bash
-python manage.py makemigrations
+python manage.py check
+python manage.py makemigrations --check --dry-run
 python manage.py migrate
-```
-
-### Crear Superusuario
-```bash
-python manage.py createsuperuser
-```
-
----
-
-## 👥 Roles del Sistema
-
-| Rol | Permisos |
-|-----|----------|
-| **Administrador** | Acceso total, gestiona usuarios y configuración |
-| **Veterinario** | Atención de pacientes, agenda propia |
-| **Recepcionista** | Agendamiento, gestión de citas |
-
----
-
-## 📁 Estructura del Proyecto
-
-```
-VetSantaSofia/
-├── agenda/              # 🗓️ Sistema de citas y disponibilidad
-├── caja/                # 💰 Gestión financiera
-├── clinica/             # 🏥 Módulo clínico
-├── cuentas/             # 👤 Autenticación y usuarios
-├── dashboard/           # 📊 Panel principal
-├── gestion/             # 📋 Gestión general
-├── hospital/            # 🏥 Gestión hospitalaria
-├── inventario/          # 📦 Control de inventario
-├── pacientes/           # 🐾 Registro de pacientes
-├── servicios/           # 💉 Catálogo de servicios
-├── templates/           # 🎨 Templates globales
-├── static/              # 🎨 Archivos estáticos
-└── media/               # 📁 Archivos multimedia
-```
-
----
-
-## 🔧 Comandos Útiles
-
-### Desarrollo
-```bash
-# Ejecutar tests
+python manage.py collectstatic --noinput
 python manage.py test
-
-# Shell interactivo
-python manage.py shell
-
-# Crear migraciones
-python manage.py makemigrations
-
-# Aplicar migraciones
-python manage.py migrate
-
-# Recolectar archivos estáticos
-python manage.py collectstatic
 ```
 
-### Agenda
+La rama de preparación de la demo incluye un workflow que ejecuta estas validaciones con PostgreSQL 16.
+
+## Despliegue en Render
+
+El archivo `render.yaml` define PostgreSQL y el servicio web. Render genera `SECRET_KEY`, inyecta `DATABASE_URL`, mantiene `DEBUG=False` y ejecuta Gunicorn.
+
+El build ejecuta:
+
 ```bash
-# Inicializar datos de ejemplo
-python manage.py inicializar_agenda
-
-# Ver migraciones de agenda
-python manage.py showmigrations agenda
+./build.sh
 ```
 
----
+El servicio inicia con:
 
-## 📝 Notas de Desarrollo
-
-### Últimas Actualizaciones
-
-#### v1.1 - Módulo de Agenda (Diciembre 2025)
-- ✅ Implementado sistema completo de agenda
-- ✅ Modelos: DisponibilidadVeterinario y Cita (actualizado)
-- ✅ API REST para disponibilidad y citas
-- ✅ Frontend con JavaScript vanilla
-- ✅ Validaciones de negocio
-- ✅ Documentación completa
-
----
-
-## 🐛 Solución de Problemas
-
-### Error: ModuleNotFoundError
 ```bash
-# Verificar entorno virtual activado
-.\venv\Scripts\activate
-
-# Reinstalar dependencias
-pip install -r requirements.txt
+python manage.py cargar_demo && gunicorn veteriaria.wsgi:application --bind 0.0.0.0:$PORT
 ```
 
-### Error: No such table
-```bash
-python manage.py migrate
+Para desplegar con Blueprint:
+
+1. Suba o fusione esta rama en GitHub.
+2. En Render, seleccione **New > Blueprint**.
+3. Conecte `Andrefnx/VetSantaSofia`.
+4. Seleccione la rama que contiene `render.yaml`.
+5. Aplique el Blueprint.
+6. Tras el primer deploy, abra la URL `onrender.com` asignada y use el usuario demo.
+
+Si configura el servicio manualmente, use exactamente:
+
+```text
+Build Command: ./build.sh
+Start Command: python manage.py cargar_demo && gunicorn veteriaria.wsgi:application --bind 0.0.0.0:$PORT
 ```
 
-### Agenda no carga
-```bash
-# Verificar migraciones
-python manage.py showmigrations agenda
+## Archivos estáticos
 
-# Aplicar si falta
-python manage.py migrate agenda
+WhiteNoise sirve los archivos recolectados en `staticfiles/`. `collectstatic` se ejecuta durante el build y usa almacenamiento con manifest y compresión.
+
+## Capturas
+
+Capturas existentes del proyecto:
+
+![Vista del sistema](---evidencia/2.png)
+
+![Vista adicional](---evidencia/3.png)
+
+## Estructura principal
+
+```text
+agenda/       citas y disponibilidad
+caja/         gestión financiera
+clinica/      atención clínica
+cuentas/      usuarios y autenticación
+ dashboard/   panel principal
+historial/    auditoría y trazabilidad
+inventario/   insumos y stock
+pacientes/    propietarios y pacientes
+servicios/    catálogo de servicios
+static/       archivos estáticos
+templates/    plantillas globales
+veteriaria/   configuración del proyecto
 ```
 
----
+## Seguridad
 
-## 📚 Recursos
-
-- [Django Documentation](https://docs.djangoproject.com/)
-- [Bootstrap 5](https://getbootstrap.com/)
-- [Font Awesome](https://fontawesome.com/)
-
----
-
-## 📄 Licencia
-
-Proyecto privado - VetSantaSofia
-
----
-
-**Desarrollado con ❤️ para VetSantaSofia**
+No se deben versionar `.env`, claves secretas ni credenciales de bases de datos. La demo usa únicamente datos ficticios. Para producción real, rote cualquier credencial que haya aparecido previamente en el historial del repositorio.
