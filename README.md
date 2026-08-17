@@ -2,7 +2,30 @@
 
 Sistema de gestión veterinaria desarrollado con Django 5.2.7. Integra autenticación por RUT, pacientes, agenda, atención clínica, inventario, servicios, caja y trazabilidad.
 
-> Las capturas históricas que no correspondían a esta aplicación fueron retiradas. No se publica una demo visual hasta contar con capturas verificadas de VetSantaSofia.
+## Demo interactiva
+
+**[Abrir demo navegable de VetSantaSofia](https://andrefnx.github.io/VetSantaSofia/)**
+
+La carpeta `demo/` contiene una experiencia estática separada del backend Django y pensada para GitHub Pages. Replica los flujos principales del rol veterinario sin conectarse a PostgreSQL ni a servicios externos.
+
+Incluye:
+
+- acceso con un usuario veterinario ficticio;
+- panel general con métricas y próximas consultas;
+- agenda por bloques con citas disponibles, ocupadas y completadas;
+- creación de citas ficticias desde bloques disponibles;
+- listado y búsqueda de pacientes;
+- ficha clínica de cada paciente;
+- timeline clínico con consultas, controles, vacunas y exámenes;
+- registro de evoluciones ficticias;
+- persistencia local con `localStorage` y botón para restablecer los datos iniciales.
+
+Credenciales de la demo web:
+
+- RUT: `22222222-2`
+- Contraseña: `DemoVet2026!`
+
+> La demo es únicamente una representación interactiva del producto. No ejecuta Django, no usa credenciales reales y no tiene acceso a la base de datos del sistema. Los cambios realizados en ella permanecen sólo en el navegador del visitante.
 
 ## Módulos funcionales
 
@@ -127,6 +150,10 @@ La aplicación mantiene además el backend estándar de Django como respaldo de 
 - WhiteNoise sirve los archivos estáticos recolectados; los archivos de usuario bajo `MEDIA_ROOT` requieren persistencia apropiada.
 - Cualquier credencial publicada en commits anteriores debe considerarse comprometida y rotarse.
 
+### Seguridad de la demo web
+
+La demo de GitHub Pages se encuentra aislada en `demo/`: no contiene `SECRET_KEY`, `DATABASE_URL`, tokens ni solicitudes hacia el backend. Los datos ficticios se definen en JavaScript y cualquier modificación se persiste únicamente mediante `localStorage` del navegador.
+
 ### Auditoría y trazabilidad
 
 `historial.RegistroHistorico` funciona como registro central de auditoría y almacena fecha, entidad, objeto afectado, tipo de evento, descripción, usuario responsable, criticidad y datos estructurados del cambio en `JSONField`.
@@ -150,7 +177,7 @@ La aplicación mantiene además el backend estándar de Django como respaldo de 
 
 El repositorio actualmente **no publica tags Git**, por lo que no se debe inferir una versión de release únicamente desde documentos históricos. Para futuros releases se recomienda SemVer (`MAJOR.MINOR.PATCH`).
 
-## Datos demo
+## Datos demo del backend
 
 ```bash
 python manage.py cargar_demo
@@ -212,6 +239,12 @@ gunicorn veteriaria.wsgi:application --bind 0.0.0.0:${PORT:-8000}
 
 También puede utilizar `./build.sh` para instalación, migraciones y estáticos.
 
+## Publicación de la demo en GitHub Pages
+
+El workflow `.github/workflows/pages-demo.yml` publica exclusivamente el contenido de `demo/`. Tras fusionar cambios a `main`, GitHub Actions construye el artefacto de Pages y lo despliega en la URL del proyecto.
+
+La demo no forma parte del proceso WSGI y puede funcionar aunque el backend Django no esté desplegado.
+
 ## Validación y pruebas
 
 ```bash
@@ -232,6 +265,7 @@ caja/         gestión financiera
 clinica/      atención clínica
 cuentas/      usuarios y autenticación
 dashboard/    panel principal
+demo/         demo web estática para GitHub Pages
 gestion/      gestión general
 historial/    auditoría y trazabilidad
 hospital/     componentes hospitalarios
